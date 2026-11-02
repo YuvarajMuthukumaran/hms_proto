@@ -6429,13 +6429,17 @@ const waDate=()=>new Date().toLocaleDateString('en-IN',{weekday:'short',day:'num
 /* Real sending goes through the Tulasi WhatsApp bridge (Downloads/tulasi-wa-bridge), which talks to OpenWA.
    The bridge address and token live in this browser only (localStorage), never in this file. */
 const WA_CFG_KEY='tulasiWaBridge';
+/* one-click setup: opening <site>/#connect=<token> saves the token in this browser, then goes to the dashboard */
+(function(){const m=(location.hash||'').match(/^#connect=([A-Za-z0-9_-]{16,})/);if(!m)return;
+  try{localStorage.setItem(WA_CFG_KEY,JSON.stringify({url:location.origin+'/api',token:m[1]}));}catch(e){}
+  history.replaceState(null,'',location.pathname+'#/myday');setTimeout(()=>{try{render();}catch(e){}toast('This browser is connected. AI scribe and WhatsApp are ready.');},300);})();
 /* Hosted (e.g. on Vercel): the bridge is this site's own /api. Opened from disk or localhost: the local bridge. */
 const WA_DEF_URL=(/^https?:$/.test(location.protocol)&&!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))?location.origin+'/api':'http://127.0.0.1:3790';
 function waCfg(){let c={};try{c=JSON.parse(localStorage.getItem(WA_CFG_KEY)||'{}')||{};}catch(e){}return {url:c.url||WA_DEF_URL,token:c.token||''};}
-function waCfgModal(after){const c=waCfg();openModal(`<div class="mh"><h3>WhatsApp connection</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
- <div class="mb"><div class="small muted">Messages are sent from Tulasi's WhatsApp number through the Tulasi bridge, which talks to OpenWA. Ask the admin for the bridge token; it is saved in this browser only.</div>
+function waCfgModal(after){const c=waCfg();openModal(`<div class="mh"><h3>Connect this browser</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
+ <div class="mb"><div class="small muted">One time per browser. This turns on the AI scribe and WhatsApp sending. Easiest: open the setup link the admin sent you. Or paste the connection token below; it is saved in this browser only.</div>
  <label class="field"><span class="lbl">Bridge address</span><input class="input" id="waU" value="${hesc(c.url)}"></label>
- <label class="field"><span class="lbl">Bridge token</span><input class="input" id="waT" type="password" value="${hesc(c.token)}" placeholder="BRIDGE_TOKEN from the bridge's .env"></label>
+ <label class="field"><span class="lbl">Connection token</span><input class="input" id="waT" type="password" value="${hesc(c.token)}" placeholder="Paste the token from the admin"></label>
  <div id="waTest" class="small muted"></div></div>
  <div class="mf"><button class="btn" style="margin-right:auto" onclick="waTest()">Test connection</button><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="waCfgSave(${after?`'${after}'`:''})">Save</button></div>`);}
 function waCfgSave(after){try{localStorage.setItem(WA_CFG_KEY,JSON.stringify({url:$('waU').value.trim().replace(/\/+$/,''),token:$('waT').value.trim()}));}catch(e){toast('This browser blocked saving the settings');return;}closeModal();toast('WhatsApp connection saved');}
@@ -6510,7 +6514,7 @@ function waRCard(){
       <div class="wa-pv" id="waRPrev">${waFmt(waRText())}</div>
       <span class="tiny muted">Words between *stars* show in bold on WhatsApp.</span>
       <div class="wa-acts"><button class="btn wa-copy" onclick="waCopy(waRText(),'Copied. Paste it in the doctors\\u2019 WhatsApp group.')">Copy for WhatsApp</button><button class="btn pri" onclick="waRSend(this)">Send to doctors' group</button></div>
-      ${log}<button class="lnk tiny" style="align-self:flex-start" onclick="waCfgModal()">WhatsApp connection settings</button></div></div></section>`;
+      ${log}<button class="lnk tiny" style="align-self:flex-start" onclick="waCfgModal()">Connection settings</button></div></div></section>`;
 }
 const __waHo0=vHandover;vHandover=function(){const h=__waHo0();if(S.role!=='rmo')return h;const k=h.indexOf('<section class="card sheet">');return k<0?h+waRCard():h.slice(0,k)+waRCard()+h.slice(k);};
 
@@ -6550,7 +6554,7 @@ function waDBlock(kind,id,draft){
   const s=waD()[kind+':'+id],w=waDWarn(kind,id),uhid=(allPts().find(x=>x.id===id)||{}).uhid||'';
   return `<div class="wa-side" style="position:static">${draft?`<div class="wa-warn">Draft preview. Save the note first, then send it to the patient's WhatsApp group (UHID ${hesc(uhid)}).</div>`:''}${w?`<div class="wa-warn">${hesc(w)}</div>`:''}<div class="wa-pv">${waFmt(waDText(kind,id))}</div>
     <div class="wa-acts"><button class="btn wa-copy" ${draft?'disabled':''} onclick="waCopy(waDText('${kind}','${id}'),'Copied. Paste it in the family WhatsApp chat.')">Copy for WhatsApp</button><button class="btn pri" ${s||draft?'disabled':''} onclick="waDSend('${kind}','${id}',this)">${s?'Sent':'Send to UHID group'}</button>${s?`<span class="wa-log">Sent ${s.at} · by ${hesc(s.by)} · group ${hesc(s.group||'')}${s.created?' (created)':''}</span>`:''}</div>
-    <button class="lnk tiny" style="align-self:flex-start" onclick="waCfgModal()">WhatsApp connection settings</button></div>`;
+    <button class="lnk tiny" style="align-self:flex-start" onclick="waCfgModal()">Connection settings</button></div>`;
 }
 const __waPd0=pDaily;pDaily=function(){const h=__waPd0();if(!isPsych())return h;
   const k=h.indexOf('<h3>Family update');if(k<0)return h;const e=h.indexOf('</section>',k);if(e<0)return h;
