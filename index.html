@@ -6370,6 +6370,7 @@ if((location.hash||'').slice(2).split('/')[0]==='clinical-docs')render();
 .wa-warn{background:#FFFAEB;border:1px solid #FEDF89;color:#93370D;border-radius:8px;padding:8px 10px;font-size:12.5px}
 .wa-log{font-size:12px;color:var(--muted,#667085)}
 .wa-tags{display:flex;gap:6px;flex-wrap:wrap}
+.wa-strip{border-color:#a7e3bd}.wa-row{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line-2,#eef1f5)}.wa-row:first-child{border-top:0}.wa-ok{color:#067647;font-weight:600}.wa-bad{color:#b42318}.wa-rdy{color:#b54708;font-weight:600}
 </style>
 <script id="sndt-js">
 /* SNDT on the Preferences tab: each section says who last changed it; any change there stamps the current user */
@@ -6501,13 +6502,21 @@ function waDWarn(kind,id){const my=waNorm(psyGet(kind,id,'brief'));if(!my)return
   if(WA_HIST[id]&&waNorm(WA_HIST[id])===my)return 'This is the same text sent on the last 3 days. Families notice repeated updates. Write what was different today.';
   const same=PSY_EOD().filter(p=>p.id!==id&&waNorm(psyGet('eod',p.id,'brief'))===my).length;
   return same>=2?`This brief is word-for-word the same as ${same} other patients' updates today. Each family should get their own update.`:'';}
-async function waDSend(kind,id,btn){if(!waCfg().token){waCfgModal();return;}
-  const p=allPts().find(x=>x.id===id);if(!p||!p.uhid){toast('This patient has no UHID');return;}
-  waBusy(btn,true);
+/* send one patient's update; records the result (sent or the error in plain words) and returns it */
+async function waDSendCore(kind,id){
+  const p=allPts().find(x=>x.id===id);if(!p||!p.uhid)return {ok:false,msg:'This patient has no UHID'};
+  S.waErr=S.waErr||{};
   try{const r=await waPost('/send/patient',{uhid:p.uhid,text:waDText(kind,id),by:signer(),kind:'daily-update'});
-    waD()[kind+':'+id]={at:clock(),by:signer(),group:r.groupName,created:r.created};if(kind==='dn')S.familySent=true;render();
-    toast(`${r.created?`Group "${r.groupName}" created and update sent`:`Sent to group "${r.groupName}"`} on WhatsApp from Tulasi's number`);}
-  catch(e){waBusy(btn,false);toast(e.message);}}
+    waD()[kind+':'+id]={at:clock(),by:signer(),group:r.groupName,created:r.created};delete S.waErr[kind+':'+id];if(kind==='dn')S.familySent=true;
+    return {ok:true,msg:`${r.created?`Group "${r.groupName}" created and update sent`:`Sent to group "${r.groupName}"`}`};}
+  catch(e){const m=/No phone numbers/.test(e.message)?'No WhatsApp numbers saved for this patient yet. Ask the admin to add the family numbers.':e.message;S.waErr[kind+':'+id]=m;return {ok:false,msg:m};}}
+async function waDSend(kind,id,btn){if(!waCfg().token){waCfgModal();return;}
+  waBusy(btn,true);const r=await waDSendCore(kind,id);render();toast(r.ok?r.msg+' on WhatsApp from Tulasi\'s number':r.msg);}
+async function waSendAll(btn){if(!waCfg().token){waCfgModal();return;}
+  const L=PSY_EOD().filter(p=>(S.eod[p.id]||{}).saved&&!waD()['eod:'+p.id]);if(!L.length){toast('Nothing waiting to send');return;}
+  waBusy(btn,true);let ok=0;const bad=[];
+  for(const p of L){if(btn)btn.innerHTML=`Sending ${ok+bad.length+1} of ${L.length}…`;const r=await waDSendCore('eod',p.id);r.ok?ok++:bad.push(p.name.split(' ')[0]);}
+  render();toast(`${ok} sent on WhatsApp${bad.length?` · not sent: ${bad.join(', ')} (see the reason next to each name)`:''}`);}
 function waDBlock(kind,id,draft){
   const s=waD()[kind+':'+id],w=waDWarn(kind,id),uhid=(allPts().find(x=>x.id===id)||{}).uhid||'';
   return `<div class="wa-side" style="position:static">${draft?`<div class="wa-warn">Draft preview. Save the note first, then send it to the patient's WhatsApp group (UHID ${hesc(uhid)}).</div>`:''}${w?`<div class="wa-warn">${hesc(w)}</div>`:''}<div class="wa-pv">${waFmt(waDText(kind,id))}</div>
@@ -6521,10 +6530,17 @@ const __waPd0=pDaily;pDaily=function(){const h=__waPd0();if(!isPsych())return h;
   return h.slice(0,e+10)+card+h.slice(e+10);};
 /* after saving the daily note, bring the WhatsApp card into view */
 const __psySaveWa=psySave;psySave=function(kind,id){__psySaveWa(kind,id);if(kind==='dn'&&S.dailySaved)setTimeout(()=>{const c=$('waDCard');if(c&&c.scrollIntoView)c.scrollIntoView({block:'start',behavior:'smooth'});},120);};
-const __waEod0=psyEodPage;psyEodPage=function(){const h=__waEod0(),sv=PSY_EOD().filter(p=>(S.eod[p.id]||{}).saved);if(!sv.length)return h;
-  const n=sv.filter(p=>waD()['eod:'+p.id]).length;
-  return h+`<section class="card"><div class="hd"><div><h3>WhatsApp progress updates ${chip(n+' of '+sv.length+' sent','c-green')}</h3><div class="small muted" style="margin-top:4px">One message per saved note, for that patient's family group.</div></div></div>
-    <div class="pad" style="display:flex;flex-direction:column;gap:10px">${sv.map(p=>`<details class="wa-blk" ${S.waOpen===p.id?'open':''}><summary style="cursor:pointer" onclick="S.waOpen='${p.id}'"><strong>${p.name}</strong> <span class="tiny muted">${p.room} · UHID ${p.uhid}</span> ${waD()['eod:'+p.id]?chip('Sent','c-green'):chip('Not sent','c-grey')}</summary>${waDBlock('eod',p.id)}</details>`).join('')}</div></section>`;};
+/* psychologist Daily notes page: the WhatsApp strip sits on top, so updates are sent right after the notes */
+const __waEod0=psyEodPage;psyEodPage=function(){const h=__waEod0(),all=PSY_EOD(),sv=all.filter(p=>(S.eod[p.id]||{}).saved);
+  const sent=sv.filter(p=>waD()['eod:'+p.id]),ready=sv.filter(p=>!waD()['eod:'+p.id]),err=S.waErr||{};
+  const st=p=>{const s=waD()['eod:'+p.id],e=err['eod:'+p.id];return s?`<span class="wa-ok">✓ Sent ${hesc(s.at)} · by ${hesc(s.by)}</span>`:e?`<span class="wa-bad">Not sent: ${hesc(e)}</span>`:`<span class="wa-rdy">Ready to send</span>`;};
+  const row=p=>{const s=waD()['eod:'+p.id];return `<div class="wa-row"><div class="grow"><strong>${p.name}</strong> <span class="tiny muted">${p.room} · UHID ${p.uhid}</span><div class="small">${st(p)}</div></div>
+    <button class="btn sm" onclick="S.waOpen=S.waOpen==='${p.id}'?'':'${p.id}';render()">${S.waOpen===p.id?'Hide message':'See message'}</button>
+    <button class="btn sm pri" ${s?'disabled':''} onclick="waDSend('eod','${p.id}',this)">${s?'Sent':'Send'}</button></div>${S.waOpen===p.id?`<div style="padding:0 0 12px">${waDBlock('eod',p.id)}</div>`:''}`;};
+  const strip=`<section class="card wa-strip" id="waStrip"><div class="hd"><div><h3>WhatsApp updates to families</h3><div class="small muted" style="margin-top:4px">${sv.length?`${sent.length} of ${sv.length} sent · each saved note becomes the message for that patient's family group`:'Save a patient\'s note below and their WhatsApp update appears here, ready to send.'}</div></div>
+    <div class="row" style="gap:8px">${ready.length?`<button class="btn pri" onclick="waSendAll(this)">Send all ${ready.length} ready</button>`:''}<button class="lnk tiny" onclick="waCfgModal()">Connection settings</button></div></div>
+    ${sv.length?`<div class="pad" style="padding-top:4px">${sv.map(row).join('')}</div>`:''}</section>`;
+  return strip+h;};
 
 if(/^(handover|patient|notes)/.test((location.hash||'').slice(2)))render();
 </script>
