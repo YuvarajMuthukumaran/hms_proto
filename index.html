@@ -280,6 +280,7 @@ button.mc{cursor:pointer}
 .tpadd{border:1px solid #9ec1f7;color:var(--blue-ink);background:#fff;border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .dpact{display:flex;flex-direction:column;gap:10px}
 .byl{display:block;font-size:11.5px;font-weight:400;color:var(--muted,#667085);line-height:1.35;margin-top:2px}
+.mar2 th,.mar2 td{min-width:44px;text-align:center}.mar2 .marmed{position:sticky;left:0;z-index:2;background:#fff;min-width:230px;max-width:260px;text-align:left;vertical-align:top}.mar2 th.marmed{background:inherit}.mar2 .martime{position:sticky;left:230px;z-index:2;background:#fff;min-width:70px;white-space:nowrap}.mar-when{font-size:11.5px;line-height:1.4;margin-top:6px}.mar-stop{color:#b42318}.mar-offrow .marmed{background:#fffafa}td.moffc{background:repeating-linear-gradient(135deg,#f2f4f7 0 6px,#e4e7ec 6px 7px)}td.moffc span{font-size:10px;color:#b42318;font-weight:600}.moff-key{display:inline-block;width:14px;height:14px;border-radius:3px;background:repeating-linear-gradient(135deg,#f2f4f7 0 4px,#d0d5dd 4px 5px)}
 .smt td{vertical-align:top}.smt td.when,.smt td:nth-child(2),.smt td:nth-child(4),.smt td:nth-child(6){white-space:nowrap}.smt td.why{min-width:160px}.smt td.doses{white-space:nowrap;line-height:1.5}
 .trhist{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px}
 .trhist summary{cursor:pointer}
@@ -2163,10 +2164,8 @@ const marDay=lbl=>{if(lbl==='Today'){const d=new Date();return new Date(d.getFul
 const atDay=at=>{const m=String(at||'').match(/(\d{1,2}) ([A-Z][a-z]{2})(?: (\d{4}))?/);return m?new Date(+(m[3]||2026),MON3.indexOf(m[2])/3,+m[1]):null;};
 function medDoseDates(m){
   if(m.doses)return m.doses;
-  const act=S.meds.filter(x=>!x.name.includes('waiting')),mi=act.indexOf(m);if(mi<0)return [];
-  const sd=atDay(m.at),out=[];
-  [...DAYS6,'Today'].forEach((lbl,di)=>{if(sd&&marDay(lbl)<sd)return;const g=MAR_SLOTS(m.freq).filter(k=>marCell(mi,di,k)==='G');
-    if(g.length){const d=lbl==='Today'?new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}):lbl;const tm=g.map(k=>MAR_TIME[k]).filter(Boolean);out.push(d+(tm.length?' ('+tm.join(', ')+')':''));}});
+  const days=marDays(),ti=days.length-1,out=[];
+  days.forEach((day,di)=>{const g=MAR_SLOTS(m.freq).filter(k=>marStat(m,day,k,di,di===ti).st==='G');if(g.length){const tm=g.map(k=>MAR_TIME[k]).filter(Boolean);out.push((di===ti?marDLab(day):marDLab(day))+(tm.length?' ('+tm.join(', ')+')':''));}});
   return out;}
 function medHistoryTable(){
   const rows=S.meds.map(m=>({m,on:true})).concat((S.medsOff||[]).map(m=>({m,on:false})));if(!rows.length)return '';
@@ -2179,7 +2178,7 @@ function medStopModal(i){const m=S.meds[i];openModal(`<div class="mh"><h3>Stop $
  <div class="mb"><div class="small muted">Started by ${m.by||'not recorded'}${m.at?' · '+m.at:''}. It stays on the chart as stopped, with your name and the time.</div>
  <label class="field"><span class="lbl">Reason</span><select class="input" id="msW"><option>Dose change (new order follows)</option><option>Side effects</option><option>Not effective</option><option>Course complete</option><option>Patient or family refused</option><option>Other</option></select></label></div>
  <div class="mf"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="rxStopMed(${i},$('msW').value)">Stop medicine</button></div>`);}
-function rxStopMed(i,why){const doses=medDoseDates(S.meds[i]),m=S.meds.splice(i,1)[0],w=whoAt();m.doses=doses;S.medsOff=S.medsOff||[];S.medsOff.unshift({...m,offBy:w.by,offAt:w.at,why});closeModal();render();toast(`${m.name} stopped by ${w.by}. Moved to Stopped medicines; nurses no longer give it.`);}
+function rxStopMed(i,why){const doses=medDoseDates(S.meds[i]),snap=marSnap(S.meds[i]),m=S.meds.splice(i,1)[0],w=whoAt();m.doses=doses;m.snap=snap;S.medsOff=S.medsOff||[];S.medsOff.unshift({...m,offBy:w.by,offAt:w.at,why});closeModal();render();toast(`${m.name} stopped by ${w.by}. Moved to Stopped medicines; nurses no longer give it.`);}
 function pOrders(){
   const rx=S.rx||[];
   const draft = rx.map((r,i)=>`<div class="rxrow">
@@ -2451,23 +2450,53 @@ const MAR_WHO={};
 function marTap(mi,k){const key=mi+'-6-'+k;const c=MAR_ST[key]||'';MAR_ST[key]=c===''?'G':c==='G'?'R':c==='R'?'H':'';
   if(MAR_ST[key]){const m=__me0();MAR_WHO[key]={ini:m.ini||ini(m.name),by:m.name,at:clock()};}else delete MAR_WHO[key];render();}
 function medChartModal(){const nm=location.hash.includes('rounds')?(()=>{const R=S.rounds,WP=WARDS[R.ward];return WP[Math.min(R.idx[R.ward],WP.length-1)].name})():'Neel Bose';
-  openModal(`<div class="mh"><h3>Medication chart · ${nm}</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div><div class="mb" style="padding:0">${marCard().replace('<section class="card">','<section>')}</div>`);$('modal').style.width='min(1000px,100%)';}
+  openModal(`<div class="mh"><h3>Medication chart · ${nm}</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div><div class="mb" style="padding:0">${marCard().replace('<section class="card">','<section>')}</div>`);$('modal').style.width='min(1400px,100%)';}
+/* ---- medication chart: every medicine (ongoing and stopped), one column per day from admission (Day 1) to today ----
+   Each box: ✓ given / R refused / H held, with the nurse's initials; empty before the start, grey after the stop. */
+const ADM_DAY=new Date(2026,9,18);
+const MAR_NURSE={SR:'Sister Rekha',BJ:'Brother Joseph',SA:'Sister Anita'};
+const SLOT_H={M:8,A:14,N:21,SOS:12};
+const marDLab=d=>d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+function marDays(){const out=[],t=marDay('Today');for(let d=new Date(ADM_DAY);d<=t;d.setDate(d.getDate()+1))out.push(new Date(d));return out;}
+function atDT(at){const m=String(at||'').match(/(\d{1,2}) ([A-Z][a-z]{2})(?: (\d{4}))?(?:,\s*(\d{1,2}):(\d{2})\s*(am|pm))?/i);if(!m)return null;
+  let h=+(m[4]||0);if(m[6]){const pm=/pm/i.test(m[6]);if(pm&&h<12)h+=12;if(!pm&&h===12)h=0;}return new Date(+(m[3]||2026),MON3.indexOf(m[2])/3,+m[1],h,+(m[5]||0));}
+const marHash=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h;};
+function marStat(m,day,k,di,isToday){
+  const st=atDT(m.at),sp=m.offAt?atDT(m.offAt):null,slot=new Date(day);
+  if(k==='SOS')slot.setHours(23,59,0,0);else slot.setHours(SLOT_H[k],0,0,0);
+  if(st&&slot<st)return {st:'pre'};
+  if(sp&&slot>sp)return {st:'off'};
+  if(m.snap&&m.snap[di+'|'+k])return m.snap[di+'|'+k];
+  const act=S.meds.filter(x=>!x.name.includes('waiting')),mi=act.indexOf(m);
+  if(isToday){if(mi<0)return {st:''};const key=mi+'-6-'+k,w=MAR_WHO[key];return {st:MAR_ST[key]||'',ini:w?w.ini:'',by:w?w.by:'',at:w?w.at:''};}
+  const lbl=marDLab(day),d6=DAYS6.indexOf(lbl),ini=k==='N'?'SR':(day.getDate()%2?'BJ':'SA');
+  let s;
+  if(d6>=0&&mi>=0)s=marCell(mi,d6,k);
+  else{const h=marHash(m.name+'|'+lbl+'|'+k);s=k==='SOS'?(h%4===0?'G':''):(h%19===0?'R':h%29===0?'H':'G');}
+  return {st:s,ini:s?ini:'',by:s?MAR_NURSE[ini]:'',at:s?(k==='SOS'?'':MAR_TIME[k])+(k==='SOS'?'':', ')+lbl:''};
+}
+function marSnap(m){const days=marDays(),snap={},today=days.length-1;days.forEach((day,di)=>MAR_SLOTS(m.freq).forEach(k=>{const r=marStat(m,day,k,di,di===today);if(r.st&&r.st!=='pre')snap[di+'|'+k]=r;}));return snap;}
 function marCard(){
-  const meds=S.meds.filter(m=>!m.name.includes('waiting'));
-  const doses=f=>f==='1-0-1'?['M','N']:f==='0-0-1'?['N']:f==='1-0-0'?['M']:f==='1-1-1'?['M','A','N']:['SOS'];
-  const T={M:'8 am',A:'2 pm',N:'9 pm',SOS:'As needed'};
-  const D=[...DAYS6,'Today'];
-  const sym=(x,today,mi,k)=>{const cls=x==='G'?'mg':x==='R'?'mr':x==='H'?'mh':'me';const lab=x==='G'?'✓':x==='R'?'R':x==='H'?'H':(today?'Tap':'');
-    const w=today?MAR_WHO[mi+'-6-'+k]:null,wi=w?w.ini:(today?'SR':'BJ'),wt=x?(w?`${x==='G'?'Given':x==='R'?'Refused':'Held'} · logged by ${w.by} at ${w.at}`:`${x==='G'?'Given':x==='R'?'Refused':'Held'} · logged by ${today?'Sister Rekha':'Brother Joseph'}, ${T[k]}`):'';
-    return today&&isWard()?`<button class="mc ${cls}" title="${wt}" onclick="marTap(${mi},'${k}')" aria-label="Log dose">${lab}${x?'<span>'+wi+'</span>':''}</button>`:`<span class="mc ${cls}" title="${wt}">${lab}${x?'<span>'+wi+'</span>':''}</span>`;};
+  const days=marDays(),ti=days.length-1,act=S.meds.filter(m=>!m.name.includes('waiting')),off=S.medsOff||[];
+  const T={M:'8 am',A:'2 pm',N:'9 pm',SOS:'As needed'},W={G:'Given',R:'Refused',H:'Held'};
+  const box=(m,day,k,di,on)=>{const isT=di===ti,r=marStat(m,day,k,di,isT),mi=act.indexOf(m);
+    if(r.st==='pre')return `<td class="${isT?'martoday':''}"></td>`;
+    if(r.st==='off'){const first=!(di>0&&marStat(m,days[di-1],k,di-1,di-1===ti).st==='off');return `<td class="moffc ${isT?'martoday':''}">${first?'<span>Stopped</span>':''}</td>`;}
+    const cls=r.st==='G'?'mg':r.st==='R'?'mr':r.st==='H'?'mh':'me',lab=r.st==='G'?'✓':r.st||(isT&&isWard()&&on?'Tap':'');
+    const tip=r.st?`${W[r.st]} · ${r.by||MAR_NURSE[r.ini]||''}${r.at?' · '+r.at:''}`:'';
+    const inner=`${lab}${r.st&&r.ini?'<span>'+r.ini+'</span>':''}`;
+    return `<td class="${isT?'martoday':''}">${isT&&isWard()&&on&&mi>=0?`<button class="mc ${cls}" title="${hesc(tip)}" onclick="marTap(${mi},'${k}')" aria-label="Log dose">${inner}</button>`:(r.st?`<span class="mc ${cls}" title="${hesc(tip)}">${inner}</span>`:'')}</td>`;};
+  const medCell=(m,on,n)=>`<td rowspan="${n}" class="marmed"><div style="font-weight:700">${hesc(m.name)}</div><div class="tiny muted">${hesc(m.freq)}${m.time?' · '+hesc(m.time):''}</div>
+    <div class="mar-when"><b>Started</b> ${hesc(m.at||'not recorded')}<br><span class="muted">${hesc(m.by||'Doctor not recorded')}</span></div>
+    ${on?'<div class="mar-when"><b style="color:#067647">Ongoing</b></div>':`<div class="mar-when mar-stop"><b>Stopped</b> ${hesc(m.offAt||'')}<br><span>${hesc(m.offBy||'')}</span><br><span>Reason: ${hesc(m.why||'not given')}</span></div>`}</td>`;
   let rows='';
-  meds.forEach((m,mi)=>{const ks=doses(m.freq);ks.forEach((k,ki)=>{rows+=`<tr>${ki===0?`<td rowspan="${ks.length}" class="marmed"><div style="font-weight:700">${m.name}</div><div class="tiny muted">${m.freq} · ${m.time}</div>${byl(m.by,m.at,'Prescribed by')}</td>`:''}<td class="martime">${T[k]}</td>${D.map((d,di)=>`<td class="${di===6?'martoday':''}">${sym(marCell(mi,di,k),di===6,mi,k)}</td>`).join('')}</tr>`;});});
-  return `<section class="card"><div class="hd"><div><h3>Medicine chart</h3><div class="small muted" style="margin-top:4px">${isWard()?'Tap today\'s box at each round: given, then refused, then held. Your initials are added; refusals alert the treating team.':'Logged by nurses at each medicine round; refusals alert you.'}</div></div>
-    <div class="row tiny" style="gap:10px"><span class="row" style="gap:4px"><span class="mc mg sm">✓</span>Given</span><span class="row" style="gap:4px"><span class="mc mr sm">R</span>Refused</span><span class="row" style="gap:4px"><span class="mc mh sm">H</span>Held</span></div></div>
-    <div class="scroll"><table class="mar"><thead><tr><th>Medicine</th><th>Time</th>${D.map((d,i)=>`<th class="${i===6?'martoday':''}">${d}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
-    <div class="pad tiny muted" style="padding-bottom:0">Initials in each box = the nurse who gave the dose, with the round time: <b>SR</b> Sister Rekha · <b>BJ</b> Brother Joseph · <b>SA</b> Sister Anita${isWard()?` · today's taps are stamped <b>${hesc(signer())}</b>`:''}.</div>
-    ${medHistoryTable()}
-    <div class="pad small muted">The live Med Adherence tab shows patient app data; it pauses during the stay (no phone) and picks up again after discharge.</div></section>`;
+  act.map(m=>[m,true]).concat(off.map(m=>[m,false])).forEach(([m,on])=>{const ks=MAR_SLOTS(m.freq);
+    ks.forEach((k,ki)=>{rows+=`<tr class="${on?'':'mar-offrow'}">${ki===0?medCell(m,on,ks.length):''}<td class="martime">${T[k]}</td>${days.map((day,di)=>box(m,day,k,di,on)).join('')}</tr>`;});});
+  return `<section class="card"><div class="hd"><div><h3>Medicine chart</h3><div class="small muted" style="margin-top:4px">Every medicine this stay, ongoing and stopped, from Day 1 to today. ${isWard()?'Tap today\'s box at each round: given, then refused, then held; your initials are added and refusals alert the treating team.':'Logged by nurses at each medicine round; refusals alert you.'}</div></div>
+    <div class="row tiny" style="gap:10px;flex-wrap:wrap"><span class="row" style="gap:4px"><span class="mc mg sm">✓</span>Given</span><span class="row" style="gap:4px"><span class="mc mr sm">R</span>Refused</span><span class="row" style="gap:4px"><span class="mc mh sm">H</span>Held</span><span class="row" style="gap:4px"><span class="moff-key"></span>Stopped</span></div></div>
+    <div class="scroll"><table class="mar mar2"><thead><tr><th class="marmed">Medicine</th><th class="martime">Time</th>${days.map((d,i)=>`<th class="${i===ti?'martoday':''}"><div>Day ${i+1}</div><div class="tiny" style="font-weight:400">${i===ti?'Today':marDLab(d)}</div></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="pad tiny muted">Initials = the nurse who logged the dose (hover a box for name and time): <b>SR</b> Sister Rekha · <b>BJ</b> Brother Joseph · <b>SA</b> Sister Anita${isWard()?` · today's taps are stamped <b>${hesc(signer())}</b>`:''}. Prototype: boxes for 24 Oct to 1 Nov are demo data.</div>
+    <div class="pad small muted" style="padding-top:0">The live Med Adherence tab shows patient app data; it pauses during the stay (no phone) and picks up again after discharge.</div></section>`;
 }
 const SUGAR=[['23 Oct',104,168,192,146],['22 Oct',98,154,176,138],['21 Oct',110,172,184,150],['20 Oct',96,148,162,132]];
 const SUGAR_BY=['Brother Joseph (day) · Sister Rekha (night)','Sister Anita (day) · Sister Rekha (night)','Brother Joseph (day) · Sister Rekha (night)','Sister Anita (day) · Sister Rekha (night)'];
