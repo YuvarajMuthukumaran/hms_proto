@@ -1,0 +1,6 @@
+{
+  "name": "tulasi-clinical-portal",
+  "private": true,
+  "description": "Tulasi Clinical Portal prototype + WhatsApp bridge (Vercel functions -> OpenWA)",
+  "engines": { "node": ">=20" }
+}
