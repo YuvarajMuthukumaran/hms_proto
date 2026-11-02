@@ -1,0 +1,5 @@
+{
+  "functions": {
+    "api/scribe.js": { "maxDuration": 60 }
+  }
+}
