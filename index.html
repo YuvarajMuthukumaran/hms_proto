@@ -6485,17 +6485,19 @@ async function waDSend(kind,id,btn){if(!waCfg().token){waCfgModal();return;}
     waD()[kind+':'+id]={at:clock(),by:signer(),group:r.groupName,created:r.created};if(kind==='dn')S.familySent=true;render();
     toast(`${r.created?`Group "${r.groupName}" created and update sent`:`Sent to group "${r.groupName}"`} on WhatsApp from Tulasi's number`);}
   catch(e){waBusy(btn,false);toast(e.message);}}
-function waDBlock(kind,id){
-  const s=waD()[kind+':'+id],w=waDWarn(kind,id);
-  return `<div class="wa-side" style="position:static">${w?`<div class="wa-warn">${hesc(w)}</div>`:''}<div class="wa-pv">${waFmt(waDText(kind,id))}</div>
-    <div class="wa-acts"><button class="btn wa-copy" onclick="waCopy(waDText('${kind}','${id}'),'Copied. Paste it in the family WhatsApp chat.')">Copy for WhatsApp</button><button class="btn pri" ${s?'disabled':''} onclick="waDSend('${kind}','${id}',this)">${s?'Sent':'Send to UHID group'}</button>${s?`<span class="wa-log">Sent ${s.at} · by ${hesc(s.by)} · group ${hesc(s.group||'')}${s.created?' (created)':''}</span>`:''}</div>
+function waDBlock(kind,id,draft){
+  const s=waD()[kind+':'+id],w=waDWarn(kind,id),uhid=(allPts().find(x=>x.id===id)||{}).uhid||'';
+  return `<div class="wa-side" style="position:static">${draft?`<div class="wa-warn">Draft preview. Save the note first, then send it to the patient's WhatsApp group (UHID ${hesc(uhid)}).</div>`:''}${w?`<div class="wa-warn">${hesc(w)}</div>`:''}<div class="wa-pv">${waFmt(waDText(kind,id))}</div>
+    <div class="wa-acts"><button class="btn wa-copy" ${draft?'disabled':''} onclick="waCopy(waDText('${kind}','${id}'),'Copied. Paste it in the family WhatsApp chat.')">Copy for WhatsApp</button><button class="btn pri" ${s||draft?'disabled':''} onclick="waDSend('${kind}','${id}',this)">${s?'Sent':'Send to UHID group'}</button>${s?`<span class="wa-log">Sent ${s.at} · by ${hesc(s.by)} · group ${hesc(s.group||'')}${s.created?' (created)':''}</span>`:''}</div>
     <button class="lnk tiny" style="align-self:flex-start" onclick="waCfgModal()">WhatsApp connection settings</button></div>`;
 }
 const __waPd0=pDaily;pDaily=function(){const h=__waPd0();if(!isPsych())return h;
   const k=h.indexOf('<h3>Family update');if(k<0)return h;const e=h.indexOf('</section>',k);if(e<0)return h;
-  const card=`<section class="card"><div class="hd"><div><h3>WhatsApp progress update ${chip('Family group','c-green')}</h3><div class="small muted" style="margin-top:4px">Built from your saved note in the format families already get on WhatsApp.</div></div></div>
-    <div class="pad">${S.dailySaved?waDBlock('dn','neel'):'<div class="small muted">Save the note first. The WhatsApp message is built from it.</div>'}</div></section>`;
+  const card=`<section class="card" id="waDCard"><div class="hd"><div><h3>WhatsApp progress update ${chip('Family group','c-green')}</h3><div class="small muted" style="margin-top:4px">Built from your note in the format families already get on WhatsApp. Sent to the patient's UHID group from Tulasi's number.</div></div></div>
+    <div class="pad">${waDBlock('dn','neel',!S.dailySaved)}</div></section>`;
   return h.slice(0,e+10)+card+h.slice(e+10);};
+/* after saving the daily note, bring the WhatsApp card into view */
+const __psySaveWa=psySave;psySave=function(kind,id){__psySaveWa(kind,id);if(kind==='dn'&&S.dailySaved)setTimeout(()=>{const c=$('waDCard');if(c&&c.scrollIntoView)c.scrollIntoView({block:'start',behavior:'smooth'});},120);};
 const __waEod0=psyEodPage;psyEodPage=function(){const h=__waEod0(),sv=PSY_EOD().filter(p=>(S.eod[p.id]||{}).saved);if(!sv.length)return h;
   const n=sv.filter(p=>waD()['eod:'+p.id]).length;
   return h+`<section class="card"><div class="hd"><div><h3>WhatsApp progress updates ${chip(n+' of '+sv.length+' sent','c-green')}</h3><div class="small muted" style="margin-top:4px">One message per saved note, for that patient's family group.</div></div></div>
