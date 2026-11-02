@@ -1275,7 +1275,7 @@ function renderSide(route){
     ${nav('#/existing/Dashboard',icon.dash,'Dashboard',false)}
     ${nav('#/existing/All Patients',icon.users,'All Patients',false)}
     ${nav('#/myday',icon.bed,'Inpatients',inIpd,'<span class="newtag">NEW</span>')}
-    ${inIpd?sub('#/myday','Inpatient dashboard','myday')+(isWard()?'':sub('#/rounds','Rounds','rounds'))+(((isPsy()&&!isLead())||isPsych())?sub('#/notes','Daily notes','notes'):'')+(S.role!=='nurse'?sub('#/nursing','Nursing chart','nursing'):'')+(S.role==='rmo'?sub('#/handover','Handover','handover'):'')+sub('#/inpatients',isLead()?'Floor inpatients':isWard()?'Ward inpatients':'My inpatients','inpatients')+(['lead','psychiatrist','psychologist'].includes(S.role)?sub('#/clinical-docs','Clinical documentation','clinical-docs'):'')+V3.subs(sec):''}
+    ${inIpd?sub('#/myday','Inpatient dashboard','myday')+(isWard()?'':sub('#/rounds','Rounds','rounds'))+(((isPsy()&&!isLead())||isPsych())?sub('#/notes','Daily notes','notes'):'')+(S.role!=='nurse'&&S.role!=='psychologist'?sub('#/nursing','Nursing chart','nursing'):'')+(S.role==='rmo'?sub('#/handover','Handover','handover'):'')+sub('#/inpatients',isLead()?'Floor inpatients':isWard()?'Ward inpatients':'My inpatients','inpatients')+(['lead','psychiatrist','psychologist'].includes(S.role)?sub('#/clinical-docs','Clinical documentation','clinical-docs'):'')+V3.subs(sec):''}
     ${S.role==='rmo'?'':nav('#/existing/My Calendar',icon.cal,'My Calendar',false)}
     ${S.role==='rmo'?'':nav('#/existing/Schedule',icon.clock,'Schedule',false)}
     ${nav('#/existing/Messages',icon.msg,'Messages',false)}
@@ -3047,7 +3047,7 @@ function nbFloorCards(rows,rowFn){
 }
 function vNurseDay(){
   $('title').textContent='Inpatients';
-  const rmoV=S.role==='rmo',rows=(rmoV?rmoPts().map(r=>r.p):PTS.slice()).sort((a,b)=>(b.risk?1:0)-(a.risk?1:0));
+  const rmoV=chartLikeRmo(),rows=(rmoV?rmoPts().map(r=>r.p):PTS.slice()).sort((a,b)=>(b.risk?1:0)-(a.risk?1:0));
   const wl=rmoV?(rmoEffFloor()==='All floors'?FLOORS.length+' floors':rmoEffFloor()):'Male ward';
   const NL=lst('nurse');
   const obsN=rows.filter(p=>/^(1:1|Every 15)/.test(EX[p.id][0])).length,obs11=rows.filter(p=>EX[p.id][0].startsWith('1:1')).map(p=>p.name);
@@ -3168,7 +3168,7 @@ function render(){
   if(r[0]==='timeline'){window.__histNav=true;location.replace('#/patient/neel/overview');return;}
   if(r[0]!=='patient')window.__histNav=false;
   V3.pre();if(S.role==='rmo')rmoInit();rmoLocBar();scaleBar();
-  if(V3.deny(r)||(r[0]==='handover'&&S.role!=='rmo')||(r[0]==='patient'&&S.role==='rmo'&&!inScope(r[1]))||(isWard()&&(r[0]==='rounds'||r[0]==='notes'))||(r[0]==='notes'&&!((isPsy()&&!isLead())||isPsych()))){go('#/myday');return;}
+  if(V3.deny(r)||(r[0]==='nursing'&&S.role==='psychologist')||(r[0]==='handover'&&S.role!=='rmo')||(r[0]==='patient'&&S.role==='rmo'&&!inScope(r[1]))||(isWard()&&(r[0]==='rounds'||r[0]==='notes'))||(r[0]==='notes'&&!((isPsy()&&!isLead())||isPsych()))){go('#/myday');return;}
   $('app').classList.toggle('compact', r[0]==='patient'||r[0]==='rounds'||r[0]==='notes');
   renderSide(r);
   let html='';
@@ -3478,7 +3478,7 @@ function dietSave(){
 function vNurseView(){
   let h=vNurseDay();
   if(S.role!=='nurse'){$('title').textContent='Nursing chart';
-    if(S.role==='rmo')h=floorTabs()+h;
+    if(chartLikeRmo())h=floorTabs()+h;
     h=h.replace('Shift board','Nursing chart').replace(' · Sister Rekha · ',' · ')
        .replace(`<button class="btn soft" onclick="nHandoverModal()">Handover note</button><button class="btn pri" onclick="toast('Starts the 2 pm medicine round, patient by patient')">Start 2 pm medicine round</button>`,S.role==='psychologist'?'':`<button class="btn pri" onclick="addMedModal()">Add medication</button>`);}
   return h;
@@ -3952,7 +3952,9 @@ const wardOf=pid=>FLOORS.find(k=>WARDS[k].some(p=>p.id===pid))||'Male ward';
 const psyOfP=p=>PSYOF[p.id]||WARD_PSY[wardOf(p.id)]||'Dr. Aanya Sharma';
 const allPts=()=>FLOORS.flatMap(k=>WARDS[k]);
 /* two RMOs on duty: each sees only the floor they are on duty at */
-const locFloors=()=>(!S.rmoLoc||S.rmoLoc==='All floors')?FLOORS:[S.rmoLoc];
+const locFloors=()=>(S.role!=='rmo'||!S.rmoLoc||S.rmoLoc==='All floors')?FLOORS:[S.rmoLoc];
+/* psychiatrist and floor lead see the nursing chart the way the RMO does: every floor, floor tabs, ward care */
+function chartLikeRmo(){return ['rmo','psychiatrist','lead'].includes(S.role);}
 const scopePts=()=>locFloors().flatMap(k=>WARDS[k]);
 const inScope=pid=>scopePts().some(p=>p.id===pid);
 const rmoPts=()=>{const fl=locFloors(),f=fl.includes(S.rmoFloor)?[S.rmoFloor]:fl;return f.flatMap(k=>WARDS[k].map(p=>({p,k})));};
@@ -4486,7 +4488,7 @@ V3.timeline = pid => {
 };
 
 /* ---------- routing, sidebar, access ---------- */
-V3.ROUTES = { floor:['lead'], ward:['nurse'], duty:['rmo'], escalation:['lead','nurse','rmo','psychiatrist'], timeline:['lead','nurse','rmo','psychiatrist','psychologist'], permissions:['lead','nurse','rmo','psychiatrist'] };
+V3.ROUTES = { floor:['lead'], ward:['nurse','rmo','psychiatrist','lead'], duty:['rmo'], escalation:['lead','nurse','rmo','psychiatrist'], timeline:['lead','nurse','rmo','psychiatrist','psychologist'], permissions:['lead','nurse','rmo','psychiatrist'] };
 V3.deny = r => { const k=r[0]; return !!V3.ROUTES[k] && !V3.ROUTES[k].includes(S.role); };
 V3.isV3 = k => !!V3.ROUTES[k];
 V3.route = r => {
@@ -5351,7 +5353,7 @@ V3.wardPage = tab => { $('title').textContent = 'Ward care'; const B = V3.wardBa
   if(!T.some(x=>x[0]===tab)) tab = 'charts';
   const body = {charts:V3.pCharts, vitals:V3.pVitals, prn:V3.pPrn, moves:V3.pMoves, admission:V3.pAdmission, handover:V3.pHandover}[tab]();
   return V3.head('Ward care', 'Day shift 8 am to 8 pm · Male ward · '+V3.who.nurse, `<button class="btn" onclick="go('#/myday')">Shift board</button>`) + V3.nurseAlertsStrip() + V3.tabs('ward',T,tab) + body; };
-V3.wardHome = () => { if(S.role!=='nurse' && S.role!=='rmo') return ''; const B = V3.wardBadges(), s = v3(), ids = new Set(V3.scope().map(p=>p.id));
+V3.wardHome = () => { if(S.role!=='nurse' && !chartLikeRmo()) return ''; const B = V3.wardBadges(), s = v3(), ids = new Set(V3.scope().map(p=>p.id));
   const T = [['charts','Shift charts','sleep, food, mood',B.charts,'pulse'],['vitals','Vitals','with safe ranges',B.vitals,'heart'],['prn','SOS and PRN','effect checks',B.prn,'pill'],['moves','Movement','who is off the ward',B.moves,'walk'],['admission','Admission','risk and belongings',B.admission,'shield'],['handover','Handover','carried over',B.handover,'users']];
   const carry = s.ho.prev ? s.ho.prev.items.filter((it,i)=>!(s.ho.carriedDone||{})[i]) : [];
   return `<section class="card"><div class="hd"><div><h3>Ward care</h3><div class="small muted" style="margin-top:4px">Doctor instructions now appear as boxes on the board. These cover everything else on the shift.</div></div></div><div class="v3tiles">${T.map(t=>`<button class="v3tile" onclick="go('#/ward/${t[0]}')"><span class="v3tile-i">${V3.i(t[4],18)}</span><span class="v3tile-t"><b>${t[1]}</b><span class="tiny muted">${t[2]}</span></span>${t[3]?`<span class="n ${t[0]==='vitals'?'crit':'amber'}">${t[3]}</span>`:''}</button>`).join('')}</div>${carry.length?`<div class="pad" style="border-top:1px solid var(--line-2)"><div class="lbl" style="margin-bottom:6px">Carried over from last night · ${carry.length}</div>${carry.map(it=>`<div class="small" style="margin-top:4px"><strong>${hesc(V3.pn(it.pid))}</strong> · ${hesc(it.k)}</div>`).join('')}</div>`:''}</section>${V3.nurseAlertsStrip()}`; };
