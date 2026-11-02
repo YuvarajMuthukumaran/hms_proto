@@ -280,7 +280,7 @@ button.mc{cursor:pointer}
 .tpadd{border:1px solid #9ec1f7;color:var(--blue-ink);background:#fff;border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .dpact{display:flex;flex-direction:column;gap:10px}
 .byl{display:block;font-size:11.5px;font-weight:400;color:var(--muted,#667085);line-height:1.35;margin-top:2px}
-.smt td{vertical-align:top}.smt td.when,.smt td:nth-child(2),.smt td:nth-child(4),.smt td:nth-child(6){white-space:nowrap}.smt td.why{min-width:160px}
+.smt td{vertical-align:top}.smt td.when,.smt td:nth-child(2),.smt td:nth-child(4),.smt td:nth-child(6){white-space:nowrap}.smt td.why{min-width:160px}.smt td.doses{white-space:nowrap;line-height:1.5}
 .trhist{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px}
 .trhist summary{cursor:pointer}
 .tritem{display:flex;flex-direction:column;gap:4px;padding:10px 0 2px;border-top:1px solid var(--line-2);margin-top:8px}
@@ -1154,7 +1154,7 @@ const S = {
     {name:'Lorazepam 1 mg', freq:'SOS', time:'As needed', range:'18 Oct to 24 Oct', by:'Dr. Sameer Khan', at:'18 Oct 2026, 11:55 pm'}
   ],
   medsOff: [
-    {name:'Olanzapine 5 mg', freq:'0-0-1', time:'After food', range:'18 Oct to 18 Oct', by:'Dr. Aanya Sharma', at:'18 Oct 2026, 11:20 am', offBy:'Dr. Aanya Sharma', offAt:'18 Oct 2026, 11:40 am', why:'Dose increased to 10 mg'}
+    {name:'Olanzapine 5 mg', freq:'0-0-1', time:'After food', range:'18 Oct to 18 Oct', by:'Dr. Aanya Sharma', at:'18 Oct 2026, 11:20 am', offBy:'Dr. Aanya Sharma', offAt:'18 Oct 2026, 11:40 am', why:'Dose increased to 10 mg', doses:[]}
   ],
   consents: [
     {name:'Admission consent and letter of undertaking', who:'Family', st:'Signed 18 Oct 2026, 11:05 am by Ananya Bose (sister) · taken by Meena Arora, front desk · witness Sister Rekha', c:'c-green'},
@@ -2154,18 +2154,32 @@ function rxSave(){
   });
   const n=(S.rx||[]).length;S.rx=[];render();toast(n+' order'+(n>1?'s':'')+' saved. Prescription PDF updated in Prescriptions.');
 }
-/* stopped medicines: one row each, newest stop first; nothing struck through */
-function stoppedMedsTable(){const L=S.medsOff||[];if(!L.length)return '';
-  const by=n=>hesc(String(n||'Not recorded'));
-  return `<div class="pad" style="padding-bottom:6px"><div class="lbl">Stopped medicines this stay · ${L.length}</div></div>
-    <div class="scroll"><table class="t smt"><thead><tr><th>Medicine</th><th>Freq.</th><th>Started on</th><th>Started by</th><th>Stopped on</th><th>Stopped by</th><th>Reason</th></tr></thead><tbody>
-    ${L.map(m=>`<tr><td style="font-weight:600">${hesc(m.name)}</td><td>${hesc(m.freq)}</td><td class="when small">${hesc(m.at||'Not recorded')}</td><td class="small">${by(m.by)}</td><td class="when small">${hesc(m.offAt||'')}</td><td class="small">${by(m.offBy)}</td><td class="why small">${hesc(m.why||'Not given')}</td></tr>`).join('')}
+/* medication history: every medicine this stay, one row each, nothing struck through.
+   Doses taken come from the nurses' dose chart (MAR); a stopped medicine keeps the list it had when stopped. */
+const MAR_SLOTS=f=>f==='1-0-1'?['M','N']:f==='0-0-1'?['N']:f==='1-0-0'?['M']:f==='1-1-1'?['M','A','N']:['SOS'];
+const MAR_TIME={M:'8 am',A:'2 pm',N:'9 pm',SOS:''};
+const MON3='JanFebMarAprMayJunJulAugSepOctNovDec';
+const marDay=lbl=>{if(lbl==='Today'){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate());}const [dd,mm]=lbl.split(' ');return new Date(2026,MON3.indexOf(mm)/3,+dd);};
+const atDay=at=>{const m=String(at||'').match(/(\d{1,2}) ([A-Z][a-z]{2})(?: (\d{4}))?/);return m?new Date(+(m[3]||2026),MON3.indexOf(m[2])/3,+m[1]):null;};
+function medDoseDates(m){
+  if(m.doses)return m.doses;
+  const act=S.meds.filter(x=>!x.name.includes('waiting')),mi=act.indexOf(m);if(mi<0)return [];
+  const sd=atDay(m.at),out=[];
+  [...DAYS6,'Today'].forEach((lbl,di)=>{if(sd&&marDay(lbl)<sd)return;const g=MAR_SLOTS(m.freq).filter(k=>marCell(mi,di,k)==='G');
+    if(g.length){const d=lbl==='Today'?new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}):lbl;const tm=g.map(k=>MAR_TIME[k]).filter(Boolean);out.push(d+(tm.length?' ('+tm.join(', ')+')':''));}});
+  return out;}
+function medHistoryTable(){
+  const rows=S.meds.map(m=>({m,on:true})).concat((S.medsOff||[]).map(m=>({m,on:false})));if(!rows.length)return '';
+  const when=(at,by)=>`<div>${hesc(at||'Not recorded')}</div><div class="tiny muted">${hesc(by||'Doctor not recorded')}</div>`;
+  return `<div class="pad" style="padding-bottom:6px"><div class="lbl">Medication history this stay · ${S.meds.length} ongoing · ${(S.medsOff||[]).length} stopped</div></div>
+    <div class="scroll"><table class="t smt"><thead><tr><th>Medicine and dose</th><th>Frequency</th><th>Start date and time</th><th>Doses taken</th><th>Stopped date and time</th><th>Reason</th></tr></thead><tbody>
+    ${rows.map(({m,on})=>{const ds=medDoseDates(m);return `<tr><td style="font-weight:600">${hesc(m.name)}</td><td>${hesc(m.freq)}${m.time?`<div class="tiny muted">${hesc(m.time)}</div>`:''}</td><td class="when small">${when(m.at,m.by)}</td><td class="small doses">${ds.length?ds.map(hesc).join('<br>'):'<span class="muted">None given</span>'}${ds.length?`<div class="tiny muted">${ds.length} day${ds.length===1?'':'s'}</div>`:''}</td><td class="when small">${on?'<span class="muted">Ongoing</span>':when(m.offAt,m.offBy)}</td><td class="why small">${on?'<span class="muted">—</span>':hesc(m.why||'Not given')}</td></tr>`;}).join('')}
     </tbody></table></div>`;}
 function medStopModal(i){const m=S.meds[i];openModal(`<div class="mh"><h3>Stop ${hesc(m.name)}</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
  <div class="mb"><div class="small muted">Started by ${m.by||'not recorded'}${m.at?' · '+m.at:''}. It stays on the chart as stopped, with your name and the time.</div>
  <label class="field"><span class="lbl">Reason</span><select class="input" id="msW"><option>Dose change (new order follows)</option><option>Side effects</option><option>Not effective</option><option>Course complete</option><option>Patient or family refused</option><option>Other</option></select></label></div>
  <div class="mf"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="rxStopMed(${i},$('msW').value)">Stop medicine</button></div>`);}
-function rxStopMed(i,why){const m=S.meds.splice(i,1)[0],w=whoAt();S.medsOff=S.medsOff||[];S.medsOff.unshift({...m,offBy:w.by,offAt:w.at,why});closeModal();render();toast(`${m.name} stopped by ${w.by}. Moved to Stopped medicines; nurses no longer give it.`);}
+function rxStopMed(i,why){const doses=medDoseDates(S.meds[i]),m=S.meds.splice(i,1)[0],w=whoAt();m.doses=doses;S.medsOff=S.medsOff||[];S.medsOff.unshift({...m,offBy:w.by,offAt:w.at,why});closeModal();render();toast(`${m.name} stopped by ${w.by}. Moved to Stopped medicines; nurses no longer give it.`);}
 function pOrders(){
   const rx=S.rx||[];
   const draft = rx.map((r,i)=>`<div class="rxrow">
@@ -2192,7 +2206,7 @@ function pOrders(){
     <div class="scroll"><table class="t"><thead><tr><th>Medicine</th><th>Freq.</th><th>Time</th><th>Duration</th><th>Prescribed by</th>${isPsy()?'<th></th>':''}</tr></thead><tbody>
       ${S.meds.map((m,i)=>`<tr><td><b>${m.name}</b></td><td>${m.freq}</td><td>${m.time}</td><td>${m.range}</td><td class="small">${m.by?`${m.by}<span class="byl">${m.at||''}</span>`:'Not recorded'}</td>${isPsy()?`<td style="text-align:right"><button class="btn sm" onclick="medStopModal(${i})">Stop</button></td>`:''}</tr>`).join('')}
     </tbody></table></div>
-    ${stoppedMedsTable()}
+    ${medHistoryTable()}
     <div class="pad tiny muted" style="padding-top:8px">Medicines are never edited. A dose change is a stop plus a new order, so the chart keeps who started and stopped each one, and when.</div>
     ${isPsy()?`<div style="padding:14px 20px 18px;border-top:1px solid var(--line-2)">
       <div class="lbl" style="margin-bottom:8px">Add medicines</div>
@@ -2452,7 +2466,7 @@ function marCard(){
     <div class="row tiny" style="gap:10px"><span class="row" style="gap:4px"><span class="mc mg sm">✓</span>Given</span><span class="row" style="gap:4px"><span class="mc mr sm">R</span>Refused</span><span class="row" style="gap:4px"><span class="mc mh sm">H</span>Held</span></div></div>
     <div class="scroll"><table class="mar"><thead><tr><th>Medicine</th><th>Time</th>${D.map((d,i)=>`<th class="${i===6?'martoday':''}">${d}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
     <div class="pad tiny muted" style="padding-bottom:0">Initials in each box = the nurse who gave the dose, with the round time: <b>SR</b> Sister Rekha · <b>BJ</b> Brother Joseph · <b>SA</b> Sister Anita${isWard()?` · today's taps are stamped <b>${hesc(signer())}</b>`:''}.</div>
-    ${stoppedMedsTable()}
+    ${medHistoryTable()}
     <div class="pad small muted">The live Med Adherence tab shows patient app data; it pauses during the stay (no phone) and picks up again after discharge.</div></section>`;
 }
 const SUGAR=[['23 Oct',104,168,192,146],['22 Oct',98,154,176,138],['21 Oct',110,172,184,150],['20 Oct',96,148,162,132]];
