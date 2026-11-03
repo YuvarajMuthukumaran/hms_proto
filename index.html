@@ -6478,7 +6478,7 @@ function cdfAuto(label,p,ep){
  if(/diagnosis/.test(l)&&!/final|discharge|change|subsequent|differential/.test(l))return p.dx||'';
  if(/psychologist/.test(l))return S.role==='psychologist'?who:'';
  if(/(consultant|psychiatrist|treating doctor|doctor in charge|name of doctor)/.test(l))return ['lead','psychiatrist'].includes(S.role)?who:'';
- if(/^(i|i mr|i mrs|i mr mrs|mr mrs|mr mrs ms|i the undersigned mr mrs ms|name|name of patient|name of the patient|patient name|patient's name|patients name|pt name)$/.test(l))return p.name;
+ if(/^(i|i mr|i mrs|i mr mrs|mr mrs|mr mrs ms|i mr mrs ms|i the undersigned mr mrs ms|name|name of patient|name of the patient|patient name|patient's name|patients name|pt name)$/.test(l.replace(/\s*[\/,]\s*/g,' ').replace(/\s+/g,' ')))return p.name;
  if(/^(aged|age)$/.test(l))return String(p.age);
  return '';
 }
