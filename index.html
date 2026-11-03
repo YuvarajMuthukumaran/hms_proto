@@ -6886,11 +6886,15 @@ vPatient=function(sub){
   return p?ptProfileGen(p,sub):__pp_vp(sub);
 };
 /* History menu: opens the profile of the patient last opened or seen in Rounds */
+let ptJumpHist=false;
 const __pp_render=render;
 render=function(){
   const r=(location.hash||'').slice(2).split('/');
-  if(r[0]==='patient'&&!r[1]){const id=S.focusPid&&ptFind(S.focusPid)?S.focusPid:'neel';location.replace('#/patient/'+id+'/overview');return;}
-  return __pp_render();
+  if(r[0]==='patient'&&!r[1]){const id=S.focusPid&&ptFind(S.focusPid)?S.focusPid:'neel';ptJumpHist=true;location.replace('#/patient/'+id+'/overview');return;}
+  const out=__pp_render();
+  /* land on the stay tabs and Stay timeline (the detailed history view), not the top of the profile */
+  if(ptJumpHist&&r[0]==='patient'){ptJumpHist=false;setTimeout(()=>{const el=document.querySelector('#view nav.tabs')||document.querySelector('#view .subtabs');if(el)window.scrollTo({top:el.getBoundingClientRect().top+scrollY-90});},60);}
+  return out;
 };
 </script>
 </body></html>
