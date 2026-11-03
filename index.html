@@ -7452,7 +7452,7 @@ function dtFilter(){const q=(($('dtQ')||{}).value||'').toLowerCase(),f=S.dtF||'a
 const DT_IC={people:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21 20c0-2.6-1.6-4.8-4-5.6"></path></svg>',
   warn:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l9 16H3z"></path><path d="M12 10v4.5M12 17.2v.1"></path></svg>'};
 const dtPill=(cls,ic,label,n,f)=>`<button class="task-summary-pill ${cls}" onclick="dtSet('${f}')" aria-pressed="${(S.dtF||'all')===f}" style="${(S.dtF||'all')===f?'box-shadow:0 0 0 2px currentColor':''}"><span class="task-pill-icon">${ic}</span><span>${label}</span><b>${n}</b></button>`;
-function dtSet(f){S.dtF=f;render();}
+function dtSet(f){S.dtF=(S.dtF||'all')===f?'all':f;render();}
 /* the role's earlier dashboard, drawn once per render: source of its summary cards and its full task rows */
 function dtBaseHtml(cfg){if(cfg._h===undefined){try{cfg._h=cfg.base?cfg.base():'';}catch(e){cfg._h='';}}return cfg._h;}
 /* every task row of the earlier Tasks card, as it was (detail lines, assignee, status chip, all buttons), grouped by patient */
@@ -7484,7 +7484,7 @@ function dtKeep(cfg){
 function dashTable(cfg){
   $('title').textContent='Inpatients';
   const T=tasks().filter(t=>!S.done[t.id]&&t.taskType!=='alert'&&t.taskType!=='countersign');
-  const old=dtOldRows(cfg,T);
+  const old=cfg.simple?null:dtOldRows(cfg,T);
   const rows=cfg.pts.map(p=>dtRow(p,cfg.items(p,T),cfg,old)).sort((a,b)=>a.rank-b.rank);
   const need=rows.filter(r=>r.rank<2).length;
   const other=T.filter(t=>!cfg.pts.some(p=>dtTitle(t).includes(p.name)));
@@ -7493,14 +7493,16 @@ function dashTable(cfg){
   setTimeout(dtFilter,0);
   const lateN=rows.filter(r=>/data-late="1"/.test(r.html)).length; /* patients with an overdue task */
   const newN=cfg.pts.filter(p=>p.day<=1).length;
+  const otherTasks=cfg.simple?'':(old&&old.other.length?`<div style="padding:10px 20px;border-bottom:1px solid var(--line-2,#eef1f5)"><div class="small muted" style="margin-bottom:4px">Also today</div><div class="dt-tasks">${old.other.map(o=>o.html).join('')}</div></div>`:other.length?`<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;padding:10px 20px;border-bottom:1px solid var(--line-2,#eef1f5)"><span class="small muted">Also today</span>${other.map(t=>`<button class="tog" onclick="${t.go?`go('${t.go}')`:`go('${cfg.otherGo||'#/myday'}')`}">${hesc(dtTitle(t))}${t.due?' · '+hesc(t.due):''}</button>`).join('')}</div>`:'');
+  const taskSummary=cfg.simple?'':`<section class="card" id="dashTasks"><div class="hd"><div class="row" style="gap:10px;flex-wrap:wrap"><h3>Tasks</h3>${dtPill('patients',DT_IC.people,'My inpatients',cfg.pts.length,'all')}${dtPill('admit',DT_IC.people,'New admission',newN,'new')}${dtPill('overdue',DT_IC.warn,'Overdue tasks',lateN,'late')}</div></div></section>`;
   return `<div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h2>Inpatient dashboard</h2><div class="muted" style="margin-top:4px">${day} · ${cfg.pts.length} patient${cfg.pts.length===1?'':'s'} · ${need} need${need===1?'s':''} you now</div></div><div class="row" style="gap:8px;flex-wrap:wrap">${cfg.btns||''}</div></div>
-  <section class="card" id="dashTasks"><div class="hd"><div class="row" style="gap:10px;flex-wrap:wrap"><h3>Tasks</h3>${dtPill('patients',DT_IC.people,'My inpatients',cfg.pts.length,'all')}${dtPill('admit',DT_IC.people,'New admission',newN,'new')}${dtPill('overdue',DT_IC.warn,'Overdue tasks',lateN,'late')}</div></div></section>
-  ${dtKeep(cfg)}
+  ${taskSummary}
+  ${cfg.simple?'':dtKeep(cfg)}
   <section class="card ptable">
     <div class="hd" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-      <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><h3>Patients</h3></div>
+      <div class="row" style="gap:12px;flex-wrap:wrap;align-items:center"><div><h3>Patients</h3>${cfg.simple?`<div class="tiny muted">${cfg.pts.length} assigned</div>`:''}</div>${cfg.simple?`<div class="row" style="gap:8px;flex-wrap:wrap">${dtPill('admit',DT_IC.people,'New admission',newN,'new')}${dtPill('overdue',DT_IC.warn,'Overdue',lateN,'late')}</div>`:''}</div>
       <input class="input" id="dtQ" style="width:240px;min-height:38px;margin:0" placeholder="Search name or room" oninput="dtFilter()" aria-label="Search patients"></div>
-    ${old&&old.other.length?`<div style="padding:10px 20px;border-bottom:1px solid var(--line-2,#eef1f5)"><div class="small muted" style="margin-bottom:4px">Also today</div><div class="dt-tasks">${old.other.map(o=>o.html).join('')}</div></div>`:other.length?`<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;padding:10px 20px;border-bottom:1px solid var(--line-2,#eef1f5)"><span class="small muted">Also today</span>${other.map(t=>`<button class="tog" onclick="${t.go?`go('${t.go}')`:`go('${cfg.otherGo||'#/myday'}')`}">${hesc(dtTitle(t))}${t.due?' · '+hesc(t.due):''}</button>`).join('')}</div>`:''}
+    ${otherTasks}
     <div class="scroll"><table class="t pt" style="table-layout:fixed;width:100%;min-width:760px"><colgroup><col style="width:13%"><col style="width:8%"><col style="width:12%">${cfg.team?'<col style="width:12%">':''}<col style="width:9%"><col><col style="width:110px"></colgroup><thead><tr><th>Patient</th><th>Room</th><th>Diagnosis</th>${cfg.team?'<th>Psychiatrist</th>':''}<th>Observation</th><th>Due today</th><th></th></tr></thead>
     <tbody id="dtBody">${rows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="${cfg.team?7:6}" class="pad small muted">No patient matches</td></tr></tbody></table></div></section>`;
 }
@@ -7706,14 +7708,14 @@ Object.assign(ROLE.psychiatrist,{
   vPatient:ptVPatient,
   render:ptHistRender,
   /* Dashboard (4 Nov): one table of my inpatients with alerts, countersigns and tasks, urgent first */
-  myday:b=>dashTable({base:b,pts:PTS,items:(p,T)=>[...DT.alerts(p),...DT.orders(p),...DT.tasks(p,T)],btns:`<button class="btn pri" onclick="go('#/rounds')">Start rounds</button>`})
+  myday:b=>dashTable({simple:true,pts:PTS,items:(p,T)=>[...DT.alerts(p),...DT.orders(p),...DT.tasks(p,T)],btns:`<button class="btn pri" onclick="go('#/rounds')">Start rounds</button>`})
 });
 </script>
 <script id="role-psychologist-js">
 /* Psychologist only. Dashboard (4 Nov): one table of my patients with today's daily note and tasks. */
 Object.assign(ROLE.psychologist,{
   myday:b=>{const L=PSY_EOD(),d=L.filter(p=>((S.eod||{})[p.id]||{}).saved).length;
-    return dashTable({base:b,pts:L,tab:'therapy',otherGo:'#/notes',items:(p,T)=>[...DT.tasks(p,T),...DT.dailyNote(p)],btns:`<button class="btn pri" onclick="go('#/notes')">✎ Add daily notes <span class="fcount">${d}/${L.length}</span></button>`});}
+    return dashTable({simple:true,pts:L,tab:'therapy',items:(p,T)=>DT.tasks(p,T),btns:`<button class="btn pri" onclick="go('#/notes')">✎ Daily notes <span class="fcount">${d}/${L.length}</span></button>`});}
 });
 </script>
 <script id="role-nurse-js">
