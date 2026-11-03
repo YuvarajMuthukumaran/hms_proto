@@ -7429,10 +7429,10 @@ function dtRow(p,items,cfg){
   const sx=p.sex||(PT_FILL[p.id]||[])[0]||'',ag=p.age||(PT_FILL[p.id]||[])[1]||'';
   return {rank,html:`<tr data-dt="${hesc((p.name+' '+p.room).toLowerCase())}" data-need="${rank<2?1:0}" ${rank===0?'style="background:#fff7f6"':''}>
     <td><button class="lnk" style="font-weight:700;font-size:14px;text-align:left;white-space:nowrap" onclick="go('#/patient/${p.id}/${tab}')">${hesc(p.name)}</button><div class="tiny muted">${sx?sx+'/'+ag+' · ':''}Day ${p.day}${p.risk?' · <b style="color:var(--red)">High risk</b>':''}</div></td>
-    <td class="small" style="white-space:nowrap">${hesc(p.room)}</td>
+    <td class="small" style="overflow-wrap:anywhere">${hesc(p.room)}</td>
     <td class="small">${hesc(p.dx)}</td>
     ${cfg.team?`<td class="small">${hesc((V3.eff&&V3.eff('psy',p.id))||(PSYOF||{})[p.id]||'Unassigned')}</td>`:''}
-    <td class="small" style="white-space:nowrap">${hesc(dtObs(p))}</td>
+    <td class="small" style="overflow-wrap:anywhere">${hesc(dtObs(p))}</td>
     <td>${items.length?items.slice(0,3).map(line).join('')+(items.length>3?`<button class="lnk tiny" onclick="go('#/patient/${p.id}/${tab}')">+${items.length-3} more</button>`:''):'<span class="small muted">Nothing due</span>'}</td>
     <td><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">${act?`<button class="btn sm pri" style="white-space:nowrap" onclick="${act.btn[1]}">${act.btn[0]}</button>`:''}<button class="btn sm" onclick="go('#/patient/${p.id}/${tab}')">Open</button></div></td></tr>`};
 }
