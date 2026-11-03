@@ -3281,7 +3281,7 @@ function accountModal(){
   const m = me();
   openModal(`<div class="mh"><h3>Viewing as</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
   <div class="mb"><div class="row" style="gap:12px;flex-wrap:nowrap">${av(m.ini,48)}<div><div style="font-weight:700;font-size:16px">${m.name}</div><div class="muted small">${m.title}</div></div></div>
-  <div class="callout grey small">Switch role from the View as bar at the top. Each role shows only its own screens. Advice from rounds reaches the nurse shift board, and events nursing reports reach the doctors, while this page stays open.</div>
+  <div class="callout grey small">To switch role, log out from the account menu and pick another role on the login page. Each role shows only its own screens. Advice from rounds reaches the nurse shift board, and events nursing reports reach the doctors, while this page stays open.</div>
   <button class="lnk" onclick="__resetDemo()">Reset demo data to the starting state</button></div>
   <div class="mf"><button class="btn pri" onclick="closeModal()">Close</button></div>`);
 }
@@ -6400,6 +6400,10 @@ const cdBaseRender=render;render=function(){const route=(location.hash||'').slic
 if((location.hash||'').slice(2).split('/')[0]==='clinical-docs')render();
 
 </script>
+<style id="no-view-as-bar-css">
+/* Prototype View as bar removed (3 Nov 2026): roles are picked on the login page */
+.proto{display:none!important}
+</style>
 <style id="cd-fill-css">
 /* Clinical documentation: fillable original pages */
 .cdf-scroll{background:#e4e7ec;display:flex;flex-direction:column;align-items:center;gap:18px;padding:18px;overflow:auto}
