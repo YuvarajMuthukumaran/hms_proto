@@ -2456,9 +2456,9 @@ function vChartsCard(){const VC=S.vc||{sys:[138,134,130,128,126,124],dia:[88,86,
   </div></section>`;
 }
 const MAR_ST={};
-function marCell(mi,d,k){const key=mi+'-'+d+'-'+k;if(MAR_ST[key])return MAR_ST[key];if(d===6)return '';if(k==='SOS')return d<2?'G':'';if(mi===1&&d===2)return 'R';if(mi===0&&d===0&&k==='M')return 'H';return 'G';}
+function marCell(mi,d,k){const key=(S.pid||'neel')+':'+mi+'-'+d+'-'+k;if(MAR_ST[key])return MAR_ST[key];if(d===6)return '';if(k==='SOS')return d<2?'G':'';if(mi===1&&d===2)return 'R';if(mi===0&&d===0&&k==='M')return 'H';return 'G';}
 const MAR_WHO={};
-function marTap(mi,k){const key=mi+'-6-'+k;const c=MAR_ST[key]||'';MAR_ST[key]=c===''?'G':c==='G'?'R':c==='R'?'H':'';
+function marTap(mi,k){const key=(S.pid||'neel')+':'+mi+'-6-'+k;const c=MAR_ST[key]||'';MAR_ST[key]=c===''?'G':c==='G'?'R':c==='R'?'H':'';
   if(MAR_ST[key]){const m=__me0();MAR_WHO[key]={ini:m.ini||ini(m.name),by:m.name,at:clock()};}else delete MAR_WHO[key];render();}
 function medChartModal(){const nm=location.hash.includes('rounds')?(()=>{const R=S.rounds,WP=WARDS[R.ward];return WP[Math.min(R.idx[R.ward],WP.length-1)].name})():'Neel Bose';
   openModal(`<div class="mh"><h3>Medication chart · ${nm}</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div><div class="mb" style="padding:0">${marCard().replace('<section class="card">','<section>')}</div>`);$('modal').style.width='min(1400px,100%)';}
@@ -2479,7 +2479,7 @@ function marStat(m,day,k,di,isToday){
   if(sp&&slot>sp)return {st:'off'};
   if(m.snap&&m.snap[di+'|'+k])return m.snap[di+'|'+k];
   const act=S.meds.filter(x=>!x.name.includes('waiting')),mi=act.indexOf(m);
-  if(isToday){if(mi<0)return {st:''};const key=mi+'-6-'+k,w=MAR_WHO[key];return {st:MAR_ST[key]||'',ini:w?w.ini:'',by:w?w.by:'',at:w?w.at:''};}
+  if(isToday){if(mi<0)return {st:''};const key=(S.pid||'neel')+':'+mi+'-6-'+k,w=MAR_WHO[key];return {st:MAR_ST[key]||'',ini:w?w.ini:'',by:w?w.by:'',at:w?w.at:''};}
   const lbl=marDLab(day),d6=DAYS6.indexOf(lbl),ini=k==='N'?'SR':(day.getDate()%2?'BJ':'SA');
   let s;
   if(d6>=0&&mi>=0)s=marCell(mi,d6,k);
@@ -3932,7 +3932,7 @@ function psyStep(kind,id,i){const s=PSY_SECS[i],open=psyOpenIdx(kind,id)===i,st=
   const qs=s.ks.filter(k=>k!=='evl'||psyGet(kind,id,'evy')==='Something happened');
   return `<div class="pn-step ${open?'open':''} ${st.done?'ok':''}" id="pnS-${i}"><button type="button" class="pn-h" id="pnH-${i}" aria-expanded="${open}" onclick="psyGo('${kind}','${id}',${i})">${psyHeadIn(kind,id,i)}</button>${open?`<div class="pn-body">${qs.map(k=>psyQ(kind,id,k)).join('')}${nxt?`<div class="pn-nx"><button type="button" class="btn ${st.done?'pri':''}" onclick="psyGo('${kind}','${id}',${i+1},1)">Next: ${nxt.t} →</button></div>`:''}</div>`:''}</div>`;}
 function psyStart(kind,id){const rec=S.psyRec===psyCtx(kind,id);
-  const y=kind==='dn'?DN_PSY.ytxt:'Yesterday ('+S.team.psych+'): 6 to 7 h sleep, all meals, calmer, calm on the ward, group therapy.';
+  const y=kind==='dn'?DN_PSY.ytxt:(id!=='neel'&&typeof ptCtxOf==='function'?ptCtxOf(id).dnY:'Yesterday ('+S.team.psych+'): 6 to 7 h sleep, all meals, calmer, calm on the ward, group therapy.');
   return `<div class="pn-start"><span class="t">Start from</span><button type="button" class="btn sm" onclick="psyFill('${kind}','${id}','usual')">Usual day</button><button type="button" class="btn sm" onclick="psyFill('${kind}','${id}','yday')">Same as yesterday</button><button type="button" class="btn sm" ${rec?'disabled':''} onclick="psyDictate('${kind}','${id}')">${rec?'<span class="rec"><i></i>Listening…</span>':icon.mic+' Dictate'}</button><div class="y">${hesc(y)} Only blank answers are filled, so nothing you chose is replaced.</div></div>`;}
 function psySide(kind,id){const miss=psyMiss(kind,id),tot=psyReq(kind,id).length,n=tot-miss.length,fl=psyFlags(kind,id);
   return `<div class="pn-card"><div class="row" style="justify-content:space-between;gap:8px"><div><div class="pn-lb">Progress</div><div style="font-size:20px;font-weight:700;line-height:1.3">${n} of ${tot} answered</div></div>${miss.length?'':chip('Ready','c-green')}</div>
@@ -3964,9 +3964,9 @@ function psyGo(kind,id,i,scroll){const c=psyCtx(kind,id);S.psyPin=S.psyPin||{};S
   if(scroll){const el=$('pnS-'+i);if(el&&el.scrollIntoView)el.scrollIntoView({block:'start',behavior:'smooth'});}}
 function psyJump(kind,id,k){S.psyPin=S.psyPin||{};S.psyPin[psyCtx(kind,id)]=PSY_SECS.findIndex(s=>s.ks.includes(k));psyRepaint(kind,id);
   const el=$('q-'+k);if(el&&el.scrollIntoView)el.scrollIntoView({block:'center',behavior:'smooth'});}
-function psyYday(kind){return kind==='dn'?{sleep:'Under 4 h',meals:'Partial',care:'Needs prompting',bl:'Normal',bw:'Normal',mood:'Irritable',beh:'Restless',part:'Attended, quiet',sessions:['Yoga'],fam:['None today'],evy:'None today'}
+function psyYday(kind,id){if(id&&id!=='neel'&&typeof ptCtxOf==='function'&&ptCtxOf(id).ydayAns)return ptCtxOf(id).ydayAns;return kind==='dn'?{sleep:'Under 4 h',meals:'Partial',care:'Needs prompting',bl:'Normal',bw:'Normal',mood:'Irritable',beh:'Restless',part:'Attended, quiet',sessions:['Yoga'],fam:['None today'],evy:'None today'}
   :{sleep:'6 to 7 h',meals:'All meals',care:'Independent',bl:'Normal',bw:'Normal',mood:'Calmer',beh:'Calm',part:'Active',sessions:['Group therapy'],fam:['None today'],evy:'None today'};}
-function psyFill(kind,id,mode){const src=mode==='usual'?PSY_USUAL:psyYday(kind);let n=0;
+function psyFill(kind,id,mode){const src=mode==='usual'?PSY_USUAL:psyYday(kind,id);let n=0;
   Object.keys(src).forEach(k=>{if(psyEmpty(psyGet(kind,id,k))){psySet(kind,id,k,Array.isArray(src[k])?src[k].slice():src[k]);n++;}});
   if(S.psyPin)delete S.psyPin[psyCtx(kind,id)];psyRepaint(kind,id);
   toast(n?(mode==='usual'?'Usual day filled into '+n+' blank answers. Change what is different.':'Yesterday copied into '+n+' blank answers. Change what is different.'):'Nothing blank to fill. Your answers are kept.');}
@@ -6978,7 +6978,7 @@ vNurseView=function(){
   return `<div><h2 style="font-size:26px">Nursing chart</h2><div class="muted" style="margin-top:4px">Medicines given, refused or held, as logged by the nurses at each round. Pick a patient.</div></div>
     ${floorTabs()}
     <div class="row" style="gap:8px;flex-wrap:wrap">${pts.map(pill).join('')}</div>
-    ${sel.id==='neel'?marCard():`<section class="card pad"><h3>${hesc(sel.name)}</h3><div class="small muted" style="margin-top:6px">Prototype: only Neel Bose has a medicine chart filled in.</div></section>`}`;
+    ${ptRun(sel.id,marCard)}`;
 };
 </script>
 <script id="wa-one-click-js">
@@ -7298,7 +7298,12 @@ function ptMakeCtx(p){
   c.dnHist=Array.from({length:Math.min(4,p.day)},(_,i)=>{const d=ptDay(i+1),round=i===1;return round
     ?{d:String(d.getDate()),my:'Oct 2026',type:'Round note',tc:'c-violet',by:psy,role:'Psychiatrist',sum:'Reviewed on round; '+set.meds[0][0]+' continued',secs:[['Findings',ptPick(f2,p.id,'r'+i)+'.'],['Medicine changes',set.meds[0][0]+' continued; review tomorrow.'],['Actions',set.labs[0]+'; '+(set.session?set.session.toLowerCase():'workup')+'.']]}
     :{d:String(d.getDate()),my:d.getMonth()===9?'Oct 2026':'Sep 2026',type:'Daily note',tc:'c-blue',by:who,role:psych?'Psychologist':'Psychiatrist',sum:ptPick(f2,p.id,'d'+i)}});
-  c.dnY=p.day?'Yesterday (Day '+(p.day-1)+', '+who+'): '+ptPick(f2,p.id,'y').toLowerCase()+'.':'Admitted today: no note yet.';
+  const yk=ptPick([0,1,2,3],p.id,'y');
+  c.ydayAns=[{sleep:'6 to 7 h',meals:'All meals',care:'Independent',bl:'Normal',bw:'Normal',mood:'Calmer',beh:'Calm',part:'Active',sessions:['Group therapy'],fam:['None today'],evy:'None today'},
+    {sleep:'4 to 6 h',meals:'Partial',care:'Needs prompting',bl:'Normal',bw:'Normal',mood:'Irritable',beh:'Restless',part:'Attended, quiet',sessions:['Individual session'],fam:['None today'],evy:'None today'},
+    {sleep:'4 to 6 h',meals:'Partial',care:'Needs prompting',bl:'Normal',bw:'Normal',mood:'Low',beh:'Withdrawn',part:'Attended, quiet',sessions:['Yoga'],fam:['Phone call'],evy:'None today'},
+    {sleep:'6 to 7 h',meals:'All meals',care:'Independent',bl:'Normal',bw:'Normal',mood:'Calmer',beh:'Calm',part:'Active',sessions:['Group therapy','Yoga'],fam:['Visit'],evy:'None today'}][yk];
+  c.dnY=p.day?'Yesterday (Day '+(p.day-1)+', '+who+'): '+f2[yk].toLowerCase()+'.':'Admitted today: no note yet.';
   c.ident=id;c.otherRel=other[0];
   return c;
 }
@@ -7321,6 +7326,8 @@ function ptSwaps(){
     ['Room 214 · Bed A',p.room],['6A60.0 · ICD-11',set.icd+' · ICD-11'],['18 Oct, 11:20',ptD(id.adm)+', 11:20'],['24 Oct, 16:40',ptD(id.adm)+', 16:40'],
     ["Day 6 of stay","Day "+p.day+" of stay"],['day 6 of 30','day '+p.day+' of 30'],['+91 98XXX XXX21',id.phone],
     ['Ananya Bose (Sister)',id.nr+' ('+id.rel+')'],['Ananya Bose (sister)',id.nr+' ('+id.rel.toLowerCase()+')'],['Ananya Bose, sister',id.nr+', '+id.rel.toLowerCase()],
+    ['Calmer today, sleep improved, engaging in groups. Pressured speech at times. Plan: increase olanzapine, check lithium level.',(c.dnHist&&c.dnHist[0]?c.dnHist[0].sum:'Seen on round')+'. Plan: continue '+(c.meds&&c.meds[0]?c.meds[0].name:'current medicines')+'; '+set.labs[0].toLowerCase()+'.'],
+    ['Serum lithium level tomorrow morning',set.labs[0]+' tomorrow morning'],
     ['Ananya Bose',id.nr],['Ananya',id.nrFirst],['Rakesh Bose',(PT_CTX[S.pid]||{}).otherRel||id.nr],['Neel Bose',p.name],['Neel',id.first],['NB · ',id.ini+' · ']
   ];
 }
@@ -7381,6 +7388,15 @@ const __pc_ipd=ipdPage;
 ipdPage=function(o){if(o&&o.go){const g=o.go;o=Object.assign({},o,{go:p=>String(g(p)).split('#/patient/neel/').join('#/patient/'+p.id+'/')});}return __pc_ipd(o);};
 /* the psychiatrist's earlier stand-in profile is no longer needed: every patient has full records */
 ptVPatient=function(sub,base){return base(sub);};
+
+/* Screens that step through several patients (Rounds, Nursing chart, doctor's medicine chart, Daily notes):
+   draw each patient from their own records. ptRun leaves that patient's records active, so taps and saves land on them. */
+function ptCtxOf(pid){return pid===S.pid?S:(PT_CTX[pid]||(PT_CTX[pid]=ptMakeCtx(ptFind(pid))));}
+function ptRun(pid,fn){ptUse(pid);return ptPersonal(fn());}
+const __pc_rounds=vRounds;
+vRounds=function(){const R=S.rounds,WP=WARDS[R.ward],p=WP[Math.min(R.idx[R.ward],WP.length-1)];return p?ptRun(p.id,()=>__pc_rounds.apply(this,arguments)):__pc_rounds.apply(this,arguments);};
+const __pc_nv=vNurseView;
+vNurseView=function(){const id=(S.role==='psychiatrist'||S.role==='lead')?'':S.nFocus;return id&&ptFind(id)?ptRun(id,()=>__pc_nv.apply(this,arguments)):__pc_nv.apply(this,arguments);};
 </script>
 <script id="roles-js">
 /* One block per role (Yuvaraj, 3 Nov): a change asked for one role goes in that role's block below and never touches the others.
