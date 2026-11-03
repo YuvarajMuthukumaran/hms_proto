@@ -7443,7 +7443,7 @@ function dtFilter(){const q=(($('dtQ')||{}).value||'').toLowerCase(),f=S.dtF||'a
 const DT_IC={people:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21 20c0-2.6-1.6-4.8-4-5.6"></path></svg>',
   warn:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l9 16H3z"></path><path d="M12 10v4.5M12 17.2v.1"></path></svg>'};
 const dtPill=(cls,ic,label,n,f)=>`<button class="task-summary-pill ${cls}" onclick="dtSet('${f}')" aria-pressed="${(S.dtF||'all')===f}" style="${(S.dtF||'all')===f?'box-shadow:0 0 0 2px currentColor':''}"><span class="task-pill-icon">${ic}</span><span>${label}</span><b>${n}</b></button>`;
-function dtSet(f){S.dtF=f;render();setTimeout(()=>{const t=document.querySelector('.ptable');t&&t.scrollIntoView({behavior:'smooth',block:'start'})},50);}
+function dtSet(f){S.dtF=f;render();}
 /* the role's own summary cards from its earlier dashboard (counts and boards that are not about one patient), kept as they were */
 function dtKeep(cfg){
   if(!cfg.base||!cfg.keep)return '';
@@ -7464,14 +7464,14 @@ function dashTable(cfg){
   const day=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
   const tog=(on,l,f)=>`<button class="tog ${on?'on':''}" onclick="${f}">${l}</button>`;
   setTimeout(dtFilter,0);
-  const lateN=T.filter(t=>t.late).length;
+  const lateN=rows.filter(r=>/data-late="1"/.test(r.html)).length; /* patients with an overdue task */
   const newN=cfg.pts.filter(p=>p.day<=1).length;
   return `<div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h2>Inpatient dashboard</h2><div class="muted" style="margin-top:4px">${day} · ${cfg.pts.length} patient${cfg.pts.length===1?'':'s'} · ${need} need${need===1?'s':''} you now</div></div><div class="row" style="gap:8px;flex-wrap:wrap">${cfg.btns||''}</div></div>
   <section class="card" id="dashTasks"><div class="hd"><div class="row" style="gap:10px;flex-wrap:wrap"><h3>Tasks</h3>${dtPill('patients',DT_IC.people,'My inpatients',cfg.pts.length,'all')}${dtPill('admit',DT_IC.people,'New admission',newN,'new')}${dtPill('overdue',DT_IC.warn,'Overdue tasks',lateN,'late')}</div></div></section>
   ${dtKeep(cfg)}
   <section class="card ptable">
     <div class="hd" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-      <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><h3>Patients</h3>${[['all','All',rows.length],['new','New admission',newN],['late','Overdue',rows.filter(r=>/data-late="1"/.test(r.html)).length],['need','Needs you now',need]].map(([k,l,n])=>tog((S.dtF||'all')===k,l+' · '+n,`S.dtF='${k}';render()`)).join('')}</div>
+      <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><h3>Patients</h3></div>
       <input class="input" id="dtQ" style="width:240px;min-height:38px;margin:0" placeholder="Search name or room" oninput="dtFilter()" aria-label="Search patients"></div>
     ${other.length?`<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;padding:10px 20px;border-bottom:1px solid var(--line-2,#eef1f5)"><span class="small muted">Also today</span>${other.map(t=>`<button class="tog" onclick="${t.go?`go('${t.go}')`:`go('${cfg.otherGo||'#/myday'}')`}">${hesc(dtTitle(t))}${t.due?' · '+hesc(t.due):''}</button>`).join('')}</div>`:''}
     <div class="scroll"><table class="t pt" style="table-layout:fixed;width:100%;min-width:760px"><colgroup><col style="width:15%"><col style="width:10%"><col style="width:14%">${cfg.team?'<col style="width:12%">':''}<col style="width:10%"><col><col style="width:150px"></colgroup><thead><tr><th>Patient</th><th>Room</th><th>Diagnosis</th>${cfg.team?'<th>Psychiatrist</th>':''}<th>Observation</th><th>Due today</th><th></th></tr></thead>
@@ -7622,6 +7622,34 @@ if(typeof cdLog==='function'){const __sb_cdlog=cdLog;cdLog=function(pid,formId,a
 })();
 /* a patient's records created in this browser count as already saved until someone changes them */
 const __sb_mk=ptMakeCtx;ptMakeCtx=function(p){const c=__sb_mk.apply(this,arguments);if(SB.ready)Object.keys(SB_KIND_KEYS).forEach(k=>{const key=p.id+'|'+k;if(SB.saved[key]===undefined)SB.saved[key]=sbJ(Object.fromEntries(SB_KIND_KEYS[k].map(x=>[x,c[x]])));});return c;};
+</script>
+<script id="ux-fixes-js">
+/* Small shared fixes (3 Nov 2026, Yuvaraj).
+   1. Pressing a button or switching tabs on the same page (or the same patient) keeps your place instead of jumping
+      to the top; opening a different page starts at the top. Several screens scroll to the top after drawing, some of
+      them a moment later, so the wanted position is applied after the redraw and again just after.
+   2. Escalation chain shows only where each open alert is now ("How an alert travels" and "Response times" removed). */
+let __ux_last='',__ux_y=window.scrollY;
+/* last position the user scrolled to; another hash-change handler resets the page before the redraw, so read this, not scrollY */
+window.addEventListener('scroll',()=>{__ux_y=window.scrollY;},{passive:true});
+/* and the position at the moment of a click, before anything reacts to it */
+let __ux_cy=0,__ux_ct=0;document.addEventListener('click',()=>{__ux_cy=window.scrollY;__ux_ct=Date.now();},true);
+const __ux_key=h=>{const r=(h||'').slice(2).split('/');if(r[0]==='patient')return r[0]+'/'+r[1];if(r[0]==='rounds'&&S.rounds)return 'rounds/'+S.rounds.ward+'/'+S.rounds.idx[S.rounds.ward];return r[0];};
+const __ux_render=render;
+render=function(){
+  const k=__ux_key(location.hash),same=k===__ux_last,y=Date.now()-__ux_ct<1500?__ux_cy:__ux_y;
+  const out=__ux_render.apply(this,arguments);
+  __ux_last=k;
+  const put=()=>{const t=same?y:0;if(window.scrollY!==t)window.scrollTo({top:t,behavior:'instant'});};
+  put();requestAnimationFrame(put);setTimeout(put,120);
+  return out;
+};
+const __ux_esc=V3.escPage;
+V3.escPage=function(){
+  const d=document.createElement('div');d.innerHTML=__ux_esc.apply(this,arguments);
+  [...d.querySelectorAll('section.card, .card')].forEach(c=>{const t=(c.querySelector('h3')||{}).textContent||'';if(/^(How an alert travels|Response times)/.test(t.trim()))c.remove();});
+  return d.innerHTML;
+};
 </script>
 <script id="roles-js">
 /* One block per role (Yuvaraj, 3 Nov): a change asked for one role goes in that role's block below and never touches the others.
