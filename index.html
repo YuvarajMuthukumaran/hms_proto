@@ -288,7 +288,7 @@ button.mc{cursor:pointer}
 .mar4 .mmed{position:sticky;left:0;z-index:3;width:240px;min-width:240px;max-width:240px;text-align:left;vertical-align:top;padding:10px 12px}
 .mar4 .mtime{position:sticky;left:240px;z-index:3;width:58px;min-width:58px;max-width:58px;font-size:12px;color:var(--muted,#667085);white-space:nowrap;box-shadow:4px 0 6px -4px rgba(15,23,42,.18)}
 .mar4 thead .mmed,.mar4 thead .mtime{z-index:4;background:var(--soft,#f7f9fc)}
-.mar4 .mday{width:46px;min-width:46px;max-width:46px}.mar4 .mmon{text-align:left;padding-left:8px;font-size:11.5px;color:var(--ink,#101828)}
+.mar4 .mday{width:46px;min-width:46px;max-width:46px}.mar4 .mmon{text-align:left;padding-left:8px;font-size:11.5px;color:var(--ink,#101828)}.mar4 .mmon span{position:sticky;left:306px;padding-right:6px;white-space:nowrap}
 .mar4 .mtoday{background:#eef4ff}.mar4 thead .mtoday{color:#1849a9}
 .mar4 tr.mlast td{border-bottom:1px solid var(--line,#e4e7ec)}
 .mar4 .mc{width:34px;height:30px;font-size:12.5px;border-radius:7px}.mar4 .mc span{font-size:8px;opacity:.75}
@@ -2512,7 +2512,7 @@ function marCard(){
   return `<section class="card mchart"><div class="hd"><div><h3>Medicine chart</h3><div class="small muted" style="margin-top:4px">${isWard()?'Tap today\'s box at each round: ✓ given, then R refused, then H held.':'Every medicine this stay, from Day 1 to today.'} Scroll sideways for earlier days; the medicine column stays in place.</div></div>
     <div class="row" style="gap:8px"><button class="btn sm" onclick="marJump(0)">‹ Day 1</button><button class="btn sm" onclick="marJump(1)">Today ›</button></div></div>
     <div class="scroll mscroll" id="marScroll"><table class="mar4"><thead>
-      <tr><th class="mmed" rowspan="2">Medicine</th><th class="mtime" rowspan="2">Time</th>${months.map(([l,n])=>`<th class="mmon" colspan="${n}">${l}</th>`).join('')}</tr>
+      <tr><th class="mmed" rowspan="2">Medicine</th><th class="mtime" rowspan="2">Time</th>${months.map(([l,n])=>`<th class="mmon" colspan="${n}"><span>${l}</span></th>`).join('')}</tr>
       <tr>${days.map((d,i)=>`<th class="mday${i===ti?' mtoday':''}" title="Day ${i+1} · ${marDLab(d)}">${i===ti?'Today':d.getDate()}</th>`).join('')}</tr>
     </thead><tbody>${rows}</tbody></table></div>
     <div class="pad tiny muted mleg"><span><span class="mc mg sm">✓</span> Given</span><span><span class="mc mr sm">R</span> Refused</span><span><span class="mc mh sm">H</span> Held</span><span><i class="moff-key"></i> Stopped</span><span>Initials = nurse who logged it (hover for name and time): SR Sister Rekha · BJ Brother Joseph · SA Sister Anita</span><span>Prototype: 24 Oct to 1 Nov are demo data</span></div></section>`;
