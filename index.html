@@ -3232,7 +3232,7 @@ function render(){
   $('app').classList.toggle('compact', r[0]==='patient'||r[0]==='rounds'||r[0]==='notes');
   renderSide(r);
   let html='';
-  if(V3.isV3(r[0])) html=V3.route(r); else if(r[0]==='myday') html=S.role==='nurse'?vNurseDay():(S.role==='rmo'?vRmoDay():vMyDay());
+  if(V3.isV3(r[0])) html=V3.route(r); else if(r[0]==='myday') html=window.__roleMyDay?window.__roleMyDay():(S.role==='nurse'?vNurseDay():(S.role==='rmo'?vRmoDay():vMyDay()));
   else if(r[0]==='nursing'){nFocus(r[1]);html=vNurseView();}
   else if(r[0]==='handover') html=vHandover();
   else if(r[0]==='admissions') html=vNewAdm();
@@ -7099,7 +7099,7 @@ function ptVPatient(sub,base){
 function ptPickHist(){
   $('title').textContent='History';
   const pool=(S.role==='lead')?allPts():(S.role==='rmo'?scopePts():PTS);
-  const row=p=>`<button class="card" style="display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer" onclick="ptJumpHist=true;go('#/patient/${p.id}/overview')">
+  const row=p=>`<button class="card" style="display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer" onclick="ptJumpHist=true;window.__histNav=true;go('#/patient/${p.id}/overview')">
     <span class="avatar pav">${p.ini}</span>
     <span style="flex:1;min-width:0"><b>${p.name}</b>${p.risk?' <span class="small" style="color:var(--red);font-weight:600">· High risk</span>':''}<span class="tiny muted" style="display:block">${p.room} · Day ${p.day} · ${p.dx}</span></span>
     <span class="small muted">Open history ›</span></button>`;
@@ -7109,12 +7109,12 @@ let ptJumpHist=false;
 function ptHistRender(base){
   const r=(location.hash||'').slice(2).split('/');
   if(r[0]==='patient'&&!r[1]){
-    if(S.focusPid&&ptFind(S.focusPid)){ptJumpHist=true;location.replace('#/patient/'+S.focusPid+'/overview');return;}
-    renderSide(r);$('app').classList.remove('compact');$('view').innerHTML=ptPickHist();window.scrollTo(0,0);return;
+    if(S.focusPid&&ptFind(S.focusPid)){ptJumpHist=true;window.__histNav=true;location.replace('#/patient/'+S.focusPid+'/overview');return;}
+    window.__histNav=true;renderSide(r);$('app').classList.remove('compact');$('view').innerHTML=ptPickHist();window.scrollTo(0,0);return;
   }
   const out=base();
   /* land on the stay tabs and Stay timeline (the detailed history view), not the top of the profile */
-  if(ptJumpHist&&r[0]==='patient'){ptJumpHist=false;setTimeout(()=>{const el=document.querySelector('#view nav.tabs')||document.querySelector('#view .subtabs');if(el)window.scrollTo({top:el.getBoundingClientRect().top+scrollY-90});},60);}
+  if(ptJumpHist&&r[0]==='patient'){ptJumpHist=false;const land=()=>{const el=document.querySelector('#view nav.tabs')||document.querySelector('#view .subtabs');if(el)window.scrollTo({top:el.getBoundingClientRect().top+scrollY-90,behavior:'instant'});};setTimeout(land,60);setTimeout(land,260);}
   return out;
 }
 </script>
