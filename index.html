@@ -3228,7 +3228,7 @@ function nFocus(pid){
 function render(){
   const r=(location.hash||'#/myday').slice(2).split('/');
   if(r[0]!=='nursing'&&S.nFocus){S.nFocus=null;lst('nurse').q='';}
-  if(r[0]==='timeline'&&!r[1]){window.__histNav=true;location.replace('#/patient/neel/overview');return;}
+  if(r[0]==='timeline'&&!r[1]){window.__histNav=true;if(S.focusPid&&typeof ptFind==='function'&&ptFind(S.focusPid)){location.replace('#/patient/'+S.focusPid+'/overview');}else if(typeof ptPickHist==='function'){renderSide(r);$('app').classList.remove('compact');$('view').innerHTML=ptPickHist();}else{location.replace('#/patient/neel/overview');}return;}
   if(r[0]!=='patient')window.__histNav=false;
   V3.pre();if(S.role==='rmo')rmoInit();rmoLocBar();scaleBar();
   if(V3.deny(r)||(r[0]==='nursing'&&S.role==='psychologist')||(r[0]==='handover'&&S.role!=='rmo')||(r[0]==='patient'&&S.role==='rmo'&&!inScope(r[1]))||(isWard()&&(r[0]==='rounds'||r[0]==='notes'))||(r[0]==='notes'&&!((isPsy()&&!isLead())||isPsych()))){go('#/myday');return;}
@@ -7313,7 +7313,7 @@ function ptUse(pid){
   PT_CTX[S.pid]=Object.assign(PT_CTX[S.pid]||{},Object.fromEntries(PT_KEYS.map(k=>[k,S[k]])));
   const c=PT_CTX[pid]||(PT_CTX[pid]=ptMakeCtx(ptFind(pid)));
   PT_KEYS.forEach(k=>S[k]=c[k]);
-  S.pid=pid;S.focusPid=pid;S.evOpen=false;
+  S.pid=pid;S.evOpen=false;
 }
 const ptRoutePid=()=>{const r=(location.hash||'').slice(2).split('/');return r[0]==='patient'&&r[1]?r[1]:''};
 
@@ -7378,7 +7378,7 @@ pOverview=function(){
 
 /* Route: #/patient/<id>/<tab> shows that patient; other screens run on Neel's records as before */
 const __pc_vp=vPatient;
-vPatient=function(sub){ptUse(ptRoutePid()||'neel');return ptPersonal(__pc_vp(sub));};
+vPatient=function(sub){const id=ptRoutePid()||'neel';ptUse(id);S.focusPid=id;return ptPersonal(__pc_vp(sub));};
 const __pc_render=render;
 render=function(){if(!ptRoutePid())ptUse('neel');return __pc_render.apply(this,arguments);};
 const __pc_modal=openModal;openModal=function(h){return __pc_modal.call(this,ptPersonal(h));};
@@ -7394,7 +7394,7 @@ ptVPatient=function(sub,base){return base(sub);};
 function ptCtxOf(pid){return pid===S.pid?S:(PT_CTX[pid]||(PT_CTX[pid]=ptMakeCtx(ptFind(pid))));}
 function ptRun(pid,fn){ptUse(pid);return ptPersonal(fn());}
 const __pc_rounds=vRounds;
-vRounds=function(){const R=S.rounds,WP=WARDS[R.ward],p=WP[Math.min(R.idx[R.ward],WP.length-1)];return p?ptRun(p.id,()=>__pc_rounds.apply(this,arguments)):__pc_rounds.apply(this,arguments);};
+vRounds=function(){const R=S.rounds,WP=WARDS[R.ward],p=WP[Math.min(R.idx[R.ward],WP.length-1)];if(p)S.focusPid=p.id;return p?ptRun(p.id,()=>__pc_rounds.apply(this,arguments)):__pc_rounds.apply(this,arguments);};
 const __pc_nv=vNurseView;
 vNurseView=function(){const id=(S.role==='psychiatrist'||S.role==='lead')?'':S.nFocus;return id&&ptFind(id)?ptRun(id,()=>__pc_nv.apply(this,arguments)):__pc_nv.apply(this,arguments);};
 </script>
