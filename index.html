@@ -1,4 +1,5 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head>
+<link rel="icon" type="image/png" href="favicon.png"><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Tulasi Clinical Portal (Copy)</title><!-- RMO layout merge -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1184,7 +1185,7 @@ const S = {
   obs: 'Every 15 minutes', edd: '2026-11-02', eddShared: false, labs: [{t:'Serum lithium', d:'Tomorrow, 7:00', st:'Ordered', by:'Dr. Aanya Sharma', at:'23 Oct 2026, 10:40 am'}], restraints: [],
   obsBy: {by:'Dr. Aanya Sharma', at:'18 Oct 2026, 11:45 am'}, eddBy: {by:'Dr. Aanya Sharma', at:'24 Oct 2026, 10:15 am'},
   dischargeDrafted:false, draftBy:'', signer:'', discharged:false, dtype:'Planned', reassessDone:false,
-  rounds: {mc:[], adv:[], ward:'Male ward', idx:{'Male ward':4,'Female ward':1,'De-addiction ward':0}, listening:false, drafted:false},
+  rounds: {mc:[], adv:[], ward:'Male ward', idx:{'Male ward':0,'Female ward':0,'De-addiction ward':0}, listening:false, drafted:false},
   admNo: 2,
   events: [
     {id:1,when:'24 Oct, 2:10 am',type:'Fall',sev:'Minor',by:'Sister Rekha · nurse',duty:'Dr. Sameer Khan · duty doctor',detail:'Slipped on the way to the bathroom. No head injury, small bruise on left knee. Vitals stable; neuro checks every 2 hours till morning. Bed lowered, night light on.',ack:false},
@@ -1285,7 +1286,7 @@ function renderSide(route){
   const sub = (h,label,key)=>`<button class="sub ${sec===key?'on':''}" onclick="go('${h}')">${label}</button>`;
   const nav = (h,ic,label,on,extra)=>`<button class="nav ${on?'on':''}" onclick="go('${h}')" title="${label}" aria-label="${label}">${ic}<span class="tx">${label}</span>${extra||''}</button>`;
   $('side').innerHTML = `
-    <div class="brand"><div class="mark">TH</div><div class="tx" style="font-weight:700;font-size:15px">Tulasi Healthcare</div></div>
+    <div class="brand"><div class="mark" style="background:#fff;padding:2px"><img src="logo.png" alt="Tulasi Healthcare" style="width:100%;height:100%;object-fit:contain"></div><div class="tx" style="font-weight:700;font-size:15px">Tulasi Healthcare</div></div>
     <div class="lbl" style="padding:6px 14px">Main menu</div>
     ${nav('#/existing/Dashboard',icon.dash,'Dashboard',false)}
     ${nav('#/existing/All Patients',icon.users,'All Patients',false)}
@@ -1449,7 +1450,7 @@ function coNote(pid){const src=isPsych()?'psy':'psych';const n=CONOTE[src][pid];
   return `<div class="conote ${n[4]==='Higher'?'risk':''}"><div class="row" style="justify-content:space-between;gap:8px"><span class="tiny" style="font-weight:700;color:var(--violet)">Today from ${who}</span><span class="tiny muted">${n[0]}</span></div><div class="row" style="gap:5px;margin:5px 0">${[n[2],n[3],'Risk: '+n[4]].map(x=>`<span class="chip ${x==='Risk: Higher'?'c-red':'c-grey'}" style="font-size:11px">${x}</span>`).join('')}</div><div class="small" style="color:var(--ink-2)">${n[1]}</div><div class="tiny muted" style="margin-top:4px">View only</div></div>`;}
 function eodNotes(){
   const dnPtLabel=p=>p.name+'-'+String(p.room||'').replace(/^Room\s*/i,'');
-  S.eod=S.eod||{}; const L0=isPsych()?PTS.slice(0,5):PTS; const L=L0.slice().sort((a,b)=>(b.risk?1:0)-(a.risk?1:0));
+  S.eod=S.eod||{}; const L0=isPsych()?PTS.slice(0,5):PTS; const L=L0.slice(); /* ward order, first patient first (3 Nov) */
   const done=L.filter(p=>(S.eod[p.id]||{}).saved).length, pct=Math.round(done/L.length*100);
   const set=(id,k,v)=>`S.eod['${id}']=S.eod['${id}']||{};S.eod['${id}']['${k}']='${v}';render()`;
   const mseg=(id,k,opts)=>{const cur=(S.eod[id]||{})[k]||[];return `<div class="mini-chips">${opts.map(o=>`<button class="tog ${cur.includes(o)?'on':''}" style="height:28px;font-size:12px" onclick="S.eod['${id}']=S.eod['${id}']||{};const a=S.eod['${id}']['${k}']||[];S.eod['${id}']['${k}']=a.includes('${o}')?a.filter(x=>x!=='${o}'):a.concat('${o}');render()">${o}</button>`).join('')}</div>`;};
@@ -3980,7 +3981,7 @@ function psySave(kind,id){
   if(kind==='dn'){S.dn.line=psyGet('dn',id,'evy')==='Something happened'?psyGet('dn',id,'evl'):'None';saveDaily();toast('Note saved'+al+'. Family update drafted.');return;}
   const p=PTS.find(x=>x.id===id);S.eod[id].saved=true;S.eodI=0;render();toast('Daily note saved for '+p.name+al);
 }
-const PSY_EOD=()=>PTS.slice(0,5).sort((a,b)=>(b.risk?1:0)-(a.risk?1:0));
+const PSY_EOD=()=>PTS.slice(0,5); /* ward order, first patient first (3 Nov) */
 function psyEodEdit(id){S.eod[id].saved=false;const pend=PSY_EOD().filter(p=>!(S.eod[p.id]||{}).saved);S.eodI=Math.max(0,pend.findIndex(p=>p.id===id));render();}
 function psyEodPage(){
   S.eod=S.eod||{};const L=PSY_EOD();
@@ -7150,7 +7151,7 @@ function ptHistRender(base){
    Logged-in role is kept for this browser tab only; Log out is in the account popup (top right). */
 const LOGIN_KEY='tulasi-proto-login';
 const LOGIN_ROLES=[['lead','Floor lead','Whole floor, all wards and psychiatrists'],['psychiatrist','Psychiatrist','Your inpatients, rounds and orders'],['psychologist','Psychologist','Therapy, daily notes and family updates'],['nurse','Nurse','Ward care, vitals and medicine chart'],['rmo','RMO on duty','Duty desk, admissions and physical exams']];
-const loginMark=size=>`<svg width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="24" r="14" fill="#f3d6c8" stroke="#c0392b" stroke-width="1.5"/><path d="M22 22c3-6 17-6 20 0M22 27c4 3 16 3 20 0" stroke="#c0392b" stroke-width="1.5" fill="none"/><path d="M8 26c2 14 10 24 24 30C18 52 10 44 8 26zM56 26c-2 14-10 24-24 30 14-4 22-12 24-30z" fill="#2e3f9e"/><path d="M12 30c3 10 9 17 20 22-12-2-19-10-20-22zM52 30c-3 10-9 17-20 22 12-2 19-10 20-22z" fill="#4457c4"/></svg>`;
+const loginMark=size=>`<img src="logo.png" alt="Tulasi Healthcare" width="${size}" height="${size}" style="object-fit:contain;display:inline-block">`; /* Tulasi logo (3 Nov), logo.png next to the page */
 let loginPick='';
 function loginShow(){
   let el=document.getElementById('tlLogin');
@@ -7208,6 +7209,7 @@ const PT_KEYS=['dailySaved','familySent','scribeDaily','historyStatus','historyD
 const ptClone=o=>JSON.parse(JSON.stringify(o));
 const PT_CTX={neel:ptClone(Object.fromEntries(PT_KEYS.map(k=>[k,S[k]])))};
 S.pid='neel';
+S.hview='read'; /* Detailed history opens on Read view first (3 Nov) */
 const PT_TODAY=new Date(2026,9,24); // demo "today": Neel is on day 6, admitted 18 Oct
 const ptDay=n=>{const d=new Date(PT_TODAY);d.setDate(d.getDate()-n);return d};
 const ptD=d=>d.getDate()+' '+d.toLocaleString('en-GB',{month:'short'});
@@ -7309,7 +7311,7 @@ function ptUse(pid){
   PT_CTX[S.pid]=Object.assign(PT_CTX[S.pid]||{},Object.fromEntries(PT_KEYS.map(k=>[k,S[k]])));
   const c=PT_CTX[pid]||(PT_CTX[pid]=ptMakeCtx(ptFind(pid)));
   PT_KEYS.forEach(k=>S[k]=c[k]);
-  S.pid=pid;S.evOpen=false;
+  S.pid=pid;S.evOpen=false;S.hview='read';
 }
 const ptRoutePid=()=>{const r=(location.hash||'').slice(2).split('/');return r[0]==='patient'&&r[1]?r[1]:''};
 
@@ -7524,6 +7526,10 @@ if(RL_LOCK){
   document.title='Tulasi · '+rlName(RL_LOCK);
   setTimeout(render,0); /* after roles-js has set up the role hooks */
 }
+/* Log out goes straight to the main address (role picker), from every role link (3 Nov) */
+loginOut=function(){try{sessionStorage.removeItem(LOGIN_KEY);}catch(e){}
+  const local=location.protocol==='file:'||/\.html?$/i.test(location.pathname);
+  location.href=local?location.origin+location.pathname:location.origin+'/';};
 </script>
 <script id="supa-js">
 /* Supabase backend (4 Nov 2026). The portal keeps working in the browser as before; when /api/config returns a Supabase
