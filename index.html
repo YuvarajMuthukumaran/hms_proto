@@ -6456,7 +6456,7 @@ const WA_CFG_KEY='tulasiWaBridge';
   history.replaceState(null,'',location.pathname+'#/myday');setTimeout(()=>{try{render();}catch(e){}toast('This browser is connected. AI scribe and WhatsApp are ready.');},300);})();
 /* Hosted (e.g. on Vercel): the bridge is this site's own /api. Opened from disk or localhost: the local bridge. */
 const WA_DEF_URL=(/^https?:$/.test(location.protocol)&&!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))?location.origin+'/api':'http://127.0.0.1:3790';
-function waCfg(){let c={};try{c=JSON.parse(localStorage.getItem(WA_CFG_KEY)||'{}')||{};}catch(e){}return {url:c.url||WA_DEF_URL,token:c.token||''};}
+function waCfg(){let c={};try{c=JSON.parse(localStorage.getItem(WA_CFG_KEY)||'{}')||{};}catch(e){}return {url:c.url||WA_DEF_URL,token:c.token||(WA_DEF_URL.endsWith('/api')?'site':'')};} /* hosted: no token needed, the API accepts the portal's own pages (owner's decision, 3 Nov 2026) */
 function waCfgModal(after){const c=waCfg();openModal(`<div class="mh"><h3>Connect this browser</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
  <div class="mb"><div class="small muted">One time per browser. This turns on the AI scribe and WhatsApp sending. Easiest: open the setup link the admin sent you. Or paste the connection token below; it is saved in this browser only.</div>
  <label class="field"><span class="lbl">Bridge address</span><input class="input" id="waU" value="${hesc(c.url)}"></label>

@@ -1,11 +1,11 @@
 // AI scribe: recorded conversation -> transcript (Groq Whisper) -> draft for the clinician (Groq gpt-oss-120b).
-// Two ways to call it, both with X-Bridge-Token:
+// Two ways to call it (from the portal's own pages, or with X-Bridge-Token from anywhere else):
 //   1. Round note: POST raw audio (audio/webm, audio/mp4, audio/wav). Query: patient, dx, meds ("|" separated).
 //   2. Any form:   POST multipart/form-data with audio (file), schema (JSON: {form, context, fields:[{key,label,type,options}]}).
 //      type is "one", "many" or "text"; answers are checked against the options before they are returned.
 // Nothing is stored here: the draft goes back to the clinician, who reviews it before anything enters the record.
 'use strict';
-const { env } = require('../lib/wa');
+const { env, authorized } = require('../lib/wa');
 const { SYSTEM, userMsg, FORM_SYSTEM, formMsg } = require('../lib/scribe-prompt');
 
 const MAX_BYTES = 4 * 1024 * 1024; // Vercel's request body limit is 4.5 MB; about 20 minutes at the portal's 24 kbps
@@ -66,8 +66,7 @@ module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   const send = (s, j) => res.status(s).json(j);
   if (req.method !== 'POST') return send(405, { ok: false, error: 'Use POST' });
-  const tok = env('BRIDGE_TOKEN');
-  if (!tok || req.headers['x-bridge-token'] !== tok) return send(401, { ok: false, error: 'Wrong or missing bridge token' });
+  if (!authorized(req)) return send(401, { ok: false, error: 'Wrong or missing bridge token' });
   if (!env('GROQ_API_KEY')) return send(500, { ok: false, error: 'Set GROQ_API_KEY in Vercel first' });
   try {
     const raw = await readBody(req);
