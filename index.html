@@ -7436,6 +7436,20 @@ function dtRow(p,items,cfg){
 function dtFilter(){const q=(($('dtQ')||{}).value||'').toLowerCase(),need=S.dtNeed;let n=0;
   document.querySelectorAll('#dtBody tr[data-dt]').forEach(r=>{const show=r.dataset.dt.includes(q)&&(!need||r.dataset.need==='1');r.style.display=show?'':'none';if(show)n++;});
   const e=$('dtNone');if(e)e.style.display=n?'none':'';}
+const DT_IC={people:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21 20c0-2.6-1.6-4.8-4-5.6"></path></svg>',
+  warn:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l9 16H3z"></path><path d="M12 10v4.5M12 17.2v.1"></path></svg>'};
+const dtPill=(cls,ic,label,n,on)=>`<button class="task-summary-pill ${cls}" onclick="${on}"><span class="task-pill-icon">${ic}</span><span>${label}</span><b>${n}</b></button>`;
+/* the role's own summary cards from its earlier dashboard (counts and boards that are not about one patient), kept as they were */
+function dtKeep(cfg){
+  if(!cfg.base||!cfg.keep)return '';
+  let h='';try{h=cfg.base();}catch(e){return '';}
+  const d=document.createElement('div');d.innerHTML=h;const out=[];
+  [...d.querySelectorAll('section.card, .card')].filter(c=>!c.parentElement.closest('.card')).forEach(c=>{
+    const t=(c.querySelector('h3')?.textContent||c.textContent).trim();
+    if(cfg.keep.some(k=>t.startsWith(k))){const grid=cfg.grid&&cfg.grid.some(k=>t.startsWith(k))?c.parentElement:c;if(!out.includes(grid))out.push(grid);}
+  });
+  return out.map(e=>e.outerHTML).join('');
+}
 function dashTable(cfg){
   $('title').textContent='Inpatients';
   const T=tasks().filter(t=>!S.done[t.id]&&t.taskType!=='alert'&&t.taskType!=='countersign');
@@ -7445,13 +7459,19 @@ function dashTable(cfg){
   const day=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
   const tog=(on,l,f)=>`<button class="tog ${on?'on':''}" onclick="${f}">${l}</button>`;
   setTimeout(dtFilter,0);
+  const lateN=T.filter(t=>t.late).length;
+  const newN=cfg.pts.filter(p=>p.day<=1).length;
   return `<div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h2>Inpatient dashboard</h2><div class="muted" style="margin-top:4px">${day} · ${cfg.pts.length} patient${cfg.pts.length===1?'':'s'} · ${need} need${need===1?'s':''} you now</div></div><div class="row" style="gap:8px;flex-wrap:wrap">${cfg.btns||''}</div></div>
+  <section class="card" id="dashTasks"><div class="hd"><div class="row" style="gap:10px;flex-wrap:wrap"><h3>Tasks</h3>${dtPill('patients',DT_IC.people,'My inpatients',cfg.pts.length,`go('#/inpatients')`)}${dtPill('admit',DT_IC.people,'New admission',newN,`go('#/admissions')`)}${dtPill('overdue',DT_IC.warn,'Overdue tasks',lateN,`S.dtNeed=true;render();setTimeout(()=>{const t=document.getElementById('dtBody');t&&t.scrollIntoView({behavior:'smooth',block:'start'})},50)`)}</div></div></section>
+  ${dtKeep(cfg)}
   ${other.length?`<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><span class="small muted">Also today:</span>${other.map(t=>`<button class="tog" onclick="${t.go?`go('${t.go}')`:`go('${cfg.otherGo||'#/myday'}')`}">${hesc(dtTitle(t))}${t.due?' · '+hesc(t.due):''}</button>`).join('')}</div>`:''}
   <section class="card ptable"><div class="ipbar"><div class="row" style="gap:8px;flex-wrap:wrap">${tog(!S.dtNeed,'All · '+rows.length,'S.dtNeed=false;render()')}${tog(S.dtNeed,'Needs you now · '+need,'S.dtNeed=true;render()')}</div>
     <input class="input" id="dtQ" style="max-width:260px;min-height:36px" placeholder="Search name or room" oninput="dtFilter()" aria-label="Search patients"></div>
     <div class="scroll"><table class="t pt"><thead><tr><th>Patient</th><th>Room</th><th>Diagnosis</th>${cfg.team?'<th>Psychiatrist</th>':''}<th>Observation</th><th>Due today</th><th></th></tr></thead>
     <tbody id="dtBody">${rows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="${cfg.team?7:6}" class="pad small muted">No patient matches</td></tr></tbody></table></div></section>`;
 }
+/* Dashboard and Inpatient dashboard are one page in this portal: the sidebar's Dashboard opens it */
+const __dt_render=render;render=function(){if((location.hash||'').startsWith('#/existing/Dashboard')){location.replace('#/myday');return;}return __dt_render.apply(this,arguments);};
 </script>
 <script id="role-links-js">
 /* One link per role (4 Nov 2026): /lead, /psychiatrist, /psychologist, /nurse, /rmo.
@@ -7462,12 +7482,9 @@ function dashTable(cfg){
 const RL_ROLES=['lead','psychiatrist','psychologist','nurse','rmo'];
 const RL_LOCK=(()=>{const seg=(location.pathname.split('/').filter(Boolean)[0]||'').toLowerCase(),q=(new URLSearchParams(location.search).get('as')||'').toLowerCase();
   return RL_ROLES.includes(seg)?seg:(RL_ROLES.includes(q)?q:'');})();
-/* the role's secret access code (?k=...) proves the link is a real team link; kept for this tab */
-const RL_KEY=(()=>{const q=new URLSearchParams(location.search).get('k')||'';let k=q;try{if(q&&RL_LOCK)sessionStorage.setItem('tulasi-key-'+RL_LOCK,q);else if(RL_LOCK)k=sessionStorage.getItem('tulasi-key-'+RL_LOCK)||'';}catch(e){}return k;})();
 const rlName=r=>(LOGIN_ROLES.find(x=>x[0]===r)||[r,r])[1];
 function rlLink(r){const local=location.protocol==='file:'||/\.html?$/i.test(location.pathname);
-  const k=r===RL_LOCK&&RL_KEY?'k='+encodeURIComponent(RL_KEY):'';
-  return local?location.origin+location.pathname+'?as='+r+(k?'&'+k:''):location.origin+'/'+r+(k?'?'+k:'');}
+  return local?location.origin+location.pathname+'?as='+r:location.origin+'/'+r;}
 /* locked: the role cannot change inside this link */
 const __rl_set=setRole;
 setRole=function(r){if(RL_LOCK&&r!==RL_LOCK){toast('This link is for '+rlName(RL_LOCK)+'. Open the '+rlName(r)+' link instead.');return;}return __rl_set.apply(this,arguments);};
@@ -7524,12 +7541,11 @@ const SB_WRITE={doctor:['psychiatrist','lead','rmo'],psychology:['psychologist',
   events:['lead','psychiatrist','psychologist','nurse','rmo'],prefs:['lead','psychiatrist','psychologist','nurse','rmo'],vitals:['nurse','rmo'],
   notes:['psychologist','psychiatrist','lead'],mar:['nurse','rmo'],docs:['lead','psychiatrist','psychologist']};
 const SB={cfg:null,ready:false,saved:{},since:'',busy:false,timer:0,err:''};
-function sbNoAccess(){if(location.protocol==='file:')return;setTimeout(()=>toast('Not connected to the shared record: open your team link with its access code. Changes stay in this browser.'),800);}
 const sbCan=k=>(SB_WRITE[k]||[]).includes(S.role);
 const sbJ=o=>JSON.stringify(o===undefined?null:o);
 async function sbReq(path,opt){
   const o=opt||{};
-  const r=await fetch(SB.cfg.url+'/rest/v1/'+path,{method:o.method||'GET',body:o.body,headers:Object.assign({apikey:SB.cfg.key,Authorization:'Bearer '+SB.cfg.key,'Content-Type':'application/json','x-tulasi-role':S.role,'x-tulasi-key':(typeof RL_KEY!=='undefined'&&RL_KEY)||''},o.headers||{})});
+  const r=await fetch(SB.cfg.url+'/rest/v1/'+path,{method:o.method||'GET',body:o.body,headers:Object.assign({apikey:SB.cfg.key,Authorization:'Bearer '+SB.cfg.key,'Content-Type':'application/json','x-tulasi-role':S.role},o.headers||{})});
   if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,160));
   const t=await r.text();return t?JSON.parse(t):null;  /* inserts with return=minimal answer 201 with no body */
 }
@@ -7590,9 +7606,6 @@ if(typeof cdLog==='function'){const __sb_cdlog=cdLog;cdLog=function(pid,formId,a
   try{
     /* baseline what this browser already shows, then load the shared record */
     sbPids().forEach(pid=>sbKinds().forEach(k=>{const d=sbPick(pid,k);if(d!=null)SB.saved[pid+'|'+k]=sbJ(d);}));
-    /* the database answers only to a role link with its access code; without one, stay on this browser's demo data */
-    const ok=await sbReq('patients?select=id&limit=1');
-    if(!ok||!ok.length){SB.err='no access';sbNoAccess();return;}
     await sbPull();SB.ready=true;render();setInterval(sbSync,30000);
   }catch(e){SB.err=e.message;console.warn('Supabase not reachable, using demo data in this browser:',e.message);}
 })();
@@ -7614,7 +7627,7 @@ const __rb_render=render;render=function(){const f=roleHook('render');return f?f
 <script id="role-lead-js">
 /* Floor lead only. Dashboard (4 Nov): one table of every floor patient with their psychiatrist, alerts, countersigns, approvals and tasks. */
 Object.assign(ROLE.lead,{
-  myday:()=>dashTable({pts:allPts(),team:true,items:(p,T)=>[...DT.alerts(p),...DT.orders(p),...DT.approvals(p),...DT.tasks(p,T)],
+  myday:b=>dashTable({base:b,keep:['Floor command','Floor team'],pts:allPts(),team:true,items:(p,T)=>[...DT.alerts(p),...DT.orders(p),...DT.approvals(p),...DT.tasks(p,T)],
     btns:`<button class="btn" onclick="go('#/floor/flow')">Floor command</button><button class="btn pri" onclick="go('#/rounds')">Start rounds</button>`})
 });
 </script>
@@ -7627,14 +7640,14 @@ Object.assign(ROLE.psychiatrist,{
   vPatient:ptVPatient,
   render:ptHistRender,
   /* Dashboard (4 Nov): one table of my inpatients with alerts, countersigns and tasks, urgent first */
-  myday:()=>dashTable({pts:PTS,items:(p,T)=>[...DT.alerts(p),...DT.orders(p),...DT.tasks(p,T)],btns:`<button class="btn pri" onclick="go('#/rounds')">Start rounds</button>`})
+  myday:b=>dashTable({base:b,pts:PTS,items:(p,T)=>[...DT.alerts(p),...DT.orders(p),...DT.tasks(p,T)],btns:`<button class="btn pri" onclick="go('#/rounds')">Start rounds</button>`})
 });
 </script>
 <script id="role-psychologist-js">
 /* Psychologist only. Dashboard (4 Nov): one table of my patients with today's daily note and tasks. */
 Object.assign(ROLE.psychologist,{
-  myday:()=>{const L=PSY_EOD(),d=L.filter(p=>((S.eod||{})[p.id]||{}).saved).length;
-    return dashTable({pts:L,tab:'therapy',otherGo:'#/notes',items:(p,T)=>[...DT.tasks(p,T),...DT.dailyNote(p)],btns:`<button class="btn pri" onclick="go('#/notes')">✎ Add daily notes <span class="fcount">${d}/${L.length}</span></button>`});}
+  myday:b=>{const L=PSY_EOD(),d=L.filter(p=>((S.eod||{})[p.id]||{}).saved).length;
+    return dashTable({base:b,pts:L,tab:'therapy',otherGo:'#/notes',items:(p,T)=>[...DT.tasks(p,T),...DT.dailyNote(p)],btns:`<button class="btn pri" onclick="go('#/notes')">✎ Add daily notes <span class="fcount">${d}/${L.length}</span></button>`});}
 });
 </script>
 <script id="role-nurse-js">
@@ -7642,7 +7655,7 @@ Object.assign(ROLE.psychologist,{
 Object.assign(ROLE.nurse,{
   /* Roles and permissions is an admin page: not in the nurse menu (4 Nov) */
   subs:(sec,base)=>base(sec).replace(new RegExp('<button[^>]*#.permissions[^>]*>Roles and permissions<.button>'),''),
-  myday:()=>dashTable({pts:PTS,tab:'vitals',otherGo:'#/ward/charts',items:(p,T)=>[...DT.alertsRaised(p),...DT.checks(p),...DT.meds(p),...DT.tasks(p,T)],
+  myday:b=>dashTable({base:b,keep:['Ward care','Due now','Instructions from the treating team'],grid:['Due now'],pts:PTS,tab:'vitals',otherGo:'#/ward/charts',items:(p,T)=>[...DT.alertsRaised(p),...DT.checks(p),...DT.meds(p),...DT.tasks(p,T)],
     btns:`<button class="btn" onclick="nHandoverModal()">Handover note</button><button class="btn pri" onclick="eventModal(true)">⚠ Report significant event</button>`})
 });
 </script>
@@ -7651,7 +7664,7 @@ Object.assign(ROLE.nurse,{
 Object.assign(ROLE.rmo,{
   /* Roles and permissions is an admin page: not in the RMO menu (4 Nov) */
   subs:(sec,base)=>base(sec).replace(new RegExp('<button[^>]*#.permissions[^>]*>Roles and permissions<.button>'),''),
-  myday:()=>dashTable({pts:scopePts(),items:(p,T)=>[...DT.alerts(p),...DT.labs(p),...DT.tasks(p,T)],btns:`<button class="btn pri" onclick="go('#/handover')">Hand over</button>`})
+  myday:b=>dashTable({base:b,keep:['Your duty work','Coming up'],pts:scopePts(),items:(p,T)=>[...DT.alerts(p),...DT.labs(p),...DT.tasks(p,T)],btns:`<button class="btn pri" onclick="go('#/handover')">Hand over</button>`})
 });
 </script>
 </body></html>
