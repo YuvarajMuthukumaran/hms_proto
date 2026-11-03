@@ -6747,11 +6747,6 @@ const __fldSc=fld;fld=function(f,ro){let h=__fldSc(f,ro);const [l,ty]=f,v=S.hist
   if((ty==='m'||ty==='ap')&&Array.isArray(v))v.forEach(o=>{h=h.replace(new RegExp('class="tog( ap)?"([^>]*)>'+String(o).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'</button>'),'class="tog$1 on"$2>'+o+'</button>');});
   return h;};
 </script>
-</body></html>
-')+'</button>'),'class="tog
- on"$2>'+o+'</button>');});
-  return h;};
-</script>
 <script id="doctor-nursing-chart-js">
 /* Psychiatrist and floor lead: the Nursing chart page shows only the medicine chart, one patient at a time.
    The ward cards (alerts, ward care, instructions, today by patient) stay on the nurse and RMO views. */
@@ -6886,11 +6881,24 @@ vPatient=function(sub){
   return p?ptProfileGen(p,sub):__pp_vp(sub);
 };
 /* History menu: opens the profile of the patient last opened or seen in Rounds */
+/* History with no patient opened yet: choose a patient, then land on their detailed history view */
+function ptPickHist(){
+  $('title').textContent='History';
+  const pool=(S.role==='lead')?allPts():(S.role==='rmo'?scopePts():PTS);
+  const row=p=>`<button class="card" style="display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer" onclick="ptJumpHist=true;go('#/patient/${p.id}/overview')">
+    <span class="avatar pav">${p.ini}</span>
+    <span style="flex:1;min-width:0"><b>${p.name}</b>${p.risk?' <span class="small" style="color:var(--red);font-weight:600">· High risk</span>':''}<span class="tiny muted" style="display:block">${p.room} · Day ${p.day} · ${p.dx}</span></span>
+    <span class="small muted">Open history ›</span></button>`;
+  return `<section class="ws-mid"><section class="card pad"><h3>Whose history?</h3><div class="small muted" style="margin:4px 0 14px">Choose a patient to open their detailed history: stay summary, stay timeline and every record from this stay.</div>${pool.map(row).join('')}</section></section>`;
+}
 let ptJumpHist=false;
 const __pp_render=render;
 render=function(){
   const r=(location.hash||'').slice(2).split('/');
-  if(r[0]==='patient'&&!r[1]){const id=S.focusPid&&ptFind(S.focusPid)?S.focusPid:'neel';ptJumpHist=true;location.replace('#/patient/'+id+'/overview');return;}
+  if(r[0]==='patient'&&!r[1]){
+    if(S.focusPid&&ptFind(S.focusPid)){ptJumpHist=true;location.replace('#/patient/'+S.focusPid+'/overview');return;}
+    renderSide(r);$('app').classList.remove('compact');$('view').innerHTML=ptPickHist();window.scrollTo(0,0);return;
+  }
   const out=__pp_render();
   /* land on the stay tabs and Stay timeline (the detailed history view), not the top of the profile */
   if(ptJumpHist&&r[0]==='patient'){ptJumpHist=false;setTimeout(()=>{const el=document.querySelector('#view nav.tabs')||document.querySelector('#view .subtabs');if(el)window.scrollTo({top:el.getBoundingClientRect().top+scrollY-90});},60);}
