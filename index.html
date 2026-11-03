@@ -4574,7 +4574,7 @@ V3.route = r => {
   return '';
 };
 /* History opens the full patient profile (Anu, 3 Nov). The profile is built for the demo patient only. */
-const ptHistHref = () => (S.role==='rmo'&&!inScope('neel')) ? '#/timeline' : '#/patient/neel';
+const ptHistHref = () => (S.role==='rmo'&&!inScope('neel')) ? '#/timeline' : '#/patient';
 V3.subs = sec => {
   const b=(h,l,key,n)=>`<button class="sub ${sec===key?'on':''}" onclick="go('${h}')">${l}${n?`<span class="newtag" style="margin-left:6px">${n}</span>`:''}</button>`;
   const mine = S.role==='lead' ? b('#/floor/flow','Floor command','floor') : S.role==='nurse' ? b('#/ward/charts','Ward care','ward') : S.role==='rmo' ? b('#/duty/night','Duty desk','duty') : '';
@@ -5952,7 +5952,7 @@ table.t td,table.pt td{padding-top:13px;padding-bottom:13px}
     '#/duty/night':['duty','green','Duty'],
     '#/escalation':['bell','red','Alerts'],
     '#/timeline':['hist','teal','History'],
-    '#/patient/neel':['hist','teal','History'],
+    '#/patient':['hist','teal','History'],
     '#/permissions':['shield','grey','Access'],
     '#/clinical-docs':['docs','teal','Clinical docs']
   };
@@ -6835,6 +6835,62 @@ render=function(){
   if(r[0]==='patient'&&r[1])S.focusPid=r[1];
   if(r[0]==='timeline'&&!r[1]&&S.focusPid&&S.focusPid!=='neel'){location.replace('#/timeline/'+S.focusPid);return;}
   return __na_render();
+};
+</script>
+<script id="pt-profile-js">
+/* Each patient opens their own profile (Yuvaraj, 3 Nov). Neel keeps the full demo records; everyone else gets a profile
+   built from their own details, and tabs without demo records say so instead of showing Neel's data. */
+const ptFind=id=>allPts().find(p=>p.id===id);
+/* lists: View opens the clicked patient, not Neel */
+const __pp_ipd=ipdPage;
+ipdPage=function(o){
+  if(o&&o.go){const g=o.go;o=Object.assign({},o,{go:p=>String(g(p)).split('#/patient/neel/').join('#/patient/'+p.id+'/')});}
+  return __pp_ipd(o);
+};
+function ptProfileGen(p,sub){
+  $('title').textContent='Patients';
+  const tabs=STAY.filter(t=>S.role!=='nurse'||['overview','admission','vitals','update','orders'].includes(t[0]));
+  if(!tabs.some(t=>t[0]===sub)) sub=S.role==='nurse'?'vitals':'overview';
+  const fl=RMO_FILL[p.id]||[],sx=p.sex||fl[3]||'',ag=p.age||fl[4]||'',ex=rmoEx(p);
+  const psy=psyOfP(p),psych=rmoPsych(p);
+  const box=(l,v,s)=>`<div class="sbox"><div class="lbl">${l}</div><div class="sval">${v}</div>${s?`<div class="tiny muted">${s}</div>`:''}</div>`;
+  const ini=n=>n.replace('Dr. ','').split(' ').map(x=>x[0]).join('').slice(0,2);
+  const tm=(n,r,c)=>`<span class="tpill"><span class="avatar ${c}" style="width:26px;height:26px;font-size:10px">${ini(n)}</span><span><b>${n.replace('Dr. ','')}</b><span class="tiny muted" style="display:block">${r}</span></span></span>`;
+  const body=sub==='overview'
+    ?`<section class="card pad"><h3 style="margin-bottom:14px">Stay summary</h3>
+        <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+          ${box('Primary diagnosis',p.dx)}${box('Day of stay','Day '+p.day,p.day===0?'Admitted today':p.day===1?'Admitted yesterday':'')}
+          ${box('Room',p.room)}${box('Admission','Section '+p.sec)}
+          ${box('Observation',ex[0]||'Routine')}${box('Next task',ex[1]||'None due')}
+          ${box('Expected discharge',ex[2]||'Not set','Can change')}${box('Risk',p.risk?'High risk':'No high-risk flag')}
+        </div></section>`
+    :`<section class="card pad"><div class="small muted">No ${(tabs.find(t=>t[0]===sub)||[])[1].toLowerCase()} records have been entered for ${p.name} in this demo yet. Neel Bose has the full set of demo records.</div></section>`;
+  return `<div><section class="ws-mid">
+    <nav class="crumb"><a href="#/myday">Inpatients</a> / <a href="#/inpatients">${isLead()?'Floor inpatients':'My inpatients'}</a> / <strong>${p.name}</strong></nav>
+    <section class="card dph">
+      <div class="dpav"><div class="avbig">${p.ini}</div><span class="chip c-green" style="font-size:11px">${p.day===0?'Admitted today':'Day '+p.day+' of stay'}</span></div>
+      <div class="dpmain">
+        <div class="row" style="gap:10px;align-items:baseline"><h2 style="font-size:26px">${p.name}</h2><span class="muted" style="font-weight:600">${sx?sx+'/'+ag:''}</span><span class="tiny muted">${p.uhid?'UHID '+p.uhid:''}</span></div>
+        <div class="small" style="color:var(--ink-2)">${p.risk?'<b style="color:var(--red)">High risk</b> · ':''}Section ${p.sec} · ${p.room}${VIP[p.id]?' · '+VIP[p.id]:''}</div>
+        <div class="row dpteam"><span class="lbl">Treating team</span>${tm(psy,'Psychiatrist','c-blue')}${psych?tm(psych,'Psychologist','c-violet'):'<span class="small muted">No psychologist yet</span>'}</div>
+      </div>
+      <div class="dpact"><button class="btn soft" onclick="schedMsg('the caregiver')">${icon.msg} Message caregiver</button></div>
+    </section>
+    <div class="subtabs" role="tablist">${tabs.map(([k,l])=>`<button class="subtab ${sub===k?'on':''}" role="tab" aria-selected="${sub===k}" onclick="go('#/patient/${p.id}/${k}')">${l}</button>`).join('')}</div>
+    ${body}
+  </section></div>`;
+}
+const __pp_vp=vPatient;
+vPatient=function(sub){
+  const id=(location.hash||'').slice(2).split('/')[1],p=id&&id!=='neel'&&ptFind(id);
+  return p?ptProfileGen(p,sub):__pp_vp(sub);
+};
+/* History menu: opens the profile of the patient last opened or seen in Rounds */
+const __pp_render=render;
+render=function(){
+  const r=(location.hash||'').slice(2).split('/');
+  if(r[0]==='patient'&&!r[1]){const id=S.focusPid&&ptFind(S.focusPid)?S.focusPid:'neel';location.replace('#/patient/'+id+'/overview');return;}
+  return __pp_render();
 };
 </script>
 </body></html>
