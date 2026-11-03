@@ -7502,6 +7502,96 @@ if(RL_LOCK){
   setTimeout(render,0); /* after roles-js has set up the role hooks */
 }
 </script>
+<script id="supa-js">
+/* Supabase backend (4 Nov 2026). The portal keeps working in the browser as before; when /api/config returns a Supabase
+   project, every patient's records, daily notes, dose ticks and clinical documents load from it at start, save when they
+   change, and pick up other roles' changes every 30 seconds.
+   Each request carries the role of this link (x-tulasi-role). Row level security lets a role write only its own kinds
+   of record (see supabase/migrations), so a change made in one role cannot alter another role's records.
+   Record kinds and who writes them (must match public.role_kinds): */
+const SB_KIND_KEYS={
+  doctor:['dx','section','meds','medsOff','rx','labs','obs','obsBy','edd','eddShared','eddBy','historyStatus','historyDraft','capacityOpen','capacityDone','reassessDone','plansSigned','discharge','dischargeDrafted','draftBy','discharged','dtype','admNo','pastAdm','team','calls','dailySaved','familySent'],
+  psychology:['psychRows','therapyNotes','dn'],
+  consents:['consents'],
+  events:['events','restraints','pgriev'],
+  prefs:['diet','pf','pfAt','pfUp','prefBy','contacts','billing'],
+  vitals:['vit','sugar','sugarHd','adh','adhT','vc','monx','nsum']
+};
+const SB_WRITE={doctor:['psychiatrist','lead','rmo'],psychology:['psychologist','psychiatrist','lead'],consents:['psychiatrist','lead','rmo'],
+  events:['lead','psychiatrist','psychologist','nurse','rmo'],prefs:['lead','psychiatrist','psychologist','nurse','rmo'],vitals:['nurse','rmo'],
+  notes:['psychologist','psychiatrist','lead'],mar:['nurse','rmo'],docs:['lead','psychiatrist','psychologist']};
+const SB={cfg:null,ready:false,saved:{},since:'',busy:false,timer:0,err:''};
+const sbCan=k=>(SB_WRITE[k]||[]).includes(S.role);
+const sbJ=o=>JSON.stringify(o===undefined?null:o);
+async function sbReq(path,opt){
+  const o=opt||{};
+  const r=await fetch(SB.cfg.url+'/rest/v1/'+path,{method:o.method||'GET',body:o.body,headers:Object.assign({apikey:SB.cfg.key,Authorization:'Bearer '+SB.cfg.key,'Content-Type':'application/json','x-tulasi-role':S.role},o.headers||{})});
+  if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,160));
+  return r.status===204?null:r.json();
+}
+/* records of one patient, by kind, from whichever copy is live */
+function sbPick(pid,kind){
+  if(kind==='notes')return ((S.eod||{})[pid])||null;
+  if(kind==='mar'){const out={};Object.keys(MAR_ST).forEach(k=>{if(k.startsWith(pid+':'))out[k]={st:MAR_ST[k],who:MAR_WHO[k]||null};});return Object.keys(out).length?out:null;}
+  const c=ptCtxOf(pid);return Object.fromEntries(SB_KIND_KEYS[kind].map(k=>[k,c[k]]));
+}
+function sbApply(pid,kind,data){
+  if(!ptFind(pid)||data==null)return;
+  if(kind==='notes'){S.eod=S.eod||{};S.eod[pid]=data;return;}
+  if(kind==='mar'){Object.keys(data).forEach(k=>{MAR_ST[k]=data[k].st;if(data[k].who)MAR_WHO[k]=data[k].who;else delete MAR_WHO[k];});return;}
+  const c=ptCtxOf(pid);(SB_KIND_KEYS[kind]||[]).forEach(k=>{if(k in data)c[k]=data[k];});
+}
+function sbKinds(){return Object.keys(SB_KIND_KEYS).concat(['notes','mar']);}
+/* the patients whose records exist in this browser: opened, generated or loaded */
+function sbPids(){return [...new Set(Object.keys(PT_CTX).concat([S.pid],Object.keys(S.eod||{}),Object.keys(MAR_ST).map(k=>k.split(':')[0])))].filter(id=>ptFind(id));}
+async function sbPull(){
+  const q='patient_records?select=patient_id,kind,data,updated_at,updated_role'+(SB.since?'&updated_at=gt.'+encodeURIComponent(SB.since):'')+'&order=updated_at.asc';
+  const rows=await sbReq(q);let n=0;
+  rows.forEach(r=>{const key=r.patient_id+'|'+r.kind;if(SB.saved[key]===sbJ(r.data))return;sbApply(r.patient_id,r.kind,r.data);SB.saved[key]=sbJ(r.data);n++;SB.since=r.updated_at;});
+  const docs=await sbReq('clinical_docs?select=entry_key,doc,updated_at'+(SB.sinceDocs?'&updated_at=gt.'+encodeURIComponent(SB.sinceDocs):'')+'&order=updated_at.asc');
+  if(docs.length&&typeof CD_DATA!=='undefined'){CD_DATA=cdLoad();docs.forEach(d=>{const s=d.doc||{};CD_DATA.submissions=CD_DATA.submissions.filter(x=>x.entryKey!==d.entry_key);if(s.submission)CD_DATA.submissions.push(s.submission);if(s.fills){CD_DATA.fills=CD_DATA.fills||{};CD_DATA.fills[d.entry_key]=s.fills;}SB.saved['doc|'+d.entry_key]=sbJ(s);SB.sinceDocs=d.updated_at;n++;});try{localStorage.setItem(CD_KEY,JSON.stringify(CD_DATA))}catch(e){}}
+  return n;
+}
+async function sbPush(){
+  const ups=[],who=(typeof signer==='function'&&signer())||S.role;
+  sbPids().forEach(pid=>sbKinds().forEach(kind=>{
+    if(!sbCan(kind))return;const data=sbPick(pid,kind),key=pid+'|'+kind,j=sbJ(data);
+    if(data==null||SB.saved[key]===j)return;
+    ups.push({row:{patient_id:pid,kind,data,updated_role:S.role,updated_by:who,updated_at:new Date().toISOString()},key,j});
+  }));
+  if(ups.length){await sbReq('patient_records?on_conflict=patient_id,kind',{method:'POST',body:JSON.stringify(ups.map(u=>u.row)),headers:{Prefer:'resolution=merge-duplicates,return=minimal'}});ups.forEach(u=>SB.saved[u.key]=u.j);}
+  if(sbCan('docs')&&typeof CD_DATA!=='undefined'){
+    const keys=new Set((CD_DATA.submissions||[]).map(x=>x.entryKey).concat(Object.keys(CD_DATA.fills||{}))),rows=[];
+    keys.forEach(k=>{const sub=(CD_DATA.submissions||[]).find(x=>x.entryKey===k)||null,doc={submission:sub,fills:(CD_DATA.fills||{})[k]||null},j=sbJ(doc);
+      if(SB.saved['doc|'+k]===j)return;SB.saved['doc|'+k]=j;
+      rows.push({entry_key:k,patient_id:k.split('|')[0],form_id:k.split('|')[1],status:sub?'submitted':'draft',doc,updated_role:S.role,updated_by:who,updated_at:new Date().toISOString()});});
+    if(rows.length)await sbReq('clinical_docs?on_conflict=entry_key',{method:'POST',body:JSON.stringify(rows),headers:{Prefer:'resolution=merge-duplicates,return=minimal'}});
+  }
+  return ups.length;
+}
+async function sbSync(){
+  if(!SB.ready||SB.busy)return;SB.busy=true;
+  try{await sbPush();const n=await sbPull();SB.err='';if(n&&!document.querySelector('#view input:focus,#view textarea:focus,#view select:focus'))render();}
+  catch(e){if(SB.err!==e.message){SB.err=e.message;console.warn('Supabase sync:',e.message);}}
+  finally{SB.busy=false;}
+}
+function sbSoon(){if(!SB.ready)return;clearTimeout(SB.timer);SB.timer=setTimeout(sbSync,1200);}
+/* save shortly after anything changes (every change re-renders), and pull other roles' changes every 30 s */
+const __sb_render=render;render=function(){const r=__sb_render.apply(this,arguments);sbSoon();return r;};
+if(typeof cdLog==='function'){const __sb_cdlog=cdLog;cdLog=function(pid,formId,action,detail){__sb_cdlog.apply(this,arguments);
+  if(SB.ready)sbReq('audit_log',{method:'POST',body:JSON.stringify({patient_id:pid||null,role:S.role,actor:(typeof signer==='function'&&signer())||S.role,action:String(action||''),detail:(formId?formId+' · ':'')+String(detail||'')}),headers:{Prefer:'return=minimal'}}).catch(()=>{});};}
+(async function sbStart(){
+  if(location.protocol==='file:')return;
+  try{const r=await fetch(location.origin+'/api/config',{cache:'no-store'});if(!r.ok)return;const j=await r.json();if(!j||!j.supabase)return;SB.cfg=j.supabase;}catch(e){return;}
+  try{
+    /* baseline what this browser already shows, then load the shared record */
+    sbPids().forEach(pid=>sbKinds().forEach(k=>{const d=sbPick(pid,k);if(d!=null)SB.saved[pid+'|'+k]=sbJ(d);}));
+    await sbPull();SB.ready=true;render();setInterval(sbSync,30000);
+  }catch(e){SB.err=e.message;console.warn('Supabase not reachable, using demo data in this browser:',e.message);}
+})();
+/* a patient's records created in this browser count as already saved until someone changes them */
+const __sb_mk=ptMakeCtx;ptMakeCtx=function(p){const c=__sb_mk.apply(this,arguments);if(SB.ready)Object.keys(SB_KIND_KEYS).forEach(k=>{const key=p.id+'|'+k;if(SB.saved[key]===undefined)SB.saved[key]=sbJ(Object.fromEntries(SB_KIND_KEYS[k].map(x=>[x,c[x]])));});return c;};
+</script>
 <script id="roles-js">
 /* One block per role (Yuvaraj, 3 Nov): a change asked for one role goes in that role's block below and never touches the others.
    Shared screens stay as they are; a role block overrides a hook only while that role is logged in.
