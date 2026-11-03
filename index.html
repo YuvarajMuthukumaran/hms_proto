@@ -1426,10 +1426,7 @@ function vMyDay(){
   return `
   <div class="row" style="justify-content:space-between"><div><h2>Inpatient dashboard</h2><div class="muted" style="margin-top:4px">${dashSub()}</div></div>${isPsych()?`<button class="btn pri" onclick="go('#/notes')">✎ Add daily notes ${(()=>{const L=isPsych()?PTS.slice(0,5):PTS;const d=L.filter(p=>((S.eod||{})[p.id]||{}).saved).length;return `<span class="fcount">${d}/${L.length}</span>`})()}</button>`:''}${isPsy()?`<button class="btn pri" onclick="go('#/rounds')">Start rounds</button>`:''}</div>
   ${V3.homeCards()}
-  ${S.role==='rmo'?rmoFloorList():`<section class="card"><div class="hd"><h3>Today's schedule</h3><div class="row" style="gap:8px"><span class="small muted">OPD slots come from your calendar</span><button class="btn sm" onclick="go('#/existing/My Calendar')">${icon.cal} Open my calendar</button></div></div>
-    <div class="grid4" style="padding:14px 20px 18px;gap:12px">
-      ${(S.role==='nurse'?[['8:00','Shift start','Handover from night shift','c-blue'],['10:00','Ward rounds','With Dr. Aanya Sharma','c-violet'],['14:00','Medicine round','Male ward','c-grey'],['16:00','Vitals round','All patients','c-grey']]:S.role==='rmo'?[['9:00','Handover','From night duty doctor','c-blue'],['10:30','Admission workup','Rohit Kapoor','c-violet'],['13:00','Ward check','All three wards','c-grey'],['21:00','Handover','To night duty doctor','c-grey']]:isPsy()?[['10:00','Ward rounds','Male, Female and De-addiction wards · 17 patients','c-blue'],['12:00','Family meeting','Neel Bose · Ananya Bose','c-violet'],['14:00 to 17:00','OPD clinic','11 booked · open My Calendar for the list','c-grey'],['17:30','Case conference','Karan Malhotra · Section 90 review','c-grey']]:[['10:30','Group therapy','Male ward · 6 patients','c-blue'],['12:00','Family meeting','Neel Bose · Ananya Bose','c-violet'],['16:00','Individual session','Neel Bose','c-grey'],['17:00','Day 3 to 4 call','Tarun Roy\'s father','c-grey']]).map(e=>`<div class="box"><div class="row" style="justify-content:space-between"><strong>${e[0]}</strong>${chip(e[1],e[3])}</div><div class="small muted" style="margin-top:6px">${e[2]}</div></div>`).join('')}
-    </div></section>`}
+  ${S.role==='rmo'?rmoFloorList():''}
   ${rmoInbox()}${isLead()?teamCard():''}
 
   <section class="card" id="dashTasks"><div class="hd"><div class="row" style="gap:10px;flex-wrap:wrap"><h3>${isLead()&&S.scope==='floor'?'Floor tasks':'Tasks'}</h3>${tf?`<button class="tfchip" onclick="dashTf('${tf}')" aria-label="Clear filter, show all tasks">${TF_LBL[tf]} · ${TV.length} <span aria-hidden="true">✕</span></button>`:''}<button class="task-summary-pill patients" onclick="go('#/inpatients')"><span class="task-pill-icon">${V3.i('users',16)}</span><span>My inpatients</span><b>${isWard()?(S.role==='rmo'?scopePts().length:17):(isLead()&&S.scope==='floor'?28:(isLead()?6:(isPsy()?8:5)))}</b></button><button class="task-summary-pill admit" onclick="go('#/admissions')"><span class="task-pill-icon">${V3.i('users',16)}</span><span>New admission</span><b>${((S.role==='lead'||S.role==='rmo')?allPts():PTS).filter(p=>p.day<=1).length}</b></button><button class="task-summary-pill overdue" onclick="dashTf('late')"><span class="task-pill-icon">${V3.i('alert',16)}</span><span>Overdue tasks</span><b>${late}</b></button></div>${isLead()?`<div class="seg" style="min-width:230px"><button class="${S.scope==='floor'?'on':''}" onclick="S.scope='floor';render()">My floor</button><button class="${S.scope==='mine'?'on':''}" onclick="S.scope='mine';render()">My patients</button></div>`:S.role==='psychiatrist'?'':'<span class="small muted">Created automatically from admissions, schedules and rounds</span>'}</div>${taskContent}</section>`;
@@ -2717,12 +2714,7 @@ function vDashboard(){
       kpi('Rounds left',String(roundsLeft),roundsLeft?'Next: '+WARDS['Male ward'][Math.min(S.rounds.idx['Male ward'],WARDS['Male ward'].length-1)].name:'All seen',roundsLeft?'':'var(--green)',"go('#/rounds')"),
       kpi('Daily notes due',String(notesDue),'Before 6 pm',notesDue?'':'var(--green)',"go('#/notes')"),
       kpi('Overdue tasks',String(late),'Across admissions, MHCA and discharges',late?'var(--amber)':'var(--green)')].join('');
-    sections=sec("Today's schedule",'',[
-        row('9:30 am','Ward round · Male ward · 5 patients, start with Neel Bose and Tarun Roy'),
-        row('12:00 pm','Family meeting · Arjun Mehta, with his wife, before home leave'),
-        row('4:00 pm','New admission review · Rohit Kapoor, history and MSE')
-      ].join(''))+
-      sec('Tasks','Created from admissions, MHCA and discharges',[
+    sections=sec('Tasks','Created from admissions, MHCA and discharges',[
         row('Neel Bose','Detailed history · 72-hour deadline passed yesterday 10:30 · with Priya Nair',['Overdue','c-red'],'neel'),
         row('Sameer Das','Capacity assessment, week 2 · weekly for 30 days under Section 89',['Overdue','c-red'],'sameer'),
         row('Rohit Kapoor','24-hour family call · Meera Kapoor, wife',['Due today','c-amber'],'rohit'),
