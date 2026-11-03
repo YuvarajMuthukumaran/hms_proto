@@ -7422,16 +7422,17 @@ const dtObs=p=>((typeof EX!=='undefined'&&EX[p.id])||[])[0]||'Routine';
 function dtRow(p,items,cfg){
   const rank=items.some(i=>i.tone==='alert')?0:items.some(i=>i.tone==='late')?1:items.length?2:3;
   const act=items.find(i=>i.btn),tab=cfg.tab||'overview';
-  const line=i=>`<div class="small" style="margin:2px 0;${i.tone==='alert'?'color:var(--red);font-weight:600':i.tone==='late'?'color:var(--amber);font-weight:600':''}">${hesc(i.txt)}${i.due?` <span class="tiny muted" style="font-weight:400">· ${hesc(i.due)}</span>`:''}</div>`;
+  const line=i=>{const m=String(i.txt).match(/^([^:]{2,22}):\s*(.*)$/),c=i.tone==='alert'?'color:var(--red)':i.tone==='late'?'color:var(--amber)':'';
+    return `<div class="small" style="margin:3px 0;line-height:1.4;${c}">${m?`<b>${hesc(m[1])}:</b> ${hesc(m[2])}`:hesc(i.txt)}${i.due?` <span class="tiny muted">· ${hesc(i.due)}</span>`:''}</div>`;};
   const sx=p.sex||(PT_FILL[p.id]||[])[0]||'',ag=p.age||(PT_FILL[p.id]||[])[1]||'';
   return {rank,html:`<tr data-dt="${hesc((p.name+' '+p.room).toLowerCase())}" data-need="${rank<2?1:0}" ${rank===0?'style="background:#fff7f6"':''}>
-    <td><button class="lnk" style="font-weight:700;font-size:14px;text-align:left" onclick="go('#/patient/${p.id}/${tab}')">${hesc(p.name)}</button><div class="tiny muted">${sx?sx+'/'+ag+' · ':''}Day ${p.day}${p.risk?' · <b style="color:var(--red)">High risk</b>':''}</div></td>
+    <td><button class="lnk" style="font-weight:700;font-size:14px;text-align:left;white-space:nowrap" onclick="go('#/patient/${p.id}/${tab}')">${hesc(p.name)}</button><div class="tiny muted">${sx?sx+'/'+ag+' · ':''}Day ${p.day}${p.risk?' · <b style="color:var(--red)">High risk</b>':''}</div></td>
     <td class="small" style="white-space:nowrap">${hesc(p.room)}</td>
     <td class="small">${hesc(p.dx)}</td>
     ${cfg.team?`<td class="small">${hesc((V3.eff&&V3.eff('psy',p.id))||(PSYOF||{})[p.id]||'Unassigned')}</td>`:''}
     <td class="small" style="white-space:nowrap">${hesc(dtObs(p))}</td>
     <td>${items.length?items.slice(0,3).map(line).join('')+(items.length>3?`<button class="lnk tiny" onclick="go('#/patient/${p.id}/${tab}')">+${items.length-3} more</button>`:''):'<span class="small muted">Nothing due</span>'}</td>
-    <td style="text-align:right;white-space:nowrap">${act?`<button class="btn sm pri" onclick="${act.btn[1]}">${act.btn[0]}</button> `:''}<button class="btn sm" onclick="go('#/patient/${p.id}/${tab}')">Open</button></td></tr>`};
+    <td><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">${act?`<button class="btn sm pri" style="white-space:nowrap" onclick="${act.btn[1]}">${act.btn[0]}</button>`:''}<button class="btn sm" onclick="go('#/patient/${p.id}/${tab}')">Open</button></div></td></tr>`};
 }
 function dtFilter(){const q=(($('dtQ')||{}).value||'').toLowerCase(),need=S.dtNeed;let n=0;
   document.querySelectorAll('#dtBody tr[data-dt]').forEach(r=>{const show=r.dataset.dt.includes(q)&&(!need||r.dataset.need==='1');r.style.display=show?'':'none';if(show)n++;});
@@ -7464,10 +7465,12 @@ function dashTable(cfg){
   return `<div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h2>Inpatient dashboard</h2><div class="muted" style="margin-top:4px">${day} · ${cfg.pts.length} patient${cfg.pts.length===1?'':'s'} · ${need} need${need===1?'s':''} you now</div></div><div class="row" style="gap:8px;flex-wrap:wrap">${cfg.btns||''}</div></div>
   <section class="card" id="dashTasks"><div class="hd"><div class="row" style="gap:10px;flex-wrap:wrap"><h3>Tasks</h3>${dtPill('patients',DT_IC.people,'My inpatients',cfg.pts.length,`go('#/inpatients')`)}${dtPill('admit',DT_IC.people,'New admission',newN,`go('#/admissions')`)}${dtPill('overdue',DT_IC.warn,'Overdue tasks',lateN,`S.dtNeed=true;render();setTimeout(()=>{const t=document.getElementById('dtBody');t&&t.scrollIntoView({behavior:'smooth',block:'start'})},50)`)}</div></div></section>
   ${dtKeep(cfg)}
-  ${other.length?`<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><span class="small muted">Also today:</span>${other.map(t=>`<button class="tog" onclick="${t.go?`go('${t.go}')`:`go('${cfg.otherGo||'#/myday'}')`}">${hesc(dtTitle(t))}${t.due?' · '+hesc(t.due):''}</button>`).join('')}</div>`:''}
-  <section class="card ptable"><div class="ipbar"><div class="row" style="gap:8px;flex-wrap:wrap">${tog(!S.dtNeed,'All · '+rows.length,'S.dtNeed=false;render()')}${tog(S.dtNeed,'Needs you now · '+need,'S.dtNeed=true;render()')}</div>
-    <input class="input" id="dtQ" style="max-width:260px;min-height:36px" placeholder="Search name or room" oninput="dtFilter()" aria-label="Search patients"></div>
-    <div class="scroll"><table class="t pt"><thead><tr><th>Patient</th><th>Room</th><th>Diagnosis</th>${cfg.team?'<th>Psychiatrist</th>':''}<th>Observation</th><th>Due today</th><th></th></tr></thead>
+  <section class="card ptable">
+    <div class="hd" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><h3>Patients</h3>${tog(!S.dtNeed,'All · '+rows.length,'S.dtNeed=false;render()')}${tog(S.dtNeed,'Needs you now · '+need,'S.dtNeed=true;render()')}</div>
+      <input class="input" id="dtQ" style="width:240px;min-height:38px;margin:0" placeholder="Search name or room" oninput="dtFilter()" aria-label="Search patients"></div>
+    ${other.length?`<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;padding:10px 20px;border-bottom:1px solid var(--line-2,#eef1f5)"><span class="small muted">Also today</span>${other.map(t=>`<button class="tog" onclick="${t.go?`go('${t.go}')`:`go('${cfg.otherGo||'#/myday'}')`}">${hesc(dtTitle(t))}${t.due?' · '+hesc(t.due):''}</button>`).join('')}</div>`:''}
+    <div class="scroll"><table class="t pt" style="table-layout:fixed;width:100%;min-width:760px"><colgroup><col style="width:15%"><col style="width:10%"><col style="width:14%">${cfg.team?'<col style="width:12%">':''}<col style="width:10%"><col><col style="width:150px"></colgroup><thead><tr><th>Patient</th><th>Room</th><th>Diagnosis</th>${cfg.team?'<th>Psychiatrist</th>':''}<th>Observation</th><th>Due today</th><th></th></tr></thead>
     <tbody id="dtBody">${rows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="${cfg.team?7:6}" class="pad small muted">No patient matches</td></tr></tbody></table></div></section>`;
 }
 /* Dashboard and Inpatient dashboard are one page in this portal: the sidebar's Dashboard opens it */
