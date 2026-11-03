@@ -1965,10 +1965,6 @@ function vPatient(sub){
   return `<div>
     <section class="ws-mid">
       ${compactHeader()}
-      <nav class="tabs ul" aria-label="Patient tabs">
-        <button class="tab stay on">Inpatient stay</button>
-        ${exTabs.map(t=>`<button class="tab" onclick="go('#/existing/${t}')">${t}</button>`).join('')}
-      </nav>
       <div class="subtabs" role="tablist">${stayTabs().map(([k,l])=>`<button class="subtab ${sub===k?'on':''}" role="tab" aria-selected="${sub===k}" onclick="go('#/patient/neel/${k}')">${l} ${sub===k?'':lateDot(k)}</button>`).join('')}</div>
       ${sub==='overview'?'':eventsBar()}
       ${body}
@@ -7378,7 +7374,12 @@ pOverview=function(){
 
 /* Route: #/patient/<id>/<tab> shows that patient; other screens run on Neel's records as before */
 const __pc_vp=vPatient;
-vPatient=function(sub){const id=ptRoutePid()||'neel';ptUse(id);S.focusPid=id;return ptPersonal(__pc_vp(sub));};
+/* Previous / Next patient on the patient page, in the same order as the role's own list, staying on the same tab */
+function ptNavList(){return S.role==='psychologist'?PSY_EOD():S.role==='rmo'?scopePts():S.role==='lead'?allPts():PTS;}
+function ptStepper(id,sub){const L=ptNavList(),i=L.findIndex(p=>p.id===id);if(i<0)return '';const pv=L[i-1],nx=L[i+1],t=sub||'overview';
+  return `<div class="row" style="justify-content:flex-end;gap:8px;margin:-4px 0 10px;flex-wrap:wrap"><span class="tiny muted">Patient ${i+1} of ${L.length}</span>${pv?`<button class="btn sm" onclick="go('#/patient/${pv.id}/${t}')">‹ ${hesc(pv.name)}</button>`:''}${nx?`<button class="btn sm" onclick="go('#/patient/${nx.id}/${t}')">${hesc(nx.name)} ›</button>`:''}</div>`;}
+vPatient=function(sub){const id=ptRoutePid()||'neel';ptUse(id);S.focusPid=id;const h=ptPersonal(__pc_vp(sub));
+  return h.replace(/(<nav class="crumb">[\s\S]*?<\/nav>)/,m=>m+ptStepper(id,(location.hash||'').slice(2).split('/')[2]));};
 const __pc_render=render;
 render=function(){if(!ptRoutePid())ptUse('neel');return __pc_render.apply(this,arguments);};
 const __pc_modal=openModal;openModal=function(h){return __pc_modal.call(this,ptPersonal(h));};
@@ -7493,6 +7494,8 @@ Object.assign(ROLE.psychologist,{
 <script id="role-nurse-js">
 /* Nurse only. Dashboard (4 Nov): one table of the ward with alerts raised, checks, 2 pm medicines and tasks. The ward boards stay under Care. */
 Object.assign(ROLE.nurse,{
+  /* Roles and permissions is an admin page: not in the nurse menu (4 Nov) */
+  subs:(sec,base)=>base(sec).replace(new RegExp('<button[^>]*#.permissions[^>]*>Roles and permissions<.button>'),''),
   myday:()=>dashTable({pts:PTS,tab:'vitals',otherGo:'#/ward/charts',items:(p,T)=>[...DT.alertsRaised(p),...DT.checks(p),...DT.meds(p),...DT.tasks(p,T)],
     btns:`<button class="btn" onclick="nHandoverModal()">Handover note</button><button class="btn pri" onclick="eventModal(true)">⚠ Report significant event</button>`})
 });
@@ -7500,6 +7503,8 @@ Object.assign(ROLE.nurse,{
 <script id="role-rmo-js">
 /* RMO on duty only. Dashboard (4 Nov): one table of every patient on duty floors with alerts, new lab results and tasks. Duty boards stay under Handover. */
 Object.assign(ROLE.rmo,{
+  /* Roles and permissions is an admin page: not in the RMO menu (4 Nov) */
+  subs:(sec,base)=>base(sec).replace(new RegExp('<button[^>]*#.permissions[^>]*>Roles and permissions<.button>'),''),
   myday:()=>dashTable({pts:scopePts(),items:(p,T)=>[...DT.alerts(p),...DT.labs(p),...DT.tasks(p,T)],btns:`<button class="btn pri" onclick="go('#/handover')">Hand over</button>`})
 });
 </script>
