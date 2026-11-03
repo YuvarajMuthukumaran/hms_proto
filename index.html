@@ -1281,7 +1281,7 @@ const icon = {
 function renderSide(route){
   const m = me();
   const sec = route[0];
-  const inIpd = ['myday','inpatients','rounds','patient','notes','nursing','handover','floor','ward','duty','escalation','timeline','permissions','clinical-docs'].includes(sec);
+  const inIpd = ['myday','inpatients','rounds','patient','notes','nursing','handover','floor','ward','duty','escalation','timeline','permissions','clinical-docs','admissions'].includes(sec);
   const sub = (h,label,key)=>`<button class="sub ${sec===key?'on':''}" onclick="go('${h}')">${label}</button>`;
   const nav = (h,ic,label,on,extra)=>`<button class="nav ${on?'on':''}" onclick="go('${h}')" title="${label}" aria-label="${label}">${ic}<span class="tx">${label}</span>${extra||''}</button>`;
   $('side').innerHTML = `
@@ -1290,7 +1290,7 @@ function renderSide(route){
     ${nav('#/existing/Dashboard',icon.dash,'Dashboard',false)}
     ${nav('#/existing/All Patients',icon.users,'All Patients',false)}
     ${nav('#/myday',icon.bed,'Inpatients',inIpd,'<span class="newtag">NEW</span>')}
-    ${inIpd?sub('#/myday','Inpatient dashboard','myday')+(isWard()?'':sub('#/rounds','Rounds','rounds'))+(((isPsy()&&!isLead())||isPsych())?sub('#/notes','Daily notes','notes'):'')+(S.role!=='nurse'&&S.role!=='psychologist'?sub('#/nursing','Nursing chart','nursing'):'')+(S.role==='rmo'?sub('#/handover','Handover','handover'):'')+sub('#/inpatients',isLead()?'Floor inpatients':isWard()?'Ward inpatients':'My inpatients','inpatients')+(['lead','psychiatrist','psychologist'].includes(S.role)?sub('#/clinical-docs','Clinical documentation','clinical-docs'):'')+V3.subs(sec):''}
+    ${inIpd?sub('#/myday','Inpatient dashboard','myday')+(isWard()?'':sub('#/rounds','Rounds','rounds'))+(((isPsy()&&!isLead())||isPsych())?sub('#/notes','Daily notes','notes'):'')+(S.role!=='nurse'&&S.role!=='psychologist'?sub('#/nursing','Nursing chart','nursing'):'')+(S.role==='rmo'?sub('#/handover','Handover','handover'):'')+sub('#/inpatients',isLead()?'Floor inpatients':isWard()?'Ward inpatients':'My inpatients','inpatients')+sub('#/admissions','New admission','admissions')+(['lead','psychiatrist','psychologist'].includes(S.role)?sub('#/clinical-docs','Clinical documentation','clinical-docs'):'')+V3.subs(sec):''}
     ${S.role==='rmo'?'':nav('#/existing/My Calendar',icon.cal,'My Calendar',false)}
     ${S.role==='rmo'?'':nav('#/existing/Schedule',icon.clock,'Schedule',false)}
     ${nav('#/existing/Messages',icon.msg,'Messages',false)}
@@ -3236,7 +3236,7 @@ function nFocus(pid){
 function render(){
   const r=(location.hash||'#/myday').slice(2).split('/');
   if(r[0]!=='nursing'&&S.nFocus){S.nFocus=null;lst('nurse').q='';}
-  if(r[0]==='timeline'){window.__histNav=true;location.replace('#/patient/neel/overview');return;}
+  if(r[0]==='timeline'&&!r[1]){window.__histNav=true;location.replace('#/patient/neel/overview');return;}
   if(r[0]!=='patient')window.__histNav=false;
   V3.pre();if(S.role==='rmo')rmoInit();rmoLocBar();scaleBar();
   if(V3.deny(r)||(r[0]==='nursing'&&S.role==='psychologist')||(r[0]==='handover'&&S.role!=='rmo')||(r[0]==='patient'&&S.role==='rmo'&&!inScope(r[1]))||(isWard()&&(r[0]==='rounds'||r[0]==='notes'))||(r[0]==='notes'&&!((isPsy()&&!isLead())||isPsych()))){go('#/myday');return;}
@@ -3246,6 +3246,7 @@ function render(){
   if(V3.isV3(r[0])) html=V3.route(r); else if(r[0]==='myday') html=S.role==='nurse'?vNurseDay():(S.role==='rmo'?vRmoDay():vMyDay());
   else if(r[0]==='nursing'){nFocus(r[1]);html=vNurseView();}
   else if(r[0]==='handover') html=vHandover();
+  else if(r[0]==='admissions') html=vNewAdm();
   else if(r[0]==='inpatients') html=S.role==='rmo'?vRmoWards():vInpatients();
   else if(r[0]==='rounds') html=vRounds();
   else if(r[0]==='notes') html=vNotes();
@@ -5930,6 +5931,7 @@ table.t td,table.pt td{padding-top:13px;padding-bottom:13px}
     care:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/>',
     duty:'<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v3a5 5 0 0 0 10 0v-2"/><circle cx="20" cy="12" r="2"/>',
     bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+    adm:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
     hist:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
     shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
     docs:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>'
@@ -5941,6 +5943,7 @@ table.t td,table.pt td{padding-top:13px;padding-bottom:13px}
     '#/nursing':['chart','green','Nursing chart'],
     '#/handover':['swap','amber','Handover'],
     '#/inpatients':['bed','violet','List'],
+    '#/admissions':['adm','blue','New admission'],
     '#/floor/flow':['floor','green','Floor'],
     '#/ward/charts':['care','green','Care'],
     '#/duty/night':['duty','green','Duty'],
@@ -5952,7 +5955,7 @@ table.t td,table.pt td{padding-top:13px;padding-bottom:13px}
   const svg = k => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[k]}</svg>`;
   const GROUPS = [
     {k:'today', w:'Today', ic:'home', c:'blue', secs:['myday','ward','floor','handover']},
-    {k:'patients', w:'Patients', ic:'bed', c:'violet', secs:['inpatients','rounds','notes','nursing','timeline','patient']},
+    {k:'patients', w:'Patients', ic:'bed', c:'violet', secs:['inpatients','admissions','rounds','notes','nursing','timeline','patient']},
     {k:'alerts', w:'Alerts', ic:'bell', c:'red', secs:['escalation','permissions']},
     {k:'clinical-docs', w:'Clinical documentation', ic:'docs', c:'teal', secs:['clinical-docs']}
   ];
@@ -6803,5 +6806,31 @@ psyEodPage=function(){
     <div class="row" style="gap:8px"><button class="lnk tiny" onclick="waCfgModal()">Connection settings</button></div></div>
     <div class="pad" style="padding-top:4px">${all.map(row).join('')}</div></section>`;
   return strip+h;};
+</script>
+<script id="new-admission-js">
+/* New admission tab: everyone admitted in the last 24 hours. History tab: stays on the patient being seen in Rounds. */
+function vNewAdm(){
+  $('title').textContent='New admission';
+  const pool=(S.role==='lead'||S.role==='rmo')?allPts():PTS;
+  const list=pool.filter(p=>p.day<=1).sort((a,b)=>a.day-b.day);
+  return ipdPage({scr:'ipdNew',lead:false,list:list,total:list.length,srt:'att',att:p=>p.risk,onSort:'S.ipdSort=this.value;render()',
+    title:'New admission',where:'Admitted in the last 24 hours',
+    cur:'h24',set:k=>'',count:k=>list.length,keys:['h24'],filters:'',
+    doc:p=>PSYOF[p.id]||'Unassigned',psy:p=>PSYCHOF[p.id]||'',dc:p=>(EX[p.id]||[])[2]||'Not set',go:()=>'#/patient/neel/admission',
+    id:p=>`${p.sex||'M'}/${p.age||''} · ${p.uhid||''}`,c6l:'Admitted',c6:p=>p.day===0?'Today':'Yesterday'});
+}
+const __na_rounds=vRounds;
+vRounds=function(){
+  const R=S.rounds,WP=WARDS[R.ward],p=WP&&WP[Math.min(R.idx[R.ward],WP.length-1)];
+  if(p)S.focusPid=p.id;
+  return __na_rounds();
+};
+const __na_render=render;
+render=function(){
+  const r=(location.hash||'#/myday').slice(2).split('/');
+  if(r[0]==='patient'&&r[1])S.focusPid=r[1];
+  if(r[0]==='timeline'&&!r[1]&&S.focusPid&&S.focusPid!=='neel'){location.replace('#/timeline/'+S.focusPid);return;}
+  return __na_render();
+};
 </script>
 </body></html>
