@@ -1733,7 +1733,7 @@ function vRounds(){
   ${done?`<section class="card pad"><h3>${R.ward} complete</h3><p class="muted">All round notes saved as today's daily notes. Orders and to-dos went to their owners.</p><div class="row" style="gap:8px">${Object.keys(WARDS).filter(k=>R.idx[k]<WARDS[k].length).slice(0,1).map(k=>`<button class="btn pri" onclick="S.rounds.ward='${k}';render()">Next: ${k}</button>`).join('')}<button class="btn" onclick="S.rounds.idx[S.rounds.ward]=0;render()">Restart this ward</button></div></section>`:`
   <div class="rlayout"><aside class="card rqueue" aria-label="Ward order"><div style="padding:4px 6px 6px"><div class="lbl">Ward order</div><div class="tiny muted" style="margin-top:2px">${WP.length} patients · ${Math.min(RI,WP.length)} seen</div></div>${q}</aside>
   <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
-      <section class="card pad row">${av(p.ini,52,p.risk?'c-red':'c-blue')}<div class="grow"><div class="row" style="gap:10px"><h2>${p.name}</h2><span class="muted">${p.room} · Day ${p.day} · Section ${p.sec}</span></div><div class="row" style="gap:8px;margin-top:8px">${p.risk?chip('High risk','c-red'):''}${chip('Slept 6 to 7 h','c-grey')}${chip('All doses taken','c-grey')}${chip('Joined group therapy','c-grey')}${obsChip(p.id)}${vitChips(p)}</div></div><div class="row" style="gap:8px"><button class="btn" ${RI===0?'disabled':''} onclick="S.rounds.idx[S.rounds.ward]=Math.max(0,S.rounds.idx[S.rounds.ward]-1);S.rounds.drafted=false;S.rounds.mc=[];S.rounds.adv=[];S.rounds.mon=[];S.rounds.inv=[];S.rounds.ref=[];S.rounds.tnote='';render()">‹ Previous patient</button><button class="btn" onclick="S.rounds.idx[S.rounds.ward]++;S.rounds.drafted=false;S.rounds.mc=[];S.rounds.adv=[];S.rounds.mon=[];S.rounds.inv=[];S.rounds.ref=[];S.rounds.tnote='';render()">Next patient ›</button><button class="btn" onclick="${p.id==='neel'?"go('#/patient/neel/overview')":"toast('Prototype: only Neel Bose is filled in')"}">Open full record</button></div></section>
+      <section class="card pad row">${av(p.ini,52,p.risk?'c-red':'c-blue')}<div class="grow"><div class="row" style="gap:10px"><h2>${p.name}</h2><span class="muted">${p.room} · Day ${p.day} · Section ${p.sec}</span></div><div class="row" style="gap:8px;margin-top:8px">${p.risk?chip('High risk','c-red'):''}${chip('Slept 6 to 7 h','c-grey')}${chip('All doses taken','c-grey')}${chip('Joined group therapy','c-grey')}${obsChip(p.id)}${vitChips(p)}</div></div><div class="row" style="gap:8px"><button class="btn" ${RI===0?'disabled':''} onclick="S.rounds.idx[S.rounds.ward]=Math.max(0,S.rounds.idx[S.rounds.ward]-1);S.rounds.drafted=false;S.rounds.mc=[];S.rounds.adv=[];S.rounds.mon=[];S.rounds.inv=[];S.rounds.ref=[];S.rounds.tnote='';render()">‹ Previous patient</button><button class="btn" onclick="S.rounds.idx[S.rounds.ward]++;S.rounds.drafted=false;S.rounds.mc=[];S.rounds.adv=[];S.rounds.mon=[];S.rounds.inv=[];S.rounds.ref=[];S.rounds.tnote='';render()">Next patient ›</button><button class="btn" onclick="go('#/patient/${p.id}/overview')">Open full record</button></div></section>
       <div class="rtop">
         <section style="display:flex;flex-direction:column;gap:8px;padding:0 4px"><h3>Since last round</h3><div class="small" style="color:var(--ink-2)">Yesterday: under 4 hours sleep, irritable. Psychologist today: slept through, joined group therapy.</div><div class="row" style="gap:8px">${chip('Detailed history overdue 1 day','c-amber')}</div></section>
         <section style="display:flex;flex-direction:column;gap:10px;padding:0 4px"><div class="row" style="justify-content:space-between"><h3>AI scribe</h3>${R.drafted?chip('Draft ready','c-blue'):''}</div>${draft}
@@ -1804,7 +1804,7 @@ function ptRows(){
   const q=(S.ptq||'').toLowerCase();
   const due=['neel','sameer','rohit'];
   const L=PTS.filter(p=>(p.name+' '+p.room).toLowerCase().includes(q));
-  const row=p=>`<button class="${p.id==='neel'?'on':''}" onclick="${p.id==='neel'?"go('#/patient/neel/'+(location.hash.split('/')[3]||'overview'))":`toast('Prototype: only Neel Bose is filled in')`}">
+  const row=p=>`<button class="${p.id===S.pid?'on':''}" onclick="go('#/patient/${p.id}/'+(location.hash.split('/')[3]||'overview'))">
       ${av(p.ini,32,p.risk?'c-red':'c-blue')}
       <span style="flex:1;min-width:0"><span style="display:block;font-weight:600;font-size:13px">${p.name}</span><span class="tiny muted">${p.room} · Day ${p.day}</span></span>
       ${due.includes(p.id)?'<span class="st" style="background:var(--amber)" title="Something is due"></span>':''}</button>`;
@@ -2395,7 +2395,7 @@ function readmit(){
   go('#/patient/neel/past'); toast('Neel Bose readmitted (Admission '+S.admNo+'). Inpatient stay tab is back, with past admissions.');
 }
 function pVitalsOld(){
-  const V=[['18 Oct','138/88','104','98.8','97','72.4','3'],['19 Oct','134/86','98','98.6','98','—','4'],['20 Oct','130/84','96','98.4','98','—','3.5'],['21 Oct','128/82','92','98.6','98','—','5'],['22 Oct','126/80','90','98.4','99','71.8','4'],['23 Oct','124/80','88','98.6','98','—','6.5']];
+  const V=S.vit||[['18 Oct','138/88','104','98.8','97','72.4','3'],['19 Oct','134/86','98','98.6','98','—','4'],['20 Oct','130/84','96','98.4','98','—','3.5'],['21 Oct','128/82','92','98.6','98','—','5'],['22 Oct','126/80','90','98.4','99','71.8','4'],['23 Oct','124/80','88','98.6','98','—','6.5']];
   const meds=S.meds.filter(m=>!m.name.includes('waiting'));
   const doses=f=>f==='1-0-1'?['M','N']:f==='0-0-1'?['N']:f==='1-0-0'?['M']:f==='1-1-1'?['M','A','N']:['SOS'];
   const st=(mi,d,k)=>{if(k==='SOS')return d<2?'Given':'—';if(mi===1&&d===2)return 'Refused';if(mi===0&&d===0&&k==='M')return 'Held';return 'Given';};
@@ -2404,13 +2404,13 @@ function pVitalsOld(){
     return `<tr><td style="font-weight:600">${m.name}<br><span class="tiny muted">${m.freq}</span></td>${cells.map(c=>`<td>${c}</td>`).join('')}<td>${chip(pct+'%',pct<90?'c-amber':'c-green')}</td></tr>`;}).join('');
   const top = isWard()? marCard()+vChartsCard() : adhSummary()+vChartsCard();
   return (isWard()?'':nursingSummary(true))+top+`
-  <section class="card"><div class="hd"><div><h3>Blood sugar monitoring</h3><div class="small muted" style="margin-top:4px">Ordered 18 Oct (on olanzapine) · finger-prick CBG by nurses · target 80 to 180 mg/dL</div></div><div class="row" style="gap:8px">${chip('4 times a day','c-grey')}<button class="btn sm" onclick="sugarModal()">Add reading</button></div></div>
+  <section class="card"><div class="hd"><div><h3>Blood sugar monitoring</h3><div class="small muted" style="margin-top:4px">${S.sugarHd||'Ordered 18 Oct (on olanzapine)'} · finger-prick CBG by nurses · target 80 to 180 mg/dL</div></div><div class="row" style="gap:8px">${chip('4 times a day','c-grey')}<button class="btn sm" onclick="sugarModal()">Add reading</button></div></div>
     <div class="scroll"><table class="t"><thead><tr><th>Date</th><th>Fasting</th><th>After breakfast</th><th>After lunch</th><th>Bedtime</th><th>Entered by</th></tr></thead><tbody>
     ${(S.sugarNew||[]).map(r=>`<tr><td style="font-weight:600">${hesc(r.at)}</td>${['Fasting','After breakfast','After lunch','Bedtime'].map(k=>`<td>${k===r.when||(r.when==='Random'&&k==='Fasting')?`<b style="${+r.v>180?'color:var(--amber)':''}">${hesc(r.v)}${r.when==='Random'?' (random)':''}</b>`:''}</td>`).join('')}<td class="small">${hesc(r.by)}</td></tr>`).join('')}
-    ${SUGAR.map((r,ri)=>`<tr><td style="font-weight:600">${r[0]}</td>${r.slice(1,5).map(v=>`<td>${v>180?`<b style="color:var(--amber)">${v}</b>`:v}</td>`).join('')}<td class="small">${SUGAR_BY[ri]||'Not recorded'}</td></tr>`).join('')}</tbody></table></div>
+    ${(S.sugar||SUGAR).map((r,ri)=>`<tr><td style="font-weight:600">${r[0]}</td>${r.slice(1,5).map(v=>`<td>${v>180?`<b style="color:var(--amber)">${v}</b>`:v}</td>`).join('')}<td class="small">${SUGAR_BY[ri]||'Not recorded'}</td></tr>`).join('')}</tbody></table></div>
     <div class="pad small muted">Readings outside the target alert the treating team. HbA1c and lipid profile requested for 25 Oct.</div></section>
   <section class="card"><div class="hd"><h3>Other monitoring by nurses</h3></div>
-    ${[['Weight','Weekly · 71.8 kg on 22 Oct (down 0.6 kg)','On track','c-green'],['Serum lithium level','Tomorrow 8 am, 12 hours after the night dose','Due','c-blue'],['Fluid intake and output','Daily · intake about 2 L','On track','c-green'],['Bowel and bladder','Daily · normal','On track','c-green'],['Sleep chart','Hourly checks at night · 6.5 h last night','Improving','c-green'],['Extrapyramidal side effects','Daily check · mild tremor noted 22 Oct','Watch','c-amber']].map(x=>`<div class="li"><div class="grow"><div style="font-weight:600">${x[0]}</div><div class="tiny muted">${x[1]}</div></div>${chip(x[2],x[3])}</div>`).join('')}
+    ${(S.monx||[['Weight','Weekly · 71.8 kg on 22 Oct (down 0.6 kg)','On track','c-green'],['Serum lithium level','Tomorrow 8 am, 12 hours after the night dose','Due','c-blue'],['Fluid intake and output','Daily · intake about 2 L','On track','c-green'],['Bowel and bladder','Daily · normal','On track','c-green'],['Sleep chart','Hourly checks at night · 6.5 h last night','Improving','c-green'],['Extrapyramidal side effects','Daily check · mild tremor noted 22 Oct','Watch','c-amber']]).map(x=>`<div class="li"><div class="grow"><div style="font-weight:600">${x[0]}</div><div class="tiny muted">${x[1]}</div></div>${chip(x[2],x[3])}</div>`).join('')}
     <div class="pad small"><button class="btn sm" onclick="toast('Monitoring order sent to the nursing station')">Order monitoring</button></div></section>
   <section class="card"><div class="hd"><div><h3>Vitals</h3><div class="small muted" style="margin-top:4px">Recorded by nurses on the ward (nursing module later; until then the RMO or nurse enters them here)</div></div><button class="btn sm" onclick="vitalsModal()">Add vitals</button></div>
     <div class="scroll"><table class="t"><thead><tr><th>Date</th><th>BP</th><th>Pulse</th><th>Temp (°F)</th><th>SpO2 (%)</th><th>Weight (kg)</th><th>Sleep (h)</th></tr></thead><tbody>${V.slice().reverse().map(v=>`<tr>${v.map((x,i)=>`<td ${i===0?'style="font-weight:600"':''}>${x}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>
@@ -2439,20 +2439,20 @@ function barChart(title,unit,vals,max){
   ${DAYS6.map((d,i)=>`<text x="${X(i)}" y="${h+12}" text-anchor="middle" font-size="9" fill="#5b6475">${d.split(' ')[0]}</text>`).join('')}</svg></div>`;
 }
 function adhSummary(){
-  const M=[['Lithium carbonate 400 mg','12/12 doses',100],['Olanzapine 10 mg','5/6 doses',83],['Lorazepam 1 mg','SOS · 2 given',null]];
+  const M=S.adh||[['Lithium carbonate 400 mg','12/12 doses',100],['Olanzapine 10 mg','5/6 doses',83],['Lorazepam 1 mg','SOS · 2 given',null]];const AT=S.adhT||{};
   const tile=(l,v,sub,c)=>`<div class="card stat"><div class="lbl">${l}</div><b style="color:${c||'inherit'}">${v}</b><span class="small muted">${sub}</span></div>`;
-  return `<div class="grid4">${tile('Overall this stay','94%','Ward adherence','var(--green)')}${tile('Doses given','17 <span style="font-size:16px;color:var(--muted)">/ 18</span>','Last 6 days')}${tile('Refused or held','2','1 refused · 1 held','var(--red)')}${tile('On time','89%','Within the round window','var(--amber)')}</div>
+  return `<div class="grid4">${tile('Overall this stay',AT.o||'94%','Ward adherence','var(--green)')}${tile('Doses given',AT.g||'17 <span style="font-size:16px;color:var(--muted)">/ 18</span>','Last 6 days')}${tile('Refused or held',AT.r||'2',AT.rs||'1 refused · 1 held','var(--red)')}${tile('On time',AT.t||'89%','Within the round window','var(--amber)')}</div>
   <section class="card"><div class="hd"><h3>Adherence by medicine</h3><span class="small" style="color:var(--blue-ink)">This stay</span></div><div style="padding:6px 20px 18px">${M.map(m=>`<div style="padding:10px 0"><div class="row" style="justify-content:space-between"><span><strong>${m[0]}</strong> <span class="muted small">· ${m[1]}</span></span>${m[2]===null?'<span class="small muted">As needed</span>':`<strong style="color:${m[2]<90?'var(--amber)':'var(--green)'}">${m[2]}%</strong>`}</div>${m[2]===null?'':`<div class="adhb" style="height:8px;margin-top:8px"><i style="width:${m[2]}%;background:${m[2]<90?'#e0a43a':'#22a05a'}"></i></div>`}</div>`).join('')}</div></section>`;
 }
-function vChartsCard(){
+function vChartsCard(){const VC=S.vc||{sys:[138,134,130,128,126,124],dia:[88,86,84,82,80,80],pulse:[104,98,96,92,90,88],sugar:[162,170,184,184,176,192],sleep:[3,4,3.5,5,4,6.5],adh:[100,100,86,100,100,100],wt:[72.4,72.3,72.1,72,71.8,71.8],wlo:70,whi:74};
   return `<section class="card"><div class="hd"><div><h3>Trends this stay</h3><div class="small muted" style="margin-top:4px">From nurses' entries · green band is the target range</div></div>${chip('Last 6 days','c-grey')}</div>
   <div class="chartgrid">
-    ${lineChart('Blood pressure','mmHg',[{n:'Systolic',c:'#1e6cdb',v:[138,134,130,128,126,124]},{n:'Diastolic',c:'#5b3fb5',v:[88,86,84,82,80,80]}],60,160,[60,130])}
-    ${lineChart('Pulse','bpm',[{n:'Pulse',c:'#b42318',v:[104,98,96,92,90,88]}],60,120,[60,100])}
-    ${lineChart('Blood sugar, after lunch','mg/dL',[{n:'After lunch',c:'#92500a',v:[162,170,184,184,176,192]}],80,220,[80,180])}
-    ${barChart('Sleep','h',[3,4,3.5,5,4,6.5],9)}
-    ${barChart('Medicine adherence','%',[100,100,86,100,100,100],100)}
-    ${lineChart('Weight','kg',[{n:'Weight',c:'#11703a',v:[72.4,72.3,72.1,72,71.8,71.8]}],70,74)}
+    ${lineChart('Blood pressure','mmHg',[{n:'Systolic',c:'#1e6cdb',v:VC.sys},{n:'Diastolic',c:'#5b3fb5',v:VC.dia}],60,160,[60,130])}
+    ${lineChart('Pulse','bpm',[{n:'Pulse',c:'#b42318',v:VC.pulse}],60,120,[60,100])}
+    ${lineChart('Blood sugar, after lunch','mg/dL',[{n:'After lunch',c:'#92500a',v:VC.sugar}],80,220,[80,180])}
+    ${barChart('Sleep','h',VC.sleep,9)}
+    ${barChart('Medicine adherence','%',VC.adh,100)}
+    ${lineChart('Weight','kg',[{n:'Weight',c:'#11703a',v:VC.wt}],VC.wlo,VC.whi)}
   </div></section>`;
 }
 const MAR_ST={};
@@ -2468,7 +2468,7 @@ const ADM_DAY=new Date(2026,9,18);
 const MAR_NURSE={SR:'Sister Rekha',BJ:'Brother Joseph',SA:'Sister Anita'};
 const SLOT_H={M:8,A:14,N:21,SOS:12};
 const marDLab=d=>d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
-function marDays(){const out=[],t=marDay('Today');for(let d=new Date(ADM_DAY);d<=t;d.setDate(d.getDate()+1))out.push(new Date(d));return out;}
+function marDays(){const out=[],t=marDay('Today');for(let d=new Date(S.admD||ADM_DAY);d<=t;d.setDate(d.getDate()+1))out.push(new Date(d));return out;}
 function atDT(at){const m=String(at||'').match(/(\d{1,2}) ([A-Z][a-z]{2})(?: (\d{4}))?(?:,\s*(\d{1,2}):(\d{2})\s*(am|pm))?/i);if(!m)return null;
   let h=+(m[4]||0);if(m[6]){const pm=/pm/i.test(m[6]);if(pm&&h<12)h+=12;if(!pm&&h===12)h=0;}return new Date(+(m[3]||2026),MON3.indexOf(m[2])/3,+m[1],h,+(m[5]||0));}
 const marHash=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h;};
@@ -2521,9 +2521,9 @@ const SUGAR_BY=['Brother Joseph (day) · Sister Rekha (night)','Sister Anita (da
 function nursingSummary(full){
   return `<section class="card"><div class="hd"><div><h3>Nursing summary</h3><div class="small muted" style="margin-top:4px">From the nurses' shift handover · Night shift, Sister Rekha · 24 Oct, 7:00 am</div></div>${full?'':`<button class="btn sm" onclick="go('#/patient/neel/vitals')">All vitals and monitoring</button>`}</div>
     <div class="pad" style="display:flex;flex-direction:column;gap:12px">
-      <div class="note small">Slept about 6.5 hours, woke once at 3 am and settled without SOS medicine. Took night doses. BP 124/80, pulse 88. Bedtime sugar 146 mg/dL. Ate full dinner. Calm, no aggression; checks every 15 minutes continued.</div>
-      <div class="row" style="gap:8px;flex-wrap:wrap">${chip('BP 124/80','c-grey')}${chip('Pulse 88','c-grey')}${chip('SpO2 98%','c-grey')}${chip('Sugar 146 bedtime','c-grey')}${chip('After-lunch sugar 192 yesterday','c-amber')}${chip('Doses: all given','c-green')}${chip('Sleep 6.5 h','c-green')}</div>
-      ${full?`<div class="tiny muted">Earlier shifts: Day shift 23 Oct (Brother Joseph): refused morning olanzapine once, took it after counselling; mild tremor noted. Evening shift 23 Oct (Sister Anita): joined group, phone call with sister for 10 minutes.</div>`:''}
+      <div class="note small">${S.nsum?S.nsum.note:`Slept about 6.5 hours, woke once at 3 am and settled without SOS medicine. Took night doses. BP 124/80, pulse 88. Bedtime sugar 146 mg/dL. Ate full dinner. Calm, no aggression; checks every 15 minutes continued.`}</div>
+      <div class="row" style="gap:8px;flex-wrap:wrap">${S.nsum?S.nsum.chips.map(c=>chip(c[0],c[1])).join(''):chip('BP 124/80','c-grey')+chip('Pulse 88','c-grey')+chip('SpO2 98%','c-grey')+chip('Sugar 146 bedtime','c-grey')+chip('After-lunch sugar 192 yesterday','c-amber')+chip('Doses: all given','c-green')+chip('Sleep 6.5 h','c-green')}</div>
+      ${full?`<div class="tiny muted">${S.nsum?S.nsum.earlier:`Earlier shifts: Day shift 23 Oct (Brother Joseph): refused morning olanzapine once, took it after counselling; mild tremor noted. Evening shift 23 Oct (Sister Anita): joined group, phone call with sister for 10 minutes.`}</div>`:''}
     </div></section>`;
 }
 function sugarModal(){openModal(`<div class="mh"><h3>Add sugar reading</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
@@ -2550,7 +2550,7 @@ function pPrefs(){
   ${DIET_CARD().replace('<h3>Diet</h3>','<div class="row" style="justify-content:space-between"><h3>Diet</h3>'+vis('Kitchen','Ward')+'</div>')}
   ${ALLOW_CARD().replace('<h3>Allowances during the stay</h3>','<div class="row" style="justify-content:space-between"><h3>Calls and visits</h3>'+vis('Front desk','Ward')+'</div>')}
   <section class="card pad" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><h3>Approved visitors</h3>${vis('Front desk','Security')}</div>
-    ${[['Ananya Bose','Sister · nominated representative','Allowed','c-green'],['Rakesh Bose','Father','Allowed','c-green'],['Kunal Arora','Friend','Not for now','c-grey']].map(v=>`<div class="box row" style="justify-content:space-between"><span class="small"><strong>${v[0]}</strong><br><span class="muted">${v[1]}</span></span>${chip(v[2],v[3])}</div>`).join('')}
+    ${(S.contacts||[['Ananya Bose','Sister · nominated representative','Allowed','c-green'],['Rakesh Bose','Father','Allowed','c-green'],['Kunal Arora','Friend','Not for now','c-grey']]).map(v=>`<div class="box row" style="justify-content:space-between"><span class="small"><strong>${v[0]}</strong><br><span class="muted">${v[1]}</span></span>${chip(v[2],v[3])}</div>`).join('')}
     <button class="btn sm" style="align-self:flex-start" onclick="toast('Visitor added; front desk notified')">Add visitor</button></section>
   <section class="card pad" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><h3>Room and belongings</h3>${vis('Front desk','Housekeeping')}</div>
     ${sel('Room',['Keep in current room','Single room preferred','Shared room is fine','Move closer to the nursing station'])}
@@ -2564,7 +2564,7 @@ function pPrefs(){
   <section class="card pad" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><h3>Communication with family</h3>${vis('Patient experience','Billing')}</div>
     ${sel('Language for updates',['Hindi','English','Bengali'])}
     ${inp('Clinical updates go to','Ananya Bose (sister) only')}
-    ${inp('Billing and payments contact','Rakesh Bose (father)')}
+    ${inp('Billing and payments contact',S.billing||'Rakesh Bose (father)')}
     ${inp('Do not share information with','','e.g. extended family, employer')}</section>
   <section class="card pad" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><h3>Other requests</h3>${vis('Admin','Ward')}</div>
     ${inp('Religious or cultural needs','Fasts on Tuesdays')}
@@ -2703,7 +2703,7 @@ function vDashboard(){
   const T=tasks(); const late=T.filter(t=>!S.done[t.id]&&t.late).length;
   const totW=Object.values(WARDS).reduce((a,w)=>a+w.length,0), seenW=Object.keys(WARDS).reduce((a,k)=>a+Math.min(S.rounds.idx[k],WARDS[k].length),0), roundsLeft=Math.max(totW-seenW,0);
   const notesDue=PTS.length-PTS.filter(p=>((S.eod||{})[p.id]||{}).saved).length;
-  const openAct=pid=>pid==='neel'?`go('#/patient/neel/overview')`:`toast('Prototype: only Neel Bose is filled in')`;
+  const openAct=pid=>`go('#/patient/${pid}/overview')`;
   const row=(name,text,pill,pid)=>`<div class="li"><div class="grow"><div style="font-weight:600">${name}</div><div class="small muted">${text}</div></div>${pill?chip(pill[0],pill[1]):''}${pid?`<button class="btn sm" onclick="${openAct(pid)}">Open</button>`:''}</div>`;
   const sec=(title,sub,body)=>`<section class="card"><div class="hd"><div><h3>${title}</h3>${sub?`<div class="small muted" style="margin-top:4px">${sub}</div>`:''}</div></div>${body}</section>`;
   const kpi=(label,val,sub,color,act)=>act?statTile('',false,act,label,`<div class="lbl">${label}</div><b${color?` style="color:${color}"`:''}>${val}</b><span class="small muted">${sub||''}</span>`):`<div class="card stat" style="cursor:default"><div class="lbl">${label}</div><b${color?` style="color:${color}"`:''}>${val}</b><span class="small muted">${sub||''}</span></div>`;
@@ -3459,7 +3459,7 @@ const REF_QUICK=[
  {kind:REF_KIND[1],to:'Endocrinologist',why:'Uncontrolled blood sugar',urg:'Within 24 hours',how:REF_OUT_HOW[1]},
  {kind:REF_KIND[1],to:'General physician',why:'Abnormal blood reports',urg:'Within 24 hours',how:REF_OUT_HOW[0]}];
 const refOut=r=>r.kind===REF_KIND[1];
-function refTask(r){return {id:r.id,pid:r.pid,ref:true,late:r.urg==='Urgent today',title:refOut(r)?'Arrange '+r.to+' · '+r.pn:r.why+' · '+r.pn,meta:(refOut(r)?r.why+' · '+r.how:'Referred to RMO')+' · from '+r.by+' on rounds',due:r.urg,chipc:'c-blue',go:'#/patient/neel/overview'};}
+function refTask(r){return {id:r.id,pid:r.pid,ref:true,late:r.urg==='Urgent today',title:refOut(r)?'Arrange '+r.to+' · '+r.pn:r.why+' · '+r.pn,meta:(refOut(r)?r.why+' · '+r.how:'Referred to RMO')+' · from '+r.by+' on rounds',due:r.urg,chipc:'c-blue',go:'#/patient/'+(r.pid||'neel')+'/overview'};}
 function refKind(){
   const o=$('refK').value===REF_KIND[1],sel=L=>L.map(x=>`<option>${x}</option>`).join('');
   $('refTo').innerHTML=o?sel(REF_OUT_TO):'<option>RMO on duty</option>';$('refTo').disabled=!o;
@@ -3611,7 +3611,7 @@ const standFor=pid=>(S.stand||[]).filter(x=>x.pid===pid&&!x.stopped);
 const informLabel=i=>{const m=String(i||'').match(/\((.*)\)/);return m?m[1]:i;};
 const nUnseen=()=>(S.nInstr||[]).map(x=>x[6]).concat(NSTATIC).filter(i=>!(S.seen||{})[i]).length;
 function seenCell(id){const v=(S.seen||{})[id];if(!v&&S.role==='rmo')return '';return v?`<span class="tiny muted" style="text-align:right">Seen by ${v.by}<br>${v.at}</span>`:`<button class="btn sm" onclick="nSeen('${id}')">Mark seen</button>`;}
-function instrAct(name,id){const v=(S.seen||{})[id];const open=name==='Neel Bose'?"go('#/patient/neel/overview')":"toast('Prototype: only Neel Bose is filled in')";
+function instrAct(name,id){const v=(S.seen||{})[id];const open="go('#/patient/"+((allPts().find(x=>x.name===name)||{id:'neel'}).id)+"/overview')";
   return `<div class="row" style="gap:8px;flex-wrap:nowrap;margin-left:auto"><button class="btn sm" onclick="${open}">Open patient</button>${v?`<span class="tiny muted" style="text-align:right">Seen by ${v.by}<br>${v.at}</span>`:`<button class="btn sm pri" onclick="nSeen('${id}')">Mark seen</button>`}</div>`;}
 function nSeen(id){S.seen=S.seen||{};S.seen[id]={by:signer(),at:clock()};render();toast('Marked seen by '+signer());}
 function standChips(pid){const L=standFor(pid);if(!L.length)return '';return `<div class="row" style="gap:4px;margin-top:4px;flex-wrap:wrap">${L.slice(0,2).map(x=>`<span class="chip ${ADV_HIGH.includes(x.ty)?'c-amber':'c-blue'}" title="${x.text}">${x.text.split(':')[0]}</span>`).join('')}${L.length>2?`<span class="chip c-grey" title="${L.slice(2).map(x=>x.text).join('; ')}">+${L.length-2}</span>`:''}</div>`;}
@@ -3636,7 +3636,7 @@ function roundStand(){
   return `<div class="lbl">Active for ${p.name} · until stopped</div>${L.map(x=>`<div class="box row" style="align-items:flex-start">${chip(x.ty,ADV_HIGH.includes(x.ty)?'c-amber':'c-blue')}<span class="grow small">${x.text}<span class="tiny muted" style="display:block;margin-top:2px">${x.until||''}${x.inform&&x.inform!=='No one extra'?' · Inform '+x.inform:''} · ${x.by}, ${x.when}${x.inf?' · '+informLabel(x.inform)+' informed '+x.inf:''}</span></span><button class="btn sm" onclick="stopStand('${x.id}')">Stop</button></div>`).join('')}`;
 }
 function monSheet(){
-  const L=monList('neel');
+  const L=monList(S.pid||'neel');
   return `<section class="card"><div class="hd"><div><h3>Monitoring orders</h3><div class="small muted" style="margin-top:4px">Ordered by the treating team along with the medicines. Each one appears on the shift board at the times shown.</div></div></div>
     <div class="scroll"><table class="t"><thead><tr><th>Monitor</th><th>How often</th><th>On the shift board</th><th>Ordered by</th></tr></thead><tbody>${L.map(c=>{const sl=(MON_FREQ.find(f=>f[0]===c[1])||[0,[]])[1],w=c[2]||{};return `<tr><td style="font-weight:600">${c[0]}</td><td>${monLabel(c[1])}</td><td class="small muted">${sl.length?sl.join(', '):'Not on the daily board'}</td><td class="small">${w.by||'Not recorded'}<span class="byl">${w.at||''}</span></td></tr>`;}).join('')||'<tr><td colspan="4" class="small muted">No monitoring ordered.</td></tr>'}</tbody></table></div></section>`;
 }
@@ -3797,7 +3797,7 @@ function dnSet(f){S.dnF=f;render();}
 function pDaily(){
   const dn=S.dn||{};const sp=dnSpec();const keys=dnKeys(sp);
   const done=keys.filter(k=>(dn[k]||[]).length).length;const pct=Math.round(done/keys.length*100);
-  const f=S.dnF||'All';const hist=DN_HIST.filter(h=>f==='All'||h.type===f);
+  const f=S.dnF||'All';const hist=(S.dnHist||DN_HIST).filter(h=>f==='All'||h.type===f);
   const update=famUpdate();
   const step=(n,t,on)=>`<span class="dstep ${on?'on':''}"><b>${n}</b>${t}</span>`;
   return `
@@ -3810,7 +3810,7 @@ function pDaily(){
         <button class="btn sm pri" id="scrD" onclick="dnDictate()">${icon.mic} Dictate</button>
       </div>
     </div>
-    <div class="dprog"><div class="dbar" aria-hidden="true"><i style="width:${pct}%"></i></div><span class="small"><b>${done} of ${keys.length}</b> answered</span><span class="tiny muted">${sp.ytxt}</span></div>
+    <div class="dprog"><div class="dbar" aria-hidden="true"><i style="width:${pct}%"></i></div><span class="small"><b>${done} of ${keys.length}</b> answered</span><span class="tiny muted">${S.dnY||sp.ytxt}</span></div>
     <div class="eq" style="margin:16px 20px">${[0,2].map(k=>`<div class="eqrow">${sp.groups.slice(k,k+2).map(g=>`<div class="eqc ${g[2].length===1?'one':''}"><div class="dng2">${g[0]}</div>${g[2].map(dnRow).join('')}</div>`).join('')}</div>`).join('')}</div>
     <div class="dsave"><span class="tiny muted"><span class="kbd">Ctrl</span> + <span class="kbd">S</span> to save</span><button class="btn pri" onclick="saveDaily()">Save note</button></div>
   </section>
@@ -4840,7 +4840,7 @@ V3.bedModal = (w,label) => {
     return V3.modal(hesc(p.name)+' · '+hesc(label),hesc(w)+' · '+hesc(b.type),`<div class="flh">${av(p.ini,40,p.risk?'c-red':'c-blue')}<div class="grow"><div class="nm">${hesc(p.name)} <span class="tiny muted" style="font-weight:400">· ${p.age||''} ${p.sex||''} · Day ${p.day||0}</span></div><div class="small muted">${hesc(p.dx)}</div></div>${p.risk?chip('High risk','c-red'):''}</div>
       <div class="kv"><div><span class="tiny muted">Psychiatrist</span><b>${hesc(V3.eff('psy',p.id))}</b></div><div><span class="tiny muted">Psychologist</span><b>${hesc(V3.eff('psych',p.id)||'Not set')}</b></div><div><span class="tiny muted">Observation</span><b>${hesc(EX[p.id][0])}</b></div></div>
       ${s.beds.dis[p.id]?`<div class="callout blue small">Planned discharge: ${hesc(s.beds.dis[p.id].when)} · ${r.n} of ${r.t} ready.</div>`:''}`,
-      `<button class="btn" onclick="V3.timelineOf('${p.id}')">Timeline</button><button class="btn" onclick="V3.allocModal('pt','${p.id}')">Change team</button><button class="btn pri" onclick="closeModal();go('#/patient/neel/overview')">Open patient file</button>`);
+      `<button class="btn" onclick="V3.timelineOf('${p.id}')">Timeline</button><button class="btn" onclick="V3.allocModal('pt','${p.id}')">Change team</button><button class="btn pri" onclick="closeModal();go('#/patient/${p.id}/overview')">Open patient file</button>`);
   }
   if(st==='free'){ const exp=s.beds.expected.filter(e=>!e.bed&&e.ward===w);
     return V3.modal('Bed '+hesc(label),hesc(w)+' · '+hesc(b.type)+' · free',`<label class="field"><span class="lbl">Reserve for</span>${V3.sel('v3rs',[['','Choose an expected admission']].concat(exp.map(e=>[e.id,e.name+' · '+V3.hm(e.eta)])),'')}<span class="tiny muted">${exp.length?'Only expected admissions to this ward are listed.':'No expected admission to this ward needs a bed.'}</span></label><div class="callout grey small">Or take the bed out of use for cleaning or maintenance. It will not count as free.</div>`,
@@ -5020,7 +5020,7 @@ V3.pQuality = () => {
   return `<div class="v3kpis">${kp}</div>
   <div class="v3cols"><section class="card"><div class="hd"><div><h3>Discharge summary turnaround</h3><div class="small muted" style="margin-top:4px">Hours from discharge order to signed summary. Dashed line is the ${ds.target}-hour target.</div></div></div><div class="pad">${svg}<div class="tiny muted" style="margin-top:4px">Last ${ds.hist.length} discharges, oldest on the left.</div></div>
     ${ds.pending.map(d=>`<div class="li" style="align-items:flex-start"><div class="grow"><strong>${hesc(V3.pn(d.pid))}</strong> ${chip('Unsigned · '+V3.mins(V3.now()-d.ordered),'c-amber')}<div class="small muted">Draft by ${hesc(d.draft)} · ${hesc(d.block)}</div></div><button class="btn sm pri" onclick="flSign()">Sign as covering doctor</button></div>`).join('')}</section>
-  <section class="card"><div class="hd"><div><h3>Grievance clocks</h3><div class="small muted" style="margin-top:4px">First response is due inside the clock set for each one</div></div></div>${q.griev.map(g=>{const left=clockLeft(g),res=g.st==='Resolved';return `<div class="li" style="align-items:flex-start"><div class="grow"><div class="row" style="gap:8px"><strong>${hesc(V3.pn(g.pid))}</strong>${chip(g.who,'c-grey')}</div><div class="small">${hesc(g.text)}</div><div class="tiny muted">Owner ${hesc(g.owner)} · raised ${V3.stamp(g.raised)} · ${g.clock}-hour clock</div>${res?'':`<div class="row" style="gap:10px;margin-top:6px;flex-wrap:nowrap">${V3.bar(100-Math.max(0,left)/(g.clock*60)*100,left<120?'warn':'')}<span class="tiny" style="white-space:nowrap;font-weight:600;color:${left<120?'var(--amber)':'inherit'}">${left<=0?'Overdue':V3.mins(left)+' left'}</span></div>`}</div>${res?chip('Resolved','c-green'):`<button class="btn sm" onclick="go('#/patient/neel/griev')">Open</button>`}</div>`;}).join('')}</section></div>
+  <section class="card"><div class="hd"><div><h3>Grievance clocks</h3><div class="small muted" style="margin-top:4px">First response is due inside the clock set for each one</div></div></div>${q.griev.map(g=>{const left=clockLeft(g),res=g.st==='Resolved';return `<div class="li" style="align-items:flex-start"><div class="grow"><div class="row" style="gap:8px"><strong>${hesc(V3.pn(g.pid))}</strong>${chip(g.who,'c-grey')}</div><div class="small">${hesc(g.text)}</div><div class="tiny muted">Owner ${hesc(g.owner)} · raised ${V3.stamp(g.raised)} · ${g.clock}-hour clock</div>${res?'':`<div class="row" style="gap:10px;margin-top:6px;flex-wrap:nowrap">${V3.bar(100-Math.max(0,left)/(g.clock*60)*100,left<120?'warn':'')}<span class="tiny" style="white-space:nowrap;font-weight:600;color:${left<120?'var(--amber)':'inherit'}">${left<=0?'Overdue':V3.mins(left)+' left'}</span></div>`}</div>${res?chip('Resolved','c-green'):`<button class="btn sm" onclick="go('#/patient/${g.pid}/griev')">Open</button>`}</div>`;}).join('')}</section></div>
   <section class="card"><div class="hd"><div><h3>Spot checks</h3><div class="small muted" style="margin-top:4px">Short notes on what you looked at, what you found, and who fixes it</div></div><button class="btn pri" onclick="V3.spotModal()">${V3.i('plus',14)} Log spot check</button></div>
     <div class="scroll"><table class="t"><thead><tr><th>When</th><th>Checked</th><th>Finding</th><th>Rating</th><th>Owner</th><th></th></tr></thead><tbody>${q.spot.map(x=>`<tr><td class="small">${V3.stamp(x.t)}</td><td><b>${hesc(x.type)}</b><div class="tiny muted">${hesc(x.who)}${x.pid?' · '+hesc(V3.pn(x.pid)):''}</div></td><td class="small" style="max-width:320px">${hesc(x.finding)}</td><td>${chip(x.rating,x.rating==='Good'?'c-green':'c-amber')}</td><td class="small">${hesc(x.owner)}${x.due?'<div class="tiny muted">Due '+hesc(x.due)+'</div>':''}</td><td>${x.st==='Open'?`<button class="btn sm" onclick="V3.spotClose('${x.id}')">Close</button>`:chip('Closed','c-grey')}</td></tr>`).join('')}</tbody></table></div></section>`;
 };
@@ -5470,7 +5470,7 @@ V3.pNight = () => {
   const kp = V3.kpi('Alerts waiting',unack,unack?'Respond inside the time on each card':'All acknowledged',unack?'crit':'ok') + V3.kpi('Open alerts',open.length,open.filter(a=>a.sev==='critical').length+' critical','') + V3.kpi('Admissions to see',newAdm.length+exp.length,newAdm.length+' in, '+exp.length+' arriving today',newAdm.length?'warn':'') + V3.kpi('Orders to be countersigned',s.orders.filter(o=>!o.cs).length,'Consultants sign by morning','');
   const mode = `<div class="v3mode ${night?'night':''}"><div class="row" style="gap:12px;flex-wrap:nowrap"><span class="v3mode-i">${V3.i(night?'moon':'clock',22)}</span><div><b>${night?'Night duty: you are the first call for everything':'Day duty: treating teams lead, you back them up'}</b><div class="small" style="opacity:.85">${night?'Nurses call you first on every ward. Consultants are on call by phone. Unanswered alerts go up the chain on their own.':'Alerts still reach you first and escalate to the psychiatrist and floor lead if nobody responds.'}</div></div></div><div class="seg"><button class="${night?'':'on'}" onclick="S.v3.ui.night=false;render()">Day duty</button><button class="${night?'on':''}" onclick="S.v3.ui.night=true;render()">Night duty, 8 pm to 8 am</button></div></div>`;
   const alerts = open.length ? open.slice(0,4).map(a=>V3.alertCard(a)).join('') : V3.empty('No open alerts','New alerts from nurses appear here the moment they are raised.');
-  const admRows = newAdm.map(p=>`<div class="li" style="align-items:flex-start"><div class="grow"><div class="row" style="gap:8px"><strong>${hesc(p.name)}</strong>${chip('Admitted 10:30 am','c-blue')}${chip('Suite 201','c-violet')}</div><div class="small muted">${hesc(p.dx)} · ${hesc(V3.eff('psy',p.id))}</div><div class="tiny muted">${V3.admState(p.id).risk==='todo'?'Nursing risk screen not done. ':''}Admission workup open.</div></div><button class="btn sm pri" onclick="go('#/patient/neel/admission')">Open workup</button></div>`).join('') + exp.map(e=>`<div class="li" style="align-items:flex-start"><div class="grow"><div class="row" style="gap:8px"><strong>${hesc(e.name)}</strong>${chip('Arriving '+V3.hm(e.eta),'c-amber')}${e.bed?chip('Bed '+hesc(e.bed.replace('Room ','R-')),'c-green'):chip('No bed','c-red')}</div><div class="small muted">${hesc(e.dx)} · ${hesc(e.ward)} · ${hesc(e.src)}</div></div></div>`).join('');
+  const admRows = newAdm.map(p=>`<div class="li" style="align-items:flex-start"><div class="grow"><div class="row" style="gap:8px"><strong>${hesc(p.name)}</strong>${chip('Admitted 10:30 am','c-blue')}${chip('Suite 201','c-violet')}</div><div class="small muted">${hesc(p.dx)} · ${hesc(V3.eff('psy',p.id))}</div><div class="tiny muted">${V3.admState(p.id).risk==='todo'?'Nursing risk screen not done. ':''}Admission workup open.</div></div><button class="btn sm pri" onclick="go('#/patient/${p.id}/admission')">Open workup</button></div>`).join('') + exp.map(e=>`<div class="li" style="align-items:flex-start"><div class="grow"><div class="row" style="gap:8px"><strong>${hesc(e.name)}</strong>${chip('Arriving '+V3.hm(e.eta),'c-amber')}${e.bed?chip('Bed '+hesc(e.bed.replace('Room ','R-')),'c-green'):chip('No bed','c-red')}</div><div class="small muted">${hesc(e.dx)} · ${hesc(e.ward)} · ${hesc(e.src)}</div></div></div>`).join('');
   const oc = FLOORS.slice().sort((a,b)=>floorNo(WARDS[a][0])-floorNo(WARDS[b][0])).map(w=>{ const o = V3.ONCALL[w]; const a = open.filter(x=>V3.ward(x.pid)===w).length;
     return `<tr><td><b>${floorNo(WARDS[w][0])}${['st','nd','rd'][floorNo(WARDS[w][0])-1]||'th'} floor</b><div class="tiny muted">${hesc(w)} · ${WARDS[w].length} patients</div></td><td>${a?chip(a+' open alert'+(a===1?'':'s'),'c-red'):chip('Quiet','c-green')}</td><td><b>${hesc(o.n)}</b><div class="tiny muted">On call tonight${o.note?' · '+hesc(o.note):''}</div></td><td class="small">${hesc(o.b)}<div class="tiny muted">Backup</div></td><td class="small"><span class="v3sel">${hesc(o.ph)}</span></td><td style="text-align:right"><button class="btn sm pri" onclick="V3.callModal('','','${w}')">${V3.i('phone',14)} Call</button></td></tr>`; }).join('');
   return `${mode}<div class="v3kpis">${kp}</div>
@@ -7202,6 +7202,185 @@ accountModal=function(){
 };
 (function(){let r='';try{r=sessionStorage.getItem(LOGIN_KEY)||'';}catch(e){}
   if(r&&LOGIN_ROLES.some(x=>x[0]===r)){if(S.role!==r){S.role=r;render();}}else loginShow();})();
+</script>
+<script id="pt-context-js">
+/* Every patient has their own records (4 Nov 2026, all roles). The patient pages were written for one patient and read
+   S.meds, S.consents, S.events… PT_CTX keeps one copy of those fields per patient. Opening #/patient/<id>/<tab> swaps that
+   patient's copy into S; every other screen runs on Neel's copy as before, so dashboards and task lists are unchanged.
+   Neel keeps the original demo records. Other patients get mock records built from their diagnosis (demo data only). */
+const PT_KEYS=['dailySaved','familySent','scribeDaily','historyStatus','historyDraft','capacityOpen','capacityDone','section','plansSigned','psychRows','dx','meds','medsOff','consents','calls','therapyNotes','team','discharge','obs','edd','eddShared','labs','restraints','obsBy','eddBy','dischargeDrafted','draftBy','discharged','dtype','reassessDone','admNo','events','pastAdm','diet','pgriev','dn','rx','pf','pfAt','pfUp','prefBy','vit','sugar','sugarHd','adh','adhT','vc','monx','nsum','admD','contacts','billing','dnHist','dnY'];
+const ptClone=o=>JSON.parse(JSON.stringify(o));
+const PT_CTX={neel:ptClone(Object.fromEntries(PT_KEYS.map(k=>[k,S[k]])))};
+S.pid='neel';
+const PT_TODAY=new Date(2026,9,24); // demo "today": Neel is on day 6, admitted 18 Oct
+const ptDay=n=>{const d=new Date(PT_TODAY);d.setDate(d.getDate()-n);return d};
+const ptD=d=>d.getDate()+' '+d.toLocaleString('en-GB',{month:'short'});
+const ptDT=(d,t)=>ptD(d)+' 2026, '+t;
+const ptHash=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
+const ptPick=(arr,id,salt)=>arr[ptHash(id+(salt||''))%arr.length];
+
+/* who the patient is: nominated representative, contact, UHID, sex and age where the ward list leaves them out */
+const PT_FAMILY={arjun:['Shalini Mehta','Wife'],varun:['Lakshmi Rao','Mother'],kabir:['Rajesh Malhotra','Father'],sameer:['Mitali Das','Mother'],neel:['Ananya Bose','Sister'],rohit:['Meera Kapoor','Wife'],dev:['Suresh Kumar','Brother'],tarun:['Anil Roy','Father'],meera:['Gopal Iyer','Husband'],sana:['Farah Qureshi','Mother'],ritu:['Vikram Malhotra','Husband'],kavya:['Lata Menon','Mother'],pooja:['Harish Bhatt','Father'],aman:['Gurpreet Gill','Wife'],yash:['Neha Arora','Sister'],nikhil:['Sunita Jain','Wife'],rahul:['Kamal Sethi','Father']};
+const PT_FILL={meera:['F',44],sana:['F',27],ritu:['F',36],kavya:['F',19],pooja:['F',32],aman:['M',39],yash:['M',28],nikhil:['M',47],rahul:['M',24]};
+function ptIdentity(p){
+  const i=allPts().indexOf(p),fam=PT_FAMILY[p.id]||['Family member','Relative'],fl=PT_FILL[p.id]||[];
+  return {name:p.name,first:p.name.split(' ')[0],ini:p.ini||p.name.split(' ').map(x=>x[0]).join(''),sex:p.sex||fl[0]||'M',age:p.age||fl[1]||30,
+    uhid:p.uhid||('2026-27RG'+(7000+i*37)),th:'TH-'+(1040+i),room:p.room,nr:fam[0],nrFirst:fam[0].split(' ')[0],rel:fam[1],
+    phone:'+91 9'+String(8000+ptHash(p.id)%1999).padStart(4,'0')+'X XXX'+String(10+ptHash(p.id+'p')%89),adm:ptDay(p.day)};
+}
+
+/* clinical mock records by diagnosis */
+const PT_DX=[
+ [/bipolar.*depress/i,{icd:'6A60.4',dx:'Bipolar affective disorder, current episode depressed',meds:[['Lithium carbonate 300 mg','1-0-1','After food'],['Quetiapine 100 mg','0-0-1','After food']],labs:['Serum lithium','Thyroid profile'],areas:[['Low mood and hopelessness','Behavioural activation'],['Limited insight','Psychoeducation on bipolar disorder']],session:'Behavioural activation · activity scheduling',obs:'Every 30 minutes'}],
+ [/bipolar/i,{icd:'6A60.0',dx:'Bipolar affective disorder, current episode manic',meds:[['Sodium valproate 500 mg','1-0-1','After food'],['Olanzapine 10 mg','0-0-1','After food']],labs:['Serum valproate','Liver function tests'],areas:[['Poor sleep and irritability','Sleep hygiene, relaxation training'],['Limited insight','Psychoeducation on mood episodes']],session:'Psychoeducation on mood episodes',obs:'Every 15 minutes'}],
+ [/schizo/i,{icd:'6A20',dx:'Schizophrenia, continuous',meds:[['Olanzapine 15 mg','0-0-1','After food'],['Trihexyphenidyl 2 mg','1-0-0','After food'],['Lorazepam 1 mg','SOS','As needed']],labs:['Lipid profile','Fasting blood sugar'],areas:[['Poor insight into illness','Psychoeducation for patient and family'],['Social withdrawal','Activity scheduling, group therapy']],session:'Early warning signs of relapse',obs:'Routine'}],
+ [/psychotic/i,{icd:'6A23',dx:'Acute and transient psychotic disorder',meds:[['Risperidone 2 mg','1-0-1','After food'],['Lorazepam 2 mg','SOS','As needed']],labs:['Urine drug screen','CT brain (plain)'],areas:[['Suspiciousness and fear','Supportive therapy, reality testing'],['Family stress','Family psychoeducation']],session:'Supportive session · reality testing',obs:'1:1 constant'}],
+ [/depress/i,{icd:'6A71.2',dx:'Recurrent depressive disorder, current episode severe',meds:[['Escitalopram 10 mg','1-0-0','After food'],['Mirtazapine 15 mg','0-0-1','After food'],['Clonazepam 0.5 mg','0-0-1','After food']],labs:['Thyroid profile','Vitamin B12 and D3'],areas:[['Low mood and poor sleep','Behavioural activation, sleep hygiene'],['Negative thoughts','Cognitive restructuring']],session:'Cognitive restructuring · thought record',obs:'Every 30 minutes'}],
+ [/obsess|ocd/i,{icd:'6B20',dx:'Obsessive-compulsive disorder',meds:[['Fluoxetine 40 mg','1-0-0','After food'],['Clonazepam 0.5 mg','0-0-1','After food']],labs:['Thyroid profile'],areas:[['Checking and washing rituals','Exposure and response prevention'],['Avoidance','Graded exposure hierarchy']],session:'Exposure and response prevention · hierarchy',obs:'Routine'}],
+ [/alcohol.*delirium/i,{icd:'6C40.4',dx:'Alcohol withdrawal with risk of delirium',meds:[['Chlordiazepoxide 25 mg','1-1-1','After food'],['Thiamine 100 mg','1-1-1','Before food'],['Haloperidol 5 mg','SOS','As needed']],labs:['Liver function tests','Serum electrolytes'],areas:[['Craving and withdrawal','Motivational interviewing'],['Family strain','Family session on relapse prevention']],session:'Motivational interviewing · stages of change',obs:'Every 15 minutes'}],
+ [/alcohol/i,{icd:'6C40.2',dx:'Alcohol dependence, in withdrawal',meds:[['Chlordiazepoxide 25 mg','1-1-1','After food'],['Thiamine 100 mg','1-0-1','Before food'],['Multivitamin','1-0-0','After food']],labs:['Liver function tests','Gamma GT'],areas:[['Craving','Motivational interviewing'],['Relapse triggers','Relapse prevention plan']],session:'Motivational interviewing · decisional balance',obs:'Every 30 minutes'}],
+ [/opioid/i,{icd:'6C43.2',dx:'Opioid dependence',meds:[['Buprenorphine 2 mg','1-0-1','Under the tongue'],['Clonidine 0.1 mg','1-0-1','After food']],labs:['Urine drug screen','HIV, HBsAg, HCV'],areas:[['Craving and withdrawal','Motivational interviewing'],['Peer influence','Relapse prevention, refusal skills']],session:'Relapse prevention · high-risk situations',obs:'Routine'}],
+ [/cannabis/i,{icd:'6C41.2',dx:'Cannabis dependence',meds:[['Quetiapine 50 mg','0-0-1','After food']],labs:['Urine drug screen'],areas:[['Craving','Motivational interviewing'],['Low motivation','Goal setting, activity scheduling']],session:'Motivational interviewing · goals',obs:'Routine'}],
+ [/anorexia/i,{icd:'6B80',dx:'Anorexia nervosa',meds:[['Olanzapine 2.5 mg','0-0-1','After food'],['Multivitamin','1-0-0','After food']],labs:['Serum electrolytes','ECG'],areas:[['Restricted eating','Meal plan with dietitian, supervised meals'],['Body image','Cognitive behavioural therapy']],session:'Meal support · body image',obs:'Every 30 minutes'}],
+ [/./,{icd:'—',dx:'Under assessment (admitted recently)',meds:[['Lorazepam 1 mg','SOS','As needed']],labs:['Complete blood count','Urine drug screen'],areas:[['To be assessed','Admission workup and detailed history']],session:'',obs:'Every 15 minutes'}]
+];
+const ptDxSet=p=>PT_DX.find(x=>x[0].test(p.dx))[1];
+function ptMakeCtx(p){
+  const c=ptClone(PT_CTX.neel),id=ptIdentity(p),set=ptDxSet(p),psy=PSYOF[p.id]||(typeof rmoPsy==='function'&&rmoPsy(p))||'Dr. Nandini Rao',psych=PSYCHOF[p.id]||'';
+  const adm=id.adm,at=(n,t)=>ptDT(ptDay(Math.max(0,p.day-n)),t),fresh=p.day<=1;
+  Object.assign(c,{
+    dx:set.dx,section:String(p.sec||'89'),team:{psy,psych},obs:(EX[p.id]||[])[0]||set.obs,
+    obsBy:{by:psy,at:ptDT(adm,'12:10 pm')},edd:(()=>{const d=new Date(adm);d.setDate(d.getDate()+Math.max(14,p.day+7));return d.toISOString().slice(0,10)})(),eddShared:false,eddBy:{by:psy,at:ptDT(adm,'12:15 pm')},
+    historyStatus:p.day>=3?(ptHash(p.id)%3?'signed':'overdue'):'pending',historyDraft:false,
+    dailySaved:false,familySent:false,scribeDaily:false,capacityOpen:false,capacityDone:p.day>=7,reassessDone:p.day>=14,
+    plansSigned:{psy:p.day>=7,psych:p.day>=7&&!!psych},calls:{h24:p.day>=1?'done':'due',d34psy:p.day>4?'done':'due',d34psych:p.day>4||!psych?'done':'due'},
+    admNo:p.day===0?3:2,discharged:false,dischargeDrafted:false,draftBy:'',dtype:'Planned',
+    discharge:{capacity:false,risk:false,formC:false,meds:false,followups:false,family:false,summary:false,dconsent:false},
+    psychRows:psych?set.areas.map((a,i)=>({area:a[0],iv:a[1],req:String(3+i),done:String(Math.min(2+i,Math.floor(p.day/4))),when:['Mon, Thu 4 pm','Wed 11 am','Tue, Fri 3 pm'][i%3],out:p.day>5?'Improving':'Started'})):[],
+    meds:set.meds.map(m=>({name:m[0],freq:m[1],time:m[2],range:ptD(adm)+' to '+ptD(new Date(adm.getTime()+30*864e5)),by:psy,at:ptDT(adm,'11:40 am')})),
+    medsOff:[],rx:[],dn:{},pf:{},pfAt:{},pfUp:{},prefBy:{},restraints:[],
+    labs:set.labs.map((t,i)=>({t,d:i?'Tomorrow, 7:00':ptD(ptDay(Math.max(0,p.day-1)))+', 7:00',st:i?'Ordered':'Result in',by:psy,at:at(0,'10:40 am')})),
+    consents:[
+      {name:'Admission consent and letter of undertaking',who:'Family',st:'Signed '+ptDT(adm,'11:05 am')+' by '+id.nr+' ('+id.rel.toLowerCase()+') · taken by Meena Arora, front desk · witness Sister Rekha',c:'c-green'},
+      p.sec==='89'||p.sec===89?{name:'Form E · Admission with high support needs',who:'Family',st:'Signed '+ptDT(adm,'11:10 am')+' by '+id.nr+' ('+id.rel.toLowerCase()+') · taken by Meena Arora, front desk',c:'c-green'}
+        :{name:'Form C · Independent admission',who:'Patient',st:'Signed '+ptDT(adm,'11:10 am')+' by '+p.name+' · taken by Meena Arora, front desk',c:'c-green'},
+      {name:'High risk informed consent',who:'Family',st:fresh?'Pending · to be taken from '+id.nr:'Signed '+ptDT(adm,'11:15 am')+' by '+id.nr+' · explained by '+psy,c:fresh?'c-amber':'c-green'}
+    ],
+    therapyNotes:psych&&set.session&&p.day>=2?[{d:ptD(ptDay(Math.max(0,p.day-2))),wk:1,t:'Intake session · Rapport and goals',by:psych,body:'Aim: build rapport and agree goals. '+id.first+' was guarded at first and settled during the session. Goals agreed with '+id.first+' and '+id.nr+'. Next: '+set.session.toLowerCase()+'.'}]
+      .concat(p.day>=5?[{d:ptD(ptDay(Math.max(0,p.day-5))),wk:1,t:'Individual session · '+set.session,by:psych,body:'Aim: '+set.areas[0][1].toLowerCase()+'. '+id.first+' engaged and completed the exercise. Outcome: partial progress. Next: review homework.'}]:[]).reverse():[],
+    events:p.risk?[{id:1,when:ptD(ptDay(Math.max(0,p.day-1)))+', 11:20 pm',type:'Behaviour on the ward',sev:'',by:'Sister Rekha · nurse',duty:'Dr. Sameer Khan · duty doctor',detail:id.first+' was restless and shouting in the corridor. Calmed with verbal de-escalation; SOS medicine given as charted.',ack:false}]:[],
+    pastAdm:ptHash(p.id)%3===0&&p.day>3?[{n:1,dates:'9 to 21 Jan 2025',days:12,psy,psych:psych||'Priya Nair',sec:'Section 89',dx:set.dx,cond:'Improved, partial insight',meds:set.meds.slice(0,2).map(m=>m[0]+' · '+m[1]),plan:'Continue medicines; follow-up after 7 days',notes:[['21 Jan','Discharge round · '+psy,'Improved. Continue medicines; follow-up after 7 days.'],['15 Jan','Family session','Family briefed on warning signs and medicine supervision.'],['10 Jan','Detailed history','First episode after stressors; family history noted.']]}]:[],
+    diet:{type:ptPick(['Vegetarian','Non-vegetarian','Eggetarian'],p.id),avoid:ptPick(['None known','Peanuts','Lactose'],p.id,'a'),notes:ptPick(['Prefers roti to rice','Small frequent meals','No sugar in tea','Jain food on Mondays'],p.id,'n')},
+    pgriev:ptHash(p.id)%4===1?[{from:'Family',t:'Wants a call from the doctor after rounds',via:'Front desk',own:psych||psy,st:'Open',sla:'4 h left',by:'Pooja Malhotra, family coordinator',at:at(0,'10:20 am')}]:[]
+  });
+  /* vitals, sugar, adherence, nursing summary and monitoring: the patient's own numbers */
+  const H=k=>ptHash(p.id+k),n=Math.max(2,Math.min(6,p.day+1)),dl=i=>ptD(ptDay(n-1-i));
+  const sys=[],dia=[],pul=[],slp=[],wt=[],sug=[],adh=[];
+  for(let i=0;i<n;i++){const k=n-1-i;sys.push(118+H('s')%14+k*2+(p.risk?4:0));dia.push(76+H('d')%8+k);pul.push(76+H('p')%12+k*2);slp.push(Math.min(8,3+H('z'+i)%3+i*0.5));wt.push(+(54+H('w')%26-i*0.1).toFixed(1));sug.push(110+H('g'+i)%60);adh.push(H('a'+i)%7?100:86);}
+  c.vit=Array.from({length:n},(_,i)=>[dl(i),sys[i]+'/'+dia[i],String(pul[i]),'98.'+(4+H('t'+i)%4),String(96+H('o'+i)%4),i===0||i===n-1?String(wt[i]):'—',String(slp[i])]);
+  c.vc={sys,dia,pulse:pul,sugar:sug,sleep:slp,adh,wt,wlo:Math.floor(Math.min(...wt))-1,whi:Math.ceil(Math.max(...wt))+1};
+  c.sugar=Array.from({length:Math.min(4,n)},(_,i)=>[ptD(ptDay(i+1)),90+H('f'+i)%25,130+H('b'+i)%45,140+H('l'+i)%60,120+H('e'+i)%35]);
+  c.sugarHd='Ordered '+ptD(adm)+' (on '+set.meds[0][0].split(' ')[0].toLowerCase()+')';
+  let G=0,T=0;c.adh=c.meds.map((m,i)=>{if(m.freq==='SOS'){const g=H('sos'+i)%3;return [m.name,'SOS · '+g+' given',null]}const per=m.freq.split('-').filter(x=>x!=='0').length,t=Math.max(1,per*Math.min(6,p.day||1)),g=t-(H('m'+i)%5===0?1:0);G+=g;T+=t;return [m.name,g+'/'+t+' doses',Math.round(100*g/t)]});
+  const pct=T?Math.round(100*G/T):100,ref=T-G;
+  c.adhT={o:pct+'%',g:G+' <span style="font-size:16px;color:var(--muted)">/ '+T+'</span>',r:String(ref),rs:ref+' refused · 0 held',t:(82+H('ot')%14)+'%'};
+  c.monx=[['Weight','Weekly · '+wt[n-1]+' kg on '+dl(n-1),'On track','c-green']].concat(set.labs.map((l,i)=>[l,i?'Tomorrow 7 am, fasting':'Result in on '+dl(Math.max(0,n-2)),i?'Due':'Done',i?'c-blue':'c-green']),[['Fluid intake and output','Daily · intake about 2 L','On track','c-green'],['Sleep chart','Hourly checks at night · '+slp[n-1]+' h last night',slp[n-1]>=6?'Improving':'Watch',slp[n-1]>=6?'c-green':'c-amber']]);
+  const mood=['calm','restless in the evening','withdrawn but cooperative','anxious, settled with reassurance'][H('mood')%4];
+  c.nsum={note:'Slept about '+slp[n-1]+' hours'+(slp[n-1]<5?', woke twice':'')+'. Took night doses. BP '+sys[n-1]+'/'+dia[n-1]+', pulse '+pul[n-1]+'. Bedtime sugar '+c.sugar[0][4]+' mg/dL. '+id.first+' was '+mood+'; '+(S.obs||c.obs).toLowerCase()+' checks continued.',
+    chips:[['BP '+sys[n-1]+'/'+dia[n-1],'c-grey'],['Pulse '+pul[n-1],'c-grey'],['SpO2 '+c.vit[n-1][4]+'%','c-grey'],['Sugar '+c.sugar[0][4]+' bedtime','c-grey'],['Doses: '+(ref?ref+' refused':'all given'),ref?'c-amber':'c-green'],['Sleep '+slp[n-1]+' h',slp[n-1]>=6?'c-green':'c-amber']],
+    earlier:'Earlier shifts: Day shift (Brother Joseph): '+(ref?'refused one dose, took it after counselling.':'took all doses, no side effects noted.')+' Evening shift (Sister Anita): joined group activity, spoke to '+id.nr+' on the phone.'};
+  c.admD=adm.toISOString();
+  const sur=p.name.split(' ').slice(-1)[0],other=[[ptPick(['Ramesh','Vijay','Sunil','Ashok'],p.id,'o')+' '+sur,'Uncle'],[ptPick(['Kavita','Rekha','Anjali','Pooja'],p.id,'q')+' '+sur,'Cousin']][H('rel')%2];
+  c.contacts=[[id.nr,id.rel+' · nominated representative','Allowed','c-green'],[other[0],other[1],'Allowed','c-green'],[ptPick(['Rohan Gupta','Ishaan Verma','Aditya Rao'],p.id,'f'),'Friend','Not for now','c-grey']];
+  c.billing=id.nr+' ('+id.rel.toLowerCase()+')';
+  /* past daily and round notes */
+  const who=psych||psy,f2=['Settled, slept 6 h','Restless at night','Withdrawn, ate partially','Calmer, joined group'];
+  c.dnHist=Array.from({length:Math.min(4,p.day)},(_,i)=>{const d=ptDay(i+1),round=i===1;return round
+    ?{d:String(d.getDate()),my:'Oct 2026',type:'Round note',tc:'c-violet',by:psy,role:'Psychiatrist',sum:'Reviewed on round; '+set.meds[0][0]+' continued',secs:[['Findings',ptPick(f2,p.id,'r'+i)+'.'],['Medicine changes',set.meds[0][0]+' continued; review tomorrow.'],['Actions',set.labs[0]+'; '+(set.session?set.session.toLowerCase():'workup')+'.']]}
+    :{d:String(d.getDate()),my:d.getMonth()===9?'Oct 2026':'Sep 2026',type:'Daily note',tc:'c-blue',by:who,role:psych?'Psychologist':'Psychiatrist',sum:ptPick(f2,p.id,'d'+i)}});
+  c.dnY=p.day?'Yesterday (Day '+(p.day-1)+', '+who+'): '+ptPick(f2,p.id,'y').toLowerCase()+'.':'Admitted today: no note yet.';
+  c.ident=id;c.otherRel=other[0];
+  return c;
+}
+function ptUse(pid){
+  if(!pid||!ptFind(pid))pid='neel';
+  if(S.pid===pid)return;
+  PT_CTX[S.pid]=Object.assign(PT_CTX[S.pid]||{},Object.fromEntries(PT_KEYS.map(k=>[k,S[k]])));
+  const c=PT_CTX[pid]||(PT_CTX[pid]=ptMakeCtx(ptFind(pid)));
+  PT_KEYS.forEach(k=>S[k]=c[k]);
+  S.pid=pid;S.focusPid=pid;S.evOpen=false;
+}
+const ptRoutePid=()=>{const r=(location.hash||'').slice(2).split('/');return r[0]==='patient'&&r[1]?r[1]:''};
+
+/* Neel's demo text in the shared patient pages → the open patient's own details */
+function ptSwaps(){
+  const p=ptFind(S.pid),id=ptIdentity(p),c=PT_CTX[S.pid]||{},set=ptDxSet(p);
+  return [
+    ['#/patient/neel/','#/patient/'+p.id+'/'],["go('#/patient/neel')","go('#/patient/"+p.id+"')"],
+    ['<div class="avbig">NB</div>','<div class="avbig">'+id.ini+'</div>'],['TH-1042 · 29/M',id.th+' · '+id.age+'/'+id.sex],['UHID 2026-27RG6990','UHID '+id.uhid],
+    ['Room 214 · Bed A',p.room],['6A60.0 · ICD-11',set.icd+' · ICD-11'],['18 Oct, 11:20',ptD(id.adm)+', 11:20'],['24 Oct, 16:40',ptD(id.adm)+', 16:40'],
+    ["Day 6 of stay","Day "+p.day+" of stay"],['day 6 of 30','day '+p.day+' of 30'],['+91 98XXX XXX21',id.phone],
+    ['Ananya Bose (Sister)',id.nr+' ('+id.rel+')'],['Ananya Bose (sister)',id.nr+' ('+id.rel.toLowerCase()+')'],['Ananya Bose, sister',id.nr+', '+id.rel.toLowerCase()],
+    ['Ananya Bose',id.nr],['Ananya',id.nrFirst],['Rakesh Bose',(PT_CTX[S.pid]||{}).otherRel||id.nr],['Neel Bose',p.name],['Neel',id.first],['NB · ',id.ini+' · ']
+  ];
+}
+function ptPersonal(html){
+  if(typeof html!=='string'||S.pid==='neel')return html;
+  ptSwaps().forEach(([a,b])=>{html=html.split(a).join(b)});
+  return html;
+}
+
+/* Stay summary for patients other than Neel: same layout, built from their own records */
+const __pc_ov=pOverview;
+pOverview=function(){
+  if(S.pid==='neel')return __pc_ov();
+  const p=ptFind(S.pid),id=ptIdentity(p),c=S,adm=id.adm,psy=S.team.psy,psych=S.team.psych;
+  const item=(when,cls,title,meta,act)=>`<div class="tl"><div class="when">${when}</div><div class="rail"><div class="pip ${cls}"></div><div class="bar"></div></div><div class="what"><div style="font-weight:600">${title}</div><div class="small muted">${meta}</div>${act||''}</div></div>`;
+  const box=(lbl,val,sub,act,tone)=>`<div class="sbox ${tone||''}"><div class="lbl">${lbl}</div><div class="sval">${val}</div>${sub?`<div class="tiny muted">${sub}</div>`:''}${act?`<div style="margin-top:auto;padding-top:6px">${act}</div>`:''}</div>`;
+  const lnk=(t,h)=>`<button class="btn sm" onclick="${h}">${t}</button>`,day=n=>ptD(new Date(adm.getTime()+n*864e5)),go_=t=>`go('#/patient/${p.id}/${t}')`;
+  const openEv=S.events.filter(e=>!e.ack),ev=S.events[0],hist=S.historyStatus==='signed';
+  const tl=[item(ptD(adm),'done','Admitted, Section '+S.section+(S.section==='90'?' supported admission (over 30 days)':' supported admission'),'Admitted by '+psy+', 11:20 am · front desk (Meena Arora): admission form and consents signed by '+id.nr+' ('+id.rel.toLowerCase()+').')];
+  if(p.day>=0)tl.push(item(ptD(adm),p.day>0?'done':'','Admission workup',p.day>0?'Done by '+psy+' · '+ptDT(adm,'12:30 pm')+' · vitals and physical exam by Dr. Sameer Khan (RMO)':'Assigned to '+psy+' · due today'));
+  tl.push(item(day(1),p.day>=1?'done':'','24-hour family call',p.day>=1?'Called by '+psy+' · '+ptDT(new Date(adm.getTime()+864e5),'11:00 am')+' · logged automatically':'Due within 24 hours of admission'));
+  tl.push(item(day(3),hist?'done':(p.day>3?'late':''),'Detailed history',hist?'Signed by '+psy+(psych?' and '+psych:''):'Assigned to '+psy+(psych?' and '+psych:'')+' · due '+day(3)+(p.day>3?' · overdue':''),hist?'':`<button class="btn sm" style="margin-top:6px" onclick="${go_('admission')}">Open</button>`));
+  tl.push(item(day(7),S.plansSigned.psy?'done':'','Diagnosis and management plans',(S.plansSigned.psy?'Signed by ':'Assigned to ')+psy+(psych?' and '+psych:'')+' · due day 7'));
+  tl.push(item('Planned','','Discharge','Expected date set by '+S.eddBy.by+' · '+S.eddBy.at+(S.eddShared?' · shared with the family':'')));
+  const lastNurse=['Settled, slept 6 h','Restless at night, slept 4 h','Calm, ate all meals','Anxious in the evening, settled with support'][ptHash(p.id)%4];
+  return `
+  <section class="card pad"><h3 style="margin-bottom:14px">Stay timeline</h3><div class="timeline">${tl.join('')}</div></section>
+  <div class="sumgrid">
+    ${box('Events log', ev?`${ev.type}${ev.sev?' · '+ev.sev:''}`:'None this stay', ev?`${ev.when} · ${openEv.length?openEv.length+' not reviewed':'all reviewed'} · ${S.events.length} this stay`:'', S.events.length?lnk(S.evOpen?'Hide events':'View events',"S.evOpen=!S.evOpen;render()"):'', openEv.length?'warn':'')}
+    ${box('Nursing · last shift',lastNurse,'Vitals within range · all doses given · by Sister Rekha, night shift',lnk('Vitals and monitoring',go_('vitals')))}
+    ${box('Last round',p.day?ptD(ptDay(1))+' · '+psy:'Not yet','Medicines reviewed on round',lnk('Round notes',go_('daily')))}
+    ${box('Daily note', S.dailySaved?'Saved today':'Pending today',S.dailySaved?'Saved by '+signer()+(S.dailyAt?' · '+S.dailyAt:''):(psych?'Assigned to '+psych:'Assigned to '+psy),lnk('Daily notes',go_('daily')), S.dailySaved?'':'warn')}
+    ${box('Medicines', S.meds.length+' active','Prescribed by '+[...new Set(S.meds.map(m=>m.by).filter(Boolean))].join(', '),lnk('Medicines',go_('orders')))}
+    ${box('Family',S.calls.h24==='done'?'24-hour call done · '+day(1):'24-hour call due','By '+psy+' · '+id.nr+', '+id.rel.toLowerCase(),lnk('Therapy and family',go_('therapy')))}
+    ${box('Mental Healthcare Act','Section '+S.section+' · day '+p.day+(S.section==='90'?'':' of 30'),'Nominated representative: '+id.nr+' · rights explained by '+psy+', '+ptDT(adm,'11:00 am'))}
+    <div class="sbox"><div class="lbl">Observation level</div>
+      <select class="input" style="min-height:34px" ${isPsy()?'':'disabled'} onchange="S.obs=this.value;S.obsBy=whoAt();render();toast('Observation changed to '+this.value+' by '+S.obsBy.by+'. Ward notified.')">${['1:1 constant','Every 15 minutes','Every 30 minutes','Routine'].map(o=>`<option ${S.obs===o?'selected':''}>${o}</option>`).join('')}</select>
+      ${byl(S.obsBy.by,S.obsBy.at,'Set by')}</div>
+    <div class="sbox"><div class="lbl">Expected discharge</div>
+      <input class="input" style="min-height:34px" type="date" value="${S.edd}" ${isPsy()?'':'disabled'} onchange="S.edd=this.value;S.eddBy=whoAt();render();toast('Expected discharge date updated by '+S.eddBy.by)" aria-label="Expected discharge date">
+      <label class="row tiny" style="gap:6px"><input type="checkbox" ${S.eddShared?'checked':''} ${isPsy()?'':'disabled'} onchange="S.eddShared=this.checked;S.eddShareBy=whoAt();render();toast(this.checked?'Shared with ${id.nr} in the caretaker app':'No longer shown to the family')"> Show to the family</label>
+      ${byl(S.eddBy.by,S.eddBy.at,'Set by')}</div>
+    ${box('Restraint', S.restraints.length?S.restraints.length+' this stay':'None this stay', S.restraints.length?S.restraints[0].when+' · '+S.restraints[0].reason+' · authorised by '+S.restraints[0].by:'Psychiatrist authorises; nominated representative told within 24 hours', isPsy()?lnk('Authorise restraint','restraintModal()'):'')}
+    ${box('Previous admissions', S.pastAdm.length?S.pastAdm.length+' earlier stay'+(S.pastAdm.length===1?'':'s'):'None, first admission', S.pastAdm.map(x=>'Admission '+x.n+' · '+x.dates).join(' · '), S.pastAdm.length?lnk('Open',go_('past')):'')}
+  </div>
+  ${S.evOpen?eventsCard():''}`;
+};
+
+/* Route: #/patient/<id>/<tab> shows that patient; other screens run on Neel's records as before */
+const __pc_vp=vPatient;
+vPatient=function(sub){ptUse(ptRoutePid()||'neel');return ptPersonal(__pc_vp(sub));};
+const __pc_render=render;
+render=function(){if(!ptRoutePid())ptUse('neel');return __pc_render.apply(this,arguments);};
+const __pc_modal=openModal;openModal=function(h){return __pc_modal.call(this,ptPersonal(h));};
+const __pc_toast=toast;toast=function(m){return __pc_toast.apply(this,[ptPersonal(m)].concat([].slice.call(arguments,1)));};
+/* lists: View opens the clicked patient (every role) */
+const __pc_ipd=ipdPage;
+ipdPage=function(o){if(o&&o.go){const g=o.go;o=Object.assign({},o,{go:p=>String(g(p)).split('#/patient/neel/').join('#/patient/'+p.id+'/')});}return __pc_ipd(o);};
+/* the psychiatrist's earlier stand-in profile is no longer needed: every patient has full records */
+ptVPatient=function(sub,base){return base(sub);};
 </script>
 <script id="roles-js">
 /* One block per role (Yuvaraj, 3 Nov): a change asked for one role goes in that role's block below and never touches the others.
