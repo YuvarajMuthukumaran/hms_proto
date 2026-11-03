@@ -1,4 +1,8 @@
 {
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/(lead|psychiatrist|psychologist|nurse|rmo)", "destination": "/index.html" }
+  ],
   "functions": {
     "api/scribe.js": { "maxDuration": 60 }
   }

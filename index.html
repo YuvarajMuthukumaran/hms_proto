@@ -7453,6 +7453,55 @@ function dashTable(cfg){
     <tbody id="dtBody">${rows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="${cfg.team?7:6}" class="pad small muted">No patient matches</td></tr></tbody></table></div></section>`;
 }
 </script>
+<script id="role-links-js">
+/* One link per role (4 Nov 2026): /lead, /psychiatrist, /psychologist, /nurse, /rmo.
+   A role link opens straight into that role (no password, owner's choice) and stays locked to it for this tab:
+   the role cannot be switched from inside, and Log out offers only that role again.
+   The plain address keeps the role picker, which now sends you to that role's own link.
+   Local file or http-server preview: ?as=<role> stands in for the path. */
+const RL_ROLES=['lead','psychiatrist','psychologist','nurse','rmo'];
+const RL_LOCK=(()=>{const seg=(location.pathname.split('/').filter(Boolean)[0]||'').toLowerCase(),q=(new URLSearchParams(location.search).get('as')||'').toLowerCase();
+  return RL_ROLES.includes(seg)?seg:(RL_ROLES.includes(q)?q:'');})();
+const rlName=r=>(LOGIN_ROLES.find(x=>x[0]===r)||[r,r])[1];
+function rlLink(r){const local=location.protocol==='file:'||/\.html?$/i.test(location.pathname);
+  return local?location.origin+location.pathname+'?as='+r:location.origin+'/'+r;}
+/* locked: the role cannot change inside this link */
+const __rl_set=setRole;
+setRole=function(r){if(RL_LOCK&&r!==RL_LOCK){toast('This link is for '+rlName(RL_LOCK)+'. Open the '+rlName(r)+' link instead.');return;}return __rl_set.apply(this,arguments);};
+const __rl_show=loginShow;
+loginShow=function(){
+  __rl_show.apply(this,arguments);
+  const el=document.getElementById('tlLogin');if(!el)return;
+  if(RL_LOCK){
+    el.querySelectorAll('.lg-role').forEach(b=>{if(b.dataset.role!==RL_LOCK)b.remove();});
+    const l=el.querySelector('#lgLbl');if(l)l.textContent='This link is for';
+    const n=el.querySelector('.lg-note');if(n)n.textContent='Prototype with demo data only. Each role has its own link; this one opens '+rlName(RL_LOCK)+' only.';
+    loginSel(RL_LOCK);
+  }else{
+    const n=el.querySelector('.lg-note');if(n)n.textContent='Prototype with demo data only. Pick your role: Login opens that role\'s own link, which you can bookmark.';
+  }
+};
+const __rl_sel=loginSel;
+loginSel=function(k){if(RL_LOCK&&k&&k!==RL_LOCK)k=RL_LOCK;return __rl_sel.call(this,k);};
+const __rl_go=loginGo;
+loginGo=function(){
+  if(!RL_LOCK&&loginPick&&document.getElementById('tlLogin')&&!document.getElementById('tlLogin').hidden){location.href=rlLink(loginPick);return;}
+  return __rl_go.apply(this,arguments);
+};
+/* account popup: show this role's link */
+const __rl_acc=accountModal;
+accountModal=function(){__rl_acc.apply(this,arguments);
+  const b=document.querySelector('#modal .mb');const r=RL_LOCK||S.role;
+  if(b&&r)b.insertAdjacentHTML('beforeend',`<div class="callout grey small" style="margin-top:12px">Your link: <b>${hesc(rlLink(r))}</b><div class="tiny muted" style="margin-top:4px">Each role has its own link. Bookmark this one; it opens ${hesc(rlName(r))} only.</div></div>`);};
+/* open the locked role now */
+if(RL_LOCK){
+  try{sessionStorage.setItem(LOGIN_KEY,RL_LOCK);}catch(e){}
+  const el=document.getElementById('tlLogin');if(el){el.hidden=true;document.body.style.overflow='';}
+  if(S.role!==RL_LOCK){S.role=RL_LOCK;S.tf='';S.rtf='';}
+  document.title='Tulasi · '+rlName(RL_LOCK);
+  setTimeout(render,0); /* after roles-js has set up the role hooks */
+}
+</script>
 <script id="roles-js">
 /* One block per role (Yuvaraj, 3 Nov): a change asked for one role goes in that role's block below and never touches the others.
    Shared screens stay as they are; a role block overrides a hook only while that role is logged in.
