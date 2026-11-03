@@ -7527,7 +7527,7 @@ async function sbReq(path,opt){
   const o=opt||{};
   const r=await fetch(SB.cfg.url+'/rest/v1/'+path,{method:o.method||'GET',body:o.body,headers:Object.assign({apikey:SB.cfg.key,Authorization:'Bearer '+SB.cfg.key,'Content-Type':'application/json','x-tulasi-role':S.role},o.headers||{})});
   if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,160));
-  return r.status===204?null:r.json();
+  const t=await r.text();return t?JSON.parse(t):null;  /* inserts with return=minimal answer 201 with no body */
 }
 /* records of one patient, by kind, from whichever copy is live */
 function sbPick(pid,kind){
