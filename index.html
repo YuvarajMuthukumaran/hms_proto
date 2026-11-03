@@ -4573,12 +4573,10 @@ V3.route = r => {
   if(k==='permissions') return V3.permPage();
   return '';
 };
-/* History opens the full patient profile (Anu, 3 Nov). The profile is built for the demo patient only. */
-const ptHistHref = () => (S.role==='rmo'&&!inScope('neel')) ? '#/timeline' : '#/patient';
 V3.subs = sec => {
   const b=(h,l,key,n)=>`<button class="sub ${sec===key?'on':''}" onclick="go('${h}')">${l}${n?`<span class="newtag" style="margin-left:6px">${n}</span>`:''}</button>`;
   const mine = S.role==='lead' ? b('#/floor/flow','Floor command','floor') : S.role==='nurse' ? b('#/ward/charts','Ward care','ward') : S.role==='rmo' ? b('#/duty/night','Duty desk','duty') : '';
-  const shared = ['lead','nurse','rmo'].includes(S.role) ? b('#/escalation','Escalation chain','escalation')+b(ptHistHref(),'Patient history','patient')+b('#/permissions','Roles and permissions','permissions') : (S.role==='psychiatrist'?b('#/escalation','Escalation chain','escalation')+b(ptHistHref(),'Patient history','patient'):b(ptHistHref(),'Patient history','patient'));
+  const shared = ['lead','nurse','rmo'].includes(S.role) ? b('#/escalation','Escalation chain','escalation')+b('#/timeline','Patient timeline','timeline')+b('#/permissions','Roles and permissions','permissions') : (S.role==='psychiatrist'?b('#/escalation','Escalation chain','escalation')+b('#/timeline','Patient timeline','timeline'):b('#/timeline','Patient timeline','timeline'));
   return mine+shared;
 };
 
@@ -6833,15 +6831,14 @@ render=function(){
 };
 </script>
 <script id="pt-profile-js">
-/* Each patient opens their own profile (Yuvaraj, 3 Nov). Neel keeps the full demo records; everyone else gets a profile
-   built from their own details, and tabs without demo records say so instead of showing Neel's data. */
+/* Patient profile helpers (3 Nov), used by role blocks only (see roles-js). Neel keeps the full demo records; other patients get a
+   profile built from their own details, and tabs without demo records say so instead of showing Neel's data. */
 const ptFind=id=>allPts().find(p=>p.id===id);
 /* lists: View opens the clicked patient, not Neel */
-const __pp_ipd=ipdPage;
-ipdPage=function(o){
+function ptIpdPerPatient(o,base){
   if(o&&o.go){const g=o.go;o=Object.assign({},o,{go:p=>String(g(p)).split('#/patient/neel/').join('#/patient/'+p.id+'/')});}
-  return __pp_ipd(o);
-};
+  return base(o);
+}
 function ptProfileGen(p,sub){
   $('title').textContent='Patients';
   const tabs=STAY.filter(t=>S.role!=='nurse'||['overview','admission','vitals','update','orders'].includes(t[0]));
@@ -6875,11 +6872,10 @@ function ptProfileGen(p,sub){
     ${body}
   </section></div>`;
 }
-const __pp_vp=vPatient;
-vPatient=function(sub){
+function ptVPatient(sub,base){
   const id=(location.hash||'').slice(2).split('/')[1],p=id&&id!=='neel'&&ptFind(id);
-  return p?ptProfileGen(p,sub):__pp_vp(sub);
-};
+  return p?ptProfileGen(p,sub):base(sub);
+}
 /* History menu: opens the profile of the patient last opened or seen in Rounds */
 /* History with no patient opened yet: choose a patient, then land on their detailed history view */
 function ptPickHist(){
@@ -6892,18 +6888,17 @@ function ptPickHist(){
   return `<section class="ws-mid"><section class="card pad"><h3>Whose history?</h3><div class="small muted" style="margin:4px 0 14px">Choose a patient to open their detailed history: stay summary, stay timeline and every record from this stay.</div>${pool.map(row).join('')}</section></section>`;
 }
 let ptJumpHist=false;
-const __pp_render=render;
-render=function(){
+function ptHistRender(base){
   const r=(location.hash||'').slice(2).split('/');
   if(r[0]==='patient'&&!r[1]){
     if(S.focusPid&&ptFind(S.focusPid)){ptJumpHist=true;location.replace('#/patient/'+S.focusPid+'/overview');return;}
     renderSide(r);$('app').classList.remove('compact');$('view').innerHTML=ptPickHist();window.scrollTo(0,0);return;
   }
-  const out=__pp_render();
+  const out=base();
   /* land on the stay tabs and Stay timeline (the detailed history view), not the top of the profile */
   if(ptJumpHist&&r[0]==='patient'){ptJumpHist=false;setTimeout(()=>{const el=document.querySelector('#view nav.tabs')||document.querySelector('#view .subtabs');if(el)window.scrollTo({top:el.getBoundingClientRect().top+scrollY-90});},60);}
   return out;
-};
+}
 </script>
 <style id="login-css">
 #tlLogin{position:fixed;inset:0;z-index:9999;display:grid;grid-template-columns:1fr 1fr;background:#f6f9fc;overflow:auto}
@@ -6986,5 +6981,42 @@ accountModal=function(){
 };
 (function(){let r='';try{r=sessionStorage.getItem(LOGIN_KEY)||'';}catch(e){}
   if(r&&LOGIN_ROLES.some(x=>x[0]===r)){if(S.role!==r){S.role=r;render();}}else loginShow();})();
+</script>
+<script id="roles-js">
+/* One block per role (Yuvaraj, 3 Nov): a change asked for one role goes in that role's block below and never touches the others.
+   Shared screens stay as they are; a role block overrides a hook only while that role is logged in.
+   Hooks: subs (Inpatients menu), ipdPage (patient lists), vPatient (patient profile), render (routing). */
+const ROLE={lead:{},psychiatrist:{},psychologist:{},nurse:{},rmo:{}};
+const roleHook=k=>(ROLE[S.role]||{})[k];
+const __rb_subs=V3.subs;V3.subs=function(sec){const f=roleHook('subs');return f?f(sec,__rb_subs):__rb_subs(sec);};
+const __rb_ipd=ipdPage;ipdPage=function(o){const f=roleHook('ipdPage');return f?f(o,__rb_ipd):__rb_ipd(o);};
+const __rb_vp=vPatient;vPatient=function(sub){const f=roleHook('vPatient');return f?f(sub,__rb_vp):__rb_vp(sub);};
+const __rb_render=render;render=function(){const f=roleHook('render');return f?f(__rb_render):__rb_render.apply(this,arguments);};
+</script>
+<script id="role-lead-js">
+/* Floor lead only. Nothing role-specific yet. */
+Object.assign(ROLE.lead,{});
+</script>
+<script id="role-psychiatrist-js">
+/* Psychiatrist only (3 Nov): History opens the detailed history view (stay tabs and Stay timeline) of the patient last opened,
+   or asks whose history when none is open; View in the lists opens the clicked patient's own profile. */
+Object.assign(ROLE.psychiatrist,{
+  subs:(sec,base)=>base(sec).replace(/<button class="sub[^"]*" onclick="go\('#\/timeline'\)">Patient timeline/,`<button class="sub ${sec==='patient'?'on':''}" onclick="go('#/patient')">Patient history`),
+  ipdPage:ptIpdPerPatient,
+  vPatient:ptVPatient,
+  render:ptHistRender
+});
+</script>
+<script id="role-psychologist-js">
+/* Psychologist only. Nothing role-specific yet. */
+Object.assign(ROLE.psychologist,{});
+</script>
+<script id="role-nurse-js">
+/* Nurse only. Nothing role-specific yet. */
+Object.assign(ROLE.nurse,{});
+</script>
+<script id="role-rmo-js">
+/* RMO on duty only. Nothing role-specific yet. */
+Object.assign(ROLE.rmo,{});
 </script>
 </body></html>
