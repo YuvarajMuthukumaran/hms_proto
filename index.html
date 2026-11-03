@@ -6788,7 +6788,7 @@ const __psyBarWa=psyBar;psyBar=function(kind,id){
 /* patient tab card: the send button works without saving first */
 const __waDBlockOne=waDBlock;waDBlock=function(kind,id,draft){
   let h=__waDBlockOne(kind,id,draft);if(!draft)return h;
-  h=h.replace("<button class="btn wa-copy" disabled onclick=",()=>"<button class="btn wa-copy" onclick=");
+  h=h.split('<button class="btn wa-copy" disabled onclick=').join('<button class="btn wa-copy" onclick=');
   h=h.replace(/Draft preview\. Save the note first, then send it to the patient's WhatsApp group \(UHID ([^)]*)\)\./,"Press Send on WhatsApp and this goes to the family group (UHID $1). The group is created the first time.");
   return h.replace(`<button class="btn pri" disabled onclick="waDSend('${kind}','${id}',this)">Send to UHID group</button>`,`<button class="btn pri" onclick="psySaveSend('${kind}','${id}',this)">Send on WhatsApp</button>`);
 };
