@@ -7462,9 +7462,12 @@ function dashTable(cfg){
 const RL_ROLES=['lead','psychiatrist','psychologist','nurse','rmo'];
 const RL_LOCK=(()=>{const seg=(location.pathname.split('/').filter(Boolean)[0]||'').toLowerCase(),q=(new URLSearchParams(location.search).get('as')||'').toLowerCase();
   return RL_ROLES.includes(seg)?seg:(RL_ROLES.includes(q)?q:'');})();
+/* the role's secret access code (?k=...) proves the link is a real team link; kept for this tab */
+const RL_KEY=(()=>{const q=new URLSearchParams(location.search).get('k')||'';let k=q;try{if(q&&RL_LOCK)sessionStorage.setItem('tulasi-key-'+RL_LOCK,q);else if(RL_LOCK)k=sessionStorage.getItem('tulasi-key-'+RL_LOCK)||'';}catch(e){}return k;})();
 const rlName=r=>(LOGIN_ROLES.find(x=>x[0]===r)||[r,r])[1];
 function rlLink(r){const local=location.protocol==='file:'||/\.html?$/i.test(location.pathname);
-  return local?location.origin+location.pathname+'?as='+r:location.origin+'/'+r;}
+  const k=r===RL_LOCK&&RL_KEY?'k='+encodeURIComponent(RL_KEY):'';
+  return local?location.origin+location.pathname+'?as='+r+(k?'&'+k:''):location.origin+'/'+r+(k?'?'+k:'');}
 /* locked: the role cannot change inside this link */
 const __rl_set=setRole;
 setRole=function(r){if(RL_LOCK&&r!==RL_LOCK){toast('This link is for '+rlName(RL_LOCK)+'. Open the '+rlName(r)+' link instead.');return;}return __rl_set.apply(this,arguments);};
@@ -7521,11 +7524,12 @@ const SB_WRITE={doctor:['psychiatrist','lead','rmo'],psychology:['psychologist',
   events:['lead','psychiatrist','psychologist','nurse','rmo'],prefs:['lead','psychiatrist','psychologist','nurse','rmo'],vitals:['nurse','rmo'],
   notes:['psychologist','psychiatrist','lead'],mar:['nurse','rmo'],docs:['lead','psychiatrist','psychologist']};
 const SB={cfg:null,ready:false,saved:{},since:'',busy:false,timer:0,err:''};
+function sbNoAccess(){if(location.protocol==='file:')return;setTimeout(()=>toast('Not connected to the shared record: open your team link with its access code. Changes stay in this browser.'),800);}
 const sbCan=k=>(SB_WRITE[k]||[]).includes(S.role);
 const sbJ=o=>JSON.stringify(o===undefined?null:o);
 async function sbReq(path,opt){
   const o=opt||{};
-  const r=await fetch(SB.cfg.url+'/rest/v1/'+path,{method:o.method||'GET',body:o.body,headers:Object.assign({apikey:SB.cfg.key,Authorization:'Bearer '+SB.cfg.key,'Content-Type':'application/json','x-tulasi-role':S.role},o.headers||{})});
+  const r=await fetch(SB.cfg.url+'/rest/v1/'+path,{method:o.method||'GET',body:o.body,headers:Object.assign({apikey:SB.cfg.key,Authorization:'Bearer '+SB.cfg.key,'Content-Type':'application/json','x-tulasi-role':S.role,'x-tulasi-key':(typeof RL_KEY!=='undefined'&&RL_KEY)||''},o.headers||{})});
   if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,160));
   const t=await r.text();return t?JSON.parse(t):null;  /* inserts with return=minimal answer 201 with no body */
 }
@@ -7586,6 +7590,9 @@ if(typeof cdLog==='function'){const __sb_cdlog=cdLog;cdLog=function(pid,formId,a
   try{
     /* baseline what this browser already shows, then load the shared record */
     sbPids().forEach(pid=>sbKinds().forEach(k=>{const d=sbPick(pid,k);if(d!=null)SB.saved[pid+'|'+k]=sbJ(d);}));
+    /* the database answers only to a role link with its access code; without one, stay on this browser's demo data */
+    const ok=await sbReq('patients?select=id&limit=1');
+    if(!ok||!ok.length){SB.err='no access';sbNoAccess();return;}
     await sbPull();SB.ready=true;render();setInterval(sbSync,30000);
   }catch(e){SB.err=e.message;console.warn('Supabase not reachable, using demo data in this browser:',e.message);}
 })();
