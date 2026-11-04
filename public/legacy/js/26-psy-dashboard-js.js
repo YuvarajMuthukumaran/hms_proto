@@ -133,7 +133,7 @@
     return `<div class="pd">
       <div class="pd-bar"><input class="input" id="dtQ" style="width:280px;min-height:40px;margin:0" placeholder="Type a name" oninput="dtFilter()" aria-label="Search patients">
         <div class="row" style="gap:8px"><button class="btn" onclick="go('#/admissions')">New admission</button><button class="btn pri" onclick="go('#/rounds')">Start rounds</button></div></div>
-      ${rows.length?`<table class="pd-t"><colgroup><col style="width:34%"><col><col style="width:230px"></colgroup>
+      ${rows.length?`<table class="pd-t"><colgroup><col style="width:280px"><col><col style="width:230px"></colgroup>
         <thead><tr><th>Alert</th><th>Patient</th><th></th></tr></thead>
         <tbody id="dtBody">${rows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="3" class="pd-empty">No patient matches</td></tr></tbody></table>`
       :`<section class="card"><div class="pd-empty">Nothing needs you right now. You can start your rounds when you are ready.</div></section>`}
