@@ -204,9 +204,9 @@
   /* dashboard: abnormal results to review, daily observation review */
   window.psyExtraItems=function(p){
     const out=[];
-    v3().labs.filter(l=>l.pid===p.id&&!l.rev&&V3.labFlag(l)!=='ok').forEach(l=>out.push({k:'task',lab:['amber','Review result'],txt:l.test+' '+l.val+' '+l.unit+' · '+(l.val<l.lo?'low':'high')+' (normal '+l.lo+' to '+l.hi+')',due:'New result',btn:['Review',`V3.labReview('${l.id}')`,false]}));
+    v3().labs.filter(l=>l.pid===p.id&&!l.rev&&V3.labFlag(l)!=='ok').forEach(l=>out.push({k:'task',lab:['amber','Check result'],txt:l.test+' '+l.val+' '+l.unit+' · '+(l.val<l.lo?'low':'high')+' (normal '+l.lo+' to '+l.hi+')',due:'New result',btn:['Check result',`V3.labReview('${l.id}')`,false]}));
     const obs=(EX[p.id]||[])[0]||'Routine',rv=pxOf(p.id).obsRev;
-    if(obs!=='Routine'&&!(rv&&rv.date===today()))out.push({k:'task',lab:['grey','Due today'],txt:'Observation level review ('+obs+')',due:'Review at least once a day',btn:['Review',`psyObsReview('${p.id}')`,false]});
+    if(obs!=='Routine'&&!(rv&&rv.date===today()))out.push({k:'task',lab:['grey','Today'],txt:'Check how often this patient is watched ('+obs+')',due:'Do this at least once a day',btn:['Mark as checked',`psyObsReview('${p.id}')`,false]});
     return out;
   };
   window.psyScoreLine=function(pid){
