@@ -11,7 +11,8 @@
   const psy=()=>S.role==='psychiatrist';
   const css=document.createElement('style');css.id='psy-alerts-css';
   css.textContent=`
-  .es{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+  /* width:100% matters: in the page's flex column an auto-margin box would shrink to its content (about 700 px) instead of using the 1180 px the design asks for */
+  .es{width:100%;max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
   .es-chain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
   .es-box{border:1px solid var(--line);background:var(--soft);border-radius:8px;padding:5px 10px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
   .es-arrow{color:#98a2b3}
@@ -19,7 +20,9 @@
   .es-tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
   .es-tile .h{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}.es-tile b{display:block;font-size:26px;line-height:1.2;margin:4px 0 2px}.es-tile .d{font-size:12px;color:var(--muted)}
   .es-dot{width:9px;height:9px;border-radius:50%}
-  .es-al{padding:16px 20px;border-top:1px solid var(--line-2)}.es-al:first-child{border-top:0}
+  .es-al{padding:18px 24px 18px 20px;border-top:1px solid var(--line-2);border-left:4px solid #cfd6e0}.es-al:first-child{border-top:0}
+  .es-al.red{border-left-color:var(--red)}.es-al.amber{border-left-color:#e5a13a}.es-al.grey{border-left-color:#cfd6e0}
+  .es-empty{text-align:center;padding:40px 20px}.es-empty .t{font-size:30px;color:var(--green);line-height:1}
   .es-r1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .es-tag{font-size:11px;font-weight:700;border-radius:99px;padding:2px 9px}.es-tag.red{background:var(--red-bg);color:var(--red)}.es-tag.amber{background:var(--amber-bg);color:var(--amber)}
   .es-name{border:0;background:none;padding:0;font:inherit;font-weight:700;font-size:14.5px;cursor:pointer;color:var(--ink)}.es-name:hover{color:var(--blue)}
@@ -72,14 +75,24 @@
         return `<div class="es-s ${st}"><b>${mark}${label}</b>${txt}</div>`;};
       const act=V3.canAck(a)?`<button class="btn sm pri" onclick="V3.ackAlert('${a.id}')">Acknowledge</button>`
         :(a.ack&&!a.seen&&['rmo','psychiatrist','lead'].includes(S.role)?`<button class="btn sm" onclick="V3.seenAlert('${a.id}')">Mark at bedside</button>`:'');
-      return `<article class="es-al"><div class="es-r1"><span class="es-tag ${tg[0]}">${hesc(tg[1])}</span><button class="es-name" onclick="go('#/patient/${a.pid}/overview')">${hesc(V3.pn(a.pid))}</button><span class="small muted">${hesc(p.room||'')} · raised ${V3.hm(a.t)} by ${hesc(a.by||'nurse')}</span></div>
+      return `<article class="es-al ${pill[0]}"><div class="es-r1"><span class="es-tag ${tg[0]}">${hesc(tg[1])}</span><button class="es-name" onclick="go('#/patient/${a.pid}/overview')">${hesc(V3.pn(a.pid))}</button><span class="small muted">${hesc(p.room||'')} · raised ${V3.hm(a.t)} by ${hesc(a.by||'nurse')}</span></div>
         <div class="es-main"><div class="small" style="max-width:640px">${hesc(a.title)}${a.detail?`<span class="tiny muted" style="display:block;margin-top:2px">${hesc(a.detail)}</span>`:''}</div><div class="es-right"><span class="es-pill ${pill[0]}">${pill[1]}</span>${act}</div></div>
         <div class="es-steps">${step('nurse','Nurse',a.t,0)}${step('rmo','RMO',i.win.rmo[0],i.win.rmo[1])}${step('psychiatrist','Psychiatrist',i.win.psychiatrist[0],i.win.psychiatrist[1])}${step('lead','Floor lead',i.win.lead[0],i.win.lead[1])}</div></article>`;};
     return `<div class="es"><div><h2>Escalation chain</h2>
-        <div class="es-chain"><span class="es-box">Nurse raises</span><span class="es-arrow">›</span><span class="es-box">RMO · ${R.rmo} min</span><span class="es-arrow">›</span><span class="es-box">Treating psychiatrist · ${R.psy} min</span><span class="es-arrow">›</span><span class="es-box">Floor lead · ${R.lead} min</span></div></div>
+        <div class="es-chain"><span class="es-box">Nurse raises</span><span class="es-arrow">›</span><span class="es-box">RMO · ${R.rmo} min</span><span class="es-arrow">›</span><span class="es-box">Treating psychiatrist · ${R.psy} min</span><span class="es-arrow">›</span><span class="es-box">Floor lead · ${R.lead} min</span><span class="tiny muted" style="margin-left:6px">times for urgent alerts</span></div></div>
       <div class="es-tiles">${tile('var(--red)','Not acknowledged',notAck+' of '+open.length,'open alerts')}${tile('var(--amber)','Escalated past RMO',esc.length,withLead?withLead+' now with floor lead':'none with the floor lead')}${tile('#98a2b3','Median time to acknowledge',med==null?'–':med+' min','today')}</div>
-      <section class="card"><div class="hd"><div><h3>Open alerts</h3><div class="small muted" style="margin-top:4px">Most urgent first · now ${V3.hm(now)}</div></div></div>${sorted.map(row).join('')||V3.empty('No open alerts')}</section></div>`;
+      <section class="card"><div class="hd"><div><h3>Open alerts</h3><div class="small muted" style="margin-top:4px">Most urgent first · now ${V3.hm(now)}</div></div></div>${sorted.map(row).join('')||'<div class="es-empty"><div class="t">✓</div><div style="font-weight:700;margin-top:8px">No open alerts</div><div class="small muted">Every alert has been acknowledged and seen at the bedside.</div></div>'}</section></div>`;
   }
+  /* marking an alert "at the bedside" takes it off this list and keeps it in the patient's Events log */
+  const __sd=V3.seenDo;
+  V3.seenDo=function(id){
+    const a=v3().alerts.find(x=>x.id===id),was=a&&a.seen,out=__sd.apply(this,arguments);
+    if(psy()&&a&&a.seen&&!was){
+      const c=ptCtxOf(a.pid);c.events=c.events||[];
+      c.events.unshift({id:Date.now(),when:atNow(),type:(a.src||'Nurse')+' alert',sev:'',by:(a.by||'Nurse')+' · nurse',duty:signer()+' · psychiatrist',detail:a.title+'. Seen at the bedside'+(a.seen.note?': '+a.seen.note:'.'),ack:true,ackBy:signer(),ackAt:atNow()});
+    }
+    return out;
+  };
   const __esc=V3.escPage;
   V3.escPage=function(){return psy()?esc():__esc.apply(this,arguments);};
 
