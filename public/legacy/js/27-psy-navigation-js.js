@@ -57,7 +57,8 @@
   };
 
   /* page buttons next to the title on the patient lists */
-  const bar=`<div class="row" style="gap:8px"><button class="btn" onclick="go('#/admissions')">New admission</button><button class="btn pri" onclick="go('#/rounds')">Start rounds</button></div>`;
+  /* no "+ New admission" button on the patient lists (owner, 5 Nov, Trello "remove +New admissions from top"); the dashboard keeps its own */
+  const bar=`<div class="row" style="gap:8px"><button class="btn pri" onclick="go('#/rounds')">Start rounds</button></div>`;
   const prevIpd=ROLE.psychiatrist.ipdPage;
   ROLE.psychiatrist.ipdPage=function(o,base){
     /* Trello "If i open new admission i dont have a way to open full list": the filter cards (All inpatients, New in 24 h, High risk,

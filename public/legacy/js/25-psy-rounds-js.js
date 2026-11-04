@@ -63,12 +63,7 @@
     if(stay&&R.seen&&R.seen[curPid(before)]){R.idx[w]=before;R.scribeNote='';render();} /* Save keeps you on this patient, now marked seen */
   };
   window.prStopUndo=function(name){const R=S.rounds;R.mc=R.mc.filter(c=>!(c.act==='Stop'&&c.text===name));render();};
-  window.prChange=function(i){const b=$('prE'+i);if(b)b.style.display=b.style.display==='none'||!b.style.display?'flex':'none';};
-  window.prApplyChange=function(i){const m=rmCur()[i],f=$('prEf'+i).value,d=$('prEd'+i).value;
-    const parts=[f!==m.freq?f:null,d!=='Same dose'?d.toLowerCase():null].filter(Boolean);
-    if(!parts.length){toast('Pick a new frequency or dose first');return;}rmAdd('Change',m.name+': '+parts.join(', '));};
-  window.prAddMed=function(){const v=($('prNew').value||'').trim();if(!v){toast('Search and pick a medicine');return;}
-    const end=$('prEnd').value;rmAdd('Start',v+', '+$('prF').value+', '+$('prW').value.toLowerCase()+(end?', until '+end:''));};
+  /* a dose is never changed from Rounds (owner, 5 Nov): the doctor stops a medicine and adds a new one */
   window.prCall=name=>toast('Prototype: calling '+name);
 
   function infoStrip(p){
@@ -135,13 +130,16 @@
       return `<tr><td><div style="font-weight:700;${stop?'text-decoration:line-through;color:var(--muted)':''}">${hesc(m.name)}</div><div class="tiny muted">${hesc(m.time||'')}${start?' · from '+hesc(start):''}${m.reason?' · '+hesc(m.reason)+', most '+m.max+' in 24 h':''}</div></td>
         <td>${hesc(m.freq)}</td><td><span class="pr-st ${st[0]}">${st[1]}</span>${chg?`<div class="tiny muted" style="margin-top:2px">${hesc(chg.text.split(': ').slice(1).join(': '))}</div>`:''}</td>
         <td style="text-align:right"><div class="row" style="justify-content:flex-end;gap:6px;flex-wrap:wrap">${stop?`<button class="btn sm" onclick="prStopUndo('${hesc(m.name)}')">Undo</button>`
-          :`<button class="btn sm" onclick="prChange(${i})">Change dose</button><button class="btn sm" onclick="rmAdd('Stop','${hesc(m.name)}')">Stop</button>`}
-          <span id="prE${i}" class="row" style="gap:6px;display:none"><select class="input" id="prEf${i}" style="width:auto;min-height:30px;padding:3px 8px" aria-label="Frequency">${FREQ.map(f=>`<option ${f===m.freq?'selected':''}>${f}</option>`).join('')}</select><select class="input" id="prEd${i}" style="width:auto;min-height:30px;padding:3px 8px" aria-label="Dose">${['Same dose','Increase dose','Reduce dose'].map(o=>`<option>${o}</option>`).join('')}</select><button class="btn sm pri" onclick="prApplyChange(${i})">Apply</button></span></div></td></tr>`;
+          :`<button class="btn sm" onclick="rmAdd('Stop','${hesc(m.name)}')">Stop</button>`}
+          </div></td></tr>`;
     }).join('');
     const news=mc.filter(c=>c.act==='Start').map((c,i)=>`<tr><td><div style="font-weight:700">${hesc(c.text.split(',')[0])}</div><div class="tiny muted">${hesc(c.text.split(',').slice(1).join(',').trim())}</div></td><td></td><td><span class="pr-st new">New</span>${c.src==='From scribe'?' <span class="tiny muted">from scribe</span>':''}</td><td style="text-align:right"><button class="btn sm" onclick="S.rounds.mc.splice(S.rounds.mc.indexOf(S.rounds.mc.filter(x=>x.act==='Start')[${i}]),1);render()">Remove</button></td></tr>`).join('');
     return `<section class="card"><div class="hd"><h3>Medicine</h3><div class="row" style="gap:8px">${mc.length?chip(mc.length+' pending','c-blue'):''}<button class="btn sm" onclick="medChartModal()">Full chart</button></div></div>
       <div class="scroll"><table class="t"><thead><tr><th>Medicine</th><th>Freq.</th><th>Status</th><th></th></tr></thead><tbody>${rows}${news}</tbody></table></div>
-      <div style="padding:12px 20px;border-top:1px solid var(--line-2);display:flex;gap:12px;flex-wrap:wrap;align-items:center"><button class="btn pri" onclick="psyRxOpen({ctx:'rounds'})">+ Add medicine</button><span class="tiny muted">Route, frequency, food, dates, SOS limits and safety checks are in one window (same fields as Orders).</span></div></section>`;
+      <div style="padding:12px 20px;border-top:1px solid var(--line-2);display:flex;gap:12px;flex-wrap:wrap;align-items:center"><button class="btn pri" onclick="psyRxOpen({ctx:'rounds'})">+ Add medicine</button>
+        <select class="input" id="prPlan" style="width:auto;min-height:38px" aria-label="Plan for" onchange="psyPlanOpen(this.value);this.value=''"><option value="">Plan for…</option>${['Clozapine','Ketamine','ECT','Long acting injection'].map(k=>`<option>${k}</option>`).join('')}</select>
+        <span class="tiny muted">Add medicine opens one window with the safety checks. Plan for creates the tasks a treatment needs (consent, blood tests).</span>
+        ${window.psyPx?(psyPx(p.id).plans||[]).slice(0,3).map(x=>`<span class="pr-ch">Plan: ${hesc(x.kind)} · ${hesc(String(x.at).split(',')[0])}</span>`).join(''):''}</div></section>`;
   }
 
   function bar(){
@@ -170,7 +168,7 @@
       <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
         <section class="card pad"><div class="pr-head">${av(p.ini,52,p.risk?'c-amber':'c-blue')}<div class="grow" style="min-width:240px"><div class="row" style="gap:10px;align-items:baseline"><h2>${hesc(p.name)}</h2><span class="muted">${sx?sx+'/'+ag+' · ':''}${hesc(p.room)} · Day ${p.day}</span></div>
           <div class="pr-chips"><span class="pr-ch">${hesc(p.dx||c.dx||'')}</span>${(c.team||{}).psych?`<span class="pr-ch">${hesc(c.team.psych)}</span>`:''}</div>${window.psySafety?`<div style="margin-top:8px">${psySafety(p.id)}</div>`:''}</div>
-          <div class="row" style="gap:8px"><a href="#/patient/${p.id}/overview" class="small" style="font-weight:600">Open full record</a><button class="btn sm" ${RI===0?'disabled':''} aria-label="Previous patient" onclick="prSwitch(${RI-1})">‹</button><button class="btn sm" ${RI>=WP.length-1?'disabled':''} aria-label="Next patient" onclick="prSwitch(${RI+1})">›</button></div></div>
+          <div class="row" style="gap:8px"><a href="#/patient/${p.id}/overview" class="small" style="font-weight:600" onclick="S.backToRounds=true">Open full record</a><button class="btn sm" ${RI===0?'disabled':''} aria-label="Previous patient" onclick="prSwitch(${RI-1})">‹</button><button class="btn sm" ${RI>=WP.length-1?'disabled':''} aria-label="Next patient" onclick="prSwitch(${RI+1})">›</button></div></div>
           ${infoStrip(p)}</section>
         <div class="pr-two">${sinceCard(p)}${noteCard(p)}</div>
         ${medCard(p)}
@@ -178,6 +176,16 @@
         ${bar()}
       </div></div>`;
   }
+
+  /* "Open full record" from Rounds: the patient page shows a Back to Rounds button (the ward order and your note are kept) */
+  const prevVP=ROLE.psychiatrist.vPatient;
+  ROLE.psychiatrist.vPatient=function(sub,base){
+    const h=prevVP?prevVP(sub,base):base(sub);
+    if(!S.backToRounds)return h;
+    return `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px"><button class="btn" onclick="S.backToRounds=false;go('#/rounds')">‹ Back to Rounds</button><span class="small muted">You opened this from Rounds. Your place in the ward order is saved.</span></div>`+h;
+  };
+  const __rBack=render;
+  render=function(){const r=(location.hash||'').slice(2).split('/')[0];if(r!=='patient'&&r!=='rounds')S.backToRounds=false;return __rBack.apply(this,arguments);};
 
   const __prev=vRounds;
   vRounds=function(){

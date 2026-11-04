@@ -5,8 +5,9 @@
      Before / After food, From and Until dates.
    1 Route is its own field.            2 STAT and Weekly are in the Frequency list.
    3 SOS / PRN needs a reason and a maximum number of doses in 24 h; the nurse's chart blocks the dose after the maximum.
-   4 The end date is a hard stop: after it the medicine moves to Stopped on its own and the nurse cannot log a dose; the doctor renews it
-     with a new order.
+   4 (Reversed 5 Nov, Trello "Rounds": there is NO end date any more, so a medicine can never be stopped by a date by mistake. The
+     automatic-stop code below stays and only acts on an old medicine that already carries an endISO.)
+   Rounds also has "Plan for" (Clozapine, Ketamine, ECT, Long acting injection): it creates the starter tasks a treatment needs.
    5 Warnings, never blocks (tick "I have read this"): drug allergy match, two medicines of the same class, the same medicine twice.
    6 Monitoring prompts when starting: lithium (level, kidney, thyroid), clozapine (blood count schedule, required), any antipsychotic
      (weight, BMI, sugar, lipids). Ticked tests are ordered with the medicine.
@@ -49,7 +50,6 @@
         <label class="field"><span class="lbl">Frequency</span><select class="input" id="rxF" onchange="psyRxCheck()">${FREQS.map(f=>`<option ${f==='1-0-1'?'selected':''}>${f}</option>`).join('')}</select></label>
         <label class="field"><span class="lbl">Food</span><select class="input" id="rxFood"><option>After food</option><option>Before food</option></select></label>
         <label class="field"><span class="lbl">From</span><input class="input" type="date" id="rxFrom" value="${today}"></label>
-        <div class="field full" id="rxEndRow"><span class="lbl">Until (the medicine stops by itself after this date)</span><div class="row" style="gap:6px;flex-wrap:wrap"><input class="input" type="date" id="rxTo" style="width:auto" min="${today}">${[7,14,30].map(n=>`<button type="button" class="rx-chip" onclick="psyRxDays(${n})">${n} days</button>`).join('')}</div></div>
         <div class="full" id="rxPrn" style="display:none"><div class="rx-g"><label class="field"><span class="lbl">Reason (required)</span><input class="input" id="rxWhy" list="rxWhyL" placeholder="e.g. for agitation"><datalist id="rxWhyL"><option value="for agitation"><option value="for nausea"><option value="for anxiety"><option value="for insomnia"><option value="for pain"></datalist></label>
           <label class="field"><span class="lbl">Most doses in 24 hours (required)</span><input class="input" type="number" min="1" max="12" id="rxMax" placeholder="e.g. 3"></label></div></div>
       </div>
@@ -57,7 +57,6 @@
       <div class="mf"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri big" onclick="psyRxAdd()">Add medicine</button></div>`);
     psyRxCheck();
   };
-  window.psyRxDays=function(n){const d=new Date($('rxFrom').value+'T12:00:00');d.setDate(d.getDate()+n-1);$('rxTo').value=iso(d);};
 
   function pending(){return CTX==='rounds'?((S.rounds&&S.rounds.mc)||[]).filter(c=>c.rx).map(c=>c.rx.name):[];}
   function warnings(name){
@@ -82,7 +81,7 @@
   window.psyRxCheck=function(){
     const name=($('rxM')||{}).value||'',f=($('rxF')||{}).value;
     if(!$('rxM'))return;
-    $('rxPrn').style.display=f==='SOS'?'':'none';$('rxEndRow').style.display=f==='STAT'?'none':'';
+    $('rxPrn').style.display=f==='SOS'?'':'none';
     const w=warnings(name),p=prompts(name);
     /* redrawing must not lose what was ticked: keep the tick while the warnings are the same, and the check boxes while the prompts are */
     const wKey=w.map(x=>x[1]).join('|'),ackWas=$('rxAck')?$('rxAck').checked:false,keepAck=ackWas&&wKey===LASTW;LASTW=wKey;
@@ -94,19 +93,19 @@
   /* ---------- add ---------- */
   function fail(msg,id){toast(msg);const e=$(id);if(e){e.focus();}return false;}
   window.psyRxAdd=function(){
-    const name=$('rxM').value.trim(),f=$('rxF').value,route=$('rxR').value,food=$('rxFood').value,from=$('rxFrom').value,to=$('rxTo').value;
+    const name=$('rxM').value.trim(),f=$('rxF').value,route=$('rxR').value,food=$('rxFood').value,from=$('rxFrom').value;
     if(!name)return fail('Choose or type the medicine and strength','rxM');
     if(!from)return fail('Choose the start date','rxFrom');
-    if(f!=='STAT'){if(!to)return fail('Choose the end date. The medicine stops by itself after it.','rxTo');if(to<from)return fail('The end date is before the start date','rxTo');}
     let why='',max=0;
     if(f==='SOS'){why=($('rxWhy').value||'').trim();max=+$('rxMax').value;if(!why)return fail('Write the reason for the SOS dose, for example "for agitation"','rxWhy');if(!(max>=1))return fail('Write the most doses allowed in 24 hours','rxMax');}
     if($('rxAck')&&!$('rxAck').checked)return fail('Tick "I have read this" to go on','rxAck');
     const p=prompts(name);let tests=[];
     for(const x of p){const c=$('rxP_'+x.id);if(x.req&&c&&!c.checked)return fail('This check is required: '+x.label,'rxP_'+x.id);if(c&&c.checked)tests=tests.concat(x.tests);}
     const w=whoAt(),b=baseOf(name),nm=name+(route!=='Oral'?' · '+route:'');
-    const range=f==='STAT'?'Single dose, '+lab(from):lab(from)+' to '+lab(to);
-    const spec={name:nm,base:b,route,freq:f,time:food,range,startISO:from,endISO:f==='STAT'?from:to,reason:why,max,by:w.by,at:w.at};
-    const text=[nm,f,food.toLowerCase(),f==='STAT'?'once now':'until '+lab(to)].concat(why?[why+', most '+max+' in 24 h']:[]).join(', ');
+    /* no end date (owner, 5 Nov): a medicine only stops when the doctor stops it, so it can never be dropped by a date by mistake */
+    const range=f==='STAT'?'Single dose, '+lab(from):lab(from)+' to ongoing';
+    const spec={name:nm,base:b,route,freq:f,time:food,range,startISO:from,reason:why,max,by:w.by,at:w.at};
+    const text=[nm,f,food.toLowerCase(),f==='STAT'?'once now':'from '+lab(from)].concat(why?[why+', most '+max+' in 24 h']:[]).join(', ');
     if(CTX==='rounds'){
       const R=S.rounds;R.mc.push({act:'Start',text,src:'Typed',rx:spec});R.inv=R.inv||[];
       tests.forEach(t=>{if(!R.inv.some(y=>y[0]===t[0]))R.inv.push([t[0],t[1]]);});
@@ -203,6 +202,33 @@
   }
   const __pd=pDischarge;
   pDischarge=function(){const h=__pd.apply(this,arguments);return psy()?disCard()+h:h;};
+
+  /* ---------- Plan for ---------- */
+  const PLANS={
+    'Clozapine':{consent:'Clozapine consent (patient and relative)',tests:[['CBC','Today']],tasks:['Weekly blood count (ANC) for the first 18 weeks','Baseline ECG and weight']},
+    'Ketamine':{consent:'Ketamine treatment consent',tests:[['ECG','Today']],tasks:['Blood pressure and pulse before and after each session','Nothing to eat or drink before each session, as the anaesthetist advises']},
+    'ECT':{consent:'ECT consent (patient and relative)',tests:[['ECG','Today'],['CBC','Today'],['RFT','Today']],tasks:['Pre-ECT work-up: anaesthetist review','Nil by mouth from midnight before the session']},
+    'Long acting injection':{consent:'Long acting injection consent',tests:[['LFT','This week'],['Lipid profile','This week']],tasks:['Check the oral medicine was tolerated before the first injection','Set the date of the next injection']}};
+  let PLAN='';
+  window.psyPlanOpen=function(kind){
+    const P=PLANS[kind];if(!P)return;PLAN=kind;
+    openModal(`<div class="mh"><h3>Plan for ${hesc(kind)}</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
+      <div class="mb"><div class="small muted">Tick what to create. These are starter tasks; the team will define the full algorithm for each plan later.</div>
+        <label class="rx-m" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="pl_c" checked><span><b>Take consent</b> · ${hesc(P.consent)}<div class="tiny muted">A request goes to the front desk to take the family's signature.</div></span></label>
+        <div class="lbl" style="margin-top:8px">Blood tests and investigations</div>
+        ${P.tests.map((t,i)=>`<label class="row small" style="gap:8px;margin:4px 0"><input type="checkbox" id="pl_t${i}" checked>${hesc(t[0])} <span class="muted">· ${hesc(t[1])}</span></label>`).join('')}
+        <div class="lbl" style="margin-top:8px">Tasks for the team</div>
+        ${P.tasks.map((t,i)=>`<label class="row small" style="gap:8px;margin:4px 0"><input type="checkbox" id="pl_k${i}" checked>${hesc(t)}</label>`).join('')}</div>
+      <div class="mf"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri big" onclick="psyPlanCreate()">Create tasks</button></div>`);
+  };
+  window.psyPlanCreate=function(){
+    const P=PLANS[PLAN];if(!P)return;const R=S.rounds,w=whoAt();let n=0;R.inv=R.inv||[];R.adv=R.adv||[];
+    if($('pl_c').checked){S.consents.push({name:P.consent,who:'Family',st:'Requested from front desk by '+w.by+' · '+w.at+' · plan for '+PLAN,c:'c-amber'});n++;}
+    P.tests.forEach((t,i)=>{if($('pl_t'+i).checked&&!R.inv.some(y=>y[0]===t[0])){R.inv.push([t[0],t[1]]);n++;}});
+    P.tasks.forEach((t,i)=>{if($('pl_k'+i).checked){R.adv.push({to:'Nursing staff',ty:'Other',text:PLAN+': '+t,until:'Until the plan is done',inform:'No one extra',by:signer()});n++;}});
+    const x=px(S.pid);x.plans=x.plans||[];x.plans.unshift({kind:PLAN,by:signer(),at:atNow()});
+    closeModal();render();toast('Plan for '+PLAN+': '+n+' task'+(n===1?'':'s')+' created. Tests and team tasks go out when you save the round.');
+  };
 
   /* ---------- 9. time left to countersign ---------- */
   window.psyOrderLeft=function(id){
