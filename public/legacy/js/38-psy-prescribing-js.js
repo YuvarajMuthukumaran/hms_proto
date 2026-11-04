@@ -165,6 +165,25 @@
   /* ---------- show the new details in lists ---------- */
   const note=m=>m.reason?`<div class="tiny muted">${hesc(m.reason)} · most ${m.max} in 24 h</div>`:'';
   const __po=pOrders;
+  /* Trello "also add a way to stop or add medicine in nursing chart view": the one nursing chart (marCard) gets Add medicine in its
+     header and a Stop button under each ongoing medicine, for the psychiatrist. It is the same chart on the Nursing chart page,
+     the Orders tab and the full-chart window. */
+  const __mc=marCard;
+  marCard=function(){
+    const h0=__mc.apply(this,arguments);if(!psy())return h0;
+    let h=h0.replace('<div class="row" style="gap:8px"><button class="btn sm" onclick="marJump(0)">','<div class="row" style="gap:8px"><button class="btn pri sm" onclick="psyRxOpen({ctx:\'orders\'})">Add medicine</button><button class="btn sm" onclick="marJump(0)">');
+    const act=S.meds.filter(m=>!m.name.includes('waiting'));let k=0;
+    h=h.replace(/<div class="mm-l mm-on">Ongoing<\/div>/g,()=>{const m=act[k++],i=S.meds.indexOf(m);return '<div class="mm-l mm-on">Ongoing</div>'+(i>=0?'<button class="btn sm" style="margin-top:6px" onclick="medStopModal('+i+')">Stop</button>':'');});
+    return h;
+  };
+  /* "Change medicines" on the patient overview opens that patient's nursing chart (Add and Stop are there), not the Orders tab */
+  window.psyToChart=id=>{S.ncP=id;go('#/nursing/'+id);};
+  const __ch=compactHeader;
+  compactHeader=function(){
+    const h=__ch.apply(this,arguments);if(!psy())return h;
+    return h.replace(/onclick="go\('#\/patient\/[^']*\/orders'\)">Change medicines/,'onclick="psyToChart(\''+(S.pid||'neel')+'\')">Change medicines');
+  };
+
   /* remove one balanced <div ...> block that starts with `open` */
   const cutDiv=(h,open)=>{const a=h.indexOf(open);if(a<0)return h;let depth=0,i=-1;const re=/<div\b|<\/div>/g;re.lastIndex=a;let m;
     while((m=re.exec(h))){depth+=m[0]==='</div>'?-1:1;if(depth===0){i=m.index+m[0].length;break;}}
