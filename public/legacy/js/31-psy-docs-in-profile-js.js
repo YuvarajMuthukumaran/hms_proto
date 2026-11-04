@@ -37,6 +37,7 @@
       <details><summary>Filled and submitted (${done.length})</summary>${done.length?done.map(row).join(''):'<div class="pad small muted">Nothing submitted yet.</div>'}</details></section>`;
   }
 
+  window.psyDocsCard=card; /* also used by 32-docs-in-profile-others */
   const __pf=pForms;
   pForms=function(){const h=__pf.apply(this,arguments);return psy()?card()+h:h;};
 })();
