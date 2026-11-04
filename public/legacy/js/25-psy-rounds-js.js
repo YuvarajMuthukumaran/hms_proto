@@ -161,12 +161,12 @@
     const tot=Object.values(WARDS).reduce((a,w)=>a+w.length,0),seen=Object.values(WARDS).reduce((a,w)=>a+w.filter(x=>sn[x.id]).length,0);
     const c=ptCtxOf(p.id),sx=p.sex||'',ag=p.age||'';
     const q=WP.map((x,j)=>{const tg=tagOf(x),done=!!sn[x.id],cls=(done?'seen ':'')+(j===RI?'on':'');
-      return `<button class="pr-q ${cls}" onclick="prSwitch(${j})"><span class="pr-dot">${done?'✓':''}</span><span style="min-width:0"><span style="display:block;font-weight:600;font-size:13px">${hesc(x.name)}</span><span class="tiny muted">${hesc(x.room)}</span></span>${tg?`<span class="pr-tag ${tg[0]}">${tg[1]}</span>`:''}</button>`;}).join('');
+      return `<button class="pr-q ${cls}" onclick="prSwitch(${j})"><span class="pr-dot">${done?'✓':''}</span><span style="min-width:0"><span style="display:block;font-weight:600;font-size:13px">@@Q${j}@@</span><span class="tiny muted">${hesc(x.room)}</span></span>${tg?`<span class="pr-tag ${tg[0]}">${tg[1]}</span>`:''}</button>`;}).join('');
     return `<div class="pr-top"><button class="pr-back" onclick="go('#/myday')">‹ Inpatients</button><div class="grow"><h2>Rounds · ${hesc(R.ward)}</h2><div class="muted small" style="margin-top:2px">${seenN} of ${WP.length} seen · ${seen} of ${tot} across your wards</div></div><button class="btn" onclick="go('#/myday')">End rounds</button></div>
     <div class="pr-grid" style="margin-top:14px">
       <aside class="card pr-queue" aria-label="Ward order" style="padding:10px"><div style="padding:4px 8px 8px"><div class="lbl">Ward order</div><div class="ebar" style="margin-top:6px"><i style="width:${Math.round(seenN/WP.length*100)}%"></i></div></div>${q}</aside>
       <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
-        <section class="card pad"><div class="pr-head">${av(p.ini,52,p.risk?'c-amber':'c-blue')}<div class="grow" style="min-width:240px"><div class="row" style="gap:10px;align-items:baseline"><h2>${hesc(p.name)}</h2><span class="muted">${sx?sx+'/'+ag+' · ':''}${hesc(p.room)} · Day ${p.day}</span></div>
+        <section class="card pad"><div class="pr-head">${av(p.ini,52,p.risk?'c-amber':'c-blue')}<div class="grow" style="min-width:240px"><div class="row" style="gap:10px;align-items:baseline"><h2>${hesc(p.name)}</h2><span class="muted">${sx?sx+'/'+ag+' · ':''}${(()=>{try{const u=p.uhid||ptIdentity(p).uhid;return u?'UHID '+hesc(u)+' · ':''}catch(e){return ''}})()}${hesc(p.room)} · Day ${p.day}</span></div>
           <div class="pr-chips"><span class="pr-ch">${hesc(p.dx||c.dx||'')}</span>${(c.team||{}).psych?`<span class="pr-ch">${hesc(c.team.psych)}</span>`:''}</div>${window.psySafety?`<div style="margin-top:8px">${psySafety(p.id)}</div>`:''}</div>
           <div class="row" style="gap:8px"><a href="#/patient/${p.id}/overview" class="small" style="font-weight:600" onclick="S.backToRounds=true">Open full record</a><button class="btn sm" ${RI===0?'disabled':''} aria-label="Previous patient" onclick="prSwitch(${RI-1})">‹</button><button class="btn sm" ${RI>=WP.length-1?'disabled':''} aria-label="Next patient" onclick="prSwitch(${RI+1})">›</button></div></div>
           ${infoStrip(p)}</section>
@@ -193,7 +193,8 @@
     const R=S.rounds,WP=WARDS[R.ward];if(R.idx[R.ward]>=WP.length)return __prev.apply(this,arguments); /* "ward complete" screen stays */
     const p=curP();if(!p)return __prev.apply(this,arguments);
     S.focusPid=p.id;$('title').textContent='Rounds';
-    return ptRun(p.id,()=>page(p));
+    let h=ptRun(p.id,()=>page(p));WP.forEach((x,j)=>{h=h.split('@@Q'+j+'@@').join(hesc(x.name));}); /* ward-order names are put back after the per-patient text swap, which would turn Neel Bose into the open patient */
+    return h;
   };
 
   /* the signed round note goes into Earlier notes (locked, with author and time) and the box is cleared for the next patient */
