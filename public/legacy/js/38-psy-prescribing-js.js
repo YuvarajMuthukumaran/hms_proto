@@ -167,6 +167,11 @@
   const __po=pOrders;
   pOrders=function(){
     let h=__po.apply(this,arguments);if(!psy())return h;
+    /* the row of four counters (Active medicines, Tests ordered, Consents waiting, Restraint this stay) is removed (owner, 5 Nov) */
+    const a=h.indexOf('<div class="ostrip">');
+    if(a>=0){let depth=0,i=a;const re=/<div\b|<\/div>/g;re.lastIndex=a;let m;
+      while((m=re.exec(h))){depth+=m[0]==='</div>'?-1:1;if(depth===0){i=m.index+m[0].length;break;}}
+      if(i>a)h=h.slice(0,a)+h.slice(i);}
     S.meds.filter(m=>m.reason).forEach(m=>{const t='<b>'+m.name+'</b>';h=h.split(t).join(t+note(m));});
     return h;
   };
