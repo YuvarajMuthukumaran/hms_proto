@@ -15,7 +15,7 @@
   body.psy-views .dph h2{font-size:22px;font-weight:700;color:#0b1324;letter-spacing:-.01em}
   body.psy-views .dph .dpmain .muted{color:#90a1b9;font-weight:600;font-size:13px}
   body.psy-views .dph .dpc{background:#f6f9fc;border:0;border-radius:12px}
-  body.psy-views .dph .dpc .lbl{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:#90a1b9;font-weight:700}
+  body.psy-views .dph .dpc .lbl{font-size:10.5px!important;letter-spacing:.05em!important;text-transform:uppercase!important;color:#90a1b9;font-weight:700!important}
   body.psy-views .dph .dpv{font-weight:700;color:#0b1324}
   body.psy-views .dph .tpill{border-radius:99px;border:1px solid #e8eef5;background:#fff}
   body.psy-views .dph .dpact .btn.soft{background:#fff;border:1px solid #cfe0f5;color:var(--blue-ink)}
