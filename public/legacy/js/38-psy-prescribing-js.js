@@ -165,13 +165,22 @@
   /* ---------- show the new details in lists ---------- */
   const note=m=>m.reason?`<div class="tiny muted">${hesc(m.reason)} · most ${m.max} in 24 h</div>`:'';
   const __po=pOrders;
+  /* remove one balanced <div ...> block that starts with `open` */
+  const cutDiv=(h,open)=>{const a=h.indexOf(open);if(a<0)return h;let depth=0,i=-1;const re=/<div\b|<\/div>/g;re.lastIndex=a;let m;
+    while((m=re.exec(h))){depth+=m[0]==='</div>'?-1:1;if(depth===0){i=m.index+m[0].length;break;}}
+    return i>a?h.slice(0,a)+h.slice(i):h;};
   pOrders=function(){
-    let h=__po.apply(this,arguments);if(!psy())return h;
+    if(!psy())return __po.apply(this,arguments);
+    /* Trello "Keep same nursing chart everywhere": the Orders tab shows the one nursing chart (marCard), not its own list of dose dates */
+    const __mh=medHistoryTable;
+    medHistoryTable=function(){return marCard().replace('<section class="card mchart">','<section class="mchart" style="border-top:1px solid var(--line-2)">');};
+    let h;try{h=__po.apply(this,arguments);}finally{medHistoryTable=__mh;}
     /* the row of four counters (Active medicines, Tests ordered, Consents waiting, Restraint this stay) is removed (owner, 5 Nov) */
-    const a=h.indexOf('<div class="ostrip">');
-    if(a>=0){let depth=0,i=a;const re=/<div\b|<\/div>/g;re.lastIndex=a;let m;
-      while((m=re.exec(h))){depth+=m[0]==='</div>'?-1:1;if(depth===0){i=m.index+m[0].length;break;}}
-      if(i>a)h=h.slice(0,a)+h.slice(i);}
+    h=cutDiv(h,'<div class="ostrip">');
+    /* Trello "No way to add medication here": a visible + Add medicine at the top of the Medicines card; the old search box at the bottom is gone */
+    h=h.replace('<button class="btn sm" onclick="rxAdd(\'Olanzapine 15 mg\')">Repeat last change</button>','<button class="btn pri" onclick="psyRxOpen({ctx:\'orders\'})">Add medicine</button>');
+    h=cutDiv(h,'<div style="padding:14px 20px 18px;border-top:1px solid var(--line-2)">');
+    h=h.replace('Same fields as the live prescription: medicine with strength, 1-0-1, before or after food, dates','Current medicines. The chart below shows every dose given, from Day 1.');
     S.meds.filter(m=>m.reason).forEach(m=>{const t='<b>'+m.name+'</b>';h=h.split(t).join(t+note(m));});
     return h;
   };
