@@ -27,15 +27,36 @@ async function groq(path, init) {
   return j;
 }
 
-async function transcribe(blob, ext, hint) {
+// Whisper guesses one language per recording, so a Hindi and English mixed round often loses one of them.
+// Fix (Trello "train ai scribe on hindi, english mixed language"): transcribe the same audio twice, once set to Hindi
+// (Hindi comes out in Devanagari, English words stay English when the prompt shows a mix) and once set to English, then give
+// BOTH transcripts to the model, which writes the clinical English note from whichever heard each part best.
+const HINGLISH_PROMPT = 'Tulasi Healthcare psychiatric hospital ward round. Doctor, Sister, Brother, RMO, psychologist, patient aur family. '
+  + 'Hindi aur English mixed: "Aaj neend kaisi thi? Olanzapine 10 mg raat ko dena hai, lithium level check karwana hai. Patient ne khana khaya, thoda irritable hai, SOS lorazepam diya." '
+  + 'मरीज़ ने रात को नींद पूरी ली, दवा ली, कोई गुस्सा नहीं।';
+
+async function transcribeOnce(blob, ext, hint, language) {
   const fd = new FormData();
   fd.append('file', blob, 'recording.' + ext);
   fd.append('model', 'whisper-large-v3');
   fd.append('response_format', 'json');
   fd.append('temperature', '0');
-  fd.append('prompt', 'Psychiatric hospital, Tulasi Healthcare. Doctors, nurses (Sister, Brother), psychologist, patient, family. Hindi and English mixed. ' + (hint || ''));
+  fd.append('language', language);
+  fd.append('prompt', HINGLISH_PROMPT + ' ' + (hint || ''));
   const tr = await groq('/audio/transcriptions', { method: 'POST', body: fd });
   return String(tr.text || '').trim();
+}
+
+async function transcribe(blob, ext, hint) {
+  const [hi, en] = await Promise.all([
+    transcribeOnce(blob, ext, hint, 'hi').catch(() => ''),
+    transcribeOnce(blob, ext, hint, 'en').catch(() => '')
+  ]);
+  if (!hi && !en) throw Object.assign(new Error('Could not hear anything in the recording. Try again closer to the speaker.'), { status: 502 });
+  const norm = x => x.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  if (!hi || !en || norm(hi) === norm(en)) return hi || en;
+  return ['Transcript A (recognised as Hindi, English words kept):', hi, '', 'Transcript B (recognised as English):', en, '',
+    'Both are automatic transcripts of the SAME recording. Each may have missed or garbled parts. Use whichever heard each part best, and never invent anything that neither one contains.'].join('\n');
 }
 
 async function writeJson(system, user) {

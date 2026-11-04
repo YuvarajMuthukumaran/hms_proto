@@ -57,14 +57,14 @@
   /* the eye: that patient's items, each with its action */
   window.psyEye=function(pid){
     const m=MAP[pid];if(!m)return;
-    const body=`<div class="pd-det">${m.items.map(i=>`<div class="pd-di"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span><div class="pd-dt">${hesc(i.txt)}${i.due?`<span class="tiny muted">${hesc(i.due)}</span>`:''}</div>${i.btn?`<button class="btn sm ${i.btn[2]?'pri':''}" style="white-space:nowrap" onclick="closeModal();${i.btn[1]}">${i.btn[0]}</button>`:''}</div>`).join('')}</div>`;
+    const body=`<div class="pd-det">${m.items.map(i=>`<div class="pd-di"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span><div class="pd-dt">${hesc(i.txt)}${i.due?`<span class="tiny muted">${hesc(i.due)}</span>`:''}</div>${i.k==='alert'?`<button class="btn sm pri" style="white-space:nowrap" onclick="psyOpenRounds('${pid}')">Review treatment</button>`:''}${i.btn?`<button class="btn sm ${i.btn[2]?'pri':''}" style="white-space:nowrap" onclick="closeModal();${i.btn[1]}">${i.btn[0]}</button>`:''}</div>`).join('')}</div>`;
     const foot=`<div class="mf"><button class="btn" onclick="closeModal();go('#/patient/${pid}/overview')">Open full record</button><button class="btn pri" onclick="psyOpenRounds('${pid}')">Open Rounds</button></div>`;
     openModal(`<div class="mh"><div><h3>${hesc(m.p.name)}</h3><div class="tiny muted" style="margin-top:2px">${hesc(m.p.dx||'')}${m.p.dx?' · ':''}Day ${m.p.day}</div></div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div><div class="mb">${body}</div>${foot}`);
   };
 
   function build(p,T){
     const items=[];
-    DT.alerts(p).forEach(i=>items.push({k:'alert',lab:['red','Alert'],txt:i.txt.replace(/^Alert:\s*/,''),due:i.due,btn:i.btn&&["I've seen this",i.btn[1],true]}));
+    DT.alerts(p).forEach(i=>items.push({k:'alert',lab:['red','Alert'],txt:i.txt.replace(/^Alert:\s*/,''),due:i.due,btn:i.btn&&['Mark seen',i.btn[1],false]}));
     DT.orders(p).forEach(i=>{const id=(i.btn[1].match(/'([^']+)'/)||[])[1];items.push({k:'order',lab:['blue','Approve'],txt:i.txt.replace(/^Countersign:\s*/,''),due:(window.psyOrderLeft&&psyOrderLeft(id))||i.due,btn:['Check and approve',`psyReview('${id}')`,false]});});
     DT.tasks(p,T).forEach(i=>{
       const sign=/discharge summary/i.test(i.txt),late=!!i.overdue;

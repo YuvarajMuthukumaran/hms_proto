@@ -50,6 +50,7 @@
         <label class="field"><span class="lbl">Frequency</span><select class="input" id="rxF" onchange="psyRxCheck()">${FREQS.map(f=>`<option ${f==='1-0-1'?'selected':''}>${f}</option>`).join('')}</select></label>
         <label class="field"><span class="lbl">Food</span><select class="input" id="rxFood"><option>After food</option><option>Before food</option></select></label>
         <label class="field"><span class="lbl">From</span><input class="input" type="date" id="rxFrom" value="${today}"></label>
+        <label class="field full"><span class="lbl">Advice for nursing (optional)</span><input class="input" id="rxAdv" placeholder="e.g. give with milk, watch for drowsiness, hold if BP is low"></label>
         <div class="full" id="rxPrn" style="display:none"><div class="rx-g"><label class="field"><span class="lbl">Reason (required)</span><input class="input" id="rxWhy" list="rxWhyL" placeholder="e.g. for agitation"><datalist id="rxWhyL"><option value="for agitation"><option value="for nausea"><option value="for anxiety"><option value="for insomnia"><option value="for pain"></datalist></label>
           <label class="field"><span class="lbl">Most doses in 24 hours (required)</span><input class="input" type="number" min="1" max="12" id="rxMax" placeholder="e.g. 3"></label></div></div>
       </div>
@@ -85,9 +86,10 @@
     const w=warnings(name),p=prompts(name);
     /* redrawing must not lose what was ticked: keep the tick while the warnings are the same, and the check boxes while the prompts are */
     const wKey=w.map(x=>x[1]).join('|'),ackWas=$('rxAck')?$('rxAck').checked:false,keepAck=ackWas&&wKey===LASTW;LASTW=wKey;
-    const ticks={};p.forEach(x=>{const c=$('rxP_'+x.id);if(c)ticks[x.id]=c.checked;});
+    const ticks={};p.forEach(x=>{const c=document.querySelector('input[name="rxP_'+x.id+'"]:checked');if(c)ticks[x.id]=c.value;});
     $('rxWarn').innerHTML=w.length?`<div class="rx-w">${w.map(x=>`<div class="${x[0]}">${hesc(x[1])}</div>`).join('')}<label class="row small" style="gap:8px"><input type="checkbox" id="rxAck" ${keepAck?'checked':''}> I have read this</label></div>`:'';
-    $('rxMon').innerHTML=p.length?`<div class="lbl" style="margin-top:10px">Checks to order with this medicine</div>${p.map(x=>`<div class="rx-m"><label><input type="checkbox" id="rxP_${x.id}" ${(x.id in ticks?ticks[x.id]:!x.req)?'checked':''}><span>${hesc(x.label)}${x.req?' <b style="color:var(--amber)">(required)</b>':''}${x.note?`<div class="tiny muted">${hesc(x.note)}</div>`:''}</span></label></div>`).join('')}`:'';
+    /* Anu (Trello): nothing is ticked by default, because baseline tests are often already done. Each check is answered with one of two options. */
+    $('rxMon').innerHTML=p.length?`<div class="lbl" style="margin-top:10px">Baseline checks for this medicine</div>${p.map(x=>`<div class="rx-m"><div style="font-size:13px">${hesc(x.label)}${x.note?`<div class="tiny muted">${hesc(x.note)}</div>`:''}</div><div class="row" style="gap:14px;margin-top:4px"><label class="row small" style="gap:6px"><input type="radio" name="rxP_${x.id}" value="done" ${ticks[x.id]==='done'?'checked':''}> Already done</label><label class="row small" style="gap:6px"><input type="radio" name="rxP_${x.id}" value="send" ${ticks[x.id]==='send'?'checked':''}> Send investigations</label></div></div>`).join('')}`:'';
   };
 
   /* ---------- add ---------- */
@@ -100,11 +102,11 @@
     if(f==='SOS'){why=($('rxWhy').value||'').trim();max=+$('rxMax').value;if(!why)return fail('Write the reason for the SOS dose, for example "for agitation"','rxWhy');if(!(max>=1))return fail('Write the most doses allowed in 24 hours','rxMax');}
     if($('rxAck')&&!$('rxAck').checked)return fail('Tick "I have read this" to go on','rxAck');
     const p=prompts(name);let tests=[];
-    for(const x of p){const c=$('rxP_'+x.id);if(x.req&&c&&!c.checked)return fail('This check is required: '+x.label,'rxP_'+x.id);if(c&&c.checked)tests=tests.concat(x.tests);}
+    for(const x of p){const c=document.querySelector('input[name="rxP_'+x.id+'"]:checked');if(!c)return fail('Choose Already done or Send investigations: '+x.label,null);if(c.value==='send')tests=tests.concat(x.tests);}
     const w=whoAt(),b=baseOf(name),nm=name+(route!=='Oral'?' · '+route:'');
     /* no end date (owner, 5 Nov): a medicine only stops when the doctor stops it, so it can never be dropped by a date by mistake */
     const range=f==='STAT'?'Single dose, '+lab(from):lab(from)+' to ongoing';
-    const spec={name:nm,base:b,route,freq:f,time:food,range,startISO:from,reason:why,max,by:w.by,at:w.at};
+    const spec={name:nm,base:b,route,freq:f,time:food,range,startISO:from,reason:why,max,adv:($('rxAdv')&&$('rxAdv').value||'').trim(),by:w.by,at:w.at};
     const text=[nm,f,food.toLowerCase(),f==='STAT'?'once now':'from '+lab(from)].concat(why?[why+', most '+max+' in 24 h']:[]).join(', ');
     if(CTX==='rounds'){
       const R=S.rounds;R.mc.push({act:'Start',text,src:'Typed',rx:spec});R.inv=R.inv||[];
@@ -163,7 +165,7 @@
   };
 
   /* ---------- show the new details in lists ---------- */
-  const note=m=>m.reason?`<div class="tiny muted">${hesc(m.reason)} · most ${m.max} in 24 h</div>`:'';
+  const note=m=>(m.reason?`<div class="tiny muted">${hesc(m.reason)} · most ${m.max} in 24 h</div>`:'')+(m.adv?`<div class="tiny muted">Advice: ${hesc(m.adv)}</div>`:'');
   const __po=pOrders;
   /* Trello "also add a way to stop or add medicine in nursing chart view": the one nursing chart (marCard) gets Add medicine in its
      header and a Stop button under each ongoing medicine, for the psychiatrist. It is the same chart on the Nursing chart page,
@@ -174,6 +176,7 @@
     let h=h0.replace('<div class="row" style="gap:8px"><button class="btn sm" onclick="marJump(0)">','<div class="row" style="gap:8px"><button class="btn pri sm" onclick="psyRxOpen({ctx:\'orders\'})">Add medicine</button><button class="btn sm" onclick="marJump(0)">');
     const act=S.meds.filter(m=>!m.name.includes('waiting'));let k=0;
     h=h.replace(/<div class="mm-l mm-on">Ongoing<\/div>/g,()=>{const m=act[k++],i=S.meds.indexOf(m);return '<div class="mm-l mm-on">Ongoing</div>'+(i>=0?'<button class="btn sm" style="margin-top:6px" onclick="medStopModal('+i+')">Stop</button>':'');});
+    S.meds.concat(S.medsOff||[]).filter(m=>m.adv).forEach(m=>{const t='<div class="mm-n">'+hesc(m.name)+'</div>';h=h.split(t).join(t+'<div class="mm-l" style="color:#344054">Advice: '+hesc(m.adv)+'</div>');});
     return h;
   };
   /* "Change medicines" on the patient overview opens that patient's nursing chart (Add and Stop are there), not the Orders tab */
@@ -200,7 +203,7 @@
     h=h.replace('<button class="btn sm" onclick="rxAdd(\'Olanzapine 15 mg\')">Repeat last change</button>','<button class="btn pri" onclick="psyRxOpen({ctx:\'orders\'})">Add medicine</button>');
     h=cutDiv(h,'<div style="padding:14px 20px 18px;border-top:1px solid var(--line-2)">');
     h=h.replace('Same fields as the live prescription: medicine with strength, 1-0-1, before or after food, dates','Current medicines. The chart below shows every dose given, from Day 1.');
-    S.meds.filter(m=>m.reason).forEach(m=>{const t='<b>'+m.name+'</b>';h=h.split(t).join(t+note(m));});
+    S.meds.filter(m=>m.reason||m.adv).forEach(m=>{const t='<b>'+m.name+'</b>';h=h.split(t).join(t+note(m));});
     return h;
   };
 
