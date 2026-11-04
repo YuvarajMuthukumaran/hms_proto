@@ -21,6 +21,7 @@
 
   const plain=t=>String(t==null?'':t).replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
   window.easyPlain=plain;
+  window.easyStartCard=(items,clear)=>startCard(items,clear); /* also used by 37-easy-simple */
 
   function startCard(items,clear){
     if(!items.length)return `<section class="pd-start ok"><div><div class="pd-sh">All clear</div><div class="pd-st">${hesc(clear.text)}</div></div><button class="btn pri big" onclick="${clear.go}">${hesc(clear.label)}</button></section>`;
