@@ -1,52 +1,43 @@
 
-/* Psychiatrist only (5 Nov 2026): Inpatient dashboard redesign (Trello "Inpatient dashboard (Today): layout, filters, actions and table").
-   - four count tiles that are the filters: Needs you now, Overdue, New admissions, All my inpatients (selected tile has a blue border)
-   - one table, content about 1180 px wide and centred: Patient | Room | Observation | Due today | arrow (diagnosis moved under the name)
-   - no Open button: the name and the arrow open the patient; each action sits on the item it belongs to
-     (Acknowledge is the only filled button; Review, Start, Review and sign are outline)
-   - status label per item: Vitals alert (red), Overdue (amber), Countersign (blue), Due today / To sign (grey)
-   - sorted Needs you now, Overdue, New admissions, Due today, Nothing due; red only for a real alert
-   Open question on the card (does opening a patient acknowledge an alert?) is answered "no": the alert is acknowledged only with the button. */
+/* Psychiatrist only (5 Nov 2026): Inpatient dashboard, simplified after the team review (two transcripts, owner's notes).
+   - no page header, no "8 patients, 3 need you" line, no Start here card; Start rounds and New admission stay as two buttons
+   - one row per patient, three things only: 1) type of alert  2) patient name  3) an eye button that opens that patient's details
+   - only patients with something to act on are listed (alert, approval, late item, result to check, summary to sign);
+     the routine "Today" items, the Room column and the Checked column are gone
+   - every row is its own card with a gap between rows and a coloured left edge (red alert, amber late or result, blue approval),
+     so one patient never runs into the next
+   - the eye opens a window with that patient's items, each with its action button (I've seen this, Check and approve, Do it now),
+     and buttons to open the patient's Rounds page or full record
+   Design follows the doctor portal (rounded cards, soft borders, small pills). */
 (function(){
   const css=document.createElement('style');css.id='psy-dash-css';
   css.textContent=`
-  .pd{max-width:none;margin:0;display:flex;flex-direction:column;gap:16px}
-  .pd-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-  .pd-tile{text-align:left;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
-  .pd-tile:hover{border-color:#9dbdf0}.pd-tile.on{border:2px solid var(--blue);padding:11px 13px}
-  .pd-tile .h{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
-  .pd-dot{width:9px;height:9px;border-radius:50%;flex:0 0 9px}
-  .pd-tile b{display:block;font-size:26px;line-height:1.2;margin:4px 0 2px}
-  .pd-tile span.d{font-size:12px;color:var(--muted)}
-  .pd-t{table-layout:fixed;width:100%;min-width:820px;border-collapse:collapse}
-  .pd-t th{background:var(--soft);color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
-  .pd-t td{padding:14px;border-bottom:1px solid var(--line-2);vertical-align:top}
-  .pd-t tr.alert td{background:#fffafa}
-  .pd-name{border:0;background:none;padding:0;font:inherit;font-weight:700;font-size:14px;color:var(--ink);text-align:left;cursor:pointer}
-  .pd-name:hover{color:var(--blue)}
-  .pd-sub{font-size:12px;color:var(--muted);margin-top:2px}.pd-dx{font-size:12.5px;color:var(--ink-2);margin-top:2px}
-  .pd-tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
-  .pd-tag{font-size:11px;font-weight:700;border-radius:99px;padding:1px 8px}
-  .pd-tag.amber{background:var(--amber-bg);color:var(--amber)}.pd-tag.blue{background:var(--blue-tint);color:var(--blue-ink)}
-  .pd-pill{display:inline-block;font-size:12px;border-radius:99px;padding:2px 10px;background:var(--grey-bg);color:var(--grey)}.pd-pill.amber{background:var(--amber-bg);color:var(--amber);font-weight:600}
-  .pd-item{display:flex;align-items:flex-start;gap:10px;padding:3px 0}
-  .pd-item+.pd-item{border-top:1px dashed var(--line-2);margin-top:4px;padding-top:7px}
-  .pd-lab{flex:0 0 96px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding-top:2px}
-  .pd-lab.red{color:var(--red)}.pd-lab.amber{color:var(--amber)}.pd-lab.blue{color:var(--blue-ink)}.pd-lab.grey{color:var(--muted)}
-  .pd-txt{flex:1;min-width:0;font-size:13px;line-height:1.4}.pd-txt .tiny{display:block}
-  .pd-go{border:0;background:none;font-size:20px;color:#8a94a6;cursor:pointer;padding:0 6px}.pd-go:hover{color:var(--blue)}
-  /* easier to use (5 Nov 2026): a "Start here" card, plain words, bigger text and buttons */
-  .pd-start{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--blue-tint);border:1px solid #bcd4fa;border-radius:14px;padding:16px 20px}
-  .pd-start.red{background:#fff5f4;border-color:#f3c3be}
-  .pd-start.ok{background:var(--green-bg);border-color:#bfe6cc}
-  .pd-sh{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-ink)}.pd-start.red .pd-sh{color:var(--red)}.pd-start.ok .pd-sh{color:var(--green)}
-  .pd-start .pd-st{font-size:17px;line-height:1.35;margin:3px 0}
-  .btn.big{min-height:46px;padding:0 24px;font-size:15px;font-weight:600}
-  .pd-t .btn.sm{min-height:36px;padding:0 14px;font-size:13.5px}
-  .pd-t tbody tr:hover td{background:#f8fbff}.pd-t tr.alert:hover td{background:#fff5f4}
-  .pd-hint{font-size:13px;color:var(--muted);margin-top:2px}
-  @media (max-width:900px){.pd-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}`;
+  .pd{display:flex;flex-direction:column;gap:14px}
+  .pd-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .pd-t{table-layout:fixed;width:100%;border-collapse:separate;border-spacing:0 10px;margin-top:-6px}
+  .pd-t th{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:0 16px 2px}
+  .pd-t td{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 16px;vertical-align:middle}
+  .pd-t td:first-child{border-left:4px solid var(--line);border-top-left-radius:14px;border-bottom-left-radius:14px}
+  .pd-t td:last-child{border-right:1px solid var(--line);border-top-right-radius:14px;border-bottom-right-radius:14px;text-align:right}
+  .pd-t tr.r-red td:first-child{border-left-color:var(--red)}.pd-t tr.r-red td{background:#fffafa}
+  .pd-t tr.r-amber td:first-child{border-left-color:#f0a43a}
+  .pd-t tr.r-blue td:first-child{border-left-color:var(--blue)}
+  .pd-t tbody tr:hover td{background:#f8fbff}.pd-t tr.r-red:hover td{background:#fff5f4}
+  .pd-who{display:flex;align-items:center;gap:12px;border:0;background:none;padding:0;font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
+  .pd-who b{font-size:15px;font-weight:700}.pd-who:hover b{color:var(--blue)}
+  .pd-chips{display:flex;gap:6px;flex-wrap:wrap}
+  .pd-chip{font-size:12px;font-weight:700;border-radius:99px;padding:3px 11px;background:var(--grey-bg);color:var(--grey);white-space:nowrap}
+  .pd-chip.red{background:#fdecea;color:var(--red)}.pd-chip.amber{background:var(--amber-bg);color:var(--amber)}.pd-chip.blue{background:var(--blue-tint);color:var(--blue-ink)}
+  .pd-eye{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink-2);cursor:pointer}
+  .pd-eye:hover{border-color:var(--blue);color:var(--blue)}
+  .pd-det{display:flex;flex-direction:column}
+  .pd-di{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--line-2)}.pd-di:first-child{border-top:0}
+  .pd-dt{flex:1;min-width:0;font-size:14px;line-height:1.4}.pd-dt .tiny{display:block}
+  .pd-empty{padding:28px;text-align:center;color:var(--muted)}`;
   document.head.appendChild(css);
+
+  const EYE='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const MAP={};
 
   window.psyReview=function(id){
     const o=v3().orders.find(x=>x.id===id);if(!o)return;
@@ -55,8 +46,23 @@
   };
   window.psyDtSet=function(f){S.dtF=f;render();};
 
+  /* open that patient's Rounds page */
+  window.psyOpenRounds=function(pid){
+    closeModal();
+    const R=S.rounds;
+    for(const w of Object.keys(WARDS)){const j=WARDS[w].findIndex(x=>x.id===pid);if(j>=0){R.ward=w;R.idx[w]=j;R.drafted=false;R.mc=[];R.adv=[];R.mon=[];R.inv=[];R.ref=[];R.noteFromScribe=false;R.scribeNote=((R.noteBy||{})[pid])||'';break;}}
+    go('#/rounds');
+  };
+
+  /* the eye: that patient's items, each with its action */
+  window.psyEye=function(pid){
+    const m=MAP[pid];if(!m)return;
+    const body=`<div class="pd-det">${m.items.map(i=>`<div class="pd-di"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span><div class="pd-dt">${hesc(i.txt)}${i.due?`<span class="tiny muted">${hesc(i.due)}</span>`:''}</div>${i.btn?`<button class="btn sm ${i.btn[2]?'pri':''}" style="white-space:nowrap" onclick="closeModal();${i.btn[1]}">${i.btn[0]}</button>`:''}</div>`).join('')}</div>`;
+    const foot=`<div class="mf"><button class="btn" onclick="closeModal();go('#/patient/${pid}/overview')">Open full record</button><button class="btn pri" onclick="psyOpenRounds('${pid}')">Open Rounds</button></div>`;
+    openModal(`<div class="mh"><div><h3>${hesc(m.p.name)}</h3><div class="tiny muted" style="margin-top:2px">${hesc(m.p.dx||'')}${m.p.dx?' · ':''}Day ${m.p.day}</div></div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div><div class="mb">${body}</div>${foot}`);
+  };
+
   function build(p,T){
-    const sx=p.sex||(PT_FILL[p.id]||[])[0]||'',ag=p.age||(PT_FILL[p.id]||[])[1]||'';
     const items=[];
     DT.alerts(p).forEach(i=>items.push({k:'alert',lab:['red','Alert'],txt:i.txt.replace(/^Alert:\s*/,''),due:i.due,btn:i.btn&&["I've seen this",i.btn[1],true]}));
     DT.orders(p).forEach(i=>{const id=(i.btn[1].match(/'([^']+)'/)||[])[1];items.push({k:'order',lab:['blue','Approve'],txt:i.txt.replace(/^Countersign:\s*/,''),due:(window.psyOrderLeft&&psyOrderLeft(id))||i.due,btn:['Check and approve',`psyReview('${id}')`,false]});});
@@ -66,47 +72,33 @@
         btn:[sign?'Review and sign':late?'Do it now':'Open',`go('${i.go||'#/patient/'+p.id+'/overview'}')`,false]});
     });
     if(window.psyExtraItems)window.psyExtraItems(p).forEach(i=>items.push(i)); /* results to review, daily observation review */
-    const need=items.some(i=>i.k==='alert'||i.k==='order'),late=items.some(i=>i.k==='late'),isNew=p.day<=1;
-    const rank=need?0:late?1:isNew?2:items.length?3:4;
-    const obs=dtObs(p),obsAmber=String(obs).startsWith('1:1');
-    const itemHtml=items.length?items.map(i=>`<div class="pd-item"><span class="pd-lab ${i.lab[0]}">${i.lab[1]}</span><div class="pd-txt">${hesc(i.txt)}${i.due?`<span class="tiny muted">${hesc(i.due)}</span>`:''}</div>${i.btn?`<button class="btn sm ${i.btn[2]?'pri':''}" style="white-space:nowrap" onclick="${i.btn[1]}">${i.btn[0]}</button>`:''}</div>`).join(''):'<span class="small" style="color:var(--green);font-weight:600">All done for today</span>';
-    const html=`<tr class="${items.some(i=>i.k==='alert')?'alert':''}" data-dt="${hesc((p.name+' '+p.room).toLowerCase())}" data-need="${need?1:0}" data-new="${isNew?1:0}" data-late="${late?1:0}">
-      <td><button class="pd-name" onclick="go('#/patient/${p.id}/overview')">${hesc(p.name)}</button><div class="pd-sub">${sx?sx+'/'+ag+' · ':''}Day ${p.day}</div><div class="pd-dx">${hesc(p.dx||'')}</div>
-        ${p.risk||isNew?`<div class="pd-tags">${p.risk?'<span class="pd-tag amber">High risk</span>':''}${isNew?'<span class="pd-tag blue">New patient</span>':''}</div>`:''}</td>
-      <td class="small" style="overflow-wrap:anywhere">${hesc(p.room)}</td>
-      <td><span class="pd-pill ${obsAmber?'amber':''}">${hesc(obs)}</span></td>
-      <td>${itemHtml}</td>
-      <td style="text-align:right"><button class="pd-go" aria-label="Open ${hesc(p.name)}" onclick="go('#/patient/${p.id}/overview')">›</button></td></tr>`;
-    return {rank,need,late,isNew,html,p,items};
-  }
-
-  /* "Start here": the one thing to do first, with its button. Nothing else on the page moves. */
-  function startHere(rows){
-    const urgent=[];rows.forEach(r=>r.items.forEach(i=>{if(i.k==='alert'||i.k==='order'||i.k==='late')urgent.push({p:r.p,i});}));
-    if(!urgent.length)return `<section class="pd-start ok"><div><div class="pd-sh">All clear</div><div class="pd-st">Nothing needs you right now.</div><div class="tiny muted">You can start your rounds when you are ready.</div></div><button class="btn pri big" onclick="go('#/rounds')">Start rounds</button></section>`;
-    const f=urgent[0],more=urgent.length-1,go=f.i.btn?f.i.btn:['Open patient',`go('#/patient/${f.p.id}/overview')`,true];
-    const why={alert:'An alert is waiting for you',order:'An order is waiting for your approval',late:'This is late'}[f.i.k];
-    return `<section class="pd-start ${f.i.k==='alert'?'red':''}"><div><div class="pd-sh">Start here · ${why}</div><div class="pd-st"><b>${hesc(f.p.name)}</b> · ${hesc(f.i.txt)}</div><div class="tiny muted">${more?more+' more thing'+(more>1?'s':'')+' waiting after this one.':'This is the only thing waiting.'}</div></div><button class="btn pri big" onclick="${go[1]}">${go[0]}</button></section>`;
+    const act=items.filter(i=>i.lab[1]!=='Today'); /* routine "Today" items are not shown on the dashboard any more */
+    const has=k=>act.some(i=>i.k===k),isNew=p.day<=1;
+    const rank=has('alert')?0:(has('order')||has('late'))?1:2;
+    const edge=has('alert')?'red':(act.some(i=>i.lab[0]==='amber'))?'amber':has('order')?'blue':'';
+    const types=[];act.forEach(i=>{if(!types.some(t=>t[1]===i.lab[1]))types.push(i.lab);});
+    MAP[p.id]={p,items:act};
+    const html=act.length?`<tr class="${edge?'r-'+edge:''}" data-dt="${hesc((p.name+' '+p.room).toLowerCase())}" data-need="${has('alert')||has('order')?1:0}" data-new="${isNew?1:0}" data-late="${has('late')?1:0}">
+      <td><div class="pd-chips">${types.map(t=>`<span class="pd-chip ${t[0]}">${hesc(t[1])}</span>`).join('')}</div></td>
+      <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,34,has('alert')?'c-red':'c-blue')}<b>${hesc(p.name)}</b></button></td>
+      <td><button class="pd-eye" aria-label="View details for ${hesc(p.name)}" title="View details" onclick="psyEye('${p.id}')">${EYE}</button></td></tr>`:'';
+    return {rank,html,act};
   }
 
   function dash(){
     $('title').textContent='Inpatients';
     const T=tasks().filter(t=>!S.done[t.id]&&t.taskType!=='alert'&&t.taskType!=='countersign');
-    const rows=PTS.map(p=>build(p,T)).sort((a,b)=>a.rank-b.rank);
-    const n={need:rows.filter(r=>r.need).length,late:rows.filter(r=>r.late).length,isNew:rows.filter(r=>r.isNew).length,all:rows.length};
-    S.dtF='all'; /* the four filter tiles were removed (owner, 5 Nov): nothing is filtered any more except by the search box */
-    const day=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+    const rows=PTS.map(p=>build(p,T)).filter(r=>r.act.length).sort((a,b)=>a.rank-b.rank);
+    S.dtF='all';
     setTimeout(dtFilter,0);
     return `<div class="pd">
-      <div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h2>Inpatient dashboard</h2><div class="muted" style="margin-top:4px">${day} · ${rows.length} patients · ${n.need} need${n.need===1?'s':''} you now</div><div class="pd-hint">Tap a patient's name to open their file.</div></div>
+      <div class="pd-bar"><input class="input" id="dtQ" style="width:280px;min-height:40px;margin:0" placeholder="Type a name" oninput="dtFilter()" aria-label="Search patients">
         <div class="row" style="gap:8px"><button class="btn" onclick="go('#/admissions')">New admission</button><button class="btn pri" onclick="go('#/rounds')">Start rounds</button></div></div>
-      ${startHere(rows)}
-      <section class="card ptable">
-        <div class="hd" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><h3>Patients</h3>
-          <input class="input" id="dtQ" style="width:260px;min-height:38px;margin:0" placeholder="Type a name or room" oninput="dtFilter()" aria-label="Search patients"></div>
-        <div class="scroll"><table class="pd-t"><colgroup><col style="width:230px"><col style="width:110px"><col style="width:130px"><col><col style="width:44px"></colgroup>
-          <thead><tr><th>Patient</th><th>Room</th><th>Checked</th><th>What to do today</th><th></th></tr></thead>
-          <tbody id="dtBody">${rows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="5" class="pad small muted">No patient matches</td></tr></tbody></table></div></section></div>`;
+      ${rows.length?`<table class="pd-t"><colgroup><col style="width:34%"><col><col style="width:72px"></colgroup>
+        <thead><tr><th>Alert</th><th>Patient</th><th></th></tr></thead>
+        <tbody id="dtBody">${rows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="3" class="pd-empty">No patient matches</td></tr></tbody></table>`
+      :`<section class="card"><div class="pd-empty">Nothing needs you right now. You can start your rounds when you are ready.</div></section>`}
+    </div>`;
   }
   Object.assign(ROLE.psychiatrist,{myday:()=>dash()});
 })();
