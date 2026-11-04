@@ -1,0 +1,18 @@
+<div class="app" id="app">
+  <aside class="side" id="side"></aside>
+  <div class="main">
+    <header class="top"><h1 id="title">Inpatients</h1>
+      <div class="row" style="gap:18px">
+        <div class="row" style="gap:0;flex-wrap:nowrap"><input id="hsq" class="input" style="display:none;width:260px;min-height:36px;padding:6px 12px" placeholder="Search patient by name, UHID or room" aria-label="Search patients" onkeydown="if(event.key==='Enter'){go('#/patient/neel/overview');toast('Prototype: search opens Neel Bose')}if(event.key==='Escape'){this.style.display='none'}">
+        <button aria-label="Search" title="Search" onclick="const i=$('hsq');i.style.display=i.style.display==='none'?'block':'none';if(i.style.display==='block')i.focus()" style="border:0;background:none;cursor:pointer;color:#8a94a6;padding:6px;border-radius:8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button></div>
+        <button aria-label="Notifications, 3 new" onclick="notifModal()" style="position:relative;border:0;background:none;cursor:pointer;color:#8a94a6;padding:6px;border-radius:8px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg><span style="position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:99px;background:var(--red)"></span></button>
+        <button class="row" aria-label="Account" onclick="accountModal()" style="gap:10px;border:0;background:none;cursor:pointer;font:inherit;color:inherit;padding:0"><div class="avatar" style="width:36px;height:36px;font-size:12px;background:var(--blue);color:#fff" id="topAv">AS</div><span style="font-weight:600" id="topName">Dr. Aanya</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a94a6" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      </div>
+    </header>
+    <div class="proto"><strong>Prototype</strong><span>Screens marked <span class="chip c-new">NEW</span> are additions. Everything else is the doctor portal as it is live today.</span><a href="#/journey">Patient journey and scope</a><span id="v3clock"></span><span class="row"><span class="small">View as</span><span class="seg" id="roleSeg" role="group" aria-label="View prototype as" style="min-width:420px"></span></span></div>
+    <main class="content" id="view"></main>
+  </div>
+</div>
+<div class="scrim" id="scrim" onclick="if(event.target===this)closeModal()"><div class="modal" role="dialog" aria-modal="true" id="modal"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>

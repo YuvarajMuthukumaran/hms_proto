@@ -1,36 +1,45 @@
-# Tulasi Clinical Portal (prototype)
+# Tulasi Clinical Portal (React + Supabase)
 
-Static HMS clinical portal prototype (`index.html`) with a WhatsApp bridge as Vercel functions (`api/`).
-All patient data in the portal is dummy.
+Vite + React + TypeScript. The inpatient screens are still the original ones and run inside the React shell;
+they move into React components one screen at a time.
 
-```
-Portal (Vercel) → /api/* (Vercel functions) → Cloudflare Tunnel → OpenWA (hospital PC, Docker) → WhatsApp
-```
+## What is React now
 
-## API
-
-All routes need the header `X-Bridge-Token`. Staff enter it once in the portal: **WhatsApp connection settings**.
-
-| Route | Does |
+| Part | Where |
 | --- | --- |
-| `GET /api/health` | OpenWA session status |
-| `POST /api/send/patient` `{uhid, text, by}` | Sends to the WhatsApp group named `<uhid>`. If the group is missing, it's created with the numbers from `PATIENTS_JSON` |
-| `POST /api/send/doctors` `{text, by}` | Sends to the doctors' group (`DOCTORS_GROUP_NAME`) |
+| Role picker (login page) and role links `/lead`, `/psychiatrist`, `/psychologist`, `/nurse`, `/rmo` | `src/App.tsx`, `src/components/RolePicker.tsx`, `src/roles.ts` |
+| Mounting the old screens | `src/components/LegacyPortal.tsx`, `src/legacy/loadLegacy.ts` |
+| Supabase sync (load, save, pull every 30 s, audit log), per-role write rules | `src/supabase/` |
+| Sync status pill ("Synced", "Demo data") | `src/components/SyncBadge.tsx` |
 
-## Vercel environment variables (private, never in this repo)
+## What is still the old code
 
-| Name | Value |
-| --- | --- |
-| `BRIDGE_TOKEN` | A long random string, shared only with staff |
-| `OPENWA_URL` | The Cloudflare Tunnel address of OpenWA, e.g. `https://xxxx.trycloudflare.com` |
-| `OPENWA_API_KEY` | OpenWA API key (`docker exec openwa-api cat /app/data/.api-key`) |
-| `OPENWA_SESSION_ID` | OpenWA session id |
-| `DOCTORS_GROUP_NAME` | Exact name of the doctors' WhatsApp group |
-| `TEAM_MEMBERS` | Optional comma-separated numbers added to every new patient group |
-| `PATIENTS_JSON` | `{"<uhid>":{"name":"...","members":["98XXXXXXXX"]}}` |
+`public/legacy/` holds the old portal split from the single HTML file: `legacy.css`, `js/NN-*.js` (loaded in order by
+`src/legacy/scripts.ts`) and `react-bridge.js`, the only door between the old screens and React (`window.TulasiBridge`,
+typed in `src/legacy/bridge.ts`). The old login, role-link and Supabase blocks were removed.
+`src/legacy/markup.html` is the old page frame (sidebar, header, `#view`, modal, toast).
 
-## Hospital PC
+Old files keep their conventions: override blocks, `S` state, `render()`, CRLF endings.
 
-OpenWA runs in Docker on the hospital PC (`ENGINE_TYPE=baileys`), reached through `cloudflared tunnel --url http://localhost:2785`.
-WhatsApp sending only works while that PC, Docker and the tunnel are running.
-A quick tunnel gets a new address each time it starts. When that happens, update `OPENWA_URL` in Vercel and redeploy.
+## Moving a screen to React
+
+1. Add a React component for the screen and render it into the old page's `#view` (or replace the old frame once
+   enough screens have moved).
+2. Read and write patient data through `TulasiBridge` until the state itself moves out of `S`.
+3. Delete the old function from its `public/legacy/js` block, then run `npm run check:legacy`.
+
+## Run
+
+```bash
+npm install
+npm run dev          # http://localhost:5173 (Supabase is off: demo data in the browser)
+npm run build        # typecheck, build, parse-check every legacy script
+```
+
+Supabase locally: copy `.env.example` to `.env.local` and fill the project URL and anon key. On Vercel the portal reads
+`SUPABASE_URL` and `SUPABASE_ANON_KEY` through `/api/config`, as before. Never use the `service_role` key.
+`api/` and `lib/` (WhatsApp bridge, AI scribe, config) are unchanged Vercel functions, so they need `vercel dev` locally.
+
+## Deploy
+
+Same Vercel project and environment variables. `vercel.json` sets the Vite build and keeps the five role rewrites.
