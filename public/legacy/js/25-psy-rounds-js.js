@@ -39,6 +39,7 @@
   @media (max-width:980px){.pr-grid{grid-template-columns:1fr}.pr-two{grid-template-columns:1fr}.pr-nums{grid-template-columns:repeat(2,minmax(0,1fr))}}`;
   document.head.appendChild(css);
 
+  const curPid=i=>{const R=S.rounds,WP=WARDS[R.ward],p=WP[Math.min(i,WP.length-1)];return p&&p.id;};
   const R0=()=>S.rounds, curP=()=>{const R=S.rounds,WP=WARDS[R.ward];return WP[Math.min(R.idx[R.ward],WP.length-1)];};
   const last=a=>Array.isArray(a)&&a.length?a[a.length-1]:null;
   const exOf=p=>(EX[p.id]||[]);
@@ -59,7 +60,7 @@
   };
   window.prSave=function(stay){
     const R=S.rounds,w=R.ward,before=R.idx[w];confirmRound();
-    if(stay&&R.idx[w]>before){R.idx[w]=before;render();}
+    if(stay&&R.seen&&R.seen[curPid(before)]){R.idx[w]=before;R.scribeNote='';render();} /* Save keeps you on this patient, now marked seen */
   };
   window.prStopUndo=function(name){const R=S.rounds;R.mc=R.mc.filter(c=>!(c.act==='Stop'&&c.text===name));render();};
   window.prChange=function(i){const b=$('prE'+i);if(b)b.style.display=b.style.display==='none'||!b.style.display?'flex':'none';};
@@ -162,17 +163,19 @@
 
   function page(p){
     const R=S.rounds,WP=WARDS[R.ward],RI=R.idx[R.ward];
-    const tot=Object.values(WARDS).reduce((a,w)=>a+w.length,0),seen=Object.keys(WARDS).reduce((a,k)=>a+Math.min(R.idx[k],WARDS[k].length),0);
+    if(R.seen&&WP.every(x=>R.seen[x.id]))R.seen={}; /* "Restart this ward" starts the ticks again */
+    const sn=R.seen||{},seenN=WP.filter(x=>sn[x.id]).length;
+    const tot=Object.values(WARDS).reduce((a,w)=>a+w.length,0),seen=Object.values(WARDS).reduce((a,w)=>a+w.filter(x=>sn[x.id]).length,0);
     const c=ptCtxOf(p.id),sx=p.sex||'',ag=p.age||'';
-    const q=WP.map((x,j)=>{const tg=tagOf(x),cls=j<RI?'seen':(j===RI?'on':'');
-      return `<button class="pr-q ${cls}" onclick="prSwitch(${j})"><span class="pr-dot">${j<RI?'✓':''}</span><span style="min-width:0"><span style="display:block;font-weight:600;font-size:13px">${hesc(x.name)}</span><span class="tiny muted">${hesc(x.room)}</span></span>${tg?`<span class="pr-tag ${tg[0]}">${tg[1]}</span>`:''}</button>`;}).join('');
-    return `<div class="pr-top"><button class="pr-back" onclick="go('#/myday')">‹ Inpatients</button><div class="grow"><h2>Rounds · ${hesc(R.ward)}</h2><div class="muted small" style="margin-top:2px">${Math.min(RI,WP.length)} of ${WP.length} seen · ${seen} of ${tot} across your wards</div></div><button class="btn" onclick="go('#/myday')">End rounds</button></div>
+    const q=WP.map((x,j)=>{const tg=tagOf(x),done=!!sn[x.id],cls=(done?'seen ':'')+(j===RI?'on':'');
+      return `<button class="pr-q ${cls}" onclick="prSwitch(${j})"><span class="pr-dot">${done?'✓':''}</span><span style="min-width:0"><span style="display:block;font-weight:600;font-size:13px">${hesc(x.name)}</span><span class="tiny muted">${hesc(x.room)}</span></span>${tg?`<span class="pr-tag ${tg[0]}">${tg[1]}</span>`:''}</button>`;}).join('');
+    return `<div class="pr-top"><button class="pr-back" onclick="go('#/myday')">‹ Inpatients</button><div class="grow"><h2>Rounds · ${hesc(R.ward)}</h2><div class="muted small" style="margin-top:2px">${seenN} of ${WP.length} seen · ${seen} of ${tot} across your wards</div></div><button class="btn" onclick="go('#/myday')">End rounds</button></div>
     <div class="pr-grid" style="margin-top:14px">
-      <aside class="card pr-queue" aria-label="Ward order" style="padding:10px"><div style="padding:4px 8px 8px"><div class="lbl">Ward order</div><div class="ebar" style="margin-top:6px"><i style="width:${Math.round(Math.min(RI,WP.length)/WP.length*100)}%"></i></div></div>${q}</aside>
+      <aside class="card pr-queue" aria-label="Ward order" style="padding:10px"><div style="padding:4px 8px 8px"><div class="lbl">Ward order</div><div class="ebar" style="margin-top:6px"><i style="width:${Math.round(seenN/WP.length*100)}%"></i></div></div>${q}</aside>
       <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
         <section class="card pad"><div class="pr-head">${av(p.ini,52,p.risk?'c-amber':'c-blue')}<div class="grow" style="min-width:240px"><div class="row" style="gap:10px;align-items:baseline"><h2>${hesc(p.name)}</h2><span class="muted">${sx?sx+'/'+ag+' · ':''}${hesc(p.room)} · Day ${p.day}</span></div>
           <div class="pr-chips"><span class="pr-ch">${hesc(p.dx||c.dx||'')}</span>${(c.team||{}).psych?`<span class="pr-ch">${hesc(c.team.psych)}</span>`:''}</div>${window.psySafety?`<div style="margin-top:8px">${psySafety(p.id)}</div>`:''}</div>
-          <div class="row" style="gap:8px"><a href="#/patient/${p.id}/overview" class="small" style="font-weight:600">Open full record</a><button class="btn sm" ${RI===0?'disabled':''} aria-label="Previous patient" onclick="prSwitch(${RI-1})">‹</button><button class="btn sm" aria-label="Next patient" onclick="prSwitch(${RI+1})">›</button></div></div>
+          <div class="row" style="gap:8px"><a href="#/patient/${p.id}/overview" class="small" style="font-weight:600">Open full record</a><button class="btn sm" ${RI===0?'disabled':''} aria-label="Previous patient" onclick="prSwitch(${RI-1})">‹</button><button class="btn sm" ${RI>=WP.length-1?'disabled':''} aria-label="Next patient" onclick="prSwitch(${RI+1})">›</button></div></div>
           ${infoStrip(p)}</section>
         <div class="pr-two">${sinceCard(p)}${noteCard(p)}</div>
         ${medCard(p)}
@@ -198,7 +201,15 @@
     const out=__cr.apply(this,arguments);
     if(R.idx[w]>before&&p){
       if(note){ptRun(p.id,()=>{S.dnHist=(S.dnHist||DN_HIST).slice();S.dnHist.unshift({d:String(d.getDate()),my:d.toLocaleString('en-GB',{month:'short'})+' '+d.getFullYear(),type:'Round note',tc:'c-violet',by:signer(),role:'Psychiatrist',sum:note.slice(0,110),signed:atNow(),secs:[['Round note',note]]});return '';});}
-      R.scribeNote='';R.noteFromScribe=false;R.scribe=null;R.noteBy=R.noteBy||{};delete R.noteBy[p.id];render();
+      /* only a saved round counts as seen; the next patient is the next one NOT yet seen (the list can be opened in any order) */
+      R.seen=R.seen||{};R.seen[p.id]=true;
+      const WP=WARDS[w];let next=-1;
+      for(let k=1;k<=WP.length;k++){const j=(before+k)%WP.length;if(!R.seen[WP[j].id]){next=j;break;}}
+      R.idx[w]=next<0?WP.length:next;
+      R.noteBy=R.noteBy||{};delete R.noteBy[p.id];
+      R.scribeNote=next<0?'':(R.noteBy[WP[next].id]||'');R.noteFromScribe=false;R.scribe=null;
+      if(next<0)S.done.daily=true;
+      render();
     }
     return out;
   };
