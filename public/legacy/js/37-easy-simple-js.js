@@ -35,10 +35,17 @@
   .ez-pt .t.amber{background:var(--amber-bg);color:var(--amber)}.ez-pt .t.blue{background:var(--blue-tint);color:var(--blue-ink)}
   .ez-search{width:260px;min-height:38px;margin:0}
   .ez-more-body{padding:4px 20px 20px;display:flex;flex-direction:column;gap:16px}
+  /* no extra tab row on this page (Today | Care, Today | Handover): the boards are under More tools and boards */
+  body.easy-simple .sgtabs{display:none!important}
+  .ez-pt{min-height:78px}
   @media (max-width:700px){.ez-row{flex-wrap:wrap}.ez-lab{flex-basis:auto;padding:3px 10px}.ez-acts{width:100%}}`;
   document.head.appendChild(css);
+  const __render=render;
+  render=function(){document.body.classList.toggle('easy-simple',S.role==='nurse'||S.role==='rmo');return __render.apply(this,arguments);};
 
-  window.ezFind=function(q){q=String(q||'').toLowerCase();document.querySelectorAll('.ez-pt').forEach(c=>{c.style.display=(c.dataset.n||'').includes(q)?'':'none';});};
+  window.ezFind=function(q){q=String(q||'').toLowerCase();
+    document.querySelectorAll('.ez-pt').forEach(c=>{c.style.display=(c.dataset.n||'').includes(q)?'':'none';});
+    document.querySelectorAll('details.ez-rest').forEach(d=>{d.open=q!==''||!!S.ezAllPts;});}; /* a search also looks inside "Show all patients" */
   window.ezMore=function(on){S.ezMore=on;render();};
 
   /* the doctor's instructions are written into the old page; read them from there so nothing is lost */
@@ -66,20 +73,27 @@
     const row=(i,first)=>{
       const lab=i.lab||['grey','To do'];
       return `<div class="ez-row"><span class="ez-lab ${lab[0]}">${hesc(lab[1])}</span><div class="ez-txt">${i.who?'<b>'+hesc(i.who)+'</b> · ':''}${hesc(i.txt)}</div><div class="ez-acts">${i.done?`<button class="ez-link" onclick="${i.done}">Done</button>`:''}<button class="btn ${first?'pri':''}" style="white-space:nowrap" onclick="${i.btn[1]}">${hesc(i.btn[0])}</button></div></div>`;};
-    const rest=items.slice(1),shown=rest.slice(0,5),hidden=rest.slice(5);
-    const next=rest.length?`<section class="ez-card"><div class="ez-hd"><h3 class="ez-h">What to do next</h3><span class="small muted">${rest.length} more after the first one</span></div>${shown.map(i=>row(i,false)).join('')}${hidden.length?`<details class="ez-det"><summary>Show ${hidden.length} more</summary>${hidden.map(i=>row(i,false)).join('')}</details>`:''}</section>`:'';
+    /* only the next 3 jobs; the rest is one tap away */
+    const rest=items.slice(1),shown=rest.slice(0,3),hidden=rest.slice(3);
+    const next=rest.length?`<section class="ez-card"><div class="ez-hd"><h3 class="ez-h">Then</h3></div>${shown.map(i=>row(i,false)).join('')}${hidden.length?`<details class="ez-det"><summary>See ${hidden.length} more</summary>${hidden.map(i=>row(i,false)).join('')}</details>`:''}</section>`:'';
 
+    /* patients: the ones with something to do come first, so a long ward is still short to scan */
+    const rank={red:0,amber:1,'':2,ok:3};
     const cards=o.pts.map(p=>{
       const L=o.line(p,T),f=L[0],tone=f?(f.tone==='alert'||f.tone==='red'?'red':f.tone==='late'||f.tone==='amber'?'amber':''):'ok';
       const txt=f?easyPlain(String(f.txt).split(':')[0])+(f.due&&!/^Open$/.test(f.due)?' · '+easyPlain(f.due):'')+(L.length>1?` · +${L.length-1} more`:''):'Nothing to do';
-      const sx=p.sex||(PT_FILL[p.id]||[])[0]||'';
-      return `<button class="ez-pt ${tone||''}" data-n="${hesc((p.name+' '+p.room).toLowerCase())}" onclick="go('#/patient/${p.id}/${o.tab}')">${p.day<=1?'<span class="t blue">New</span>':p.risk?'<span class="t amber">High risk</span>':''}<b>${hesc(p.name)}</b><span class="r">${hesc(p.room)}${sx?' · '+sx+'/'+(p.age||(PT_FILL[p.id]||[])[1]||''):''}</span><span class="s ${tone||'ok'}">${hesc(txt)}</span></button>`;}).join('');
-    const patients=`<section class="ez-card"><div class="ez-hd"><h3 class="ez-h">My patients</h3><input class="input ez-search" placeholder="Find a patient" aria-label="Find a patient" oninput="ezFind(this.value)"></div><div class="ez-pts">${cards}</div></section>`;
+      return {r:rank[tone||''],html:`<button class="ez-pt ${tone||''}" data-n="${hesc((p.name+' '+p.room).toLowerCase())}" onclick="go('#/patient/${p.id}/${o.tab}')">${p.day<=1?'<span class="t blue">New</span>':p.risk?'<span class="t amber">High risk</span>':''}<b>${hesc(p.name)}</b><span class="r">${hesc(p.room)}</span><span class="s ${tone||'ok'}">${hesc(txt)}</span></button>`};
+    }).sort((a,b)=>a.r-b.r);
+    const LIM=6,many=cards.length>8,vis=many?cards.slice(0,LIM):cards,more_=many?cards.slice(LIM):[];
+    const patients=`<section class="ez-card"><div class="ez-hd"><h3 class="ez-h">My patients</h3>${many?`<input class="input ez-search" placeholder="Find a patient" aria-label="Find a patient" oninput="ezFind(this.value)">`:''}</div><div class="ez-pts">${vis.map(c=>c.html).join('')}</div>${more_.length?`<details class="ez-det ez-rest" ${S.ezAllPts?'open':''} ontoggle="S.ezAllPts=this.open"><summary>Show all ${cards.length} patients</summary><div class="ez-pts" style="padding-top:12px">${more_.map(c=>c.html).join('')}</div></details>`:''}</section>`;
 
     const boards=dtKeep(cfg);
     const more=boards?`<details class="ez-card ez-det" ${S.ezMore?'open':''} ontoggle="S.ezMore=this.open"><summary style="border-top:0">More tools and boards</summary><div class="ez-more-body">${boards}</div></details>`:'';
 
-    return `<div class="ez"><div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h2>Inpatient dashboard</h2><div class="muted" style="margin-top:4px">${day} · ${o.pts.length} patients · ${urgent} thing${urgent===1?'':'s'} need${urgent===1?'s':''} you now</div><div class="pd-hint">${hesc(o.hint)}</div></div><div class="row" style="gap:8px;flex-wrap:wrap">${o.btns||''}</div></div>
+    /* a friendly title instead of "Inpatient dashboard": who it is for, and one sentence on how the day looks */
+    const h=new Date().getHours(),greet=h<12?'Good morning':h<17?'Good afternoon':'Good evening',me_=(V3.who&&V3.who[S.role])||'';
+    const sub=items.length?`${day} · ${items.length} thing${items.length===1?'':'s'} to do`:`${day} · You're all caught up`;
+    return `<div class="ez"><div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h2>${greet}${me_?', '+hesc(me_):''}</h2><div class="muted" style="margin-top:4px">${sub}</div></div><div class="row" style="gap:8px;flex-wrap:wrap">${o.btns||''}</div></div>
       ${easyStartCard(items,o.clear)}${next}${patients}${more}</div>`;
   };
 })();
