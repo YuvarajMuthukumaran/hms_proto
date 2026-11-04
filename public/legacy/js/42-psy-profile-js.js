@@ -101,24 +101,54 @@
   window.psyNotesPdf=function(){const p=ptFind(S.pid)||PTS.find(x=>x.id===S.pid);psyPdf('Daily and round notes',`<h2>Daily and round notes</h2>${notes().map(noteHtml).join('')||'<div>No notes yet.</div>'}`,p);};
 
   /* ---------- Print file ---------- */
+  /* what the doctor can print, in three groups: Admission, Clinical, Discharge. A document that is not filled yet is listed but cannot be ticked. */
+  const G_ADM=['admission-consent','form-e','form-c','high-risk-consent','capacity-assessment','psychiatric-history'];
+  const G_DIS=['discharge-consent','discharge-summary','lama-consent'];
   const docs=()=>{
-    const out=[];
-    out.push({k:'notes',t:'Daily and round notes',sub:notes().length+' note'+(notes().length===1?'':'s'),n:notes().length,
+    const out=[],x=(window.psyPx&&psyPx(S.pid))||{};
+    const add=(g,o)=>out.push(Object.assign({g},o));
+    const al=x.allergy,rc=x.recon||{adm:[],admNone:false,dis:{},disExtra:[]};
+    /* ---- Admission ---- */
+    const ad=x.admDocs||[];
+    add('Admission',{t:'Admission documents uploaded',sub:ad.length+' file'+(ad.length===1?'':'s')+' (names and details)',n:ad.length,
+      html:()=>`<h2>Admission documents</h2><table><tr><th>Document</th><th>Type</th><th>Added by</th></tr>${ad.map(d=>`<tr><td>${hesc(d.name)}</td><td>${hesc(d.type||'')}</td><td>${hesc(d.by||'')} · ${hesc(d.at||'')}</td></tr>`).join('')}</table>`});
+    const nAl=(al?1:0)+(rc.adm||[]).length;
+    add('Admission',{t:'Allergies and medicines before admission',sub:nAl?'Recorded':'',n:nAl,
+      html:()=>`<h2>Allergies</h2><div>${al?(al.list&&al.list.length?al.list.map(a=>hesc(a.drug)+(a.rx?' ('+hesc(a.rx)+')':'')).join(', '):'No known drug allergies'):'Not recorded'}</div><h2>Medicines before admission</h2>${(rc.adm||[]).length?`<table><tr><th>Medicine</th><th>Decision</th></tr>${rc.adm.map(m=>`<tr><td>${hesc(m.name)}</td><td>${hesc(m.dec||'')}</td></tr>`).join('')}</table>`:'<div>'+(rc.admNone?'None before admission':'Not recorded')+'</div>'}`});
+    /* ---- forms, from the clinical documentation module ---- */
+    let items=[];try{CD_DATA=cdLoad();items=cdItems(S.pid);}catch(e){}
+    const formRows=(g,ids)=>{
+      const done=items.filter(i=>ids.includes(i.form.id)&&i.submission);
+      done.forEach(i=>add(g,{t:i.form.title,sub:'Filled '+(i.submission.submittedAt?new Date(i.submission.submittedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):''),n:1,
+        html:()=>{const src=(window.CD_TEMPLATES&&CD_TEMPLATES[i.form.template])||{};return `<h2>${hesc(i.form.title)}</h2><style>${src.css||''}</style>${i.submission.html||''}`;}}));
+      ids.filter(id=>!done.some(i=>i.form.id===id)).forEach(id=>{const it=items.find(i=>i.form.id===id);if(it)add(g,{t:it.form.title,sub:'',n:0,html:()=>''});});
+    };
+    formRows('Admission',G_ADM);
+    /* ---- Clinical ---- */
+    add('Clinical',{t:'Daily and round notes',sub:notes().length+' note'+(notes().length===1?'':'s'),n:notes().length,
       html:()=>`<h2>Daily and round notes</h2>${notes().map(noteHtml).join('')}`});
-    out.push({k:'meds',t:'Medicines (current and stopped)',sub:(S.meds.length+(S.medsOff||[]).length)+' medicines',n:S.meds.length+(S.medsOff||[]).length,
+    add('Clinical',{t:'Medicines (current and stopped)',sub:(S.meds.length+(S.medsOff||[]).length)+' medicines',n:S.meds.length+(S.medsOff||[]).length,
       html:()=>`<h2>Medicines</h2><table><tr><th>Medicine</th><th>Frequency</th><th>Started</th><th>Status</th></tr>${S.meds.map(m=>`<tr><td>${hesc(m.name)}</td><td>${hesc(m.freq)}</td><td>${hesc(m.at||'')} ${hesc(m.by||'')}</td><td>Ongoing</td></tr>`).concat((S.medsOff||[]).map(m=>`<tr><td>${hesc(m.name)}</td><td>${hesc(m.freq)}</td><td>${hesc(m.at||'')} ${hesc(m.by||'')}</td><td>Stopped ${hesc(m.offAt||'')} ${hesc(m.offBy||'')}${m.why?' · '+hesc(m.why):''}</td></tr>`)).join('')}</table>`});
-    out.push({k:'past',t:'Past admissions',sub:S.pastAdm.length+' admission'+(S.pastAdm.length===1?'':'s'),n:S.pastAdm.length,
+    add('Clinical',{t:'Past admissions',sub:S.pastAdm.length+' admission'+(S.pastAdm.length===1?'':'s'),n:S.pastAdm.length,
       html:()=>S.pastAdm.map(a=>`<h2>Past admission ${hesc(String(a.n))} · ${hesc(a.dates)}</h2><div>${hesc(a.dx)} · ${hesc(a.cond)}</div>${pastItems(a).map(noteHtml).join('')}`).join('')});
-    let subs=[];try{CD_DATA=cdLoad();subs=CD_DATA.submissions.filter(x=>x.pid===S.pid);}catch(e){}
-    subs.forEach((s,i)=>out.push({k:'form'+i,t:(s.title||s.formTitle||'Filled form')+'',sub:'Filled '+(s.submittedAt?new Date(s.submittedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):''),n:1,
-      html:()=>{const src=(window.CD_TEMPLATES&&CD_TEMPLATES[s.template])||{};return `<h2>${hesc(s.title||s.formTitle||'Form')}</h2><style>${src.css||''}</style>${s.html||''}`;}}));
+    const rest=items.filter(i=>!G_ADM.includes(i.form.id)&&!G_DIS.includes(i.form.id));
+    const restIds=[...new Set(rest.map(i=>i.form.id))];
+    formRows('Clinical',restIds);
+    /* ---- Discharge ---- */
+    formRows('Discharge',G_DIS);
+    const dn=(rc.disExtra||[]).length+Object.keys(rc.dis||{}).filter(k=>(rc.dis[k]||{}).d).length;
+    add('Discharge',{t:'Discharge medicines check',sub:dn?dn+' decided':'',n:dn,
+      html:()=>`<h2>Discharge medicines check</h2><table><tr><th>Medicine</th><th>Decision</th></tr>${Object.keys(rc.dis||{}).filter(k=>(rc.dis[k]||{}).d).map(k=>`<tr><td>${hesc(k)}</td><td>${hesc(rc.dis[k].d)}</td></tr>`).join('')}${(rc.disExtra||[]).map(m=>`<tr><td>${hesc(m.name)}</td><td>New at discharge${m.note?' · '+hesc(m.note):''}</td></tr>`).join('')}</table>`});
     return out;
   };
   window.psyPrintOpen=function(){
     const d=docs();window.__ppDocs=d;
-    const rows=d.map((x,i)=>`<label class="${x.n?'':'dis'}"><input type="checkbox" class="ppc" data-i="${i}" ${x.n?'':'disabled'} onchange="psyPrintSync()"><span><b>${hesc(x.t)}</b><span class="tiny muted">${hesc(x.n?x.sub:'Nothing filled yet')}</span></span></label>`).join('');
-    openModal(`<div class="mh"><div><h3>Print file</h3><div class="tiny muted" style="margin-top:2px">Pick what to print. Only filled documents are included, never blank forms.</div></div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
-      <div class="mb"><div class="pp-sel"><label class="pp-all"><input type="checkbox" id="ppAll" onchange="psyPrintAll(this.checked)"><span><b>Select all</b></span></label>${rows}</div></div>
+    let last='';
+    const rows=d.map((x,i)=>{
+      const head=x.g!==last?`<div class="lbl" style="margin:10px 2px 2px">${hesc(x.g)}</div>`:'';last=x.g;
+      return head+`<label class="${x.n?'':'dis'}"><input type="checkbox" class="ppc" data-i="${i}" ${x.n?'':'disabled'} onchange="psyPrintSync()"><span><b>${hesc(x.t)}</b><span class="tiny muted">${hesc(x.n?x.sub:'Not filled yet')}</span></span></label>`;}).join('');
+    openModal(`<div class="mh"><div><h3>Print file</h3><div class="tiny muted" style="margin-top:2px">Pick what to print. Only filled documents can be ticked; blank forms are never printed.</div></div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
+      <div class="mb" style="max-height:60vh;overflow:auto"><div class="pp-sel"><label class="pp-all"><input type="checkbox" id="ppAll" onchange="psyPrintAll(this.checked)"><span><b>Select all</b></span></label>${rows}</div></div>
       <div class="mf"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" id="ppGo" onclick="psyPrintRun()" disabled>Make PDF</button></div>`);
   };
   window.psyPrintAll=function(on){document.querySelectorAll('.ppc:not(:disabled)').forEach(c=>c.checked=on);psyPrintSync();};
