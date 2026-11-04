@@ -39,4 +39,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/37-easy-simple-js.js',
   '/legacy/js/38-psy-prescribing-js.js',
   '/legacy/js/39-psy-daily-all-js.js',
+  '/legacy/js/40-page-transition-js.js',
 ];
