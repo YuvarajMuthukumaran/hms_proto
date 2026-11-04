@@ -3,11 +3,10 @@
    1. Trello "Redesign Escalation chain page": chain in one line, three tiles (Not acknowledged, Escalated past RMO, Median time to
       acknowledge), open alerts most urgent first, each with a tag, who has it and the time left, and four step boxes. Acknowledge
       (filled) then Mark at bedside (outline); once marked at bedside the alert leaves the list and stays in the patient's Events log.
-   2. Trello "Sister nurse alert is coming in all tabs": the full callout shows only on Stay summary (top) and Daily notes. Every other
-      tab shows a small "1 event not reviewed" chip in the patient header that opens the Events log. The callout says what happened
-      ("Fall (minor) · 24 Oct, 2:10 am · reported by Sister Rekha, night shift"). Amber for minor, red only for serious events
-      (seizure, self-harm, absconding). Marking reviewed removes the callout and chip and writes "Reviewed by [name], [time]" in the log.
-   The open question on that card (chip or full strip everywhere) is answered with the chip, as the card suggests. */
+   2. Trello "Sister nurse alert is coming in all tabs": there is no orange strip on any tab (the owner asked for the Stay summary and
+      Daily notes callout to be removed too). A small "1 event not reviewed" chip sits in the patient header and opens the Events log
+      (amber for minor events, red only for serious ones: seizure, self-harm, absconding). Marking reviewed removes the chip and writes
+      "Reviewed by [name], [time]" in the log. */
 (function(){
   const psy=()=>S.role==='psychiatrist';
   const css=document.createElement('style');css.id='psy-alerts-css';
@@ -87,8 +86,6 @@
   /* ---- nurse-reported events ---- */
   const SERIOUS=['Seizure','Self-harm attempt','Absconding attempt','Medical emergency or transfer out','Choking'];
   const serious=e=>SERIOUS.includes(e.type)||e.sev==='Major';
-  const tabNow=()=>{const r=(location.hash||'').slice(2).split('/');return r[0]==='patient'?(r[2]||'overview'):'';};
-  function shiftOf(when){const m=String(when).match(/(\d{1,2}):(\d{2})\s*(am|pm)/i);if(!m)return 'ward shift';let h=+m[1]%12+(/pm/i.test(m[3])?12:0);return (h<8||h>=20)?'night shift':'day shift';}
   window.psyEvReview=function(id){
     const e=S.events.find(x=>x.id===id);if(!e)return;e.ack=true;e.ackBy=signer();e.ackAt=atNow();render();toast('Marked reviewed by '+signer());
   };
@@ -96,15 +93,9 @@
     go('#/patient/'+pid+'/overview');
     setTimeout(()=>{S.evOpen=true;render();setTimeout(()=>{const x=document.getElementById('evcard');x&&x.scrollIntoView({behavior:'smooth'});},60);},80);
   };
-  function callout(){
-    const open=S.events.filter(e=>!e.ack);if(!open.length)return '';
-    const e=open[0],red=serious(e),c=red?['#fdecec','#f3c3be']:['#fff6ec','#f3c58c'];
-    const by=String(e.by||'').split(' · ')[0];
-    return `<div class="callout row" style="background:${c[0]};border:1px solid ${c[1]};justify-content:space-between;gap:12px"><div class="small"><strong>${hesc(e.type)}${e.sev?' ('+hesc(e.sev.toLowerCase())+')':''}</strong> · ${hesc(e.when)} · reported by ${hesc(by)}, ${shiftOf(e.when)}${open.length>1?` <span class="muted">· ${open.length-1} more not reviewed</span>`:''}</div>
-      <div class="row" style="gap:8px"><button class="btn sm" onclick="psyEvView('${S.pid}')">View</button><button class="btn sm pri" onclick="psyEvReview(${e.id})">Mark reviewed</button></div></div>`;
-  }
+  /* no orange strip on any tab (5 Nov 2026, owner): the old strip is switched off for the psychiatrist, and so is the Stay summary / Daily notes callout that replaced it */
   const __eb=eventsBar;
-  eventsBar=function(){if(!psy())return __eb.apply(this,arguments);return tabNow()==='daily'?callout():'';};
+  eventsBar=function(){return psy()?'':__eb.apply(this,arguments);};
 
   const __ch=compactHeader;
   compactHeader=function(){
@@ -118,7 +109,6 @@
   ROLE.psychiatrist.vPatient=function(sub,base){
     let h=prevVP?prevVP(sub,base):base(sub);
     h=h.replace(/S\.events\.find\(x=>x\.id===(\d+)\)\.ack=true;render\(\);toast\('Marked reviewed'\)/g,'psyEvReview($1)');
-    if(!sub||sub==='overview'){const c=callout();if(c)h=h.replace(/(<div class="subtabs"[\s\S]*?<\/div>)/,'$1'+c);}
     /* reviewed events keep who and when in the log */
     (S.events||[]).filter(e=>e.ackBy).forEach(e=>{const t='Reported by '+e.by+' · seen by '+e.duty;h=h.split(t).join(t+' · Reviewed by '+hesc(e.ackBy)+', '+hesc(e.ackAt||''));});
     return h;
