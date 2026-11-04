@@ -13,7 +13,7 @@
   const psy=()=>S.role==='psychiatrist';
   const css=document.createElement('style');css.id='psy-handover-css';
   css.textContent=`
-  .ho{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+  .ho{max-width:none;margin:0;display:flex;flex-direction:column;gap:16px}
   .ho-p{border-top:1px solid var(--line-2);padding:14px 20px}.ho-p:first-child{border-top:0}
   .ho-sbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 20px;margin-top:8px}
   .ho-sbar>div{font-size:13px;line-height:1.45;min-width:0}.ho-sbar b.k{display:inline-block;min-width:18px;height:18px;border-radius:5px;background:var(--blue-tint);color:var(--blue-ink);text-align:center;font-size:11px;line-height:18px;margin-right:6px}

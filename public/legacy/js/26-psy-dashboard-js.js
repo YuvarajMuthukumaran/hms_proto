@@ -10,7 +10,7 @@
 (function(){
   const css=document.createElement('style');css.id='psy-dash-css';
   css.textContent=`
-  .pd{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+  .pd{max-width:none;margin:0;display:flex;flex-direction:column;gap:16px}
   .pd-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
   .pd-tile{text-align:left;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
   .pd-tile:hover{border-color:#9dbdf0}.pd-tile.on{border:2px solid var(--blue);padding:11px 13px}

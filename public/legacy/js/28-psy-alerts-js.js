@@ -12,7 +12,7 @@
   const css=document.createElement('style');css.id='psy-alerts-css';
   css.textContent=`
   /* width:100% matters: in the page's flex column an auto-margin box would shrink to its content (about 700 px) instead of using the 1180 px the design asks for */
-  .es{width:100%;max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+  .es{width:100%;max-width:none;margin:0;display:flex;flex-direction:column;gap:16px}
   .es-chain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
   .es-box{border:1px solid var(--line);background:var(--soft);border-radius:8px;padding:5px 10px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
   .es-arrow{color:#98a2b3}

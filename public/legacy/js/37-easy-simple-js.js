@@ -10,7 +10,7 @@
 (function(){
   const css=document.createElement('style');css.id='easy-simple-css';
   css.textContent=`
-  .ez{display:flex;flex-direction:column;gap:18px;max-width:1100px}
+  .ez{display:flex;flex-direction:column;gap:18px}
   .ez h3.ez-h{font-size:16px;margin:0}
   .ez-card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
   .ez-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;flex-wrap:wrap}
