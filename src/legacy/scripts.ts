@@ -32,4 +32,8 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/30-psy-handover-js.js',
   '/legacy/js/31-psy-docs-in-profile-js.js',
   '/legacy/js/32-docs-in-profile-others-js.js',
+  '/legacy/js/33-easy-dash-shared-js.js',
+  '/legacy/js/34-lead-easy-js.js',
+  '/legacy/js/35-nurse-easy-js.js',
+  '/legacy/js/36-rmo-easy-js.js',
 ];
