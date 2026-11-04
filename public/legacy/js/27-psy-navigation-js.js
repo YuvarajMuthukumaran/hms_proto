@@ -37,6 +37,8 @@
     const out=__rs.apply(this,arguments);
     if(psy()){
       const dd=document.querySelector('#side .sgdd');
+      /* Clinical documentation is not a place of its own: each patient's documents are in the patient's Forms to print tab */
+      if(dd)dd.querySelectorAll('button[aria-label^="Clinical documentation"]').forEach(b=>b.remove());
       if(dd&&!dd.querySelector('[data-rounds]')){
         const onR=/^#\/rounds/.test(location.hash||'');
         const b=document.createElement('button');b.dataset.rounds='1';b.title='Rounds';b.setAttribute('aria-label','Rounds');b.setAttribute('onclick',"go('#/rounds')");

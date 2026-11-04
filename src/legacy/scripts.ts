@@ -30,4 +30,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/28-psy-alerts-js.js',
   '/legacy/js/29-psy-safety-js.js',
   '/legacy/js/30-psy-handover-js.js',
+  '/legacy/js/31-psy-docs-in-profile-js.js',
 ];
