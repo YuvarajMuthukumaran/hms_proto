@@ -17,14 +17,18 @@ function loadCss(href: string): Promise<void> {
   });
 }
 
-/** Runs one legacy block as a classic inline script, so top-level const/function names are shared exactly as before. */
-async function runScript(url: string): Promise<void> {
+async function fetchScript(url: string): Promise<string> {
   const res = await fetch(v(url));
   if (!res.ok) throw new Error(`Could not load ${url} (${res.status})`);
-  const code = await res.text();
+  return res.text();
+}
+
+/** Runs one legacy block as a classic inline script, so top-level const/function names are shared exactly as before. */
+function runScript(url: string, code: string) {
   const el = document.createElement('script');
   el.dataset.legacy = url;
-  el.textContent = `${code}\n//# sourceURL=${url}`;
+  el.textContent = `${code}
+//# sourceURL=${url}`;
   document.body.appendChild(el); // executes synchronously
 }
 
@@ -38,8 +42,11 @@ export function bootLegacy(role: RoleKey, onError: (message: string) => void): P
     onError(`${e.message}${e.filename ? ` (${e.filename.split('/').pop()}:${e.lineno})` : ''}`);
   window.addEventListener('error', onWindowError);
   booted = (async () => {
-    await loadCss('/legacy/legacy.css');
-    for (const url of [...LEGACY_SCRIPTS, BRIDGE_SCRIPT]) await runScript(url);
+    const urls = [...LEGACY_SCRIPTS, BRIDGE_SCRIPT];
+    // download everything first, then run every block in one go: the page never paints a half-started portal
+    // (the first blocks draw the old dashboard before the role blocks replace it)
+    const [codes] = await Promise.all([Promise.all(urls.map(fetchScript)), loadCss('/legacy/legacy.css')]);
+    urls.forEach((url, i) => runScript(url, codes[i]));
     if (!window.TulasiBridge) throw new Error('The portal scripts loaded but did not start (see the console).');
     return window.TulasiBridge;
   })().finally(() => window.removeEventListener('error', onWindowError));
