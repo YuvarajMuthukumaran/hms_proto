@@ -40,4 +40,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/38-psy-prescribing-js.js',
   '/legacy/js/39-psy-daily-all-js.js',
   '/legacy/js/40-page-transition-js.js',
+  '/legacy/js/41-psy-frontdesk-forms-js.js',
 ];
