@@ -101,6 +101,23 @@
   window.psyNotesPdf=function(){const p=ptFind(S.pid)||PTS.find(x=>x.id===S.pid);psyPdf('Daily and round notes',`<h2>Daily and round notes</h2>${notes().map(noteHtml).join('')||'<div>No notes yet.</div>'}`,p);};
 
   /* ---------- Print file ---------- */
+  /* Detailed history: the signed history (Neel's read view) or the AI-scribe draft; one place for the Print file list and the PDF button */
+  function histDoc(){
+    const secsHtml=secs=>`<h2>Detailed history</h2>${secs.map(([h,t,al])=>`<div class="n"><div class="m"><b>${hesc(h)}</b>${al?' · important':''}</div>${Array.isArray(t)?t.map(hesc).join('<br>'):hesc(t)}</div>`).join('')}`;
+    if(S.pid==='neel'&&typeof HREAD!=='undefined')return {n:1,sub:'Signed 21 Oct · Dr. Aanya Sharma, Priya Nair',html:()=>secsHtml(HREAD)};
+    if(S.historyDraft&&typeof HDRAFT!=='undefined'){
+      const secs=Object.keys(HDRAFT).filter(k=>HDRAFT[k]&&(!Array.isArray(HDRAFT[k])||HDRAFT[k].length)).map(k=>[k,HDRAFT[k]]);
+      if(secs.length)return {n:1,sub:'Draft, not signed yet',html:()=>secsHtml(secs)};
+    }
+    return {n:0,sub:'',html:()=>''};
+  }
+  window.psyHistPdf=function(){const d=histDoc();if(!d.n){toast('The detailed history is not written yet');return;}psyPdf('Detailed history',d.html(),ptFind(S.pid)||PTS.find(x=>x.id===S.pid));};
+  const __pa2=pAdmission;
+  pAdmission=function(){
+    const h=__pa2.apply(this,arguments);if(!psy())return h;
+    return h.replace('<button class="btn" onclick="toast(\'Saved as draft\')">Save draft</button>','<button class="btn" onclick="psyHistPdf()">PDF</button><button class="btn" onclick="toast(\'Saved as draft\')">Save draft</button>');
+  };
+
   /* what the doctor can print, in three groups: Admission, Clinical, Discharge. A document that is not filled yet is listed but cannot be ticked. */
   const G_ADM=['admission-consent','form-e','form-c','high-risk-consent','capacity-assessment','psychiatric-history'];
   const G_DIS=['discharge-consent','discharge-summary','lama-consent'];
@@ -123,6 +140,7 @@
         html:()=>{const src=(window.CD_TEMPLATES&&CD_TEMPLATES[i.form.template])||{};return `<h2>${hesc(i.form.title)}</h2><style>${src.css||''}</style>${i.submission.html||''}`;}}));
       ids.filter(id=>!done.some(i=>i.form.id===id)).forEach(id=>{const it=items.find(i=>i.form.id===id);if(it)add(g,{t:it.form.title,sub:'',n:0,html:()=>''});});
     };
+    const hd=histDoc();add('Admission',{t:'Detailed history',sub:hd.sub,n:hd.n,html:hd.html});
     formRows('Admission',G_ADM);
     /* ---- Clinical ---- */
     add('Clinical',{t:'Daily and round notes',sub:notes().length+' note'+(notes().length===1?'':'s'),n:notes().length,
