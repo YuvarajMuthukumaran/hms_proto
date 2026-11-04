@@ -101,10 +101,44 @@
   window.psyNotesPdf=function(){const p=ptFind(S.pid)||PTS.find(x=>x.id===S.pid);psyPdf('Daily and round notes',`<h2>Daily and round notes</h2>${notes().map(noteHtml).join('')||'<div>No notes yet.</div>'}`,p);};
 
   /* ---------- Print file ---------- */
+  /* A signed history for a patient other than Neel is shown from what the record holds (the prototype stores no typed history). */
+  function histFromRecord(){
+    const p=ptFind(S.pid)||PTS.find(x=>x.id===S.pid)||{},id=(window.ptIdentity&&ptIdentity(p))||{},al=(window.psyPx&&psyPx(S.pid).allergy)||null;
+    const by=(S.team.psy||'')+(S.team.psych?' and '+S.team.psych:'');
+    const meds=S.meds.map(m=>m.name+' · '+m.freq+(m.time?' · '+m.time:''));
+    const past=(S.pastAdm||[]).map(a=>'Admission '+a.n+' ('+a.dates+'): '+a.dx+'. '+a.cond+'.');
+    const secs=[
+      ['Informant and reliability',(id.nr?id.nr+' ('+String(id.rel||'').toLowerCase()+'), nominated representative. ':'')+'Information adequate and consistent.'],
+      ['Chief complaints and diagnosis',(S.dx||p.dx||'Not recorded')+(S.dxIcd?' · '+S.dxIcd:'')],
+      ['Treatment history',past.length?past:'First admission. No earlier treatment recorded here.'],
+      ['Current medicines',meds.length?meds:'None recorded'],
+      ['Allergies',al?(al.list&&al.list.length?al.list.map(x=>x.drug+(x.rx?' ('+x.rx+')':'')).join(', '):'No known drug allergies'):'Not recorded'],
+      ['Risk and legal status',(p.risk?'High risk flagged at admission. ':'No high-risk flag. ')+'Section '+(S.section||'89')+'.']
+    ];
+    return {by,secs};
+  }
+  window.psyHistView=function(){
+    const d=histDoc();if(!d.n){toast('The detailed history is not written yet');return;}
+    const signedNeel=S.pid==='neel',sc=signedNeel?{by:'Dr. Aanya Sharma, Priya Nair',secs:HREAD}:(S.historyStatus==='signed'?histFromRecord():{by:'Draft, not signed yet',secs:Object.keys(HDRAFT).filter(k=>HDRAFT[k]&&(!Array.isArray(HDRAFT[k])||HDRAFT[k].length)).map(k=>[k,HDRAFT[k]])});
+    const p=ptFind(S.pid)||PTS.find(x=>x.id===S.pid)||{};
+    openModal(`<div class="mh"><div><h3>Detailed history · ${hesc(p.name||'')}</h3><div class="tiny muted" style="margin-top:2px">${signedNeel?'Signed 21 Oct · ':''}${hesc(sc.by)}</div></div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
+      <div class="mb" style="max-height:65vh;overflow:auto">${secList(sc.secs)}</div>
+      <div class="mf"><button class="btn" onclick="closeModal();go('#/patient/'+S.pid+'/admission')">Open in Admission</button><button class="btn pri" onclick="closeModal();psyHistPdf()">PDF</button></div>`);
+    $('modal').style.width='min(720px,100%)';
+  };
+  /* the Stay summary timeline: a signed Detailed history gets a View button */
+  const __ov2=pOverview;
+  pOverview=function(){
+    const h=__ov2.apply(this,arguments);if(!psy())return h;
+    if(!histDoc().n)return h;
+    return h.replace(/(<div style="font-weight:600">Detailed history<\/div><div class="small muted">[^<]*<\/div>)/,(m)=>m+'<button class="btn sm" style="margin-top:6px;margin-right:6px" onclick="psyHistView()">View detailed history</button>');
+  };
+
   /* Detailed history: the signed history (Neel's read view) or the AI-scribe draft; one place for the Print file list and the PDF button */
   function histDoc(){
     const secsHtml=secs=>`<h2>Detailed history</h2>${secs.map(([h,t,al])=>`<div class="n"><div class="m"><b>${hesc(h)}</b>${al?' · important':''}</div>${Array.isArray(t)?t.map(hesc).join('<br>'):hesc(t)}</div>`).join('')}`;
     if(S.pid==='neel'&&typeof HREAD!=='undefined')return {n:1,sub:'Signed 21 Oct · Dr. Aanya Sharma, Priya Nair',html:()=>secsHtml(HREAD)};
+    if(S.historyStatus==='signed'){const sc=histFromRecord();return {n:1,sub:'Signed · '+sc.by,html:()=>secsHtml(sc.secs)};}
     if(S.historyDraft&&typeof HDRAFT!=='undefined'){
       const secs=Object.keys(HDRAFT).filter(k=>HDRAFT[k]&&(!Array.isArray(HDRAFT[k])||HDRAFT[k].length)).map(k=>[k,HDRAFT[k]]);
       if(secs.length)return {n:1,sub:'Draft, not signed yet',html:()=>secsHtml(secs)};
