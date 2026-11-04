@@ -23,4 +23,11 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/21-role-nurse-js.js',
   '/legacy/js/22-role-rmo-js.js',
   '/legacy/js/23-role-initial-render-js.js',
+  '/legacy/js/24-psy-notes-js.js',
+  '/legacy/js/25-psy-rounds-js.js',
+  '/legacy/js/26-psy-dashboard-js.js',
+  '/legacy/js/27-psy-navigation-js.js',
+  '/legacy/js/28-psy-alerts-js.js',
+  '/legacy/js/29-psy-safety-js.js',
+  '/legacy/js/30-psy-handover-js.js',
 ];

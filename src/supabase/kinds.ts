@@ -3,7 +3,7 @@ import type { RoleKey } from '../roles';
 /** Which fields of a patient's record live in which kind of row (patient_records.kind).
  *  Must match supabase/migrations: public.role_kinds decides who may write each kind. */
 export const CONTEXT_KINDS = {
-  doctor: ['dx', 'section', 'meds', 'medsOff', 'rx', 'labs', 'obs', 'obsBy', 'edd', 'eddShared', 'eddBy', 'historyStatus', 'historyDraft', 'capacityOpen', 'capacityDone', 'reassessDone', 'plansSigned', 'discharge', 'dischargeDrafted', 'draftBy', 'discharged', 'dtype', 'admNo', 'pastAdm', 'team', 'calls', 'dailySaved', 'familySent'],
+  doctor: ['dx', 'section', 'meds', 'medsOff', 'rx', 'labs', 'obs', 'obsBy', 'edd', 'eddShared', 'eddBy', 'historyStatus', 'historyDraft', 'capacityOpen', 'capacityDone', 'reassessDone', 'plansSigned', 'discharge', 'dischargeDrafted', 'draftBy', 'discharged', 'dtype', 'admNo', 'pastAdm', 'team', 'calls', 'dailySaved', 'familySent', 'psyx'],
   psychology: ['psychRows', 'therapyNotes', 'dn'],
   consents: ['consents'],
   events: ['events', 'restraints', 'pgriev'],
