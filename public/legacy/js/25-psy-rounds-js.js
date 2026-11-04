@@ -132,7 +132,7 @@
       const stop=mc.some(c=>c.act==='Stop'&&c.text===m.name),chg=mc.find(c=>c.act==='Change'&&c.text.startsWith(m.name+':'));
       const st=stop?['stop','Stopping today']:chg?['chg','Dose changed']:['cont','Continue'];
       const start=String(m.range||'').split(' to ')[0];
-      return `<tr><td><div style="font-weight:700;${stop?'text-decoration:line-through;color:var(--muted)':''}">${hesc(m.name)}</div><div class="tiny muted">${hesc(m.time||'')}${start?' · from '+hesc(start):''}</div></td>
+      return `<tr><td><div style="font-weight:700;${stop?'text-decoration:line-through;color:var(--muted)':''}">${hesc(m.name)}</div><div class="tiny muted">${hesc(m.time||'')}${start?' · from '+hesc(start):''}${m.reason?' · '+hesc(m.reason)+', most '+m.max+' in 24 h':''}</div></td>
         <td>${hesc(m.freq)}</td><td><span class="pr-st ${st[0]}">${st[1]}</span>${chg?`<div class="tiny muted" style="margin-top:2px">${hesc(chg.text.split(': ').slice(1).join(': '))}</div>`:''}</td>
         <td style="text-align:right"><div class="row" style="justify-content:flex-end;gap:6px;flex-wrap:wrap">${stop?`<button class="btn sm" onclick="prStopUndo('${hesc(m.name)}')">Undo</button>`
           :`<button class="btn sm" onclick="prChange(${i})">Change dose</button><button class="btn sm" onclick="rmAdd('Stop','${hesc(m.name)}')">Stop</button>`}
@@ -141,12 +141,7 @@
     const news=mc.filter(c=>c.act==='Start').map((c,i)=>`<tr><td><div style="font-weight:700">${hesc(c.text.split(',')[0])}</div><div class="tiny muted">${hesc(c.text.split(',').slice(1).join(',').trim())}</div></td><td></td><td><span class="pr-st new">New</span>${c.src==='From scribe'?' <span class="tiny muted">from scribe</span>':''}</td><td style="text-align:right"><button class="btn sm" onclick="S.rounds.mc.splice(S.rounds.mc.indexOf(S.rounds.mc.filter(x=>x.act==='Start')[${i}]),1);render()">Remove</button></td></tr>`).join('');
     return `<section class="card"><div class="hd"><h3>Medicine</h3><div class="row" style="gap:8px">${mc.length?chip(mc.length+' pending','c-blue'):''}<button class="btn sm" onclick="medChartModal()">Full chart</button></div></div>
       <div class="scroll"><table class="t"><thead><tr><th>Medicine</th><th>Freq.</th><th>Status</th><th></th></tr></thead><tbody>${rows}${news}</tbody></table></div>
-      <div style="padding:12px 20px;border-top:1px solid var(--line-2);display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="lbl" style="margin-right:4px">Add medicine</span>
-        <input class="input" id="prNew" list="prDrugs" placeholder="Search medicine and strength" style="flex:1 1 200px;min-width:0;min-height:34px"><datalist id="prDrugs">${DRUGS.map(d=>`<option value="${hesc(d)}">`).join('')}</datalist>
-        <select class="input" id="prF" style="width:auto;min-height:34px" aria-label="Frequency">${FREQ.map((f,i)=>`<option ${i===1?'selected':''}>${f}</option>`).join('')}</select>
-        <select class="input" id="prW" style="width:auto;min-height:34px" aria-label="When">${MED_WHEN.map(o=>`<option>${o}</option>`).join('')}</select>
-        <label class="tiny muted" style="display:flex;align-items:center;gap:6px">Until<input class="input" type="date" id="prEnd" style="width:auto;min-height:34px"></label>
-        <button class="btn sm pri" onclick="prAddMed()">Add</button></div></section>`;
+      <div style="padding:12px 20px;border-top:1px solid var(--line-2);display:flex;gap:12px;flex-wrap:wrap;align-items:center"><button class="btn pri" onclick="psyRxOpen({ctx:'rounds'})">+ Add medicine</button><span class="tiny muted">Route, frequency, food, dates, SOS limits and safety checks are in one window (same fields as Orders).</span></div></section>`;
   }
 
   function bar(){

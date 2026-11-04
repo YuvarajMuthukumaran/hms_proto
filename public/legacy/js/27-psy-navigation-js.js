@@ -60,6 +60,12 @@
   const bar=`<div class="row" style="gap:8px"><button class="btn" onclick="go('#/admissions')">New admission</button><button class="btn pri" onclick="go('#/rounds')">Start rounds</button></div>`;
   const prevIpd=ROLE.psychiatrist.ipdPage;
   ROLE.psychiatrist.ipdPage=function(o,base){
+    /* Trello "If i open new admission i dont have a way to open full list": the filter cards (All inpatients, New in 24 h, High risk,
+       Discharge planned) are on the New admission page too. New in 24 h stays here; the others open the patient list with that filter. */
+    if(o&&o.scr==='ipdNew'){
+      const dis=p=>(EX[p.id]||[])[2]!=='Not set';
+      o=Object.assign({},o,{keys:['all','h24','risk','dis'],count:k=>PTS.filter(p=>ipdIn(k,p,dis)).length,set:k=>k==='h24'?'':`filt='${k}';go('#/inpatients')`});
+    }
     const h=prevIpd?prevIpd(o,base):base(o);
     return h.replace(/<div class="ipd">\s*<div>(<h2[\s\S]*?<\/div>)<\/div>/,(m,t)=>`<div class="ipd"><div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div>${t}</div>${bar}</div>`);
   };

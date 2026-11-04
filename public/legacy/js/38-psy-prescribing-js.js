@@ -1,0 +1,213 @@
+
+/* Psychiatrist (5 Nov 2026), Trello "IPD prescribing safety: route, STAT, PRN limits, end dates, monitoring prompts".
+   One "Add medicine" window, used by Rounds and by Orders (Medicines), with the same fields as the live prescription:
+     medicine + strength in one field, Route (Oral / IM / IV / Sublingual / Topical), Frequency (1-0-1 style, Weekly, SOS, STAT),
+     Before / After food, From and Until dates.
+   1 Route is its own field.            2 STAT and Weekly are in the Frequency list.
+   3 SOS / PRN needs a reason and a maximum number of doses in 24 h; the nurse's chart blocks the dose after the maximum.
+   4 The end date is a hard stop: after it the medicine moves to Stopped on its own and the nurse cannot log a dose; the doctor renews it
+     with a new order.
+   5 Warnings, never blocks (tick "I have read this"): drug allergy match, two medicines of the same class, the same medicine twice.
+   6 Monitoring prompts when starting: lithium (level, kidney, thyroid), clozapine (blood count schedule, required), any antipsychotic
+     (weight, BMI, sugar, lipids). Ticked tests are ordered with the medicine.
+   7 Reconciliation: Admission tab "Medicines before admission" (Continue / Stop / Changed) and Discharge tab "Discharge medicines check".
+   9 The countersign card on the dashboard shows the time left (within 24 h).
+   The nurse chart (marTap) and the automatic stop apply to any medicine that carries a max or an end date; older medicines behave as before. */
+(function(){
+  const psy=()=>S.role==='psychiatrist';
+  const ROUTES=['Oral','IM','IV','Sublingual','Topical'];
+  const FREQS=['1-0-1','0-0-1','1-0-0','1-1-1','Weekly','SOS','STAT'];
+  const CLS={
+    antipsychotic:['quetiapine','olanzapine','risperidone','aripiprazole','clozapine','haloperidol','chlorpromazine','amisulpride','paliperidone','lurasidone'],
+    benzodiazepine:['lorazepam','clonazepam','diazepam','alprazolam','midazolam','chlordiazepoxide','oxazepam'],
+    'mood stabiliser':['lithium','sodium valproate','valproate','lamotrigine','carbamazepine'],
+    antidepressant:['sertraline','escitalopram','fluoxetine','paroxetine','fluvoxamine','mirtazapine','venlafaxine','duloxetine']};
+  const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const lab=s=>{const d=new Date(s+'T12:00:00');return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});};
+  const baseOf=n=>String(n||'').replace(/\s*·.*$/,'').replace(/\s+\d[\d.,]*\s*(mg|mcg|µg|g|ml|iu|units?)\b.*$/i,'').trim();
+  const classOf=n=>{const b=baseOf(n).toLowerCase();return Object.keys(CLS).find(k=>CLS[k].some(x=>b.startsWith(x)))||'';};
+  const css=document.createElement('style');css.id='psy-rx-css';
+  css.textContent=`
+  .rx-w{display:flex;flex-direction:column;gap:6px;margin:8px 0}.rx-w div{border-radius:8px;padding:8px 10px;font-size:13px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-line)}
+  .rx-w div.red{background:var(--red-bg);color:var(--red);border-color:#f3c3be}
+  .rx-m{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;background:var(--soft);font-size:13px}.rx-m label{display:flex;gap:8px;align-items:flex-start;margin:4px 0}
+  .rx-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.rx-g .full{grid-column:1/-1}
+  .rx-chip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:2px 10px;font:inherit;font-size:12px;cursor:pointer}`;
+  document.head.appendChild(css);
+
+  const px=pid=>(window.psyPx?psyPx(pid):(ptCtxOf(pid).psyx=ptCtxOf(pid).psyx||{}));
+  let CTX='rounds',PRE='',LASTW='';
+
+  /* ---------- the window ---------- */
+  window.psyRxOpen=function(o){
+    o=o||{};CTX=o.ctx||'rounds';PRE=o.name||'';LASTW='';
+    const today=iso(new Date());
+    openModal(`<div class="mh"><h3>Add medicine</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
+      <div class="mb"><div class="rx-g">
+        <label class="field full"><span class="lbl">Medicine and strength</span><input class="input" id="rxM" list="rxDrugs" value="${hesc(PRE)}" placeholder="Type to search, e.g. Quetiapine 50 mg" oninput="psyRxCheck()" onchange="psyRxCheck()" autocomplete="off"><datalist id="rxDrugs">${DRUGS.map(d=>`<option value="${hesc(d)}">`).join('')}</datalist></label>
+        <label class="field"><span class="lbl">Route</span><select class="input" id="rxR">${ROUTES.map(r=>`<option>${r}</option>`).join('')}</select></label>
+        <label class="field"><span class="lbl">Frequency</span><select class="input" id="rxF" onchange="psyRxCheck()">${FREQS.map(f=>`<option ${f==='1-0-1'?'selected':''}>${f}</option>`).join('')}</select></label>
+        <label class="field"><span class="lbl">Food</span><select class="input" id="rxFood"><option>After food</option><option>Before food</option></select></label>
+        <label class="field"><span class="lbl">From</span><input class="input" type="date" id="rxFrom" value="${today}"></label>
+        <div class="field full" id="rxEndRow"><span class="lbl">Until (the medicine stops by itself after this date)</span><div class="row" style="gap:6px;flex-wrap:wrap"><input class="input" type="date" id="rxTo" style="width:auto" min="${today}">${[7,14,30].map(n=>`<button type="button" class="rx-chip" onclick="psyRxDays(${n})">${n} days</button>`).join('')}</div></div>
+        <div class="full" id="rxPrn" style="display:none"><div class="rx-g"><label class="field"><span class="lbl">Reason (required)</span><input class="input" id="rxWhy" list="rxWhyL" placeholder="e.g. for agitation"><datalist id="rxWhyL"><option value="for agitation"><option value="for nausea"><option value="for anxiety"><option value="for insomnia"><option value="for pain"></datalist></label>
+          <label class="field"><span class="lbl">Most doses in 24 hours (required)</span><input class="input" type="number" min="1" max="12" id="rxMax" placeholder="e.g. 3"></label></div></div>
+      </div>
+      <div id="rxWarn"></div><div id="rxMon"></div></div>
+      <div class="mf"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri big" onclick="psyRxAdd()">Add medicine</button></div>`);
+    psyRxCheck();
+  };
+  window.psyRxDays=function(n){const d=new Date($('rxFrom').value+'T12:00:00');d.setDate(d.getDate()+n-1);$('rxTo').value=iso(d);};
+
+  function pending(){return CTX==='rounds'?((S.rounds&&S.rounds.mc)||[]).filter(c=>c.rx).map(c=>c.rx.name):[];}
+  function warnings(name){
+    const b=baseOf(name).toLowerCase(),out=[];if(!b)return out;
+    const al=px(S.pid).allergy;
+    if(!al)out.push(['','Allergies are not recorded for this patient yet. Record them in Orders before you prescribe.']);
+    else (al.list||[]).forEach(a=>{const x=String(a.drug||'').toLowerCase();if(x&&(b.includes(x)||x.includes(b)))out.push(['red','Allergy match: '+a.drug+(a.rx?' ('+a.rx+')':'')+'. This patient has a recorded allergy to this medicine.']);});
+    const cur=S.meds.map(m=>m.name).concat(pending()),cls=classOf(name);
+    cur.forEach(n=>{
+      if(baseOf(n).toLowerCase()===b)out.push(['','Already prescribed: '+n+'. The same medicine twice.']);
+      else if(cls&&classOf(n)===cls)out.push(['','Already on '+baseOf(n)+': two medicines of the same class ('+cls+'). Confirm this is intended.']);
+    });
+    return out;
+  }
+  function prompts(name){
+    const b=baseOf(name).toLowerCase(),out=[];if(!b)return out;
+    if(b.startsWith('lithium'))out.push({id:'li',label:'Order serum lithium level (this week), plus kidney (RFT) and thyroid (TSH) tests at baseline',tests:[['Serum lithium','This week'],['RFT','Today'],['TSH','Today']]});
+    if(b.startsWith('clozapine'))out.push({id:'cz',req:true,label:'Blood count (ANC) schedule: weekly for the first 18 weeks. Required before continuing.',tests:[['CBC','Today']]});
+    if(classOf(name)==='antipsychotic')out.push({id:'ap',label:'Metabolic baseline: weight, BMI, sugar and lipids',tests:[['Lipid profile','This week'],['Fasting sugar','This week']],note:'Weigh the patient and record BMI at baseline.'});
+    return out;
+  }
+  window.psyRxCheck=function(){
+    const name=($('rxM')||{}).value||'',f=($('rxF')||{}).value;
+    if(!$('rxM'))return;
+    $('rxPrn').style.display=f==='SOS'?'':'none';$('rxEndRow').style.display=f==='STAT'?'none':'';
+    const w=warnings(name),p=prompts(name);
+    /* redrawing must not lose what was ticked: keep the tick while the warnings are the same, and the check boxes while the prompts are */
+    const wKey=w.map(x=>x[1]).join('|'),ackWas=$('rxAck')?$('rxAck').checked:false,keepAck=ackWas&&wKey===LASTW;LASTW=wKey;
+    const ticks={};p.forEach(x=>{const c=$('rxP_'+x.id);if(c)ticks[x.id]=c.checked;});
+    $('rxWarn').innerHTML=w.length?`<div class="rx-w">${w.map(x=>`<div class="${x[0]}">${hesc(x[1])}</div>`).join('')}<label class="row small" style="gap:8px"><input type="checkbox" id="rxAck" ${keepAck?'checked':''}> I have read this</label></div>`:'';
+    $('rxMon').innerHTML=p.length?`<div class="lbl" style="margin-top:10px">Checks to order with this medicine</div>${p.map(x=>`<div class="rx-m"><label><input type="checkbox" id="rxP_${x.id}" ${(x.id in ticks?ticks[x.id]:!x.req)?'checked':''}><span>${hesc(x.label)}${x.req?' <b style="color:var(--amber)">(required)</b>':''}${x.note?`<div class="tiny muted">${hesc(x.note)}</div>`:''}</span></label></div>`).join('')}`:'';
+  };
+
+  /* ---------- add ---------- */
+  function fail(msg,id){toast(msg);const e=$(id);if(e){e.focus();}return false;}
+  window.psyRxAdd=function(){
+    const name=$('rxM').value.trim(),f=$('rxF').value,route=$('rxR').value,food=$('rxFood').value,from=$('rxFrom').value,to=$('rxTo').value;
+    if(!name)return fail('Choose or type the medicine and strength','rxM');
+    if(!from)return fail('Choose the start date','rxFrom');
+    if(f!=='STAT'){if(!to)return fail('Choose the end date. The medicine stops by itself after it.','rxTo');if(to<from)return fail('The end date is before the start date','rxTo');}
+    let why='',max=0;
+    if(f==='SOS'){why=($('rxWhy').value||'').trim();max=+$('rxMax').value;if(!why)return fail('Write the reason for the SOS dose, for example "for agitation"','rxWhy');if(!(max>=1))return fail('Write the most doses allowed in 24 hours','rxMax');}
+    if($('rxAck')&&!$('rxAck').checked)return fail('Tick "I have read this" to go on','rxAck');
+    const p=prompts(name);let tests=[];
+    for(const x of p){const c=$('rxP_'+x.id);if(x.req&&c&&!c.checked)return fail('This check is required: '+x.label,'rxP_'+x.id);if(c&&c.checked)tests=tests.concat(x.tests);}
+    const w=whoAt(),b=baseOf(name),nm=name+(route!=='Oral'?' · '+route:'');
+    const range=f==='STAT'?'Single dose, '+lab(from):lab(from)+' to '+lab(to);
+    const spec={name:nm,base:b,route,freq:f,time:food,range,startISO:from,endISO:f==='STAT'?from:to,reason:why,max,by:w.by,at:w.at};
+    const text=[nm,f,food.toLowerCase(),f==='STAT'?'once now':'until '+lab(to)].concat(why?[why+', most '+max+' in 24 h']:[]).join(', ');
+    if(CTX==='rounds'){
+      const R=S.rounds;R.mc.push({act:'Start',text,src:'Typed',rx:spec});R.inv=R.inv||[];
+      tests.forEach(t=>{if(!R.inv.some(y=>y[0]===t[0]))R.inv.push([t[0],t[1]]);});
+      closeModal();render();toast('Added to this round: '+nm+(tests.length?'. '+tests.length+' test'+(tests.length>1?'s':'')+' added to Investigations.':''));
+    }else{
+      if(b.toLowerCase().startsWith('clozapine')){S.consents.push({name:'Clozapine consent',who:'Family',st:'Requested from front desk by '+w.by+' · '+w.at,c:'c-amber'});S.meds.push(Object.assign({},spec,{name:nm+' · waiting for consent',range:'Starts once signed'}));}
+      else S.meds.push(spec);
+      tests.forEach(t=>{try{v3().pending.unshift({pid:S.pid,test:t[0],when:'Collect: '+t[1],st:'Ordered'});}catch(e){}});
+      S.rx=[];closeModal();render();toast(nm+' ordered'+(tests.length?'. '+tests.length+' test'+(tests.length>1?'s':'')+' ordered with it.':'')+' Nurses will see it.');
+    }
+  };
+
+  /* Orders: choosing a medicine (search, Frequent, Repeat last change) opens the window instead of adding a bare draft row */
+  const __rxAdd=rxAdd;
+  rxAdd=function(name){if(!psy())return __rxAdd.apply(this,arguments);psyRxOpen({ctx:'orders',name});};
+
+  /* Rounds: the structured medicines are written to the chart when the round is saved */
+  const __cr=confirmRound;
+  confirmRound=function(){
+    if(!psy())return __cr.apply(this,arguments);
+    const R=S.rounds,w=R.ward,before=R.idx[w],WP=WARDS[w],p=WP[Math.min(before,WP.length-1)];
+    const specs=(R.mc||[]).filter(c=>c.act==='Start'&&c.rx).map(c=>c.rx);
+    const out=__cr.apply(this,arguments);
+    if(specs.length&&p&&(R.idx[w]!==before)){ptRun(p.id,()=>{specs.forEach(s=>S.meds.push(s));return '';});render();}
+    return out;
+  };
+
+  /* ---------- end date = hard stop; PRN maximum ---------- */
+  function expireAll(){
+    const t=iso(new Date()),seen=new Set();
+    [S,...Object.keys(PT_CTX||{}).filter(k=>k!==S.pid).map(k=>PT_CTX[k])].forEach(c=>{
+      if(!c||seen.has(c)||!Array.isArray(c.meds))return;seen.add(c);
+      const gone=c.meds.filter(m=>m.endISO&&m.endISO<t);if(!gone.length)return;
+      c.meds=c.meds.filter(m=>!(m.endISO&&m.endISO<t));c.medsOff=c.medsOff||[];
+      gone.forEach(m=>{let doses=[];try{if(c===S)doses=medDoseDates(m);}catch(e){}c.medsOff.unshift(Object.assign({},m,{doses,offBy:'Auto-stopped',offAt:atNow(),why:'End date reached ('+lab(m.endISO)+'). To continue, the doctor renews it with a new order.'}));});
+    });
+  }
+  const __render=render;
+  render=function(){try{expireAll();}catch(e){console.warn('expire',e);}return __render.apply(this,arguments);};
+
+  const __mt=marTap;
+  marTap=function(mi,k){
+    const m=(S.meds||[])[mi];
+    if(m&&m.endISO&&m.endISO<iso(new Date())){toast('This medicine ended on '+lab(m.endISO)+'. Ask the doctor to renew it.');return;}
+    if(m&&m.max&&k==='SOS'){
+      /* the SOS cell cycles empty > given > refused > held > empty; every time it becomes "given" that is one dose, and a cleared tap does not hand the dose back */
+      const key=(S.pid||'neel')+':'+mi+'-6-SOS',cur=MAR_ST[key]||'',next=cur===''?'G':cur==='G'?'R':cur==='R'?'H':'';
+      S.sosN=S.sosN||{};const n=S.sosN[key]||0;
+      if(next==='G'){
+        if(n>=m.max){toast('Most '+m.max+' doses in 24 hours already given. Call the doctor before giving more.');return;}
+        S.sosN[key]=n+1;toast('Dose '+(n+1)+' of '+m.max+' recorded');
+      }
+    }
+    return __mt.apply(this,arguments);
+  };
+
+  /* ---------- show the new details in lists ---------- */
+  const note=m=>m.reason?`<div class="tiny muted">${hesc(m.reason)} · most ${m.max} in 24 h</div>`:'';
+  const __po=pOrders;
+  pOrders=function(){
+    let h=__po.apply(this,arguments);if(!psy())return h;
+    S.meds.filter(m=>m.reason).forEach(m=>{const t='<b>'+m.name+'</b>';h=h.split(t).join(t+note(m));});
+    return h;
+  };
+
+  /* ---------- 7. reconciliation ---------- */
+  const DEC=['Continue','Stop','Changed'];
+  const recon=()=>{const x=px(S.pid);x.recon=x.recon||{adm:[],admNone:false,dis:{},disExtra:[]};return x.recon;};
+  window.psyReconAdd=function(){const n=($('rcN').value||'').trim();if(!n){toast('Type the medicine and dose');return;}recon().adm.push({name:n,dec:$('rcD').value,note:($('rcT').value||'').trim(),by:signer(),at:atNow()});render();};
+  window.psyReconSet=function(i,k,v){recon().adm[i][k]=v;render();};
+  window.psyReconDel=function(i){recon().adm.splice(i,1);render();};
+  window.psyReconNone=function(){const r=recon();r.admNone=true;r.admBy=signer();r.admAt=atNow();render();};
+  function admCard(){
+    const r=recon(),done=r.adm.length||r.admNone;
+    return `<section class="card" id="reconadm"><div class="hd"><div><h3>Medicines before admission</h3><div class="small muted" style="margin-top:4px">What the patient was taking at home. Mark each one Continue, Stop or Changed so nothing is lost.</div></div>${done?chip('Recorded','c-green'):chip('Not recorded yet','c-amber')}</div>
+      ${r.adm.map((m,i)=>`<div class="li"><div class="grow"><div style="font-weight:600">${hesc(m.name)}</div><div class="tiny muted">${hesc(m.by)} · ${hesc(m.at)}</div></div><select class="input" style="width:auto;min-height:32px" onchange="psyReconSet(${i},'dec',this.value)" aria-label="Decision for ${hesc(m.name)}">${DEC.map(d=>`<option ${m.dec===d?'selected':''}>${d}</option>`).join('')}</select><input class="input" style="width:220px;min-height:32px" placeholder="Note (new dose, reason)" value="${hesc(m.note||'')}" onchange="psyReconSet(${i},'note',this.value)"><button class="btn sm" onclick="psyReconDel(${i})">Remove</button></div>`).join('')}
+      ${r.admNone?`<div class="pad small muted">Recorded: no medicines before admission (${hesc(r.admBy||'')}, ${hesc(r.admAt||'')}).</div>`:''}
+      <div class="pad row" style="gap:8px;flex-wrap:wrap;align-items:center"><input class="input" id="rcN" style="flex:1 1 220px;min-height:36px" placeholder="Medicine and dose, e.g. Sodium valproate 500 mg twice a day"><select class="input" id="rcD" style="width:auto;min-height:36px">${DEC.map(d=>`<option>${d}</option>`).join('')}</select><input class="input" id="rcT" style="flex:1 1 160px;min-height:36px" placeholder="Note"><button class="btn sm pri" onclick="psyReconAdd()">Add</button>${r.adm.length||r.admNone?'':'<button class="btn sm" onclick="psyReconNone()">No medicines before admission</button>'}</div></section>`;
+  }
+  const __pa=pAdmission;
+  pAdmission=function(){const h=__pa.apply(this,arguments);return psy()?admCard()+h:h;};
+
+  window.psyDisSet=function(key,k,v){const r=recon();r.dis[key]=r.dis[key]||{};r.dis[key][k]=v;render();};
+  window.psyDisAdd=function(){const n=($('dsN').value||'').trim();if(!n){toast('Type the medicine and dose');return;}recon().disExtra.push({name:n,note:($('dsT').value||'').trim(),by:signer(),at:atNow()});render();};
+  window.psyDisDel=function(i){recon().disExtra.splice(i,1);render();};
+  function disCard(){
+    const r=recon(),stay=S.meds.map(m=>m.name),home=r.adm.filter(m=>m.dec!=='Stop').map(m=>m.name);
+    const rows=[...new Set([...stay,...home])];
+    const decided=rows.filter(n=>(r.dis[n]||{}).d).length;
+    return `<section class="card" id="recondis"><div class="hd"><div><h3>Discharge medicines check</h3><div class="small muted" style="margin-top:4px">Every medicine from the stay and from home: decide Continue, Stop or Changed, so nothing is dropped by accident.</div></div>${rows.length&&decided<rows.length?chip((rows.length-decided)+' not decided','c-amber'):chip(rows.length?'All decided':'No medicines','c-green')}</div>
+      ${rows.map(n=>{const e=r.dis[n]||{};const isHome=home.includes(n)&&!stay.includes(n);return `<div class="li"><div class="grow"><div style="font-weight:600">${hesc(n)}</div><div class="tiny muted">${isHome?'Taking at home before admission':'Prescribed during this stay'}</div></div><select class="input" style="width:auto;min-height:32px" onchange="psyDisSet('${hesc(n).replace(/'/g,"\\'")}','d',this.value)" aria-label="Decision for ${hesc(n)}"><option value="">Not decided</option>${DEC.map(d=>`<option ${e.d===d?'selected':''}>${d}</option>`).join('')}</select><input class="input" style="width:220px;min-height:32px" placeholder="Note (new dose, reason)" value="${hesc(e.note||'')}" onchange="psyDisSet('${hesc(n).replace(/'/g,"\\'")}','note',this.value)"></div>`;}).join('')||'<div class="pad small muted">No medicines to check.</div>'}
+      ${r.disExtra.map((m,i)=>`<div class="li"><div class="grow"><div style="font-weight:600">${hesc(m.name)}</div><div class="tiny muted">New at discharge · ${hesc(m.by)}, ${hesc(m.at)}${m.note?' · '+hesc(m.note):''}</div></div><button class="btn sm" onclick="psyDisDel(${i})">Remove</button></div>`).join('')}
+      <div class="pad row" style="gap:8px;flex-wrap:wrap;align-items:center"><input class="input" id="dsN" style="flex:1 1 220px;min-height:36px" placeholder="New medicine at discharge, with dose"><input class="input" id="dsT" style="flex:1 1 160px;min-height:36px" placeholder="Note"><button class="btn sm pri" onclick="psyDisAdd()">Add</button></div></section>`;
+  }
+  const __pd=pDischarge;
+  pDischarge=function(){const h=__pd.apply(this,arguments);return psy()?disCard()+h:h;};
+
+  /* ---------- 9. time left to countersign ---------- */
+  window.psyOrderLeft=function(id){
+    const o=v3().orders.find(x=>x.id===id);if(!o||o.t==null)return '';
+    const left=1440-(V3.now()-o.t),a=Math.abs(left),txt=a>=60?Math.floor(a/60)+' h':Math.round(a)+' min';
+    return 'Countersign within 24 h · '+(left>=0?txt+' left':'overdue by '+txt);
+  };
+})();

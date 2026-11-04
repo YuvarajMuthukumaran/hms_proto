@@ -38,8 +38,15 @@ let booted: Promise<LegacyBridge> | null = null;
 export function bootLegacy(role: RoleKey, onError: (message: string) => void): Promise<LegacyBridge> {
   if (booted) return booted;
   window.__TULASI__ = { role };
-  const onWindowError = (e: ErrorEvent) =>
-    onError(`${e.message}${e.filename ? ` (${e.filename.split('/').pop()}:${e.lineno})` : ''}`);
+  // The first block draws the page before the later blocks exist, so opening a page such as #/admissions directly throws once
+  // ("vNewAdm is not defined") and then recovers when the bridge redraws. Only a script that cannot even be parsed is shown at
+  // once; anything else is shown only if the portal really fails to start.
+  const early: string[] = [];
+  const onWindowError = (e: ErrorEvent) => {
+    const msg = `${e.message}${e.filename ? ` (${e.filename.split('/').pop()}:${e.lineno})` : ''}`;
+    if (/SyntaxError/.test(e.message)) onError(msg);
+    else early.push(msg);
+  };
   window.addEventListener('error', onWindowError);
   booted = (async () => {
     const urls = [...LEGACY_SCRIPTS, BRIDGE_SCRIPT];
@@ -47,7 +54,7 @@ export function bootLegacy(role: RoleKey, onError: (message: string) => void): P
     // (the first blocks draw the old dashboard before the role blocks replace it)
     const [codes] = await Promise.all([Promise.all(urls.map(fetchScript)), loadCss('/legacy/legacy.css')]);
     urls.forEach((url, i) => runScript(url, codes[i]));
-    if (!window.TulasiBridge) throw new Error('The portal scripts loaded but did not start (see the console).');
+    if (!window.TulasiBridge) throw new Error(`The portal scripts loaded but did not start${early[0] ? `: ${early[0]}` : ' (see the console)'}.`);
     return window.TulasiBridge;
   })().finally(() => window.removeEventListener('error', onWindowError));
   return booted;

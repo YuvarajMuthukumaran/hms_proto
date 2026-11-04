@@ -59,7 +59,7 @@
     const sx=p.sex||(PT_FILL[p.id]||[])[0]||'',ag=p.age||(PT_FILL[p.id]||[])[1]||'';
     const items=[];
     DT.alerts(p).forEach(i=>items.push({k:'alert',lab:['red','Alert'],txt:i.txt.replace(/^Alert:\s*/,''),due:i.due,btn:i.btn&&["I've seen this",i.btn[1],true]}));
-    DT.orders(p).forEach(i=>{const id=(i.btn[1].match(/'([^']+)'/)||[])[1];items.push({k:'order',lab:['blue','Approve'],txt:i.txt.replace(/^Countersign:\s*/,''),due:i.due,btn:['Check and approve',`psyReview('${id}')`,false]});});
+    DT.orders(p).forEach(i=>{const id=(i.btn[1].match(/'([^']+)'/)||[])[1];items.push({k:'order',lab:['blue','Approve'],txt:i.txt.replace(/^Countersign:\s*/,''),due:(window.psyOrderLeft&&psyOrderLeft(id))||i.due,btn:['Check and approve',`psyReview('${id}')`,false]});});
     DT.tasks(p,T).forEach(i=>{
       const sign=/discharge summary/i.test(i.txt),late=!!i.overdue;
       items.push({k:late?'late':'task',lab:late?['amber','Late']:sign?['grey','To sign']:['grey','Today'],txt:i.txt,due:i.due,
