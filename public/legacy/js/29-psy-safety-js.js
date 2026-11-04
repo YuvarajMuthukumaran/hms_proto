@@ -82,7 +82,7 @@
   vNurseView=function(){
     const h=__nv.apply(this,arguments);if(!psy())return h;
     const pts=rmoPts().map(r=>r.p),sel=pts.find(p=>p.id===(S.ncP||S.nFocus||'neel'))||pts[0];
-    return sel?h.replace(/(<div class="row" style="gap:8px;flex-wrap:wrap">[\s\S]*?<\/button><\/div>)/,'$1<section class="card pad">'+psySafety(sel.id)+'</section>'):h;
+    return sel?h.replace(/(<div class="row" style="gap:8px;flex-wrap:wrap">[\s\S]*?<\/button><\/div>)/,'$1<section class="card pad"><div style="font-weight:600;margin-bottom:6px">'+hesc(sel.name)+' <span class="muted small" style="font-weight:400">'+hesc((sel.sex?sel.sex+'/'+sel.age+' · ':'')+(()=>{try{const u=sel.uhid||ptIdentity(sel).uhid;return u?'UHID '+u+' · ':''}catch(e){return ''}})()+sel.room)+'</span></div>'+psySafety(sel.id)+'</section>'):h;
   };
 
   /* ---------- NEWS2 and suicide screen ---------- */
