@@ -34,6 +34,8 @@
 
   /* ---------- safety strip ---------- */
   const sx=p=>p.sex||(PT_FILL[p.id]||[])[0]||'',ag=p=>p.age||(PT_FILL[p.id]||[])[1]||'';
+  /* age first, then sex: "29 Male" (team review) */
+  window.psyAgeSex=p=>{const a=ag(p),x=sx(p),f={M:'Male',F:'Female'}[x]||x;return [a,f].filter(Boolean).join(' ');};
   function legal(p,c){
     const sec=String(c.section||p.sec||'');
     if(sec==='90'){const d=new Date();d.setDate(d.getDate()+Math.max(0,90-(p.day||0)));return ['', 'Section 90 · review due '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})];}
@@ -43,14 +45,11 @@
   window.psySafety=function(pid){
     const p=ptFind(pid);if(!p)return '';const c=ptCtxOf(pid),x=pxOf(pid),ex=EX[pid]||[];
     const al=x.allergy,lg=legal(p,c);
-    let a;
-    if(!al)a=`<button class="c amber" onclick="psyAllergy('${pid}')" title="Record allergies">Allergies not recorded · Record</button>`;
-    else if(al.list&&al.list.length)a=`<span class="c red" title="Recorded by ${hesc(al.by)}, ${hesc(al.at)}">Drug allergy: ${al.list.map(i=>hesc(i.drug)+(i.rx?' ('+hesc(i.rx)+')':'')).join(', ')}</span>`;
-    else a=`<span class="c" title="Recorded by ${hesc(al.by)}, ${hesc(al.at)}">No known drug allergies</span>`;
-    const obs=ex[0]||'Routine',rv=x.obsRev&&x.obsRev.date===today();
-    const by=(c.obsBy&&c.obsBy.by)||(c.team||{}).psy||'';
-    const o=obs==='Routine'?`<span class="c">Observation: routine</span>`
-      :`<span class="c ${String(obs).startsWith('1:1')?'amber':''}">Observation: ${hesc(obs)} · set by ${hesc(by)} · ${rv?'reviewed today '+hesc(x.obsRev.time):'review by today 6:00 pm'}</span>${rv?'':`<button class="c" onclick="psyObsReview('${pid}')">Review now</button>`}`;
+    /* owner, 5 Nov (team review): show an allergy only when there is one; nothing for "no known allergies" or "not recorded".
+       The observation chip is gone from the header. Allergies are recorded and edited on the Admission tab. */
+    let a='';
+    if(al&&al.list&&al.list.length)a=`<span class="c red" title="Recorded by ${hesc(al.by)}, ${hesc(al.at)}">Drug allergy: ${al.list.map(i=>hesc(i.drug)+(i.rx?' ('+hesc(i.rx)+')':'')).join(', ')}</span>`;
+    const o='';
     const lvl=x.riskLevel||(p.risk?'High':'Low');
     const r=`<span class="c ${lvl==='High'?'amber':''}" title="${x.riskLevel?'From the suicide / self-harm screen':'From the admission risk flag'}">Risk of harm: ${lvl}</span>`;
     return `<div class="sf" aria-label="Patient safety">${a}<span class="c ${lg[0]}">${hesc(lg[1])}</span>${o}${r}</div>`;
@@ -73,7 +72,7 @@
   compactHeader=function(){
     let h=__ch.apply(this,arguments);if(!psy())return h;
     const p=ptFind(S.pid);if(!p)return h;
-    h=h.replace(/<span class="muted" style="font-weight:600">[^<]*<\/span><span class="tiny muted">UHID [^<]*<\/span>/,`<span class="muted" style="font-weight:600">${sx(p)}${ag(p)?'/'+ag(p):''} · UHID ${hesc(p.uhid||'')} · ${hesc(p.room)}</span>`);
+    h=h.replace(/<span class="muted" style="font-weight:600">[^<]*<\/span><span class="tiny muted">UHID [^<]*<\/span>/,`<span class="muted" style="font-weight:600">${[psyAgeSex(p),p.uhid?'UHID '+hesc(p.uhid):'',hesc(p.room)].filter(Boolean).join(' · ')}</span>`);
     return h.replace(/<div class="row" style="gap:6px;flex-wrap:nowrap;overflow-x:auto">[\s\S]*?<\/div>(?=\s*<div class="dpcards">)/,psySafety(S.pid)+(S.discharged?'<span class="chip c-green">Discharged</span>':''));
   };
 
@@ -82,7 +81,7 @@
   vNurseView=function(){
     const h=__nv.apply(this,arguments);if(!psy())return h;
     const pts=rmoPts().map(r=>r.p),sel=pts.find(p=>p.id===(S.ncP||S.nFocus||'neel'))||pts[0];
-    return sel?h.replace(/(<div class="row" style="gap:8px;flex-wrap:wrap">[\s\S]*?<\/button><\/div>)/,'$1<section class="card pad"><div style="font-weight:600;margin-bottom:6px">'+hesc(sel.name)+' <span class="muted small" style="font-weight:400">'+hesc((sel.sex?sel.sex+'/'+sel.age+' · ':'')+(()=>{try{const u=sel.uhid||ptIdentity(sel).uhid;return u?'UHID '+u+' · ':''}catch(e){return ''}})()+sel.room)+'</span></div>'+psySafety(sel.id)+'</section>'):h;
+    return sel?h.replace(/(<div class="row" style="gap:8px;flex-wrap:wrap">[\s\S]*?<\/button><\/div>)/,'$1<section class="card pad"><div style="font-weight:600;margin-bottom:6px">'+hesc(sel.name)+' <span class="muted small" style="font-weight:400">'+hesc((psyAgeSex(sel)?psyAgeSex(sel)+' · ':'')+(()=>{try{const u=sel.uhid||ptIdentity(sel).uhid;return u?'UHID '+u+' · ':''}catch(e){return ''}})()+sel.room)+'</span></div>'+psySafety(sel.id)+'</section>'):h;
   };
 
   /* ---------- NEWS2 and suicide screen ---------- */

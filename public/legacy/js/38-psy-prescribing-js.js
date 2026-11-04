@@ -219,7 +219,16 @@
       <div class="pad row" style="gap:8px;flex-wrap:wrap;align-items:center"><input class="input" id="rcN" style="flex:1 1 220px;min-height:36px" placeholder="Medicine and dose, e.g. Sodium valproate 500 mg twice a day"><select class="input" id="rcD" style="width:auto;min-height:36px">${DEC.map(d=>`<option>${d}</option>`).join('')}</select><input class="input" id="rcT" style="flex:1 1 160px;min-height:36px" placeholder="Note"><button class="btn sm pri" onclick="psyReconAdd()">Add</button>${r.adm.length||r.admNone?'':'<button class="btn sm" onclick="psyReconNone()">No medicines before admission</button>'}</div></section>`;
   }
   const __pa=pAdmission;
-  pAdmission=function(){const h=__pa.apply(this,arguments);return psy()?admCard()+h:h;};
+  pAdmission=function(){
+    const h=__pa.apply(this,arguments);if(!psy())return h;
+    /* team review (5 Nov): no separate "Medicines before admission" card; it sits under the Detailed history as Past treatment history */
+    const card=admCard().replace('<h3>Medicines before admission</h3>','<h3>Past treatment history · medicines before admission</h3>');
+    /* the allergy tag is hidden in the header unless an allergy exists, so allergies are recorded and edited here */
+    const al=(window.psyPx&&psyPx(S.pid).allergy)||null;
+    const alTxt=!al?'Not recorded yet':(al.list&&al.list.length?'Drug allergy: '+al.list.map(i=>hesc(i.drug)+(i.rx?' ('+hesc(i.rx)+')':'')).join(', '):'No known drug allergies')+' · '+hesc(al.by)+', '+hesc(al.at);
+    const alCard=`<section class="card"><div class="pad row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-weight:600">Allergies</div><div class="small muted">${alTxt}</div></div><button class="btn sm" onclick="psyAllergy('${S.pid}')">${al?'Edit':'Record allergies'}</button></div></section>`;
+    return alCard+((S.admSec||'hist')==='hist'?h+card:h);
+  };
 
   window.psyDisSet=function(key,k,v){const r=recon();r.dis[key]=r.dis[key]||{};r.dis[key][k]=v;render();};
   window.psyDisAdd=function(){const n=($('dsN').value||'').trim();if(!n){toast('Type the medicine and dose');return;}recon().disExtra.push({name:n,note:($('dsT').value||'').trim(),by:signer(),at:atNow()});render();};

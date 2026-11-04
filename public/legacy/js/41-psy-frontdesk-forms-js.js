@@ -2,14 +2,13 @@
 /* Psychiatrist only (5 Nov 2026). Trello (Anu) "Front desk forms: please make an editable version of these forms".
    The Admission tab > Front desk forms card was a read-only list (Signed chips). Each form that has an on-screen version
    (the same editable form and PDF used under Forms to print > Fill in online) now has an "Open and edit" button:
-   Admission consent and letter of undertaking, Form E, High risk informed consent. The COVID form has no on-screen version yet. */
+   Admission consent and letter of undertaking, Form E, High risk informed consent. The COVID form was removed (team review, 5 Nov). */
 (function(){
   const psy=()=>S.role==='psychiatrist';
   const ROWS=[
     ['Admission consent form and letter of undertaking (advance and charges)','admission-consent','Signed 18 Oct'],
     ['Form E · request for admission with high support needs (rule 8)','form-e','Signed by the nominated representative'],
-    ['High risk informed consent','high-risk-consent','Signed 18 Oct'],
-    ['COVID form',null,'Signed 18 Oct']
+    ['High risk informed consent','high-risk-consent','Signed 18 Oct']
   ];
   const __pa=pAdmission;
   pAdmission=function(){
