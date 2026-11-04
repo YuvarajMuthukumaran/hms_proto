@@ -94,14 +94,13 @@
     const T=tasks().filter(t=>!S.done[t.id]&&t.taskType!=='alert'&&t.taskType!=='countersign');
     const rows=PTS.map(p=>build(p,T)).sort((a,b)=>a.rank-b.rank);
     const n={need:rows.filter(r=>r.need).length,late:rows.filter(r=>r.late).length,isNew:rows.filter(r=>r.isNew).length,all:rows.length};
-    const f=S.dtF||'all',day=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
-    const tile=(k,dot,l,c,d)=>`<button class="pd-tile ${f===k?'on':''}" aria-pressed="${f===k}" onclick="psyDtSet('${k}')"><span class="h"><i class="pd-dot" style="background:${dot}"></i>${l}</span><b>${c}</b><span class="d">${d}</span></button>`;
+    S.dtF='all'; /* the four filter tiles were removed (owner, 5 Nov): nothing is filtered any more except by the search box */
+    const day=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
     setTimeout(dtFilter,0);
     return `<div class="pd">
-      <div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h2>Inpatient dashboard</h2><div class="muted" style="margin-top:4px">${day} · ${rows.length} patients · ${n.need} need${n.need===1?'s':''} you now</div><div class="pd-hint">Tap a box to see only those patients. Tap a patient's name to open their file.</div></div>
+      <div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h2>Inpatient dashboard</h2><div class="muted" style="margin-top:4px">${day} · ${rows.length} patients · ${n.need} need${n.need===1?'s':''} you now</div><div class="pd-hint">Tap a patient's name to open their file.</div></div>
         <div class="row" style="gap:8px"><button class="btn" onclick="go('#/admissions')">New admission</button><button class="btn pri" onclick="go('#/rounds')">Start rounds</button></div></div>
       ${startHere(rows)}
-      <div class="pd-tiles">${tile('need','var(--red)','Needs you now',n.need,'Alerts and orders waiting for you')}${tile('late','var(--amber)','Late',n.late,'Work that should already be done')}${tile('new','var(--blue)','New patients',n.isNew,'Came in the last 24 hours')}${tile('all','#98a2b3','All my patients',n.all,'Everyone you look after')}</div>
       <section class="card ptable">
         <div class="hd" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><h3>Patients</h3>
           <input class="input" id="dtQ" style="width:260px;min-height:38px;margin:0" placeholder="Type a name or room" oninput="dtFilter()" aria-label="Search patients"></div>
