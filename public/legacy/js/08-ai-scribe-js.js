@@ -8,7 +8,7 @@ listenRound=async function(){
   const R=S.rounds;if(R.scribing)return;
   if(R.listening){if(__scRec&&__scRec.state!=='inactive')__scRec.stop();return;}
   if(!navigator.mediaDevices||!window.MediaRecorder){toast('This browser cannot record. Type the round note instead.');return;}
-  if(!waCfg().token){waCfgModal();toast('Paste the connection token once, then tap Start listening again');return;}
+  
   let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});}
   catch(e){toast('Microphone blocked. Allow the microphone for this site, or type the round note.');return;}
   const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(t=>MediaRecorder.isTypeSupported(t))||'';
@@ -23,7 +23,7 @@ async function scribeUpload(blob){
   const meds=p.id==='neel'?S.meds.map(m=>m.name+' '+m.freq):[];
   const qs=new URLSearchParams({patient:p.name,dx:p.dx||'',meds:meds.join('|')}),c=waCfg();
   try{
-    const r=await fetch(c.url+'/scribe?'+qs,{method:'POST',headers:{'Content-Type':blob.type||'audio/webm','X-Bridge-Token':c.token},body:blob,signal:AbortSignal.timeout(90000)});
+    const r=await fetch(c.url+'/scribe?'+qs,{method:'POST',headers:{'Content-Type':blob.type||'audio/webm'},body:blob,signal:AbortSignal.timeout(90000)});
     const j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw new Error(j.error||'Scribe error '+r.status);
     R.scribe=Object.assign({},j,{pid:p.id,at:clock(),by:signer()});R.drafted=true;
     R.mc=(R.mc||[]).filter(x=>x.src!=='From scribe').concat(j.medChanges.map(m=>({act:m.act,text:m.text,src:'From scribe'})));

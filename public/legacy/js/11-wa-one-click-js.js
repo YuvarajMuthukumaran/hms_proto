@@ -9,7 +9,7 @@ async function psySaveSend(kind,id,btn){
     toast('Nothing filled in for '+p.name+' yet. Tap a few answers (or Usual day), then send.');
     if(kind==='eod'){const pend=PSY_EOD().filter(x=>!((S.eod||{})[x.id]||{}).saved),i=pend.findIndex(x=>x.id===id);if(i>=0){S.eodI=i;render();}}
     return;}
-  if(!waCfg().token){waCfgModal();toast('Connect this browser once, then press Send again.');return;}
+  
   const saved=kind==='dn'?S.dailySaved:((S.eod||{})[id]||{}).saved;
   if(!saved&&!psyMiss(kind,id).length){if(kind==='dn')psySave(kind,id);else S.eod[id].saved=true;}
   if(btn)waBusy(btn,true);
@@ -38,6 +38,6 @@ psyEodPage=function(){
     return `<div class="wa-row"><div class="grow"><strong>${p.name}</strong> <span class="tiny muted">${p.room} · UHID ${p.uhid}</span><div class="small">${st(p)}</div></div>
     ${any?`<button class="btn sm" onclick="S.waOpen=S.waOpen==='${p.id}'?'':'${p.id}';render()">${S.waOpen===p.id?'Hide message':'See message'}</button>`:''}<button class="btn sm pri" ${s?'disabled':''} onclick="psySaveSend('eod','${p.id}',this)">${s?'✓ Sent':'Send on WhatsApp'}</button></div>${S.waOpen===p.id&&any?`<div style="padding:0 0 12px">${waDBlock('eod',p.id)}</div>`:''}`;};
   const strip=`<section class="card wa-strip" id="waStrip"><div class="hd"><div><h3>WhatsApp updates to families</h3><div class="small muted" style="margin-top:4px">${sentL.length} of ${all.length} sent today. <b>Send on WhatsApp</b> sends that patient's update to their family group; the group is created the first time.</div></div>
-    <div class="row" style="gap:8px"><button class="lnk tiny" onclick="waCfgModal()">Connection settings</button></div></div>
+    </div>
     <div class="pad" style="padding-top:4px">${all.map(row).join('')}</div></section>`;
   return strip+h;};

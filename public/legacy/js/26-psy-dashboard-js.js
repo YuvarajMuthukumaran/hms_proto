@@ -18,9 +18,9 @@
   .pd-t th{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:0 16px 2px}
   .pd-t td{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 16px;vertical-align:middle}
   /* status accent: a slim pill bar floating inside the card with a soft glow (no thick curved border) */
-  .pd-t td:first-child{position:relative;padding-left:34px;border-left:1px solid var(--line);border-top-left-radius:16px;border-bottom-left-radius:16px}
-  .pd-t td:last-child{border-right:1px solid var(--line);border-top-right-radius:16px;border-bottom-right-radius:16px;text-align:right}
-  .pd-t td:first-child::before{content:'';position:absolute;left:13px;top:16px;bottom:16px;width:5px;border-radius:99px;background:var(--pc,#d0d5dd);box-shadow:0 0 0 3px var(--pg,transparent)}
+  .pd-t td:first-child{position:relative;padding-left:18px;border-left:1px solid var(--line);border-top-left-radius:16px;border-bottom-left-radius:16px}
+  .pd-t td:last-child{padding-left:8px;padding-right:14px;border-right:1px solid var(--line);border-top-right-radius:16px;border-bottom-right-radius:16px;text-align:right}
+  .pd-ty{font-size:14px;font-weight:700;color:#475467}.pd-ty.red{color:#b42318}.pd-ty.blue{color:#175cd3}.pd-ty.amber{color:#b54708}
   .pd-t tr{box-shadow:0 1px 2px rgba(16,24,40,.04)}
   .pd-t tr.r-red{--pc:#e5484d;--pg:rgba(229,72,77,.16)}.pd-t tr.r-red td{background:#fffbfb}
   .pd-t tr.r-amber{--pc:#f5a524;--pg:rgba(245,165,36,.18)}
@@ -41,10 +41,10 @@
   .pd-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:99px;padding:4px 11px 4px 9px;background:#f2f4f7;color:#475467;white-space:nowrap;border:1px solid rgba(16,24,40,.06)}
   .pd-chip::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
   .pd-chip.red{background:#fef3f2;color:#b42318;border-color:#fecdca}.pd-chip.amber{background:#fffaeb;color:#b54708;border-color:#fedf89}.pd-chip.blue{background:#eff8ff;color:#175cd3;border-color:#b2ddff}
-  .pd-eye{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink-2);cursor:pointer}
+  .pd-eye{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink-2);cursor:pointer}
   .pd-eye:hover{border-color:var(--blue);color:var(--blue)}
-  .pd-acts{display:inline-flex;align-items:center;gap:8px;justify-content:flex-end}
-  .pd-take{min-height:40px;padding:0 14px;font-weight:600;white-space:nowrap}
+  .pd-acts{display:inline-flex;align-items:center;gap:8px;justify-content:flex-end;white-space:nowrap}
+  .pd-take{min-height:36px;padding:0 12px;font-size:13px;font-weight:600;white-space:nowrap}
   .pd-done{display:inline-flex;align-items:center;min-height:40px;padding:0 12px;border-radius:10px;background:var(--green-bg);color:var(--green);font-size:13px;font-weight:600;white-space:nowrap}
   /* the eye window: each open item is its own soft card, actions underneath */
   .pd-det{display:flex;flex-direction:column;gap:10px}
@@ -55,7 +55,13 @@
   .pd-dt{font-size:15px;line-height:1.45;font-weight:500;color:var(--ink)}.pd-dt .tiny{display:block;font-weight:400;margin-top:2px}
   .pd-da{display:flex;gap:8px;flex-wrap:wrap}
   .pd-who2{display:flex;align-items:center;gap:12px}.pd-who2 h3{font-size:19px;margin:0}.pd-who2 .tiny{margin-top:2px}
-  .pd-empty{padding:28px;text-align:center;color:var(--muted)}`;
+  .pd-empty{padding:28px;text-align:center;color:var(--muted)}
+  /* narrow windows: drop the Actions taken column so the buttons stay in view (it is still in the eye window) */
+  @media (max-width:1180px){.pd-t col:nth-child(4){display:none}.pd-t th:nth-child(4),.pd-t td:nth-child(4){display:none}.pd-t{min-width:720px!important}}
+  #pdMenu{position:fixed;z-index:120;width:300px;max-width:calc(100vw - 24px);background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px rgba(15,23,42,.18);padding:6px}
+  #pdMenu .pdm-i{display:block;width:100%;text-align:left;border:0;background:none;font:inherit;padding:9px 12px;border-radius:9px;cursor:pointer;color:var(--ink)}
+  #pdMenu .pdm-i:hover{background:var(--soft)}#pdMenu .pdm-i b{display:block;font-size:14px;font-weight:600}
+  #pdMenu .pdm-i span{display:block;font-size:12px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}`;
   document.head.appendChild(css);
 
   const EYE='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -66,7 +72,34 @@
     V3.modal('Approve this order? · '+hesc(V3.pn(o.pid)),'Written by '+hesc(o.by)+(o.via?' after speaking to '+hesc(o.via):''),
       `<div class="note small">${hesc(o.text)}</div><div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn" onclick="closeModal()">Not now</button><button class="btn pri big" onclick="closeModal();V3.countersign('${o.id}')">Yes, approve</button></div>`);
   };
+  /* 5 Nov team review (Nikita and Anu): approving is one click, no "Approve this order?" window on top of the window.
+     psyReview above stays for the floor lead, whose Check and approve button still asks first. */
+  window.psyApprove=function(id){V3.countersign(id);};
   window.psyDtSet=function(f){S.dtF=f;render();};
+  /* patient line under the name: age and sex, then room. No diagnosis, no UHID, no day count, no dates (Nikita and Anu, 5 Nov) */
+  const sub=p=>[(window.psyAgeSex?psyAgeSex(p):''),p.room].filter(Boolean).join(' · ');
+
+  /* Take Action: a drop-down under the button listing what can be done for this patient. It is a floating panel (the table scrolls
+     sideways, so a menu inside it would be cut off). */
+  window.pdMenuClose=function(){const o=document.getElementById('pdMenu');if(o)o.remove();};
+  window.psyMenu=function(ev,pid){
+    ev.stopPropagation();
+    const old=document.getElementById('pdMenu');if(old){const same=old.dataset.pid===pid;old.remove();if(same)return;}
+    const m=MAP[pid];if(!m)return;
+    const tk=(window.psyPx&&psyPx(pid).taken)||{},open=m.items.filter(i=>!tk[i.key]);
+    const medical=open.some(i=>i.k==='alert'||i.k==='order'||/result/i.test(i.lab[1]));
+    const row=(go,t,s)=>`<button class="pdm-i" onclick="pdMenuClose();${go}"><b>${t}</b>${s?`<span>${hesc(s)}</span>`:''}</button>`;
+    const el=document.createElement('div');el.id='pdMenu';el.dataset.pid=pid;el.setAttribute('role','menu');
+    el.innerHTML=open.filter(i=>i.btn).map(i=>row(i.btn[1],hesc(i.btn[0]),i.txt)).join('')
+      +(medical?row(`psyToChart('${pid}')`,'Review treatment','Open the nursing chart'):'')
+      +row(`psyActionTaken('${pid}')`,'Log action taken','Write what was done');
+    document.body.appendChild(el);
+    const r=ev.currentTarget.getBoundingClientRect();
+    el.style.top=Math.min(r.bottom+6,innerHeight-el.offsetHeight-12)+'px';el.style.left=Math.max(12,Math.min(r.right-el.offsetWidth,innerWidth-el.offsetWidth-12))+'px';
+  };
+  document.addEventListener('mousedown',e=>{const o=document.getElementById('pdMenu');if(o&&!o.contains(e.target)&&!(e.target.closest&&e.target.closest('.pd-take')))o.remove();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')pdMenuClose();});
+  window.addEventListener('scroll',()=>pdMenuClose(),true);
 
   /* open that patient's Rounds page */
   window.psyOpenRounds=function(pid){
@@ -87,11 +120,11 @@
       /* Review treatment (opens the nursing chart) sits on every medical item: alerts, approvals and results to check. */
       const rt=`<button class="btn sm ${i.k==='alert'?'pri':''}" onclick="closeModal();psyToChart('${pid}')">Review treatment</button>`,act=i.btn?`<button class="btn sm ${i.k==='order'?'pri':''}" onclick="${back}${i.btn[1]}">${i.btn[0]}</button>`:'';
       const medical=i.k==='alert'||i.k==='order'||/result/i.test(i.lab[1]);
-      const taken=`<button class="btn sm" onclick="closeModal();psyActionTaken('${pid}',${ix})">Action taken</button>`;
+      const taken=`<button class="btn sm" onclick="closeModal();psyActionTaken('${pid}',${ix})">Log action</button>`;
       const acts=(i.k==='alert'?rt+act:(medical?act+rt:act))+taken;
       return `<div class="pd-di ${i.k==='alert'?'al':''}"><div class="pd-dh"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span>${i.due?`<span class="tiny">${hesc(i.due)}</span>`:''}</div><div class="pd-dt">${hesc(i.txt)}</div><div class="pd-da">${acts}</div></div>`;}).join('')}</div>`;
     const foot=`<div class="mf"><button class="btn" onclick="closeModal();go('#/patient/${pid}/overview')">Open full record</button><button class="btn" onclick="psyOpenRounds('${pid}')">Open Rounds</button></div>`;
-    openModal(`<div class="mh"><div class="pd-who2">${av(m.p.ini,44,m.items.some(i=>i.k==='alert')?'c-red':'c-blue')}<div><h3>${hesc(m.p.name)}</h3><div class="tiny muted">${hesc(m.p.dx||'')}${m.p.dx?' · ':''}Day ${m.p.day}</div></div></div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div><div class="mb">${body}</div>${foot}`);
+    openModal(`<div class="mh"><div class="pd-who2">${av(m.p.ini,44,m.items.some(i=>i.k==='alert')?'c-red':'c-blue')}<div><h3>${hesc(m.p.name)}</h3><div class="tiny muted">${hesc(sub(m.p))}</div></div></div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div><div class="mb">${body}</div>${foot}`);
     $('modal').style.width='min(620px,100%)';
   };
 
@@ -130,8 +163,9 @@
 
   function build(p,T){
     const items=[];
-    DT.alerts(p).forEach(i=>items.push({k:'alert',aid:((i.btn&&i.btn[1]||'').match(/'([^']+)'/)||[])[1],lab:['red','Alert'],txt:i.txt.replace(/^Alert:\s*/,''),due:i.due,btn:i.btn&&['Mark seen',i.btn[1],false]}));
-    DT.orders(p).forEach(i=>{const id=(i.btn[1].match(/'([^']+)'/)||[])[1];items.push({k:'order',lab:['blue','Approve'],txt:i.txt.replace(/^Countersign:\s*/,''),due:(window.psyOrderLeft&&psyOrderLeft(id))||i.due,btn:['Approve',`psyReview('${id}')`,false]});});
+    /* the word "Alert" is not repeated on every row (Nikita, 5 Nov): the type is where the alert came from, e.g. Vitals */
+    DT.alerts(p).forEach(i=>items.push({k:'alert',aid:((i.btn&&i.btn[1]||'').match(/'([^']+)'/)||[])[1],lab:['red',(i.due&&i.due!=='Now')?i.due:'Urgent'],txt:i.txt.replace(/^Alert:\s*/,''),due:'',btn:i.btn&&['Mark seen',i.btn[1],false]}));
+    DT.orders(p).forEach(i=>{const id=(i.btn[1].match(/'([^']+)'/)||[])[1];items.push({k:'order',lab:['blue','Approve'],txt:i.txt.replace(/^Countersign:\s*/,''),due:(window.psyOrderLeft&&psyOrderLeft(id))||i.due,btn:['Approve',`psyApprove('${id}')`,false]});});
     DT.tasks(p,T).forEach(i=>{
       const sign=/discharge summary/i.test(i.txt),late=!!i.overdue;
       items.push({k:late?'late':'task',lab:late?['amber','Late']:sign?['grey','To sign']:['grey','Today'],txt:i.txt,due:i.due,
@@ -146,16 +180,23 @@
     const rank=allTaken?3:has('alert')?0:(has('order')||has('late'))?1:2;
     const edge=has('alert')?'red':(view.some(i=>i.lab[0]==='amber'))?'amber':has('order')?'blue':'';
     const types=[];view.forEach(i=>{if(!types.some(t=>t[1]===i.lab[1]))types.push(i.lab);});
+    /* the Type column is one plain word: the most urgent type for this patient (alert, then approval, then late, then the rest) */
+    const tr=l=>({red:0,blue:1,amber:2}[l[0]]===undefined?3:{red:0,blue:1,amber:2}[l[0]]);
+    const top=types.slice().sort((a,b)=>tr(a)-tr(b))[0]||['grey',''];
     MAP[p.id]={p,items:act};
     const last=allTaken?tk[act[act.length-1].key]:null;
     const lines=rem.concat(doneL),shown=lines.slice(0,3);
-    const detail=i=>tk[i.key]?`<div class="pd-d done"><i class="pd-dot ok"></i><span>✓ ${hesc(i.txt)}<span class="tiny"> · action taken by ${hesc(tk[i.key].by||'')}</span></span></div>`:`<div class="pd-d"><i class="pd-dot ${i.lab[0]}"></i><span>${hesc(i.txt)}${i.due?`<span class="tiny muted"> · ${hesc(i.due)}</span>`:''}</span></div>`;
+    /* Event = what happened; Actions taken = what was done about it, by anyone (nurse, RMO, psychiatrist) */
+    const detail=i=>tk[i.key]?`<div class="pd-d done"><i class="pd-dot ok"></i><span>${hesc(i.txt)}</span></div>`:`<div class="pd-d"><i class="pd-dot ${i.lab[0]}"></i><span>${hesc(i.txt)}${i.due?`<span class="tiny muted"> · ${hesc(i.due)}</span>`:''}</span></div>`;
+    const did=[];
+    act.forEach(i=>{const t=tk[i.key];if(t)did.push(`<div class="pd-d done"><i class="pd-dot ok"></i><span>${hesc(t.note||'Action taken')}<span class="tiny"> · ${hesc(t.by||'')} · ${hesc(t.at||'')}</span></span></div>`);});
+    v3().alerts.filter(a=>a.pid===p.id&&a.ack&&!a.closed&&!a.seen).forEach(a=>did.push(`<div class="pd-d done"><i class="pd-dot ok"></i><span>Acknowledged<span class="tiny"> · ${hesc(a.ack.by||'')}${a.ack.role&&V3.roleName&&V3.roleName[a.ack.role]?' ('+hesc(V3.roleName[a.ack.role])+')':''} · ${hesc(V3.hm(a.ack.t))}</span></span></div>`));
     const html=act.length?`<tr class="${allTaken?'r-done':(edge?'r-'+edge:'')}" data-dt="${hesc((p.name+' '+p.room).toLowerCase())}" data-need="${has('alert')||has('order')?1:0}" data-new="${isNew?1:0}" data-late="${has('late')?1:0}">
-      <td><div class="pd-chips">${types.map(t=>`<span class="pd-chip ${t[0]}">${hesc(t[1])}</span>`).join('')}</div></td>
-      <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,38,has('alert')?'c-red':'c-blue')}<span><span class="pd-nm"><b>${hesc(p.name)}</b>${p.risk?'<span class="pd-tag amber">High risk</span>':''}</span><span class="pd-sub">${hesc([(window.psyAgeSex?psyAgeSex(p):''),'Day '+p.day].filter(Boolean).join(' · '))}</span></span></button>
-        <div class="pd-dx">${hesc(p.dx||'')}</div>${isNew?`<div class="pd-tags">${isNew?'<span class="pd-tag blue">New admission</span>':''}</div>`:''}</td>
-      <td>${shown.map(detail).join('')}${lines.length>3?`<div class="tiny muted" style="margin-top:4px">+${lines.length-3} more, press the eye</div>`:''}${doneL.length&&rem.length?`<div class="tiny" style="margin-top:4px;color:#067647;font-weight:600">${doneL.length} of ${act.length} done, ${rem.length} still open</div>`:''}</td>
-      <td><div class="pd-acts"><button class="pd-eye" aria-label="View details for ${hesc(p.name)}" title="View details" onclick="psyEye('${p.id}')">${EYE}</button>${allTaken?`<span class="pd-done" title="${hesc((last.by||'')+' · '+(last.at||'')+(last.note?' · '+last.note:''))}">Action taken ✓</span>`:`<button class="btn sm pd-take" onclick="psyActionTaken('${p.id}')">Action Taken</button>`}</div></td></tr>`:'';
+      <td><span class="pd-ty ${top[0]}">${hesc(top[1])}</span></td>
+      <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,38,has('alert')?'c-red':'c-blue')}<span><span class="pd-nm"><b>${hesc(p.name)}</b>${p.risk?'<span class="pd-tag amber">High risk</span>':''}</span><span class="pd-sub">${hesc(sub(p))}</span></span></button>${isNew?`<div class="pd-tags" style="margin-left:50px"><span class="pd-tag blue">New admission</span></div>`:''}</td>
+      <td>${shown.map(detail).join('')}${lines.length>3?`<div class="tiny muted" style="margin-top:4px">+${lines.length-3} more, press the eye</div>`:''}</td>
+      <td>${did.length?did.join(''):'<span class="tiny muted">Nothing yet</span>'}${doneL.length&&rem.length?`<div class="tiny" style="margin-top:4px;color:#067647;font-weight:600">${doneL.length} of ${act.length} done</div>`:''}</td>
+      <td><div class="pd-acts"><button class="pd-eye" aria-label="View details for ${hesc(p.name)}" title="View details" onclick="psyEye('${p.id}')">${EYE}</button>${allTaken?`<span class="pd-done" title="${hesc((last.by||'')+' · '+(last.at||'')+(last.note?' · '+last.note:''))}">Action taken ✓</span>`:`<button class="btn sm pd-take" aria-haspopup="menu" onclick="psyMenu(event,'${p.id}')">Take Action <span aria-hidden="true">▾</span></button>`}</div></td></tr>`:'';
     return {rank,html,act};
   }
 
@@ -168,9 +209,9 @@
     return `<div class="pd">
       <div class="pd-bar"><input class="input" id="dtQ" style="width:280px;min-height:40px;margin:0" placeholder="Type a name" oninput="dtFilter()" aria-label="Search patients">
         <div class="row" style="gap:8px"><button class="btn" onclick="go('#/admissions')">New admission</button><button class="btn pri" onclick="go('#/rounds')">Start rounds</button></div></div>
-      ${rows.length?`<div style="overflow-x:auto"><table class="pd-t" style="min-width:860px"><colgroup><col style="width:260px"><col style="width:24%"><col><col style="width:230px"></colgroup>
-        <thead><tr><th>Alert</th><th>Patient</th><th>Details</th><th></th></tr></thead>
-        <tbody id="dtBody">${rows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="4" class="pd-empty">No patient matches</td></tr></tbody></table></div>`
+      ${rows.length?`<div style="overflow-x:auto"><table class="pd-t" style="min-width:900px"><colgroup><col style="width:122px"><col style="width:190px"><col><col style="width:21%"><col style="width:216px"></colgroup>
+        <thead><tr><th>Type</th><th>Patient</th><th>Event</th><th>Actions taken</th><th></th></tr></thead>
+        <tbody id="dtBody">${rows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="5" class="pd-empty">No patient matches</td></tr></tbody></table></div>`
       :`<section class="card"><div class="pd-empty">Nothing needs you right now. You can start your rounds when you are ready.</div></section>`}
     </div>`;
   }

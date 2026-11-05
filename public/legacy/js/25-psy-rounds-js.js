@@ -23,7 +23,7 @@
   .pr-head{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
   .pr-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .pr-ch{font-size:12px;border-radius:99px;padding:2px 10px;background:var(--grey-bg);color:var(--grey)}
-  .pr-info{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-top:1px solid var(--line-2);margin:14px -20px -4px;padding:0 20px}
+  .pr-info{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid var(--line-2);margin:14px -20px -4px;padding:0 20px}
   .pr-info>div{padding:10px 12px 8px 0;font-size:12.5px;line-height:1.45;min-width:0}
   .pr-info .l{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
   .pr-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
@@ -35,6 +35,18 @@
   .pr-st{font-size:11px;font-weight:700;border-radius:99px;padding:2px 9px;white-space:nowrap}
   .pr-st.cont{background:var(--grey-bg);color:var(--grey)}.pr-st.chg{background:var(--amber-bg);color:var(--amber)}.pr-st.stop{background:var(--grey-bg);color:var(--grey);text-decoration:none}.pr-st.new{background:var(--blue-tint);color:var(--blue-ink)}
   .pr-bar{position:sticky;bottom:0;z-index:20;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 16px;box-shadow:0 -6px 18px rgba(15,23,42,.06)}
+  /* vitals as plain text, not boxes (Nikita and Anu, 5 Nov): normal values are quiet, the ones to look at are coloured and bold */
+  .pr-vit{display:flex;flex-wrap:wrap;gap:6px 24px;font-size:14px}
+  .pr-vi .l{color:var(--muted);font-size:12.5px}.pr-vi b{font-weight:500;color:var(--ink-2)}.pr-vi .u{color:var(--muted);font-size:12px}
+  .pr-vi.warn b{color:#b54708;font-weight:700}.pr-vi.bad b{color:#d92d20;font-weight:700}
+  /* medicine card: tighter, up to ten medicines fit */
+  .pr-med .t td{padding-top:7px;padding-bottom:7px}
+  .pr-lab{display:flex;flex-direction:column;gap:8px}
+  .pr-lo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--line-2)}
+  .pr-lo input{flex:1 1 220px;min-width:180px;min-height:32px;padding:3px 10px;font-size:13px}
+  .pr-mod{display:flex;flex-direction:column;gap:8px}
+  .pr-mod button{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px;font:inherit;font-weight:600;cursor:pointer;color:var(--ink)}
+  .pr-mod button:hover{border-color:var(--blue);background:var(--blue-tint)}
   @media (max-width:1100px){.pr-info{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media (max-width:980px){.pr-grid{grid-template-columns:1fr}.pr-two{grid-template-columns:1fr}.pr-nums{grid-template-columns:repeat(2,minmax(0,1fr))}}`;
   document.head.appendChild(css);
@@ -66,6 +78,9 @@
   /* a dose is never changed from Rounds (owner, 5 Nov): the doctor stops a medicine and adds a new one */
   window.prCall=name=>toast('Prototype: calling '+name);
 
+  /* a psychiatrist is shown as "Dr. Name", a psychologist by name only; no role words (team review, 5 Nov) */
+  const dr=n=>{n=String(n||'');return /^Dr\.?\s/.test(n)?n:(n?'Dr. '+n:'');};
+  window.prKeep=keepNote;
   function infoStrip(p){
     const c=ptCtxOf(p.id),tm=c.team||{},ex=exOf(p),ev=evOf(p),al=alertsOf(p);
     const stand=(S.stand||[]).filter(x=>x.pid===p.id&&x.risk);
@@ -77,8 +92,7 @@
     if(String(ex[0]||'').startsWith('1:1')||/15/.test(ex[0]||''))bits.push(`<span style="color:var(--amber);font-weight:600">${hesc(ex[0])}</span>`);
     stand.forEach(x=>bits.push(hesc(x.text)));
     return `<div class="pr-info">
-      <div><div class="l">Treating team</div>${hesc((tm.psy||'').replace('Dr. ','Dr. '))} <span class="muted">psychiatrist</span><br>${tm.psych?hesc(tm.psych)+' <span class="muted">psychologist</span>':`<a href="#/patient/${p.id}/overview" class="small">Add psychologist</a>`}</div>
-      <div><div class="l">On duty now</div>${hesc(V3.who.nurse)} <span class="muted">nurse</span><br>${hesc(V3.who.rmo)} <span class="muted">RMO</span> <button class="btn sm" style="padding:0 8px;min-height:22px" onclick="prCall('${hesc(V3.who.rmo)}')">Call</button></div>
+      <div><div class="l">Treating team</div>${hesc(dr(tm.psy))}<br>${tm.psych?hesc(tm.psych):`<a href="#/patient/${p.id}/overview" class="small">Add psychologist</a>`}</div>
       <div><div class="l">Significant alerts</div>${bits.length?bits.join('<br>'):'<span class="muted">No open alerts</span>'}</div>
       <div><div class="l">Family / NR</div>${nrName?hesc(nrName)+' <span class="muted">('+hesc(rel.toLowerCase())+'), NR</span><br><span class="muted">+91 98•••• 4210 · Hindi · '+call+'</span>':'<span class="muted">No nominated representative recorded</span>'}</div>
     </div>`;
@@ -86,7 +100,8 @@
 
   function sinceCard(p){
     const c=ptCtxOf(p.id),vc=c.vc||{},sys=last(vc.sys),dia=last(vc.dia),pul=last(vc.pulse),sug=last(vc.sugar),slp=last(vc.sleep);
-    const num=(l,v,bad)=>`<div class="pr-num ${bad?'amber':''}"><b>${v==null?'—':v}</b><span>${l}</span></div>`;
+    /* lvl: '' normal, 'warn' raised, 'bad' out of range; an arrow shows which way, so colour is not the only signal */
+    const vi=(l,v,lvl,dir,u)=>`<span class="pr-vi ${lvl||''}"><span class="l">${l}</span> <b>${v==null?'—':v}</b>${u?` <span class="u">${u}</span>`:''}${lvl&&dir?` <b>${dir}</b>`:''}</span>`;
     const bp=sys!=null?sys+'/'+dia:null;
     const eod=(S.eod||{})[p.id],pr=(c.psychRows||[]).reduce((a,r)=>[a[0]+(+r.done||0),a[1]+(+r.req||0)],[0,0]);
     const ev=evOf(p),pend=[];
@@ -95,7 +110,7 @@
     const refs=(S.referrals||[]).filter(r=>r.pid===p.id&&!S.done[r.id]).length;if(refs)pend.push(refs+' referral'+(refs>1?'s':'')+' with the RMO');
     const oor=(sys!=null&&(sys>=140||sys<90))||(pul!=null&&(pul>100||pul<55));
     return `<section class="card pad"><h3 style="margin-bottom:10px">Since last round</h3>
-      <div class="pr-nums">${num('BP',bp,sys!=null&&(sys>=140||sys<90))}${num('Pulse',pul,pul!=null&&(pul>100||pul<55))}${num('Sugar mg/dL',sug,sug!=null&&(sug>180||sug<70))}${num('Sleep h',slp,slp!=null&&slp<5)}</div>
+      <div class="pr-vit">${vi('BP',bp,sys==null?'':(sys>=140||dia>=90||sys<90)?'bad':sys>=130?'warn':'',sys<90?'↓':'↑')}${vi('Pulse',pul,pul==null?'':(pul>100||pul<55)?'bad':'',pul<55?'↓':'↑')}${vi('Sugar',sug,sug==null?'':(sug>180||sug<70)?'bad':sug>140?'warn':'',sug<70?'↓':'↑','mg/dL')}${vi('Sleep',slp,slp==null?'':slp<5?'warn':'','↓','h')}</div>
       <div class="pr-lines">
         <div><b>Nursing</b>${oor?'Vitals out of range at the last check':'Vitals in range, doses given as charted'}</div>
         <div><b>Psychologist</b>${hesc(((c.team||{}).psych)||'None assigned')}${pr[1]?' · '+pr[0]+' of '+pr[1]+' sessions done':''}${eod&&eod.saved?' · note written today':''}</div>
@@ -118,7 +133,7 @@
       ${sc.medChanges&&sc.medChanges.length?`<div class="small muted" style="margin-top:8px">${sc.medChanges.length} medicine change${sc.medChanges.length>1?'s':''} added to Medicine below as "From scribe". Remove any that are wrong.</div>`:''}
       ${sc.todos&&sc.todos.length?`<div class="small" style="margin-top:8px"><b>To-dos</b> · ${sc.todos.map(t=>hesc(t.text)+' ('+hesc(t.owner)+')').join('; ')}</div>`:''}`:'';
     return `<section class="card pad"><div class="row" style="justify-content:space-between;margin-bottom:10px"><h3>Round note</h3>${btn}</div>
-      <textarea class="input pr-note" id="prNote" placeholder="Type the round note here, or use the AI scribe" oninput="S.rounds.scribeNote=this.value">${hesc(R.scribeNote||'')}</textarea>${aiLine}${extra}</section>`;
+      <textarea class="input pr-note" id="prNote" placeholder="Type the round note here, or use the AI scribe" oninput="S.rounds.scribeNote=this.value;prKeep()">${hesc(R.scribeNote||'')}</textarea>${aiLine}${extra}</section>`;
   }
 
   function medCard(p){
@@ -134,25 +149,80 @@
           </div></td></tr>`;
     }).join('');
     const news=mc.filter(c=>c.act==='Start').map((c,i)=>`<tr><td><div style="font-weight:700">${hesc(c.text.split(',')[0])}</div><div class="tiny muted">${hesc(c.text.split(',').slice(1).join(',').trim())}</div></td><td></td><td><span class="pr-st new">New</span>${c.src==='From scribe'?' <span class="tiny muted">from scribe</span>':''}</td><td style="text-align:right"><button class="btn sm" onclick="S.rounds.mc.splice(S.rounds.mc.indexOf(S.rounds.mc.filter(x=>x.act==='Start')[${i}]),1);render()">Remove</button></td></tr>`).join('');
-    return `<section class="card"><div class="hd"><h3>Medicine</h3><div class="row" style="gap:8px">${mc.length?chip(mc.length+' pending','c-blue'):''}<button class="btn sm" onclick="medChartModal()">Full chart</button></div></div>
-      <div class="scroll"><table class="t"><thead><tr><th>Medicine</th><th>Freq.</th><th>Status</th><th></th></tr></thead><tbody>${rows}${news}</tbody></table></div>
+    return `<section class="card pr-med"><div class="hd"><h3>Medicine</h3><div class="row" style="gap:8px">${mc.length?chip(mc.length+' pending','c-blue'):''}<button class="btn sm" onclick="medChartModal()">Full chart</button></div></div>
+      <div class="scroll"><table class="t"><tbody>${rows}${news}</tbody></table></div>
       <div style="padding:12px 20px;border-top:1px solid var(--line-2);display:flex;gap:12px;flex-wrap:wrap;align-items:center"><button class="btn pri" onclick="psyRxOpen({ctx:'rounds'})">Add medicine</button>
-        <select class="input" id="prPlan" style="width:auto;min-height:38px" aria-label="Plan for" onchange="psyPlanOpen(this.value);this.value=''"><option value="">Plan for…</option>${['Clozapine','Ketamine','ECT','Long acting injection'].map(k=>`<option>${k}</option>`).join('')}</select>
-        <span class="tiny muted">Add medicine opens one window with the safety checks. Plan for creates the tasks a treatment needs (consent, blood tests).</span>
+        <button class="btn" onclick="prModalityOpen()">Add treatment modality</button>
         ${window.psyPx?(psyPx(p.id).plans||[]).slice(0,3).map(x=>`<span class="pr-ch">Plan: ${hesc(x.kind)} · ${hesc(String(x.at).split(',')[0])}</span>`).join(''):''}</div></section>`;
   }
 
+  /* Add Treatment Modality (was "Plan for…"): a window with the options; picking one opens its linked tasks (consent, blood tests) */
+  const MODS=[['Clozapine','Consent, CBC and monitoring'],['Ketamine','Consent and monitoring'],['ECT','Consent, fitness and monitoring'],['Long acting injection','Consent and schedule']];
+  window.prModalityOpen=function(){
+    openModal('<div class="mh"><h3>Add treatment modality</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div><div class="mb"><div class="small muted" style="margin-bottom:10px">Pick one. You then choose which linked tasks to create.</div><div class="pr-mod">'+MODS.map(m=>'<button onclick="closeModal();psyPlanOpen(\''+m[0]+'\')"><span>'+m[0]+'</span><span class="tiny muted" style="font-weight:400">'+m[1]+'</span></button>').join('')+'</div></div>');
+  };
   function bar(){
     const R=S.rounds,parts=[];
     if(R.mc.length)parts.push(R.mc.length+' medicine change'+(R.mc.length>1?'s':''));
     if(R.mon.length)parts.push(R.mon.length+' monitoring');
-    if(R.inv.length)parts.push(R.inv.length+' investigation'+(R.inv.length>1?'s':''));
+    if(R.inv.length)parts.push(R.inv.length+' lab order'+(R.inv.length>1?'s':''));
     if(R.adv.length)parts.push(R.adv.length+' instruction'+(R.adv.length>1?'s':''));
     if(R.ref.length)parts.push(R.ref.length+' referral'+(R.ref.length>1?'s':''));
     const n=roundCount();
     return `<div class="pr-bar"><span class="small">${n?`<b>${n} change${n>1?'s':''} this round:</b> ${parts.join(', ')}`:'<span class="muted">No changes this round yet</span>'}</span>
-      <span class="row" style="gap:8px"><button class="btn" onclick="prSave(true)">Save</button><button class="btn pri" onclick="prSave(false)">Save and next patient</button></span></div>`;
+      <span class="row" style="gap:12px"><span class="tiny muted">Your entries are kept as you go</span><button class="btn pri" onclick="prSave(false)">Save and next patient</button></span></div>`;
   }
+
+  /* ---- Lab Orders (was Investigations): the test from a drop-down, one line of advice that fills itself where the test needs it.
+     The advice lines are starter defaults for the team to confirm. ---- */
+  const LAB_ADV={'Serum lithium':'Sample 12 hours after the last dose, before the next dose','Valproate level':'Trough sample, before the morning dose','Fasting sugar':'After 8 hours of fasting','Lipid profile':'After 10 to 12 hours of fasting','Prolactin':'Morning sample, at least 2 hours after waking','HbA1c':'No fasting needed','Urine drug screen':'Fresh urine sample'};
+  const labAdv=n=>LAB_ADV[n]||'';
+  window.prLabPick=function(v){
+    const R=S.rounds;R.inv=R.inv||[];
+    if(v==='__other'){R.labOther=true;render();setTimeout(()=>{const i=document.getElementById('loOther');if(i)i.focus();},0);return;}
+    if(v&&!R.inv.some(y=>y[0]===v)){R.inv.push([v,R.invW||'Tomorrow morning',labAdv(v)]);}
+    render();
+  };
+  window.prLabOther=function(v){
+    v=String(v||'').trim();const R=S.rounds;if(!R.labOther)return;R.labOther=false;
+    if(v&&!R.inv.some(y=>y[0]===v)){R.inv=R.inv||[];R.inv.push([v,R.invW||'Tomorrow morning','']);}
+    render();
+  };
+  window.prLabAdv=function(i,v){const R=S.rounds;if(R.inv&&R.inv[i])R.inv[i][2]=v;};
+  const __rm=roundMon;
+  roundMon=function(){
+    if(!psy())return __rm.apply(this,arguments);
+    const R=S.rounds;R.mon=R.mon||[];R.inv=R.inv||[];
+    R.inv.forEach(c=>{if(c[2]===undefined)c[2]=labAdv(c[0]);}); /* tests added by a treatment plan get the same advice */
+    const tot=R.inv.length+R.mon.length,taken=new Set(R.inv.map(c=>c[0]));
+    return `<section class="card"><div class="hd"><h3>Monitoring</h3>${tot?chip(tot+' pending','c-blue'):''}</div>
+    <div class="mon-add-top"><div class="lbl" style="margin-bottom:6px">Add monitoring</div><div class="mon-cascade"><button type="button" id="monCascadeToggle" class="input mon-cascade-toggle" aria-haspopup="true" aria-expanded="false" onclick="monToggleMenu()">Choose parameter and frequency <span>▾</span></button><div id="monCascadeMenu" class="mon-cascade-menu" hidden><div class="mon-param-list">${MON_PARAMS.map((m,i)=>`<button type="button" class="mon-param-option ${i===0?'on':''}" onmouseenter="monShowFreq(${i})" onclick="monShowFreq(${i})">${m[0]} <span>›</span></button>`).join('')}</div><div id="monFreqList" class="mon-freq-list"></div></div></div></div>
+    <div class="pr-lab" style="padding:12px 20px;border-top:1px solid var(--line-2)">
+      <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><div class="lbl">Lab orders</div>
+        <span class="row" style="gap:6px"><span class="tiny muted">Collect</span><select class="input" style="width:auto;min-height:30px;padding:3px 8px" aria-label="Collect" onchange="S.rounds.invW=this.value">${INV_WHEN.map(w=>`<option ${(R.invW||'Tomorrow morning')===w?'selected':''}>${w}</option>`).join('')}</select></span></div>
+      <select class="input" aria-label="Add a lab order" onchange="prLabPick(this.value)"><option value="">Choose a test…</option>${INV_LIST.filter(x=>!taken.has(x)).map(x=>`<option>${x}</option>`).join('')}<option value="__other">Other test…</option></select>
+      ${R.labOther?`<input class="input" id="loOther" placeholder="Type the test, then press Enter" onkeydown="if(event.key==='Enter')prLabOther(this.value)" onblur="prLabOther(this.value)">`:''}
+      ${R.inv.map((c,i)=>`<div class="pr-lo"><span style="font-weight:600">${hesc(c[0])}</span><span class="tiny muted">${hesc(c[1])}</span><input class="input" aria-label="Advice for ${hesc(c[0])}" placeholder="Advice (optional)" value="${hesc(c[2]||'')}" oninput="prLabAdv(${i},this.value)"><button class="x" aria-label="Remove" onclick="S.rounds.inv.splice(${i},1);render()">×</button></div>`).join('')}
+    </div>
+    ${R.mon.length?`<div style="padding:4px 20px 16px;display:flex;flex-direction:column;gap:8px"><div class="lbl">Pending</div>${R.mon.map((c,i)=>`<div class="box row">${chip('Monitor','c-green')}<span class="grow small">${c.act==='Stop'?'Stop monitoring '+c.p:c.p+': '+monLabel(c.f)}</span><button class="x" aria-label="Remove" onclick="S.rounds.mon.splice(${i},1);render()">×</button></div>`).join('')}</div>`:''}
+  </section>`;
+  };
+  /* the advice travels with the lab order into the nursing instruction */
+  const __cr0=confirmRound;
+  confirmRound=function(){
+    if(psy()){const R=S.rounds;R.inv=(R.inv||[]).map(c=>[c[0],c[1]+(c[2]?' · '+c[2]:'')]);}
+    return __cr0.apply(this,arguments);
+  };
+
+  /* ---- Referral saves by itself: pick where, write the reason, it is added (no Add referral button) ---- */
+  window.prRefAuto=function(){const d=document.getElementById('refChoice'),r=document.getElementById('refFreeReason');if(d&&r&&d.value&&r.value.trim())refAddChoice();};
+  const __rr=roundRef;
+  roundRef=function(){
+    const h=__rr.apply(this,arguments);if(!psy())return h;
+    return h.replace('<select class="input" id="refChoice">','<select class="input" id="refChoice" onchange="prRefAuto()">')
+      .replace('<textarea class="input" id="refFreeReason" rows="2" placeholder="Write the reason for this referral">','<textarea class="input" id="refFreeReason" rows="2" placeholder="Write the reason for this referral" onchange="prRefAuto()">')
+      .replace(/<div class="row" style="justify-content:flex-end"><button class="btn sm pri" onclick="refAddChoice\(\)">Add referral<\/button><\/div>/,'');
+  };
 
   function page(p){
     const R=S.rounds,WP=WARDS[R.ward],RI=R.idx[R.ward];
@@ -167,7 +237,7 @@
       <aside class="card pr-queue" aria-label="Ward order" style="padding:10px"><div style="padding:4px 8px 8px"><div class="lbl">Ward order</div><div class="ebar" style="margin-top:6px"><i style="width:${Math.round(seenN/WP.length*100)}%"></i></div></div>${q}</aside>
       <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
         <section class="card pad"><div class="pr-head">${av(p.ini,52,p.risk?'c-amber':'c-blue')}<div class="grow" style="min-width:240px"><div class="row" style="gap:10px;align-items:baseline"><h2>${hesc(p.name)}</h2><span class="muted">${(window.psyAgeSex&&psyAgeSex(p))?psyAgeSex(p)+' · ':''}${(()=>{try{const u=p.uhid||ptIdentity(p).uhid;return u?'UHID '+hesc(u)+' · ':''}catch(e){return ''}})()}${hesc(p.room)} · Day ${p.day}</span></div>
-          <div class="pr-chips"><span class="pr-ch">${hesc(p.dx||c.dx||'')}</span>${(c.team||{}).psych?`<span class="pr-ch">${hesc(c.team.psych)}</span>`:''}</div>${window.psySafety?`<div style="margin-top:8px">${psySafety(p.id)}</div>`:''}</div>
+          <div class="pr-chips"><span class="pr-ch">${hesc(p.dx||c.dx||'')}</span></div>${window.psySafety?`<div style="margin-top:8px">${psySafety(p.id)}</div>`:''}</div>
           <div class="row" style="gap:8px"><a href="#/patient/${p.id}/overview" class="small" style="font-weight:600" onclick="S.backToRounds=true">Open full record</a><button class="btn sm" ${RI===0?'disabled':''} aria-label="Previous patient" onclick="prSwitch(${RI-1})">‹</button><button class="btn sm" ${RI>=WP.length-1?'disabled':''} aria-label="Next patient" onclick="prSwitch(${RI+1})">›</button></div></div>
           ${infoStrip(p)}</section>
         <div class="pr-two">${sinceCard(p)}${noteCard(p)}</div>

@@ -39,6 +39,9 @@
       const dd=document.querySelector('#side .sgdd');
       /* Clinical documentation is not a place of its own: each patient's documents are in the patient's Forms to print tab */
       if(dd)dd.querySelectorAll('button[aria-label^="Clinical documentation"]').forEach(b=>b.remove());
+      /* the Escalation chain page is gone for the psychiatrist (team review, 5 Nov): Mark seen, Approve and Review treatment on the dashboard cover it.
+         An audit log for the floor lead and admin will be built separately. */
+      if(dd)dd.querySelectorAll('button[aria-label^="Alerts"]').forEach(b=>b.remove());
       if(dd&&!dd.querySelector('[data-rounds]')){
         const onR=/^#\/rounds/.test(location.hash||'');
         const b=document.createElement('button');b.dataset.rounds='1';b.title='Rounds';b.setAttribute('aria-label','Rounds');b.setAttribute('onclick',"go('#/rounds')");

@@ -6,7 +6,7 @@ const __sfClose=closeModal;
 closeModal=function(){if(__sfRec&&__sfRec.state==='recording'){__sfRec._cancel=true;__sfRec.stop();}__sfClose();};
 async function scribeForm(o){
   if(!navigator.mediaDevices||!window.MediaRecorder){toast('This browser cannot record. Fill the form by hand.');return;}
-  if(!waCfg().token){waCfgModal();toast('Paste the connection token once, then try again');return;}
+  
   let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});}
   catch(e){toast('Microphone blocked. Allow the microphone for this site, or fill the form by hand.');return;}
   const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(t=>MediaRecorder.isTypeSupported(t))||'';
@@ -26,7 +26,7 @@ async function scribeForm(o){
     try{
       const fd=new FormData();fd.append('audio',blob,'recording.'+(blob.type.includes('mp4')?'mp4':'webm'));
       fd.append('schema',JSON.stringify({form:o.form,context:o.context,fields:o.fields}));
-      const c=waCfg(),r=await fetch(c.url+'/scribe',{method:'POST',headers:{'X-Bridge-Token':c.token},body:fd,signal:AbortSignal.timeout(90000)});
+      const c=waCfg(),r=await fetch(c.url+'/scribe',{method:'POST',body:fd,signal:AbortSignal.timeout(90000)});
       const j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw new Error(j.error||'Scribe error '+r.status);
       __sfClose();const n=Object.keys(j.values).length;o.apply(j.values,j);
       toast(n?`Filled ${n} of ${o.fields.length} from the recording${j.unclear.length?'. Check: '+j.unclear.join('; '):''}. Review before saving.`:'Nothing in the recording matched this form. Fill it by hand.');

@@ -49,7 +49,9 @@
   const __en=eodNotes;
   eodNotes=function(){
     const h=__en.apply(this,arguments);if(!psy())return h;
-    return h.replace(/S\.eod\['([^']+)'\]\.saved=true;S\.eodI=0;/g,"S.eod['$1'].saved=true;psyNoteToProfile('$1');S.eodI=0;");
+    /* team review, 5 Nov: no "Skip for now". If you opened Daily notes you mean to fill it, so Save and next is the only way forward. */
+    return h.replace(/S\.eod\['([^']+)'\]\.saved=true;S\.eodI=0;/g,"S.eod['$1'].saved=true;psyNoteToProfile('$1');S.eodI=0;")
+      .replace(/<button class="btn sm"\s+(?:disabled\s+)?onclick="S\.eodI=\d+;render\(\)">Skip for now ›<\/button>/,'');
   };
 
   /* the Daily notes tab inside a patient's profile points to the all-patients page */

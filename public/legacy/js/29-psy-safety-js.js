@@ -51,8 +51,22 @@
     if(al&&al.list&&al.list.length)a=`<span class="c red" title="Recorded by ${hesc(al.by)}, ${hesc(al.at)}">Drug allergy: ${al.list.map(i=>hesc(i.drug)+(i.rx?' ('+hesc(i.rx)+')':'')).join(', ')}</span>`;
     const o='';
     const lvl=x.riskLevel||(p.risk?'High':'Low');
-    const r=`<span class="c ${lvl==='High'?'amber':''}" title="${x.riskLevel?'From the suicide / self-harm screen':'From the admission risk flag'}">Risk of harm: ${lvl}</span>`;
-    return `<div class="sf" aria-label="Patient safety">${a}<span class="c ${lg[0]}">${hesc(lg[1])}</span>${o}${r}</div>`;
+    /* team review, 5 Nov: a risk tag only when the risk is high; nothing for low or empty. Risk tags: self-harm, absconding, poor compliance, violence, sexual dysregulation. */
+    const r=lvl==='High'?`<span class="c amber" title="${x.riskLevel?'From the suicide / self-harm screen':'From the admission risk flag'}">Risk of harm: High</span>`:'';
+    const tg=(x.riskTags||[]).map(t=>`<span class="c red">${hesc(t)}</span>`).join('');
+    const addTag=`<button class="c" style="border:1px dashed var(--line);background:#fff;color:var(--muted)" title="Mark this patient as high risk for something" onclick="psyRiskTags('${pid}')">+ Risk tag</button>`;
+    return `<div class="sf" aria-label="Patient safety">${a}<span class="c ${lg[0]}">${hesc(lg[1])}</span>${o}${r}${tg}${addTag}</div>`;
+  };
+  const RISK_TAGS=['Self-harm','Absconding','Poor compliance','Violence','Sexual dysregulation'];
+  window.psyRiskTags=function(pid){
+    const x=pxOf(pid),cur=x.riskTags||[];
+    V3.modal('High risk tags · '+hesc(V3.pn(pid)),'Tick what this patient is at high risk of. The tags show in the patient header.',
+      RISK_TAGS.map((t,i)=>`<label class="row" style="gap:10px;margin:8px 0"><input type="checkbox" class="rkt" data-t="${hesc(t)}" ${cur.includes(t)?'checked':''}><b>High risk of ${hesc(t.toLowerCase())}</b></label>`).join(''),
+      `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="psyRiskTagsSave('${pid}')">Save</button>`);
+  };
+  window.psyRiskTagsSave=function(pid){
+    const tags=[...document.querySelectorAll('#modal .rkt:checked')].map(c=>c.dataset.t);
+    pxOf(pid).riskTags=tags;closeModal();render();toast(tags.length?'Risk tags saved: '+tags.join(', '):'Risk tags cleared');
   };
   window.psyObsReview=function(pid){const x=pxOf(pid);x.obsRev={by:signer(),time:atNow().split(', ').pop(),date:today()};render();toast('Observation level reviewed by '+signer());};
   window.psyAllergy=function(pid){
