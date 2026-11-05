@@ -124,6 +124,16 @@
     return out.length?out.join('')+labReports():h;
   };
 
+  /* Trello "remove these boxes": the four summary boxes (Therapy sessions, Notes this week, Family calls, Group sessions) are gone from Therapy and family for the psychiatrist */
+  const __pth=pTherapy;
+  pTherapy=function(){
+    let h=__pth.apply(this,arguments);if(!psy())return h;
+    const a=h.indexOf('<div class="grid4">');if(a<0)return h;
+    let depth=0,end=-1;const re=/<div\b|<\/div>/g;re.lastIndex=a;let m;
+    while((m=re.exec(h))){depth+=m[0]==='</div>'?-1:1;if(depth===0){end=m.index+m[0].length;break;}}
+    return end>a?h.slice(0,a)+h.slice(end):h;
+  };
+
   /* A signed history for a patient other than Neel is shown from what the record holds (the prototype stores no typed history). */
   function histFromRecord(){
     const p=ptFind(S.pid)||PTS.find(x=>x.id===S.pid)||{},id=(window.ptIdentity&&ptIdentity(p))||{},al=(window.psyPx&&psyPx(S.pid).allergy)||null;
