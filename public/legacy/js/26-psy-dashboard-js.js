@@ -75,6 +75,23 @@
   /* 5 Nov team review (Nikita and Anu): approving is one click, no "Approve this order?" window on top of the window.
      psyReview above stays for the floor lead, whose Check and approve button still asks first. */
   window.psyApprove=function(id){V3.countersign(id);};
+  /* the name used in the button: the alert's source (Vitals) or the medicine (Ondansetron) */
+  const itemName=i=>{
+    if(i.k==='order'){const m=String(i.txt).match(/^([A-Za-z][A-Za-z-]*(?:\s+[A-Za-z][A-Za-z-]*)*?)(?=\s+\d)/);return m?m[1]:String(i.txt).split(/\s+/)[0];}
+    const l=(i.lab&&i.lab[1])||'';return (l&&l!=='Urgent')?l:'Alert';
+  };
+  /* one tap: "Vitals done" marks that alert as dealt with (and acknowledges it); "Ondansetron done" approves that order. Both are written to Actions taken with name and time. */
+  window.psyItemDone=function(pid,ix){
+    const m=MAP[pid],i=m&&m.items[ix];if(!i)return;
+    const x=psyPx(pid);x.taken=x.taken||{};if(x.taken[i.key])return;
+    if(i.k==='order'&&!i.oid){toast('Could not find that order');return;}
+    const w=whoAt(),name=itemName(i);
+    x.taken[i.key]={by:w.by,at:w.at,note:name+' done'+(i.k==='order'?' (approved)':'')};
+    if(i.k==='alert'&&i.aid){const a=v3().alerts.find(y=>y.id===i.aid);if(a&&!a.ack)a.ack={by:V3.byMe(),role:S.role,t:V3.now(),note:name+' done'};}
+    V3.log(pid,S.role,'note',name+' done'+(i.k==='order'?' (approved)':'')+' · '+w.by);
+    if(i.k==='order'){V3.countersign(i.oid);return;}
+    render();toast(name+' done, recorded by '+w.by);
+  };
   window.psyDtSet=function(f){S.dtF=f;render();};
   /* patient line under the name: age and sex, then room. No diagnosis, no UHID, no day count, no dates (Nikita and Anu, 5 Nov) */
   const sub=p=>[(window.psyAgeSex?psyAgeSex(p):''),p.room].filter(Boolean).join(' · ');
@@ -165,7 +182,7 @@
     const items=[];
     /* the word "Alert" is not repeated on every row (Nikita, 5 Nov): the type is where the alert came from, e.g. Vitals */
     DT.alerts(p).forEach(i=>items.push({k:'alert',aid:((i.btn&&i.btn[1]||'').match(/'([^']+)'/)||[])[1],lab:['red',(i.due&&i.due!=='Now')?i.due:'Urgent'],txt:i.txt.replace(/^Alert:\s*/,''),due:'',btn:i.btn&&['Mark seen',i.btn[1],false]}));
-    DT.orders(p).forEach(i=>{const id=(i.btn[1].match(/'([^']+)'/)||[])[1];items.push({k:'order',lab:['blue','Approve'],txt:i.txt.replace(/^Countersign:\s*/,''),due:(window.psyOrderLeft&&psyOrderLeft(id))||i.due,btn:['Approve',`psyApprove('${id}')`,false]});});
+    DT.orders(p).forEach(i=>{const id=(i.btn[1].match(/'([^']+)'/)||[])[1];items.push({k:'order',oid:id,lab:['blue','Approve'],txt:i.txt.replace(/^Countersign:\s*/,''),due:(window.psyOrderLeft&&psyOrderLeft(id))||i.due,btn:['Approve',`psyApprove('${id}')`,false]});});
     DT.tasks(p,T).forEach(i=>{
       const sign=/discharge summary/i.test(i.txt),late=!!i.overdue;
       items.push({k:late?'late':'task',lab:late?['amber','Late']:sign?['grey','To sign']:['grey','Today'],txt:i.txt,due:i.due,
@@ -173,7 +190,10 @@
     });
     if(window.psyExtraItems)window.psyExtraItems(p).forEach(i=>items.push(i)); /* results to review, daily observation review */
     const act=items.filter(i=>i.lab[1]!=='Today'); /* routine "Today" items are not shown on the dashboard any more */
-    act.forEach(i=>{i.key=i.k+':'+i.txt;});
+    act.forEach((i,ix)=>{i.key=i.k+':'+i.txt;
+      /* Take Action lists "Vitals done" / "Ondansetron done" (no Mark seen); other items keep their own button (Open, Do it now, Review and sign) */
+      if(i.k==='alert'||i.k==='order')i.btn=[itemName(i)+' done',"psyItemDone('"+p.id+"',"+ix+")",false];
+    });
     const tk=(window.psyPx&&psyPx(p.id).taken)||{},rem=act.filter(i=>!tk[i.key]),doneL=act.filter(i=>tk[i.key]);
     const allTaken=act.length>0&&!rem.length,view=rem.length?rem:act; /* chips, colour and order follow what is still open */
     const has=k=>view.some(i=>i.k===k),isNew=p.day<=1;
@@ -190,7 +210,7 @@
     const detail=i=>tk[i.key]?`<div class="pd-d done"><i class="pd-dot ok"></i><span>${hesc(i.txt)}</span></div>`:`<div class="pd-d"><i class="pd-dot ${i.lab[0]}"></i><span>${hesc(i.txt)}${i.due?`<span class="tiny muted"> · ${hesc(i.due)}</span>`:''}</span></div>`;
     const did=[];
     act.forEach(i=>{const t=tk[i.key];if(t)did.push(`<div class="pd-d done"><i class="pd-dot ok"></i><span>${hesc(t.note||'Action taken')}<span class="tiny"> · ${hesc(t.by||'')} · ${hesc(t.at||'')}</span></span></div>`);});
-    v3().alerts.filter(a=>a.pid===p.id&&a.ack&&!a.closed&&!a.seen).forEach(a=>did.push(`<div class="pd-d done"><i class="pd-dot ok"></i><span>Acknowledged<span class="tiny"> · ${hesc(a.ack.by||'')}${a.ack.role&&V3.roleName&&V3.roleName[a.ack.role]?' ('+hesc(V3.roleName[a.ack.role])+')':''} · ${hesc(V3.hm(a.ack.t))}</span></span></div>`));
+    v3().alerts.filter(a=>a.pid===p.id&&a.ack&&!a.closed&&!a.seen).forEach(a=>did.push(`<div class="pd-d done"><i class="pd-dot ok"></i><span>${hesc(a.ack.note||'Acknowledged')}<span class="tiny"> · ${hesc(a.ack.by||'')}${a.ack.role&&V3.roleName&&V3.roleName[a.ack.role]?' ('+hesc(V3.roleName[a.ack.role])+')':''} · ${hesc(V3.hm(a.ack.t))}</span></span></div>`));
     const html=act.length?`<tr class="${allTaken?'r-done':(edge?'r-'+edge:'')}" data-dt="${hesc((p.name+' '+p.room).toLowerCase())}" data-need="${has('alert')||has('order')?1:0}" data-new="${isNew?1:0}" data-late="${has('late')?1:0}">
       <td><span class="pd-ty ${top[0]}">${hesc(top[1])}</span></td>
       <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,38,has('alert')?'c-red':'c-blue')}<span><span class="pd-nm"><b>${hesc(p.name)}</b>${p.risk?'<span class="pd-tag amber">High risk</span>':''}</span><span class="pd-sub">${hesc(sub(p))}</span></span></button>${isNew?`<div class="pd-tags" style="margin-left:50px"><span class="pd-tag blue">New admission</span></div>`:''}</td>

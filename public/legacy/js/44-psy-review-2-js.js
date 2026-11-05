@@ -293,8 +293,8 @@
   window.psyWkInv=function(name,on){const w=wkData();w.inv=(w.inv||[]).filter(i=>i!==name);if(on)w.inv.push(name);psyWk('inv',w.inv);};
   window.psyWkView=function(v){S.wkView=v;render();};
   function workupCard(isPsyUser){
-    const w=wkData(),v=S.wkView==='read'?'read':'form',full=!!S.admFull;
-    const seg=`<div class="seg" style="align-self:flex-start;min-width:240px"><button class="${v==='form'?'on':''}" onclick="psyWkView('form')">Fill form</button><button class="${v==='read'?'on':''}" onclick="psyWkView('read')">Read view</button></div>`;
+    const w=wkData(),v=S.wkView==='form'?'form':'read',full=!!S.admFull;
+    const seg=`<div class="seg" style="align-self:flex-start;min-width:240px"><button class="${v==='read'?'on':''}" onclick="psyWkView('read')">Read view</button><button class="${v==='form'?'on':''}" onclick="psyWkView('form')">Fill form</button></div>`;
     const status=w.edited?`<span id="wkEdited" class="small muted">Edited by ${hesc(w.by)}, ${hesc(w.at)}</span>`:w.signed?`<span id="wkEdited" class="small" style="color:#067647;font-weight:600">Signed ${hesc((w.at||'').split(',')[0].replace(/ 20\d\d/,''))} · ${hesc(w.by)}</span>`:`<span id="wkEdited" class="small muted">Not filled in yet</span>`;
     /* treatment chart: the table is shared with the RMO's screen */
     const tt=document.createElement('template');tt.innerHTML=(typeof wkTreatment==='function')?wkTreatment():'';
@@ -420,8 +420,8 @@
   /* capacity assessment: the same Fill form / Read view layout as the detailed history */
   const CAPREAD=[['Purpose','Admission'],['Advance directive','Absent · NR: Ananya Bose, sister'],['Obvious lack of capacity','No'],['1A Oriented · 1B Informed · 1C Follows commands · 1D Acknowledges illness','Yes · Yes · Yes · No'],['2A Agrees to treatment · 2C Explains refusal','No · No'],['3A Communicates decision','Yes'],['Conclusion','4B · Needs 100% support from nominated representative'],['Assessed by','Dr. Aanya Sharma · 18 Oct, 1:30 pm · NR signed']];
   function capCard(){
-    const v=S.capView==='read'?'read':'form',full=!!S.admFull;
-    const seg=`<div class="seg" style="align-self:flex-start;min-width:240px"><button class="${v==='form'?'on':''}" onclick="S.capView='form';render()">Fill form</button><button class="${v==='read'?'on':''}" onclick="S.capView='read';render()">Read view</button></div>`;
+    const v=S.capView==='form'?'form':'read',full=!!S.admFull;
+    const seg=`<div class="seg" style="align-self:flex-start;min-width:240px"><button class="${v==='read'?'on':''}" onclick="S.capView='read';render()">Read view</button><button class="${v==='form'?'on':''}" onclick="S.capView='form';render()">Fill form</button></div>`;
     const body=v==='read'?`<div class="grid2">${CAPREAD.map(f=>`<div class="box small"><div class="lbl">${f[0]}</div><div style="margin-top:4px;font-weight:600">${f[1]}</div></div>`).join('')}</div>`
       :`${capForm(true)}<div class="row" style="justify-content:flex-end;gap:8px"><button class="btn" onclick="toast('Saved as draft')">Save draft</button><button class="btn pri" onclick="toast('Capacity assessment signed by '+signer())">Review and sign</button></div>`;
     return `<section class="card ${full?'adm-full':''}" id="capCard"><div class="hd"><div><h3>Capacity assessment</h3><div class="small muted" style="margin-top:4px">MHA 2017 capacity assessment for treatment decisions including admission</div></div>
@@ -455,7 +455,7 @@
     const seg=card.querySelector('.seg');
     if(seg){
       const n=document.createElement('div');n.className='seg';n.setAttribute('style','align-self:flex-start;min-width:460px');
-      n.innerHTML=`<button class="${hv==='form'?'on':''}" onclick="S.hview='form';render()">Fill form</button><button class="${hv==='ai'?'on':''}" onclick="S.hview='ai';render()">AI summary</button><button class="${hv==='aifill'?'on':''}" onclick="S.hview='aifill';render()">AI-filled form</button><button class="${hv==='read'?'on':''}" onclick="S.hview='read';render()">Read view</button>`;
+      n.innerHTML=`<button class="${hv==='read'?'on':''}" onclick="S.hview='read';render()">Read view</button><button class="${hv==='form'?'on':''}" onclick="S.hview='form';render()">Fill form</button><button class="${hv==='ai'?'on':''}" onclick="S.hview='ai';render()">AI summary</button><button class="${hv==='aifill'?'on':''}" onclick="S.hview='aifill';render()">AI-filled form</button>`;
       seg.replaceWith(n);
       if(hv==='ai'){const nx=n.nextElementSibling;const tt=document.createElement('template');tt.innerHTML=aiSummary();if(nx)nx.replaceWith(tt.content);else n.after(tt.content);}
       if(hv==='aifill'){
