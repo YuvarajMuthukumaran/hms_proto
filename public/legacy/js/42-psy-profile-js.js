@@ -23,6 +23,7 @@
   .pp-sel{display:flex;flex-direction:column;gap:8px}
   .pp-sel label{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;cursor:pointer;font-size:14px}
   .pp-sel label.dis{opacity:.5;cursor:default}
+  .pp-r{display:flex;gap:8px;align-items:stretch}.pp-r label{flex:1;min-width:0}.pp-r .btn{align-self:center;white-space:nowrap}
   .pp-sel label b{font-weight:600}.pp-sel .tiny{display:block}
   .pp-all{border-color:var(--blue)!important;background:var(--blue-tint)}`;
   document.head.appendChild(css);
@@ -180,10 +181,15 @@
       if(ti>=0&&fi>=0){const t=STAY.splice(ti,1)[0];t[1]='Therapy Plans';STAY.splice(STAY.findIndex(x=>x[0]==='forms'),0,t);}
       /* Anu: merge Preferences for admin and Grievances into one tab, renamed Patient Experience */
       const gi=STAY.findIndex(x=>x[0]==='griev');if(gi>=0)STAY.splice(gi,1);
+      /* Anu (WhatsApp): the Orders tab also holds monitoring, vitals charting and plans such as ECT, so it is renamed Treatment Plan */
+      const oi=STAY.find(x=>x[0]==='orders');if(oi)oi[1]='Treatment Plan';
+      /* Forms to print tab removed (team: Print file replaces it) */
+      const fi2=STAY.findIndex(x=>x[0]==='forms');if(fi2>=0)STAY.splice(fi2,1);
       const pi=STAY.find(x=>x[0]==='prefs');if(pi)pi[1]='Patient Experience';
       STAY.__psyTabs=true;
     }
     if(psy()&&/^#\/patient\/[^/]+\/griev$/.test(location.hash||'')){location.replace(location.hash.replace(/\/griev$/,'/prefs'));return;}
+    if(psy()&&/^#\/patient\/[^/]+\/forms$/.test(location.hash||'')){location.replace(location.hash.replace(/\/forms$/,'/overview'));return;}
     const out=__r42.apply(this,arguments);
     if(psy())document.querySelectorAll('#view .lnk,#view button.tog').forEach(e=>{if(e.textContent.trim()==='Therapy and family')e.textContent='Therapy Plans';});
     return out;
@@ -264,7 +270,7 @@
       const done=items.filter(i=>ids.includes(i.form.id)&&i.submission);
       done.forEach(i=>add(g,{t:i.form.title,sub:'Filled '+(i.submission.submittedAt?new Date(i.submission.submittedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):''),n:1,
         html:()=>{const src=(window.CD_TEMPLATES&&CD_TEMPLATES[i.form.template])||{};return `<h2>${hesc(i.form.title)}</h2><style>${src.css||''}</style>${i.submission.html||''}`;}}));
-      ids.filter(id=>!done.some(i=>i.form.id===id)).forEach(id=>{const it=items.find(i=>i.form.id===id);if(it)add(g,{t:it.form.title,sub:'',n:0,html:()=>''});});
+      ids.filter(id=>!done.some(i=>i.form.id===id)).forEach(id=>{const it=items.find(i=>i.form.id===id);if(it)add(g,{t:it.form.title,sub:'',n:0,fill:it.entryKey,html:()=>''});});
     };
     const hd=histDoc();add('Admission',{t:'Detailed history',sub:hd.sub,n:hd.n,html:hd.html});
     formRows('Admission',G_ADM);
@@ -290,8 +296,9 @@
     let last='';
     const rows=d.map((x,i)=>{
       const head=x.g!==last?`<div class="lbl" style="margin:10px 2px 2px">${hesc(x.g)}</div>`:'';last=x.g;
-      return head+`<label class="${x.n?'':'dis'}"><input type="checkbox" class="ppc" data-i="${i}" ${x.n?'':'disabled'} onchange="psyPrintSync()"><span><b>${hesc(x.t)}</b><span class="tiny muted">${hesc(x.n?x.sub:'Not filled yet')}</span></span></label>`;}).join('');
-    openModal(`<div class="mh"><div><h3>Print file</h3><div class="tiny muted" style="margin-top:2px">Pick what to print. Only filled documents can be ticked; blank forms are never printed.</div></div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
+      /* the Forms to print tab is gone (team decision): a form that is not filled yet has a Fill in button here, so filling and printing live in one place */
+      return head+`<div class="pp-r"><label class="${x.n?'':'dis'}"><input type="checkbox" class="ppc" data-i="${i}" ${x.n?'':'disabled'} onchange="psyPrintSync()"><span><b>${hesc(x.t)}</b><span class="tiny muted">${hesc(x.n?x.sub:'Not filled yet')}</span></span></label>${x.fill?`<button class="btn sm" onclick="closeModal();psyDocOpen('${hesc(x.fill)}')">Fill in</button>`:''}</div>`;}).join('');
+    openModal(`<div class="mh"><div><h3>Print file</h3><div class="tiny muted" style="margin-top:2px">Pick what to print. Only filled documents can be ticked, never blank forms. A form that is not filled yet has a Fill in button.</div></div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
       <div class="mb" style="max-height:60vh;overflow:auto"><div class="pp-sel"><label class="pp-all"><input type="checkbox" id="ppAll" onchange="psyPrintAll(this.checked)"><span><b>Select all</b></span></label>${rows}</div></div>
       <div class="mf"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" id="ppGo" onclick="psyPrintRun()" disabled>Make PDF</button></div>`);
   };

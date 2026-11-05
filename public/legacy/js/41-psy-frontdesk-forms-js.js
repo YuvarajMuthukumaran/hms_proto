@@ -21,7 +21,7 @@
       const btn=it?`<button class="btn sm pri" onclick="psyDocOpen('${hesc(it.entryKey)}')">Open and edit</button>`:'<span class="tiny muted">No on-screen version yet</span>';
       return `<div class="li"><div class="grow"><div style="font-weight:600">${name}</div><div class="tiny muted">${sub}</div></div>${chip('Signed','c-green')}${btn}</div>`;
     }).join('');
-    const card=`<section class="card"><div class="hd"><div><h3>Admission forms</h3><div class="small muted" style="margin-top:4px">Open a form to edit it on screen, then generate the PDF.</div></div>${chip('Taken by front desk','c-grey')}</div>${rows}<div class="pad small muted">Taken in the admin portal on the tablet. Other consents are on Orders and consents.</div>`;
+    const card=`<section class="card"><div class="hd"><div><h3>Admission forms</h3><div class="small muted" style="margin-top:4px">Open a form to edit it on screen, then generate the PDF.</div></div>${chip('Taken by front desk','c-grey')}</div>${rows}<div class="pad small muted">Taken in the admin portal on the tablet. Other consents are on Treatment Plan.</div>`;
     return h.slice(0,a)+card+h.slice(b);
   };
 })();
