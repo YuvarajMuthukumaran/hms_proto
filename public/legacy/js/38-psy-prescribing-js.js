@@ -63,8 +63,8 @@
   function warnings(name){
     const b=baseOf(name).toLowerCase(),out=[];if(!b)return out;
     const al=px(S.pid).allergy;
-    if(!al)out.push(['','Allergies are not recorded for this patient yet. Record them in Orders before you prescribe.']);
-    else (al.list||[]).forEach(a=>{const x=String(a.drug||'').toLowerCase();if(x&&(b.includes(x)||x.includes(b)))out.push(['red','Allergy match: '+a.drug+(a.rx?' ('+a.rx+')':'')+'. This patient has a recorded allergy to this medicine.']);});
+    /* Anu (Trello, 4 Nov): the allergy warning comes only when the patient is allergic to something. "Not recorded yet" is no longer shown here. */
+    if(al)(al.list||[]).forEach(a=>{const x=String(a.drug||'').toLowerCase();if(x&&(b.includes(x)||x.includes(b)))out.push(['red','Allergy match: '+a.drug+(a.rx?' ('+a.rx+')':'')+'. This patient has a recorded allergy to this medicine.']);});
     const cur=S.meds.map(m=>m.name).concat(pending()),cls=classOf(name);
     cur.forEach(n=>{
       if(baseOf(n).toLowerCase()===b)out.push(['','Already prescribed: '+n+'. The same medicine twice.']);
