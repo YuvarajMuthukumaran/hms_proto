@@ -72,7 +72,7 @@
   window.psyEye=function(pid){
     const m=MAP[pid];if(!m)return;
     const body=`<div class="pd-det">${m.items.map(i=>{
-      const acts=(i.k==='alert'?`<button class="btn sm pri" onclick="psyOpenRounds('${pid}')">Review treatment</button>`:'')+(i.btn?`<button class="btn sm ${i.btn[2]?'pri':''}" onclick="closeModal();${i.btn[1]}">${i.btn[0]}</button>`:'');
+      const acts=(i.k==='alert'?`<button class="btn sm pri" onclick="closeModal();psyToChart('${pid}')">Review treatment</button>`:'')+(i.btn?`<button class="btn sm ${i.btn[2]?'pri':''}" onclick="closeModal();${i.btn[1]}">${i.btn[0]}</button>`:'');
       return `<div class="pd-di ${i.k==='alert'?'al':''}"><div class="pd-dh"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span>${i.due?`<span class="tiny">${hesc(i.due)}</span>`:''}</div><div class="pd-dt">${hesc(i.txt)}</div>${acts?`<div class="pd-da">${acts}</div>`:''}</div>`;}).join('')}</div>`;
     const foot=`<div class="mf"><button class="btn" onclick="closeModal();go('#/patient/${pid}/overview')">Open full record</button><button class="btn" onclick="psyOpenRounds('${pid}')">Open Rounds</button></div>`;
     openModal(`<div class="mh"><div class="pd-who2">${av(m.p.ini,44,m.items.some(i=>i.k==='alert')?'c-red':'c-blue')}<div><h3>${hesc(m.p.name)}</h3><div class="tiny muted">${hesc(m.p.dx||'')}${m.p.dx?' · ':''}Day ${m.p.day}</div></div></div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div><div class="mb">${body}</div>${foot}`);
@@ -102,7 +102,7 @@
   function build(p,T){
     const items=[];
     DT.alerts(p).forEach(i=>items.push({k:'alert',aid:((i.btn&&i.btn[1]||'').match(/'([^']+)'/)||[])[1],lab:['red','Alert'],txt:i.txt.replace(/^Alert:\s*/,''),due:i.due,btn:i.btn&&['Mark seen',i.btn[1],false]}));
-    DT.orders(p).forEach(i=>{const id=(i.btn[1].match(/'([^']+)'/)||[])[1];items.push({k:'order',lab:['blue','Approve'],txt:i.txt.replace(/^Countersign:\s*/,''),due:(window.psyOrderLeft&&psyOrderLeft(id))||i.due,btn:['Check and approve',`psyReview('${id}')`,false]});});
+    DT.orders(p).forEach(i=>{const id=(i.btn[1].match(/'([^']+)'/)||[])[1];items.push({k:'order',lab:['blue','Approve'],txt:i.txt.replace(/^Countersign:\s*/,''),due:(window.psyOrderLeft&&psyOrderLeft(id))||i.due,btn:['Approve',`psyReview('${id}')`,false]});});
     DT.tasks(p,T).forEach(i=>{
       const sign=/discharge summary/i.test(i.txt),late=!!i.overdue;
       items.push({k:late?'late':'task',lab:late?['amber','Late']:sign?['grey','To sign']:['grey','Today'],txt:i.txt,due:i.due,

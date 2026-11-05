@@ -101,6 +101,29 @@
   window.psyNotesPdf=function(){const p=ptFind(S.pid)||PTS.find(x=>x.id===S.pid);psyPdf('Daily and round notes',`<h2>Daily and round notes</h2>${notes().map(noteHtml).join('')||'<div>No notes yet.</div>'}`,p);};
 
   /* ---------- Print file ---------- */
+  /* ---------- Vitals and monitoring tab (Trello "Vitals and monitoring"): fewer charts, in this order ----------
+     1 Medicine chart (the nursing chart)  2 Vitals  3 other monitoring (blood sugar, intake and output ...)  4 Lab reports (names that open the PDF).
+     The nursing summary, the adherence-by-medicine table and the trend charts are gone. */
+  window.psyLabPdf=function(id){
+    const l=v3().labs.find(x=>x.id===id);if(!l)return;const f=V3.labFlag(l),p=ptFind(S.pid)||PTS.find(x=>x.id===S.pid);
+    psyPdf('Lab report · '+l.test,`<h2>${hesc(l.test)}</h2><table><tr><th>Collected</th><th>Result</th><th>Normal range</th><th>Flag</th></tr><tr><td>${hesc(V3.stamp(l.t))}</td><td><b>${hesc(String(l.val))}</b> ${hesc(l.unit||'')}</td><td>${hesc(String(l.lo))} to ${hesc(String(l.hi))}</td><td>${f==='crit'?'Critical':f==='abn'?(l.val<l.lo?'Low':'High'):'In range'}</td></tr></table>
+      <div style="margin-top:10px">${l.rev?'Reviewed by '+hesc(l.rev.by)+' · '+hesc(V3.stamp(l.rev.t)):'Not reviewed yet'}${l.pdf?'<br>Attached report file: '+hesc(l.pdf):''}${l.by?'<br>Entered by '+hesc(l.by):''}</div>`,p);
+  };
+  function labReports(){
+    const L=v3().labs.filter(l=>l.pid===S.pid).sort((a,b)=>b.t-a.t);
+    return `<section class="card"><div class="hd"><div><h3>Lab reports</h3><div class="small muted" style="margin-top:4px">Tap a report to open the full report as a PDF.</div></div></div>
+      ${L.length?L.map(l=>`<div class="li"><div class="grow"><div style="font-weight:600">${hesc(l.test)}</div><div class="tiny muted">${hesc(V3.stamp(l.t))}</div></div><button class="btn sm" onclick="psyLabPdf('${l.id}')">Open PDF</button></div>`).join(''):'<div class="pad small muted">No lab reports yet.</div>'}</section>`;
+  }
+  const __pv2=pVitals;
+  pVitals=function(){
+    const h=__pv2.apply(this,arguments);if(!psy())return h;
+    const t=document.createElement('template');t.innerHTML=h;
+    const kids=[...t.content.children],ttl=e=>((e.querySelector('h3')||e.querySelector('.lbl')||{}).textContent||'').trim();
+    const order=['Medicine chart','Vitals','Scores','Monitoring orders','Blood sugar monitoring','Other monitoring by nurses'];
+    const out=order.flatMap(n=>kids.filter(e=>ttl(e).startsWith(n)).map(e=>e.outerHTML));
+    return out.length?out.join('')+labReports():h;
+  };
+
   /* A signed history for a patient other than Neel is shown from what the record holds (the prototype stores no typed history). */
   function histFromRecord(){
     const p=ptFind(S.pid)||PTS.find(x=>x.id===S.pid)||{},id=(window.ptIdentity&&ptIdentity(p))||{},al=(window.psyPx&&psyPx(S.pid).allergy)||null;

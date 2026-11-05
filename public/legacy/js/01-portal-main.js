@@ -863,19 +863,24 @@ const WK_DUR=['3 days','7 days','14 days','30 days','Until review'];
 const WK_SLOTS={'1-0-1':['8 am','9 pm'],'0-0-1':['9 pm'],'1-0-0':['8 am'],'1-1-1':['8 am','2 pm','9 pm'],'SOS':['2 pm']};
 function wkTreatment(){
   const can=!isPsych()&&S.role!=='nurse',sent=S.wkSent||[],rx=S.wkRx||[],last=sent[sent.length-1],seenL=last&&(S.seen||{})[last.id];
-  const head=`<div class="row" style="justify-content:space-between;align-items:center;gap:8px"><span class="lbl">Treatment chart</span>${last?(seenL?chip('Seen by nursing · '+seenL.at,'c-green'):chip('Sent to nursing · '+last.at,'c-blue')):(can?chip('Goes to nursing','c-grey'):'')}</div>`;
+  const head=`<div class="row" style="justify-content:space-between;align-items:center;gap:8px"><span class="lbl">Treatment chart</span>${last?(seenL?chip('Seen by nursing · '+seenL.at,'c-green'):chip('Sent to nursing · '+last.at,'c-blue')):(can?chip('Added straight to the nursing chart','c-grey'):'')}</div>`;
   const srow=r=>{const sn=(S.seen||{})[r.id];return `<tr><td style="font-weight:600">${hesc(r.name)}</td><td>${hesc(r.freq)}</td><td>${hesc(r.when)}</td><td>${hesc(r.days)}</td><td>${sn?chip('Seen by nursing','c-green'):chip('Sent '+r.at,'c-blue')}<div class="tiny muted" style="margin-top:2px">${hesc(r.first)}</div></td><td></td></tr>`;};
   const prow=(r,i)=>`<tr><td style="font-weight:600">${hesc(r.name)}</td><td>${hesc(r.freq)}</td><td>${hesc(r.when)}</td><td>${hesc(r.days)}</td><td>${chip('Not sent yet','c-amber')}</td><td style="text-align:right"><button class="x" aria-label="Remove ${hesc(r.name)}" onclick="S.wkRx.splice(${i},1);render()">×</button></td></tr>`;
   const body=sent.map(srow).join('')+rx.map(prow).join('')||`<tr><td colspan="6" class="small muted">${can?'No medicines in the chart yet. Add the first one below.':'Not entered yet'}</td></tr>`;
   const sel=(id,label,opts,pick,st)=>`<select class="input" id="${id}" aria-label="${label}" style="${st||'width:auto'};min-height:34px">${opts}</select>`;
-  const add=can?`<div class="lbl" style="margin-top:14px">Add medicine</div><div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px">${sel('wkN','Medicine name',`<option value="">Choose medicine</option>${DRUGS.map(d=>`<option>${d}</option>`).join('')}`,0,'flex:1 1 180px;min-width:0;width:auto')}${sel('wkF','Frequency',FREQ.map((f,i)=>`<option ${i===1?'selected':''}>${f}</option>`).join(''))}${sel('wkW','When',MED_WHEN.map(o=>`<option>${o}</option>`).join(''))}${sel('wkD','Duration',WK_DUR.map((o,i)=>`<option ${i===1?'selected':''}>${o}</option>`).join(''))}<button class="btn sm" onclick="wkAdd()">Add</button></div><div id="wkEr" class="small" style="color:var(--red);display:none;margin-top:6px"></div><div class="row" style="justify-content:space-between;align-items:center;gap:8px;margin-top:12px"><span class="tiny muted">Sent medicines appear in the nursing Medicine chart at their dose times.</span><button class="btn pri" onclick="wkSend()">Send to nursing${rx.length?' ('+rx.length+')':''}</button></div>`:'';
+  const add=can?`<div class="lbl" style="margin-top:14px">Add medicine</div><div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px">${sel('wkN','Medicine name',`<option value="">Choose medicine</option>${DRUGS.map(d=>`<option>${d}</option>`).join('')}`,0,'flex:1 1 180px;min-width:0;width:auto')}${sel('wkF','Frequency',FREQ.map((f,i)=>`<option ${i===1?'selected':''}>${f}</option>`).join(''))}${sel('wkW','When',MED_WHEN.map(o=>`<option>${o}</option>`).join(''))}${sel('wkD','Duration',WK_DUR.map((o,i)=>`<option ${i===1?'selected':''}>${o}</option>`).join(''))}<button class="btn sm" onclick="wkAdd()">Add</button></div><div id="wkEr" class="small" style="color:var(--red);display:none;margin-top:6px"></div><div class="row" style="justify-content:space-between;align-items:center;gap:8px;margin-top:12px"><span class="tiny muted">A medicine you add goes straight into the nursing Medicine chart at its dose times.</span></div>`:'';
   return `<div class="box small" style="grid-column:1/-1">${head}<div class="scroll" style="margin-top:8px"><table class="t"><thead><tr><th>Medicine</th><th>Frequency</th><th>When</th><th>Duration</th><th>Status</th><th></th></tr></thead><tbody>${body}</tbody></table></div>${add}</div>`;
 }
 function wkErr(t){const e=$('wkEr');e.textContent=t;e.style.display='block';}
 function wkAdd(){
   const n=$('wkN').value;if(!n){wkErr('Choose a medicine first');return;}
-  S.wkRx=S.wkRx||[];if(S.wkRx.concat(S.wkSent||[]).some(r=>r.name===n)){wkErr(n+' is already in the chart');return;}
-  S.wkRx.push({name:n,freq:$('wkF').value,when:$('wkW').value,days:$('wkD').value});render();
+  S.wkRx=S.wkRx||[];if(S.wkRx.concat(S.wkSent||[]).some(r=>r.name===n)||S.meds.some(m=>m.name===n)){wkErr(n+' is already in the chart');return;}
+  const r={name:n,freq:$('wkF').value,when:$('wkW').value,days:$('wkD').value};
+  S.wkRx.push(r);
+  /* team review (Trello "Admission note"): no Send to nursing button. The medicine goes into the nursing Medicine chart (S.meds) at once, and to the nurses' dose times */
+  const w=whoAt(),day=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+  S.meds.push({name:r.name,freq:r.freq,time:r.when,range:day+' · '+r.days.toLowerCase(),by:w.by,at:w.at});
+  wkSend();
 }
 function wkSend(){
   const rx=S.wkRx||[];if(!rx.length){wkErr('Add at least one medicine first');return;}

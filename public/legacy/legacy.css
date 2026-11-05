@@ -291,10 +291,12 @@ button.mc{cursor:pointer}
 .mar4 .mtoday{background:#eef4ff}.mar4 thead .mtoday{color:#1849a9}
 /* bold line between two medicines, normal lines between the frequency rows of one medicine (Trello: nursing chart in Orders and consents) */
 .mar4 tr.mlast td{border-bottom:2px solid #667085}
+.mar4 tbody td.mmed{border-bottom:2px solid #667085;padding-bottom:14px}
+.mar4 tbody tr:not(.mlast) td:not(.mmed){border-bottom:1px solid var(--line-2)}
 .mar4 .mc{width:34px;height:30px;font-size:12.5px;border-radius:7px}.mar4 .mc span{font-size:8px;opacity:.75}
-.mar4 td.moffc{background:#f2f4f7}.mar4 td.moffc.mfirst{border-left:2px solid #f04438}.mar4 .moffm{background:#fffbfa}
+.mar4 td.moffc{background:#f2f4f7}/* no red line where a medicine was stopped (team review) */.mar4 .moffm{background:#fffbfa}
 .mm-n{font-weight:700;font-size:13.5px}.mm-f{font-size:12px;color:var(--muted,#667085);margin-top:1px}.mm-l{font-size:11.5px;color:var(--muted,#667085);margin-top:5px;line-height:1.35}.mm-on{color:#067647;font-weight:600}.mm-s{color:#b42318}
-.mleg{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}.mleg>span{display:inline-flex;align-items:center;gap:5px}.mleg .moff-key{display:inline-block;width:14px;height:14px;border-radius:3px;background:#f2f4f7;border-left:2px solid #f04438}
+.mleg{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}.mleg>span{display:inline-flex;align-items:center;gap:5px}.mleg .moff-key{display:inline-block;width:14px;height:14px;border-radius:3px;background:#f2f4f7;}
 .smt td{vertical-align:top}.smt td.when,.smt td:nth-child(2),.smt td:nth-child(4),.smt td:nth-child(6){white-space:nowrap}.smt td.why{min-width:160px}.smt td.doses{white-space:nowrap;line-height:1.5}
 .trhist{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px}
 .trhist summary{cursor:pointer}
