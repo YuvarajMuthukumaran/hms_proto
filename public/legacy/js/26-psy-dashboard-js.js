@@ -35,7 +35,8 @@
   .pd-tag{font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 9px}.pd-tag.amber{background:#fffaeb;color:#b54708}.pd-tag.blue{background:#eff8ff;color:#175cd3}
   .pd-d{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;line-height:1.4;padding:2px 0}
   .pd-d+.pd-d{margin-top:4px}
-  .pd-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:#98a2b3;margin-top:6px}.pd-dot.red{background:#e5484d}.pd-dot.amber{background:#f5a524}.pd-dot.blue{background:#3b82f6}
+  .pd-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:#98a2b3;margin-top:6px}.pd-dot.red{background:#e5484d}.pd-dot.amber{background:#f5a524}.pd-dot.blue{background:#3b82f6}.pd-dot.ok{background:#12b76a}.pd-d.done{color:#667085}.pd-d.done .tiny{color:#067647}
+  .pd-di.done{background:#f6fef9;border-color:#abefc6}
   .pd-chips{display:flex;gap:6px;flex-wrap:wrap}
   .pd-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:99px;padding:4px 11px 4px 9px;background:#f2f4f7;color:#475467;white-space:nowrap;border:1px solid rgba(16,24,40,.06)}
   .pd-chip::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
@@ -78,35 +79,53 @@
   /* the eye: that patient's items, each with its action */
   window.psyEye=function(pid){
     const m=MAP[pid];if(!m)return;
-    const body=`<div class="pd-det">${m.items.map(i=>{
-      /* Review treatment (opens the nursing chart) sits on every medical item: alerts, approvals and results to check. Anu: "please add review treatment also" on Approve. */
-      const rt=`<button class="btn sm ${i.k==='alert'?'pri':''}" onclick="closeModal();psyToChart('${pid}')">Review treatment</button>`,act=i.btn?`<button class="btn sm ${i.k==='order'?'pri':''}" onclick="closeModal();${i.btn[1]}">${i.btn[0]}</button>`:'';
+    const tk=(window.psyPx&&psyPx(pid).taken)||{};
+    const body=`<div class="pd-det">${m.items.map((i,ix)=>{
+      if(tk[i.key]){const t=tk[i.key];return `<div class="pd-di done"><div class="pd-dh"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span><span class="tiny" style="color:#067647;font-weight:600">Action taken ✓</span></div><div class="pd-dt">${hesc(i.txt)}</div><div class="tiny muted">${hesc(t.by||'')} · ${hesc(t.at||'')}${t.note?' · '+hesc(t.note):''}</div></div>`;}
+      /* after any action on one item the window opens again with the rest (Trello "alert page": marking one task must still show the second) */
+      const back=`S.__eyePid='${pid}';closeModal();`;
+      /* Review treatment (opens the nursing chart) sits on every medical item: alerts, approvals and results to check. */
+      const rt=`<button class="btn sm ${i.k==='alert'?'pri':''}" onclick="closeModal();psyToChart('${pid}')">Review treatment</button>`,act=i.btn?`<button class="btn sm ${i.k==='order'?'pri':''}" onclick="${back}${i.btn[1]}">${i.btn[0]}</button>`:'';
       const medical=i.k==='alert'||i.k==='order'||/result/i.test(i.lab[1]);
-      const acts=i.k==='alert'?rt+act:(medical?act+rt:act);
-      return `<div class="pd-di ${i.k==='alert'?'al':''}"><div class="pd-dh"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span>${i.due?`<span class="tiny">${hesc(i.due)}</span>`:''}</div><div class="pd-dt">${hesc(i.txt)}</div>${acts?`<div class="pd-da">${acts}</div>`:''}</div>`;}).join('')}</div>`;
+      const taken=`<button class="btn sm" onclick="closeModal();psyActionTaken('${pid}',${ix})">Action taken</button>`;
+      const acts=(i.k==='alert'?rt+act:(medical?act+rt:act))+taken;
+      return `<div class="pd-di ${i.k==='alert'?'al':''}"><div class="pd-dh"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span>${i.due?`<span class="tiny">${hesc(i.due)}</span>`:''}</div><div class="pd-dt">${hesc(i.txt)}</div><div class="pd-da">${acts}</div></div>`;}).join('')}</div>`;
     const foot=`<div class="mf"><button class="btn" onclick="closeModal();go('#/patient/${pid}/overview')">Open full record</button><button class="btn" onclick="psyOpenRounds('${pid}')">Open Rounds</button></div>`;
     openModal(`<div class="mh"><div class="pd-who2">${av(m.p.ini,44,m.items.some(i=>i.k==='alert')?'c-red':'c-blue')}<div><h3>${hesc(m.p.name)}</h3><div class="tiny muted">${hesc(m.p.dx||'')}${m.p.dx?' · ':''}Day ${m.p.day}</div></div></div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div><div class="mb">${body}</div>${foot}`);
     $('modal').style.width='min(620px,100%)';
   };
 
-  /* Action Taken: the doctor says what was done for this patient's open items. It is logged in the patient's Events log with name and time,
-     open alerts are marked acknowledged, and the row shows "Action taken" until something new comes up. */
-  window.psyActionTaken=function(pid){
+  /* Action Taken: tick what you did (one item or several), say what you did. It is logged in the patient events log with name and time, open alerts are
+     marked acknowledged, and the ticked items show "Action taken". The other items stay on the dashboard. */
+  window.psyActionTaken=function(pid,only){
     const m=MAP[pid];if(!m)return;
-    V3.modal('Action taken · '+hesc(m.p.name),'What was done for these items',
-      `<div class="pd-det">${m.items.map(i=>`<div class="pd-di"><div class="pd-dh"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span></div><div class="pd-dt">${hesc(i.txt)}</div></div>`).join('')}</div>
-       <label class="field" style="margin-top:8px"><span class="lbl">What you did (required)</span><textarea class="input" id="atN" rows="3" placeholder="e.g. Reviewed in the ward, repeat vitals in 30 minutes, lorazepam given as ordered"></textarea><div id="atE" class="small" style="color:var(--red);display:none">Write what you did first</div></label>`,
+    const tk=(window.psyPx&&psyPx(pid).taken)||{},open=m.items.map((i,ix)=>({i,ix})).filter(o=>!tk[o.i.key]);
+    if(!open.length){toast('Everything is already marked');return;}
+    const pre=only!=null?only:open[0].ix;
+    V3.modal('Action taken · '+hesc(m.p.name),'Tick what you did. The other items stay on the dashboard.',
+      `<div class="pd-det">${open.map(o=>`<label class="pd-di" style="flex-direction:row;align-items:flex-start;gap:12px;cursor:pointer"><input type="checkbox" class="atc" data-i="${o.ix}" ${o.ix===pre?'checked':''} style="margin-top:4px"><div style="flex:1"><div class="pd-dh"><span class="pd-chip ${o.i.lab[0]}">${hesc(o.i.lab[1])}</span></div><div class="pd-dt">${hesc(o.i.txt)}</div></div></label>`).join('')}</div>
+       <label class="field" style="margin-top:8px"><span class="lbl">What you did (required)</span><textarea class="input" id="atN" rows="3" placeholder="e.g. Reviewed in the ward, repeat vitals in 30 minutes, lorazepam given as ordered"></textarea><div id="atE" class="small" style="color:var(--red);display:none">Tick at least one item and write what you did</div></label>`,
       `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="psyActionSave('${pid}')">Record action taken</button>`);
   };
   window.psyActionSave=function(pid){
-    const m=MAP[pid],n=(($('atN')||{}).value||'').trim();if(!m)return;if(!n){$('atE').style.display='block';return;}
+    const m=MAP[pid],n=(($('atN')||{}).value||'').trim(),ticked=[...document.querySelectorAll('#modal .atc:checked')].map(c=>m&&m.items[+c.dataset.i]).filter(Boolean);
+    if(!m)return;if(!n||!ticked.length){$('atE').style.display='block';return;}
     const w=whoAt(),x=psyPx(pid);x.taken=x.taken||{};
-    m.items.forEach(i=>{
+    ticked.forEach(i=>{
       x.taken[i.key]={by:w.by,at:w.at,note:n};
       if(i.k==='alert'&&i.aid){const a=v3().alerts.find(y=>y.id===i.aid);if(a&&!a.ack)a.ack={by:V3.byMe(),role:S.role,t:V3.now()};}
     });
     V3.log(pid,S.role,'note','Action taken: '+n+' · '+w.by);
+    if(m.items.some(i=>!x.taken[i.key]))S.__eyePid=pid; /* the rest of this patient items stay in view */
     closeModal();render();toast('Action taken recorded for '+m.p.name+' by '+w.by);
+  };
+  /* reopen the patient window after an action, so the second task is still there */
+  const __rdash=render;
+  render=function(){
+    const out=__rdash.apply(this,arguments);
+    const pid=S.__eyePid;
+    if(pid){S.__eyePid=null;setTimeout(()=>{const m=MAP[pid],tk=(window.psyPx&&psyPx(pid).taken)||{};if(m&&m.items.some(i=>!tk[i.key])&&!document.getElementById('scrim').classList.contains('show'))psyEye(pid);},80);}
+    return out;
   };
 
   function build(p,T){
@@ -120,18 +139,22 @@
     });
     if(window.psyExtraItems)window.psyExtraItems(p).forEach(i=>items.push(i)); /* results to review, daily observation review */
     const act=items.filter(i=>i.lab[1]!=='Today'); /* routine "Today" items are not shown on the dashboard any more */
-    const has=k=>act.some(i=>i.k===k),isNew=p.day<=1;
-    const rank=has('alert')?0:(has('order')||has('late'))?1:2;
-    const edge=has('alert')?'red':(act.some(i=>i.lab[0]==='amber'))?'amber':has('order')?'blue':'';
-    const types=[];act.forEach(i=>{if(!types.some(t=>t[1]===i.lab[1]))types.push(i.lab);});
     act.forEach(i=>{i.key=i.k+':'+i.txt;});
+    const tk=(window.psyPx&&psyPx(p.id).taken)||{},rem=act.filter(i=>!tk[i.key]),doneL=act.filter(i=>tk[i.key]);
+    const allTaken=act.length>0&&!rem.length,view=rem.length?rem:act; /* chips, colour and order follow what is still open */
+    const has=k=>view.some(i=>i.k===k),isNew=p.day<=1;
+    const rank=allTaken?3:has('alert')?0:(has('order')||has('late'))?1:2;
+    const edge=has('alert')?'red':(view.some(i=>i.lab[0]==='amber'))?'amber':has('order')?'blue':'';
+    const types=[];view.forEach(i=>{if(!types.some(t=>t[1]===i.lab[1]))types.push(i.lab);});
     MAP[p.id]={p,items:act};
-    const tk=(window.psyPx&&psyPx(p.id).taken)||{},allTaken=act.length>0&&act.every(i=>tk[i.key]),last=allTaken?tk[act[act.length-1].key]:null;
+    const last=allTaken?tk[act[act.length-1].key]:null;
+    const lines=rem.concat(doneL),shown=lines.slice(0,3);
+    const detail=i=>tk[i.key]?`<div class="pd-d done"><i class="pd-dot ok"></i><span>✓ ${hesc(i.txt)}<span class="tiny"> · action taken by ${hesc(tk[i.key].by||'')}</span></span></div>`:`<div class="pd-d"><i class="pd-dot ${i.lab[0]}"></i><span>${hesc(i.txt)}${i.due?`<span class="tiny muted"> · ${hesc(i.due)}</span>`:''}</span></div>`;
     const html=act.length?`<tr class="${allTaken?'r-done':(edge?'r-'+edge:'')}" data-dt="${hesc((p.name+' '+p.room).toLowerCase())}" data-need="${has('alert')||has('order')?1:0}" data-new="${isNew?1:0}" data-late="${has('late')?1:0}">
       <td><div class="pd-chips">${types.map(t=>`<span class="pd-chip ${t[0]}">${hesc(t[1])}</span>`).join('')}</div></td>
       <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,38,has('alert')?'c-red':'c-blue')}<span><b>${hesc(p.name)}</b><span class="pd-sub">${hesc([(window.psyAgeSex?psyAgeSex(p):''),'Day '+p.day].filter(Boolean).join(' · '))}</span></span></button>
         <div class="pd-dx">${hesc(p.dx||'')}</div>${(p.risk||isNew)?`<div class="pd-tags">${p.risk?'<span class="pd-tag amber">High risk</span>':''}${isNew?'<span class="pd-tag blue">New admission</span>':''}</div>`:''}</td>
-      <td>${act.slice(0,3).map(i=>`<div class="pd-d"><i class="pd-dot ${i.lab[0]}"></i><span>${hesc(i.txt)}${i.due?`<span class="tiny muted"> · ${hesc(i.due)}</span>`:''}</span></div>`).join('')}${act.length>3?`<div class="tiny muted" style="margin-top:4px">+${act.length-3} more, press the eye</div>`:''}</td>
+      <td>${shown.map(detail).join('')}${lines.length>3?`<div class="tiny muted" style="margin-top:4px">+${lines.length-3} more, press the eye</div>`:''}${doneL.length&&rem.length?`<div class="tiny" style="margin-top:4px;color:#067647;font-weight:600">${doneL.length} of ${act.length} done, ${rem.length} still open</div>`:''}</td>
       <td><div class="pd-acts"><button class="pd-eye" aria-label="View details for ${hesc(p.name)}" title="View details" onclick="psyEye('${p.id}')">${EYE}</button>${allTaken?`<span class="pd-done" title="${hesc((last.by||'')+' · '+(last.at||'')+(last.note?' · '+last.note:''))}">Action taken ✓</span>`:`<button class="btn sm pd-take" onclick="psyActionTaken('${p.id}')">Action Taken</button>`}</div></td></tr>`:'';
     return {rank,html,act};
   }
