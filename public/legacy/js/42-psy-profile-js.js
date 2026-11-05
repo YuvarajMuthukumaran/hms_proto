@@ -253,8 +253,8 @@
     if(med){let m=med.outerHTML.replace(/onclick="psyRxOpen\(\{ctx:'orders'\}\)">/,`onclick="psyToChart('${S.pid}')">`).replace('Current medicines. The chart below shows every dose given, from Day 1.','Current medicines, read only here. Add medicine opens the full nursing chart, where medicines are added and stopped.').replace(/<button class="btn sm" onclick="medStopModal\(\d+\)">Stop<\/button>/g,'');out.push(m);}
     /* 2 Vitals, with the scores under it */
     const v=findSec(vit,'Vitals'),sc=findSec(vit,'Scores');
-    if(v){let h=v.outerHTML;if(sc)h=h.replace(/<\/section>\s*$/,`<div style="border-top:1px solid var(--line-2)">${sc.innerHTML}</div></section>`);out.push(h);}
-    else if(sc)out.push(sc.outerHTML);
+    /* the Scores block (NEWS2 and suicide screen) is removed from this tab (owner, 5 Nov) */
+    if(v)out.push(v.outerHTML);
     /* 3 Monitoring: orders, blood sugar and the other monitoring in one card */
     const parts=['Monitoring orders','Blood sugar monitoring','Other monitoring by nurses'].map(n=>findSec(vit,n)).filter(Boolean);
     /* "Other monitoring by nurses" becomes a table like the vitals (it was a list, and its status chips are hidden in this view) */
