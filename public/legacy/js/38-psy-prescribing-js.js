@@ -173,7 +173,13 @@
   const __mc=marCard;
   marCard=function(){
     const h0=__mc.apply(this,arguments);if(!psy())return h0;
-    let h=h0.replace('<div class="row" style="gap:8px"><button class="btn sm" onclick="marJump(0)">','<div class="row" style="gap:8px"><button class="btn pri sm" onclick="psyRxOpen({ctx:\'orders\'})">Add medicine</button><button class="btn sm" onclick="marJump(0)">');
+    /* Anu: a Vitals tab inside the medication chart. The button sits left of Add medicine and swaps the chart for the vitals table (no redraw, so it also works in the Rounds window). */
+    const onVitalsPage=/\/vitals/.test(location.hash||'');
+    const VDEF=[['18 Oct','138/88','104','98.8','97','72.4','3'],['19 Oct','134/86','98','98.6','98','—','4'],['20 Oct','130/84','96','98.4','98','—','3.5'],['21 Oct','128/82','92','98.6','98','—','5'],['22 Oct','126/80','90','98.4','99','71.8','4'],['23 Oct','124/80','88','98.6','98','—','6.5']];
+    const VR=(S.vit||VDEF).slice().reverse();
+    const vit=`<div class="pv-vit"><div class="scroll"><table class="t"><thead><tr><th>Date</th><th>BP</th><th>Pulse</th><th>Temp (°F)</th><th>SpO2 (%)</th><th>Weight (kg)</th><th>Sleep (h)</th></tr></thead><tbody>${VR.map(v=>`<tr>${v.map((x,i)=>`<td ${i===0?'style="font-weight:600"':''}>${hesc(String(x))}</td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="pad tiny muted">Recorded by the nurses on the ward. Press Medicines to go back to the chart.</div></div>`;
+    let h=h0.replace('<div class="row" style="gap:8px"><button class="btn sm" onclick="marJump(0)">','<div class="row" style="gap:8px">'+(onVitalsPage?'':'<button class="btn sm" onclick="psyChartTab(this)">Vitals</button>')+'<button class="btn pri sm" onclick="psyRxOpen({ctx:\'orders\'})">Add medicine</button><button class="btn sm" onclick="marJump(0)">');
+    if(!onVitalsPage)h=h.replace('<div class="scroll mscroll" id="marScroll">',vit+'<div class="scroll mscroll" id="marScroll">');
     const act=S.meds.filter(m=>!m.name.includes('waiting'));let k=0;
     h=h.replace(/<div class="mm-l mm-on">Ongoing<\/div>/g,()=>{const m=act[k++],i=S.meds.indexOf(m);return '<div class="mm-l mm-on">Ongoing</div>'+(i>=0?'<button class="btn sm" style="margin-top:6px" onclick="medStopModal('+i+')">Stop</button>':'');});
     S.meds.concat(S.medsOff||[]).filter(m=>m.adv).forEach(m=>{const t='<div class="mm-n">'+hesc(m.name)+'</div>';h=h.split(t).join(t+'<div class="mm-l" style="color:#344054">Advice: '+hesc(m.adv)+'</div>');});
@@ -181,6 +187,8 @@
   };
   /* "Change medicines" on the patient overview opens that patient's nursing chart (Add and Stop are there), not the Orders tab */
   window.psyToChart=id=>{S.ncP=id;go('#/nursing/'+id);};
+  window.psyChartTab=function(btn){const card=btn.closest('.mchart');if(!card)return;const on=card.classList.toggle('showvit');btn.textContent=on?'Medicines':'Vitals';};
+  (function(){const st=document.createElement('style');st.id='psy-chart-tab-css';st.textContent='.mchart .pv-vit{display:none}.mchart.showvit .pv-vit{display:block}.mchart.showvit .mscroll,.mchart.showvit .mleg{display:none}';document.head.appendChild(st);})();
   const __ch=compactHeader;
   compactHeader=function(){
     const h=__ch.apply(this,arguments);if(!psy())return h;

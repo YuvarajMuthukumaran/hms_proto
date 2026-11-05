@@ -20,8 +20,13 @@
   .es-tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
   .es-tile .h{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}.es-tile b{display:block;font-size:26px;line-height:1.2;margin:4px 0 2px}.es-tile .d{font-size:12px;color:var(--muted)}
   .es-dot{width:9px;height:9px;border-radius:50%}
-  .es-al{padding:18px 24px 18px 20px;border-top:1px solid var(--line-2);border-left:4px solid #cfd6e0}.es-al:first-child{border-top:0}
-  .es-al.red{border-left-color:var(--red)}.es-al.amber{border-left-color:#e5a13a}.es-al.grey{border-left-color:#cfd6e0}
+  /* each alert is its own card with a gap between cards and a slim pill accent bar with a soft glow (Trello "alert page": patients must be clearly separate) */
+  .es-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:4px}.es-head h3{margin:0}
+  .es-list{display:flex;flex-direction:column;gap:16px}
+  .es-al{position:relative;background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 24px 18px 34px;box-shadow:0 1px 3px rgba(16,24,40,.06)}
+  .es-al::before{content:'';position:absolute;left:14px;top:18px;bottom:18px;width:5px;border-radius:99px;background:#d0d5dd}
+  .es-al.red{background:#fffbfb;border-color:#fecdca}.es-al.red::before{background:#e5484d;box-shadow:0 0 0 3px rgba(229,72,77,.16)}
+  .es-al.amber::before{background:#f5a524;box-shadow:0 0 0 3px rgba(245,165,36,.18)}
   .es-empty{text-align:center;padding:40px 20px}.es-empty .t{font-size:30px;color:var(--green);line-height:1}
   .es-r1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .es-tag{font-size:11px;font-weight:700;border-radius:99px;padding:2px 9px}.es-tag.red{background:var(--red-bg);color:var(--red)}.es-tag.amber{background:var(--amber-bg);color:var(--amber)}
@@ -81,7 +86,7 @@
     return `<div class="es"><div><h2>Escalation chain</h2>
         <div class="es-chain"><span class="es-box">Nurse raises</span><span class="es-arrow">›</span><span class="es-box">RMO · ${R.rmo} min</span><span class="es-arrow">›</span><span class="es-box">Treating psychiatrist · ${R.psy} min</span><span class="es-arrow">›</span><span class="es-box">Floor lead · ${R.lead} min</span><span class="tiny muted" style="margin-left:6px">times for urgent alerts</span></div></div>
       <div class="es-tiles">${tile('var(--red)','Not acknowledged',notAck+' of '+open.length,'open alerts')}${tile('var(--amber)','Escalated past RMO',esc.length,withLead?withLead+' now with floor lead':'none with the floor lead')}${tile('#98a2b3','Median time to acknowledge',med==null?'–':med+' min','today')}</div>
-      <section class="card"><div class="hd"><div><h3>Open alerts</h3><div class="small muted" style="margin-top:4px">Most urgent first · now ${V3.hm(now)}</div></div></div>${sorted.map(row).join('')||'<div class="es-empty"><div class="t">✓</div><div style="font-weight:700;margin-top:8px">No open alerts</div><div class="small muted">Every alert has been acknowledged and seen at the bedside.</div></div>'}</section></div>`;
+      <div class="es-head"><h3>Open alerts</h3><span class="small muted">Most urgent first · now ${V3.hm(now)}</span></div><div class="es-list">${sorted.map(row).join('')||'<div class="es-empty"><div class="t">✓</div><div style="font-weight:700;margin-top:8px">No open alerts</div><div class="small muted">Every alert has been acknowledged and seen at the bedside.</div></div>'}</div></div>`;
   }
   /* marking an alert "at the bedside" takes it off this list and keeps it in the patient's Events log */
   const __sd=V3.seenDo;
