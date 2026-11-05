@@ -28,7 +28,14 @@
   .pd-t tbody tr:hover td{background:#f8fbff}.pd-t tr.r-red:hover td{background:#fff6f6}
   .pd-t tr.r-done{--pc:#12b76a;--pg:rgba(18,183,106,.16)}
   .pd-who{display:flex;align-items:center;gap:12px;border:0;background:none;padding:0;font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
-  .pd-who b{font-size:15px;font-weight:700}.pd-who:hover b{color:var(--blue)}
+  .pd-who b{font-size:15px;font-weight:700;display:block}.pd-who:hover b{color:var(--blue)}
+  .pd-sub{display:block;font-size:12.5px;color:var(--muted);margin-top:1px}
+  .pd-dx{font-size:13px;color:var(--ink-2);margin:8px 0 0 50px;line-height:1.35}
+  .pd-tags{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0 50px}
+  .pd-tag{font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 9px}.pd-tag.amber{background:#fffaeb;color:#b54708}.pd-tag.blue{background:#eff8ff;color:#175cd3}
+  .pd-d{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;line-height:1.4;padding:2px 0}
+  .pd-d+.pd-d{margin-top:4px}
+  .pd-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:#98a2b3;margin-top:6px}.pd-dot.red{background:#e5484d}.pd-dot.amber{background:#f5a524}.pd-dot.blue{background:#3b82f6}
   .pd-chips{display:flex;gap:6px;flex-wrap:wrap}
   .pd-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:99px;padding:4px 11px 4px 9px;background:#f2f4f7;color:#475467;white-space:nowrap;border:1px solid rgba(16,24,40,.06)}
   .pd-chip::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
@@ -122,7 +129,9 @@
     const tk=(window.psyPx&&psyPx(p.id).taken)||{},allTaken=act.length>0&&act.every(i=>tk[i.key]),last=allTaken?tk[act[act.length-1].key]:null;
     const html=act.length?`<tr class="${allTaken?'r-done':(edge?'r-'+edge:'')}" data-dt="${hesc((p.name+' '+p.room).toLowerCase())}" data-need="${has('alert')||has('order')?1:0}" data-new="${isNew?1:0}" data-late="${has('late')?1:0}">
       <td><div class="pd-chips">${types.map(t=>`<span class="pd-chip ${t[0]}">${hesc(t[1])}</span>`).join('')}</div></td>
-      <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,34,has('alert')?'c-red':'c-blue')}<b>${hesc(p.name)}</b></button></td>
+      <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,38,has('alert')?'c-red':'c-blue')}<span><b>${hesc(p.name)}</b><span class="pd-sub">${hesc([(window.psyAgeSex?psyAgeSex(p):''),'Day '+p.day].filter(Boolean).join(' · '))}</span></span></button>
+        <div class="pd-dx">${hesc(p.dx||'')}</div>${(p.risk||isNew)?`<div class="pd-tags">${p.risk?'<span class="pd-tag amber">High risk</span>':''}${isNew?'<span class="pd-tag blue">New admission</span>':''}</div>`:''}</td>
+      <td>${act.slice(0,3).map(i=>`<div class="pd-d"><i class="pd-dot ${i.lab[0]}"></i><span>${hesc(i.txt)}${i.due?`<span class="tiny muted"> · ${hesc(i.due)}</span>`:''}</span></div>`).join('')}${act.length>3?`<div class="tiny muted" style="margin-top:4px">+${act.length-3} more, press the eye</div>`:''}</td>
       <td><div class="pd-acts"><button class="pd-eye" aria-label="View details for ${hesc(p.name)}" title="View details" onclick="psyEye('${p.id}')">${EYE}</button>${allTaken?`<span class="pd-done" title="${hesc((last.by||'')+' · '+(last.at||'')+(last.note?' · '+last.note:''))}">Action taken ✓</span>`:`<button class="btn sm pd-take" onclick="psyActionTaken('${p.id}')">Action Taken</button>`}</div></td></tr>`:'';
     return {rank,html,act};
   }
@@ -136,9 +145,9 @@
     return `<div class="pd">
       <div class="pd-bar"><input class="input" id="dtQ" style="width:280px;min-height:40px;margin:0" placeholder="Type a name" oninput="dtFilter()" aria-label="Search patients">
         <div class="row" style="gap:8px"><button class="btn" onclick="go('#/admissions')">New admission</button><button class="btn pri" onclick="go('#/rounds')">Start rounds</button></div></div>
-      ${rows.length?`<table class="pd-t"><colgroup><col style="width:280px"><col><col style="width:230px"></colgroup>
-        <thead><tr><th>Alert</th><th>Patient</th><th></th></tr></thead>
-        <tbody id="dtBody">${rows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="3" class="pd-empty">No patient matches</td></tr></tbody></table>`
+      ${rows.length?`<div style="overflow-x:auto"><table class="pd-t" style="min-width:860px"><colgroup><col style="width:260px"><col style="width:24%"><col><col style="width:230px"></colgroup>
+        <thead><tr><th>Alert</th><th>Patient</th><th>Details</th><th></th></tr></thead>
+        <tbody id="dtBody">${rows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="4" class="pd-empty">No patient matches</td></tr></tbody></table></div>`
       :`<section class="card"><div class="pd-empty">Nothing needs you right now. You can start your rounds when you are ready.</div></section>`}
     </div>`;
   }
