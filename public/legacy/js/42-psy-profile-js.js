@@ -119,8 +119,11 @@
     const h=__pv2.apply(this,arguments);if(!psy())return h;
     const t=document.createElement('template');t.innerHTML=h;
     const kids=[...t.content.children],ttl=e=>((e.querySelector('h3')||e.querySelector('.lbl')||{}).textContent||'').trim();
-    const order=['Medicine chart','Vitals','Scores','Monitoring orders','Blood sugar monitoring','Other monitoring by nurses'];
-    const out=order.flatMap(n=>kids.filter(e=>ttl(e).startsWith(n)).map(e=>e.outerHTML));
+    /* Anu (Trello, moved back to In-progress with a screenshot of the Medicines card): number 1 is the Medicines card, the same one as on Orders
+       (current medicines with Add medicine and Stop, and the nursing chart right under it), not a bare chart. */
+    let medHtml='';try{const t2=document.createElement('template');t2.innerHTML=pOrders();const m=[...t2.content.children].find(e=>ttl(e)==='Medicines');if(m)medHtml=m.outerHTML;}catch(e){}
+    const order=[medHtml?'':'Medicine chart','Vitals','Scores','Monitoring orders','Blood sugar monitoring','Other monitoring by nurses'];
+    const out=(medHtml?[medHtml]:[]).concat(order.flatMap(n=>n?kids.filter(e=>ttl(e).startsWith(n)).map(e=>e.outerHTML):[]));
     return out.length?out.join('')+labReports():h;
   };
 
