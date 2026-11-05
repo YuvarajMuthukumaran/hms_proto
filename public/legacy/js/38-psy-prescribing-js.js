@@ -203,7 +203,7 @@
     if(!psy())return __po.apply(this,arguments);
     /* Trello "Keep same nursing chart everywhere": the Orders tab shows the one nursing chart (marCard), not its own list of dose dates */
     const __mh=medHistoryTable;
-    medHistoryTable=function(){return marCard().replace('<section class="card mchart">','<section class="mchart" style="border-top:1px solid var(--line-2)">');};
+    medHistoryTable=function(){if(S.__noChart)return '';return marCard().replace('<section class="card mchart">','<section class="mchart" style="border-top:1px solid var(--line-2)">');};
     let h;try{h=__po.apply(this,arguments);}finally{medHistoryTable=__mh;}
     /* the row of four counters (Active medicines, Tests ordered, Consents waiting, Restraint this stay) is removed (owner, 5 Nov) */
     h=cutDiv(h,'<div class="ostrip">');

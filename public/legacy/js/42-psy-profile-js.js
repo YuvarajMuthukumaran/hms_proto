@@ -183,12 +183,15 @@
       const gi=STAY.findIndex(x=>x[0]==='griev');if(gi>=0)STAY.splice(gi,1);
       /* Anu (WhatsApp): the Orders tab also holds monitoring, vitals charting and plans such as ECT, so it is renamed Treatment Plan */
       const oi=STAY.find(x=>x[0]==='orders');if(oi)oi[1]='Treatment Plan';
+      /* Vitals and medicines is part of Treatment Plan now */
+      const vi=STAY.findIndex(x=>x[0]==='vitals');if(vi>=0)STAY.splice(vi,1);
       /* Forms to print tab removed (team: Print file replaces it) */
       const fi2=STAY.findIndex(x=>x[0]==='forms');if(fi2>=0)STAY.splice(fi2,1);
       const pi=STAY.find(x=>x[0]==='prefs');if(pi)pi[1]='Patient Experience';
       STAY.__psyTabs=true;
     }
     if(psy()&&/^#\/patient\/[^/]+\/griev$/.test(location.hash||'')){location.replace(location.hash.replace(/\/griev$/,'/prefs'));return;}
+    if(psy()&&/^#\/patient\/[^/]+\/vitals$/.test(location.hash||'')){location.replace(location.hash.replace(/\/vitals$/,'/orders'));return;}
     if(psy()&&/^#\/patient\/[^/]+\/forms$/.test(location.hash||'')){location.replace(location.hash.replace(/\/forms$/,'/overview'));return;}
     const out=__r42.apply(this,arguments);
     if(psy())document.querySelectorAll('#view .lnk,#view button.tog').forEach(e=>{if(e.textContent.trim()==='Therapy and family')e.textContent='Therapy Plans';});
@@ -226,6 +229,42 @@
     const all=(S.dnHist||DN_HIST),types=[...new Set(all.map(n=>n.type))],f=S.dnF||'All';
     const chips=['All'].concat(types).map(x=>`<button class="tog ${f===x?'on':''}" onclick="S.dnLim=10;dnSet('${hesc(x)}')">${x==='All'?'All':hesc(x)+' · '+all.filter(n=>n.type===x).length}</button>`).join('');
     return h.replace(/<div class="mini-chips" role="group" aria-label="Filter notes">[\s\S]*?<\/div>/,`<div class="mini-chips" role="group" aria-label="Filter notes">${chips}</div>`);
+  };
+
+  /* ---------- Treatment Plan tab (Anu, Trello "Vitals and monitoring", 5 Nov): Vitals and medicines and Orders and consents become one tab, six parts in this order ----------
+     1 Medicines (the list; Add medicine opens the full nursing chart)  2 Vitals chart  3 Monitoring chart (same format)  4 Lab reports (name and date, opens the PDF)
+     5 Requests and permissions (ECT, clozapine ...)  6 Consents. Scores and Monitoring orders sit inside Vitals and Monitoring. */
+  const ttlOf=e=>((e.querySelector('h3')||e.querySelector('.lbl')||{}).textContent||'').trim();
+  const kidsOf=html=>{const t=document.createElement('template');t.innerHTML=html;return [...t.content.children];};
+  const findSec=(kids,name)=>kids.find(e=>ttlOf(e).startsWith(name));
+  const labReports2=()=>{
+    const L=v3().labs.filter(l=>l.pid===S.pid).sort((a,b)=>b.t-a.t);
+    return `<section class="card"><div class="hd"><div><h3>Lab reports</h3><div class="small muted" style="margin-top:4px">Report name and date. Tap a report to open the full PDF.</div></div><button class="btn sm" onclick="psyLabAdd('${S.pid}')">Upload lab report</button></div>
+      ${L.length?L.map(l=>`<div class="li"><div class="grow"><div style="font-weight:600">${hesc(l.test)}</div><div class="tiny muted">${hesc(V3.stamp(l.t))}</div></div><button class="btn sm" onclick="psyLabPdf('${l.id}')">Open PDF</button></div>`).join(''):'<div class="pad small muted">No lab reports yet.</div>'}</section>`;
+  };
+  const __po42=pOrders;
+  pOrders=function(){
+    if(!psy())return __po42.apply(this,arguments);
+    let ord;S.__noChart=true;try{ord=kidsOf(__po42.apply(this,arguments));}finally{S.__noChart=false;}
+    let vit=[];try{vit=kidsOf(__pv2.apply(this,arguments));}catch(e){}
+    const out=[];
+    /* 1 Medicines: the list only. Add medicine opens the full nursing chart. */
+    const med=findSec(ord,'Medicines');
+    if(med){let m=med.outerHTML.replace(/onclick="psyRxOpen\(\{ctx:'orders'\}\)">/,`onclick="psyToChart('${S.pid}')">`).replace('Current medicines. The chart below shows every dose given, from Day 1.','Current medicines, read only here. Add medicine opens the full nursing chart, where medicines are added and stopped.').replace(/<button class="btn sm" onclick="medStopModal\(\d+\)">Stop<\/button>/g,'');out.push(m);}
+    /* 2 Vitals, with the scores under it */
+    const v=findSec(vit,'Vitals'),sc=findSec(vit,'Scores');
+    if(v){let h=v.outerHTML;if(sc)h=h.replace(/<\/section>\s*$/,`<div style="border-top:1px solid var(--line-2)">${sc.innerHTML}</div></section>`);out.push(h);}
+    else if(sc)out.push(sc.outerHTML);
+    /* 3 Monitoring: orders, blood sugar and the other monitoring in one card */
+    const parts=['Monitoring orders','Blood sugar monitoring','Other monitoring by nurses'].map(n=>findSec(vit,n)).filter(Boolean);
+    if(parts.length)out.push(`<section class="card"><div class="hd"><div><h3>Monitoring</h3><div class="small muted" style="margin-top:4px">Blood sugar, intake and output and everything else monitored, in the same format as the vitals</div></div></div>${parts.map(e=>`<div style="border-top:1px solid var(--line-2)">${e.innerHTML}</div>`).join('')}</section>`);
+    /* 4 Lab reports */
+    out.push(labReports2());
+    /* 5 Requests and permissions, 6 Consents */
+    const rq=findSec(ord,'Requests and procedures'),cs=findSec(ord,'Consents');
+    if(rq)out.push(rq.outerHTML.replace('<h3>Requests and procedures</h3>','<h3>Requests and permissions</h3>').replace('Each request tells the front desk which family signature to take','ECT, clozapine and other treatments that need a request or a permission. Each one tells the front desk which family signature to take'));
+    if(cs)out.push(cs.outerHTML);
+    return out.length?out.join(''):__po42.apply(this,arguments);
   };
 
   /* A signed history for a patient other than Neel is shown from what the record holds (the prototype stores no typed history). */
