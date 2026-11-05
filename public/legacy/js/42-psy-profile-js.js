@@ -257,6 +257,11 @@
     else if(sc)out.push(sc.outerHTML);
     /* 3 Monitoring: orders, blood sugar and the other monitoring in one card */
     const parts=['Monitoring orders','Blood sugar monitoring','Other monitoring by nurses'].map(n=>findSec(vit,n)).filter(Boolean);
+    /* "Other monitoring by nurses" becomes a table like the vitals (it was a list, and its status chips are hidden in this view) */
+    parts.forEach((e,i)=>{if(!/^Other monitoring/.test(ttlOf(e)))return;
+      const rows=[...e.querySelectorAll('.li')].map(li=>`<tr><td style="font-weight:600">${hesc((li.querySelector('.grow > div')||{}).textContent||'')}</td><td>${hesc((li.querySelector('.tiny')||{}).textContent||'')}</td><td>${hesc((li.querySelector('.chip')||{}).textContent||'')}</td></tr>`).join('');
+      const btn=e.querySelector('.pad button'),bh=btn?btn.outerHTML:'';
+      const d=document.createElement('section');d.innerHTML=`<div class="hd"><h3>Other monitoring by nurses</h3>${bh}</div><div class="scroll"><table class="t"><thead><tr><th>Monitoring</th><th>Plan and latest</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;parts[i]=d;});
     if(parts.length)out.push(`<section class="card"><div class="hd"><div><h3>Monitoring</h3><div class="small muted" style="margin-top:4px">Blood sugar, intake and output and everything else monitored, in the same format as the vitals</div></div></div>${parts.map(e=>`<div style="border-top:1px solid var(--line-2)">${e.innerHTML}</div>`).join('')}</section>`);
     /* 4 Lab reports */
     out.push(labReports2());
