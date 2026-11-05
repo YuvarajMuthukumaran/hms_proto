@@ -199,6 +199,35 @@
   const __pp2=pPrefs;
   pPrefs=function(){const h=__pp2.apply(this,arguments);return psy()?h+'<div class="lbl" style="margin:10px 4px 0">Grievances</div>'+pGriev():h;};
 
+  /* ---------- Earlier notes: easy to move around when a stay has 30+ notes (Trello "more than 30 notes - hard to navigate", Nikita: "add form wise tags") ----------
+     a search box, a tag per note showing which form it came from, filter by form, and notes shown 10 at a time. */
+  const cssN=document.createElement('style');cssN.id='psy-notes-nav-css';
+  cssN.textContent=`
+  .dn-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:2px 0 10px}.dn-bar .input{max-width:360px;min-height:38px;margin:0}
+  .dn-more{display:flex;justify-content:center;padding:10px 0 2px}
+  .ntag{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 10px;background:#eff8ff;color:#175cd3;border:1px solid #b2ddff;white-space:nowrap}
+  .ntag.c-violet{background:#f4f3ff;color:#5925dc;border-color:#d9d6fe}.ntag.c-green{background:#ecfdf3;color:#067647;border-color:#abefc6}.ntag.c-amber{background:#fffaeb;color:#b54708;border-color:#fedf89}.ntag.c-grey{background:#f2f4f7;color:#475467;border-color:#e4e7ec}`;
+  document.head.appendChild(cssN);
+  window.psyDnSearch=function(v){S.dnQ=v;S.dnLim=10;render();const i=document.getElementById('dnQ');if(i){i.focus();try{i.setSelectionRange(v.length,v.length);}catch(e){}}};
+  window.psyDnMore=function(){S.dnLim=(S.dnLim||10)+10;render();};
+  const __nl=noteList;
+  noteList=function(id,items){
+    if(!psy()||id!=='dn')return __nl.apply(this,arguments);
+    const q=(S.dnQ||'').trim().toLowerCase();
+    const L=q?items.filter(n=>[n.type,n.by,n.role,n.sum,n.d,n.my].join(' ').toLowerCase().includes(q)):items;
+    const lim=S.dnLim||10,shown=L.slice(0,lim),left=L.length-shown.length;
+    const list=shown.length?__nl(id,shown).replace(/<span class="chip (c-[a-z]+)">([^<]*)<\/span>/g,'<span class="ntag $1">$2</span>'):'<div class="pad small muted">No note matches.</div>';
+    return `<div class="dn-bar"><input class="input" id="dnQ" value="${hesc(S.dnQ||'')}" placeholder="Search notes by doctor, form or words" onchange="psyDnSearch(this.value)" onkeydown="if(event.key==='Enter')psyDnSearch(this.value)" aria-label="Search notes"><span class="small muted">Showing ${shown.length} of ${L.length} note${L.length===1?'':'s'}, newest first</span></div>${list}${left>0?`<div class="dn-more"><button class="btn" onclick="psyDnMore()">Show ${Math.min(10,left)} more (${left} left)</button></div>`:''}`;
+  };
+  /* the filter buttons follow the forms that really have notes, with a count */
+  const __pdn=pDaily;
+  pDaily=function(){
+    const h=__pdn.apply(this,arguments);if(!psy())return h;
+    const all=(S.dnHist||DN_HIST),types=[...new Set(all.map(n=>n.type))],f=S.dnF||'All';
+    const chips=['All'].concat(types).map(x=>`<button class="tog ${f===x?'on':''}" onclick="S.dnLim=10;dnSet('${hesc(x)}')">${x==='All'?'All':hesc(x)+' · '+all.filter(n=>n.type===x).length}</button>`).join('');
+    return h.replace(/<div class="mini-chips" role="group" aria-label="Filter notes">[\s\S]*?<\/div>/,`<div class="mini-chips" role="group" aria-label="Filter notes">${chips}</div>`);
+  };
+
   /* A signed history for a patient other than Neel is shown from what the record holds (the prototype stores no typed history). */
   function histFromRecord(){
     const p=ptFind(S.pid)||PTS.find(x=>x.id===S.pid)||{},id=(window.ptIdentity&&ptIdentity(p))||{},al=(window.psyPx&&psyPx(S.pid).allergy)||null;
