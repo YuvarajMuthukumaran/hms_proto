@@ -28,7 +28,7 @@
   .pd-t tbody tr:hover td{background:#f8fbff}.pd-t tr.r-red:hover td{background:#fff6f6}
   .pd-t tr.r-done{--pc:#12b76a;--pg:rgba(18,183,106,.16)}
   .pd-who{display:flex;align-items:center;gap:12px;border:0;background:none;padding:0;font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
-  .pd-who b{font-size:15px;font-weight:700;display:block}.pd-who:hover b{color:var(--blue)}
+  .pd-who b{font-size:15px;font-weight:700}.pd-nm{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pd-who:hover b{color:var(--blue)}
   .pd-sub{display:block;font-size:12.5px;color:var(--muted);margin-top:1px}
   .pd-dx{font-size:13px;color:var(--ink-2);margin:8px 0 0 50px;line-height:1.35}
   .pd-tags{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0 50px}
@@ -152,8 +152,8 @@
     const detail=i=>tk[i.key]?`<div class="pd-d done"><i class="pd-dot ok"></i><span>✓ ${hesc(i.txt)}<span class="tiny"> · action taken by ${hesc(tk[i.key].by||'')}</span></span></div>`:`<div class="pd-d"><i class="pd-dot ${i.lab[0]}"></i><span>${hesc(i.txt)}${i.due?`<span class="tiny muted"> · ${hesc(i.due)}</span>`:''}</span></div>`;
     const html=act.length?`<tr class="${allTaken?'r-done':(edge?'r-'+edge:'')}" data-dt="${hesc((p.name+' '+p.room).toLowerCase())}" data-need="${has('alert')||has('order')?1:0}" data-new="${isNew?1:0}" data-late="${has('late')?1:0}">
       <td><div class="pd-chips">${types.map(t=>`<span class="pd-chip ${t[0]}">${hesc(t[1])}</span>`).join('')}</div></td>
-      <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,38,has('alert')?'c-red':'c-blue')}<span><b>${hesc(p.name)}</b><span class="pd-sub">${hesc([(window.psyAgeSex?psyAgeSex(p):''),'Day '+p.day].filter(Boolean).join(' · '))}</span></span></button>
-        <div class="pd-dx">${hesc(p.dx||'')}</div>${(p.risk||isNew)?`<div class="pd-tags">${p.risk?'<span class="pd-tag amber">High risk</span>':''}${isNew?'<span class="pd-tag blue">New admission</span>':''}</div>`:''}</td>
+      <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,38,has('alert')?'c-red':'c-blue')}<span><span class="pd-nm"><b>${hesc(p.name)}</b>${p.risk?'<span class="pd-tag amber">High risk</span>':''}</span><span class="pd-sub">${hesc([(window.psyAgeSex?psyAgeSex(p):''),'Day '+p.day].filter(Boolean).join(' · '))}</span></span></button>
+        <div class="pd-dx">${hesc(p.dx||'')}</div>${isNew?`<div class="pd-tags">${isNew?'<span class="pd-tag blue">New admission</span>':''}</div>`:''}</td>
       <td>${shown.map(detail).join('')}${lines.length>3?`<div class="tiny muted" style="margin-top:4px">+${lines.length-3} more, press the eye</div>`:''}${doneL.length&&rem.length?`<div class="tiny" style="margin-top:4px;color:#067647;font-weight:600">${doneL.length} of ${act.length} done, ${rem.length} still open</div>`:''}</td>
       <td><div class="pd-acts"><button class="pd-eye" aria-label="View details for ${hesc(p.name)}" title="View details" onclick="psyEye('${p.id}')">${EYE}</button>${allTaken?`<span class="pd-done" title="${hesc((last.by||'')+' · '+(last.at||'')+(last.note?' · '+last.note:''))}">Action taken ✓</span>`:`<button class="btn sm pd-take" onclick="psyActionTaken('${p.id}')">Action Taken</button>`}</div></td></tr>`:'';
     return {rank,html,act};
