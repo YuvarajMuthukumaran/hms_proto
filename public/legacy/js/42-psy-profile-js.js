@@ -137,6 +137,62 @@
     return end>a?h.slice(0,a)+h.slice(end):h;
   };
 
+  /* ---------- Admission tab: numbered steps (transcripts: "step 1, 2, 3 like the consultation flow", not "front desk forms") ---------- */
+  const cssAdm=document.createElement('style');cssAdm.id='psy-adm-steps-css';
+  cssAdm.textContent=`
+  .adm-steps{display:flex;list-style:none;margin:0;padding:20px 12px 16px;background:#fff;border:1px solid var(--line);border-radius:16px}
+  .adm-step{flex:1;min-width:0;position:relative}
+  .adm-step+.adm-step::before{content:'';position:absolute;left:-50%;right:50%;top:19px;height:3px;border-radius:99px;background:#e4e7ec}
+  .adm-step.prevdone::before{background:#12b76a}
+  .adm-step button{width:100%;border:0;background:none;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 6px;color:var(--ink)}
+  .adm-n{position:relative;z-index:1;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;border:2px solid #d0d5dd;color:#667085;font-weight:700;font-size:15px}
+  .adm-step.done .adm-n{background:#12b76a;border-color:#12b76a;color:#fff}
+  .adm-step.warn .adm-n{background:#fffaeb;border-color:#f5a524;color:#b54708}
+  .adm-step.sel .adm-n{border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-tint)}.adm-step.sel.done .adm-n{background:#12b76a;border-color:#12b76a}
+  .adm-k{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#98a2b3;margin-top:4px}
+  .adm-t{font-weight:600;font-size:14px;line-height:1.3;text-align:center}
+  .adm-step.sel .adm-t{color:var(--blue-ink)}
+  .adm-s{font-size:12px;color:var(--muted)}.adm-step.done .adm-s{color:#067647}.adm-step.warn .adm-s{color:#b54708;font-weight:600}
+  .adm-step button:hover .adm-n{border-color:var(--blue)}
+  @media (max-width:760px){.adm-steps{flex-direction:column;gap:10px;padding:12px}.adm-step+.adm-step::before{display:none}.adm-step button{flex-direction:row;gap:12px;text-align:left;justify-content:flex-start}.adm-t{text-align:left}.adm-k{margin:0}}`;
+  document.head.appendChild(cssAdm);
+  const __pa3=pAdmission;
+  pAdmission=function(){
+    const h=__pa3.apply(this,arguments);if(!psy())return h;
+    const t=document.createElement('template');t.innerHTML=h;
+    const g=t.content.querySelector('.sumgrid');if(!g)return h;
+    const boxes=[...g.querySelectorAll('.sbox.pick')];if(!boxes.length)return h;
+    const names={'Front desk forms':'Admission forms'};
+    const steps=boxes.map(b=>{const k=((b.getAttribute('onclick')||'').match(/admSec='(\w+)'/)||[])[1],chipEl=b.querySelector('.chip');
+      const cls=chipEl?(chipEl.className.match(/c-(green|amber|grey|blue)/)||[])[1]:'grey',title=(b.querySelector('.lbl')||{}).textContent||'';
+      return {k,title:names[title]||title,status:chipEl?chipEl.textContent:'',cls,desc:(b.querySelector('.tiny')||{}).textContent||'',sel:b.classList.contains('sel')};});
+    const li=steps.map((x,i)=>`<li class="adm-step ${x.cls==='green'?'done':x.cls==='amber'?'warn':''} ${x.sel?'sel':''} ${i>0&&steps[i-1].cls==='green'?'prevdone':''}"><button onclick="S.admSec='${x.k}';render()" aria-current="${x.sel?'step':'false'}" title="${hesc(x.desc)}"><span class="adm-n">${x.cls==='green'?'✓':i+1}</span><span class="adm-k">Step ${i+1}</span><span class="adm-t">${hesc(x.title)}</span><span class="adm-s">${hesc(x.status)}</span></button></li>`).join('');
+    const ol=document.createElement('ol');ol.className='adm-steps';ol.setAttribute('aria-label','Admission steps');ol.innerHTML=li;
+    g.replaceWith(ol);return t.innerHTML;
+  };
+
+  /* Anu (Trello): "put Therapy and family before Forms to print and make the tab Therapy Plans". The role is fixed for the tab, so the shared tab list is
+     changed once on the first render. */
+  const __r42=render;
+  render=function(){
+    if(psy()&&!STAY.__psyTabs){
+      const ti=STAY.findIndex(x=>x[0]==='therapy'),fi=STAY.findIndex(x=>x[0]==='forms');
+      if(ti>=0&&fi>=0){const t=STAY.splice(ti,1)[0];t[1]='Therapy Plans';STAY.splice(STAY.findIndex(x=>x[0]==='forms'),0,t);}
+      /* Anu: merge Preferences for admin and Grievances into one tab, renamed Patient Experience */
+      const gi=STAY.findIndex(x=>x[0]==='griev');if(gi>=0)STAY.splice(gi,1);
+      const pi=STAY.find(x=>x[0]==='prefs');if(pi)pi[1]='Patient Experience';
+      STAY.__psyTabs=true;
+    }
+    if(psy()&&/^#\/patient\/[^/]+\/griev$/.test(location.hash||'')){location.replace(location.hash.replace(/\/griev$/,'/prefs'));return;}
+    const out=__r42.apply(this,arguments);
+    if(psy())document.querySelectorAll('#view .lnk,#view button.tog').forEach(e=>{if(e.textContent.trim()==='Therapy and family')e.textContent='Therapy Plans';});
+    return out;
+  };
+
+  /* the merged tab shows the preferences first, then the grievances */
+  const __pp2=pPrefs;
+  pPrefs=function(){const h=__pp2.apply(this,arguments);return psy()?h+'<div class="lbl" style="margin:10px 4px 0">Grievances</div>'+pGriev():h;};
+
   /* A signed history for a patient other than Neel is shown from what the record holds (the prototype stores no typed history). */
   function histFromRecord(){
     const p=ptFind(S.pid)||PTS.find(x=>x.id===S.pid)||{},id=(window.ptIdentity&&ptIdentity(p))||{},al=(window.psyPx&&psyPx(S.pid).allergy)||null;
