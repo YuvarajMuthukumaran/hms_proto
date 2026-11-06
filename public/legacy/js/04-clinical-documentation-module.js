@@ -3,7 +3,7 @@ const CD_TEMPLATES = {"admission-consent":{"css":"\r\n<!--\r\n /* Font Definitio
 const CD_FORMS=[
 {id:'admission-consent',title:'Admission Consent',template:'admission-consent',schedule:'admission',cadence:'At admission',roles:['lead','psychiatrist']},
 {id:'high-risk-consent',title:'High Risk Informed Consent',template:'high-risk-consent',schedule:'admission',cadence:'At admission',roles:['lead','psychiatrist']},
-{id:'form-c',title:'Form C',template:'form-c',schedule:'admission',cadence:'At admission',roles:['lead','psychiatrist']},
+{id:'form-c',title:'Form C',template:'form-c',schedule:'admission',cadence:'At admission',roles:['psychiatrist','psychologist']},
 {id:'form-e',title:'Form E',template:'form-e',schedule:'window',cadence:'Once during admission',roles:['lead','psychiatrist']},
 {id:'capacity-assessment',title:'Capacity Assessment',template:'capacity-assessment',schedule:'capacity',cadence:'Admission and recurring review',roles:['lead','psychiatrist']},
 {id:'reassessment',title:'Reassessment',template:'reassessment',schedule:'weekly',cadence:'Weekly from day 7',roles:['lead','psychiatrist']},

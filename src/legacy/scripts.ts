@@ -47,4 +47,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/45-psychologist-handover-js.js',
   '/legacy/js/46-lead-alert-audit-js.js',
   '/legacy/js/47-back-keeps-place-js.js',
+  '/legacy/js/48-psy-backlog-js.js',
 ];

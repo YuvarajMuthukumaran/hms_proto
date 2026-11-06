@@ -23,12 +23,19 @@
   .hn-page{margin:0}.hn-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:14px 20px 4px}
   .hn-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px;padding:8px 20px 4px}
   .hn-f{min-width:0;grid-column:1/-1}.hn-f.half{grid-column:auto}
-  .hn-f .lbl{display:flex;align-items:center;gap:8px;margin-bottom:4px}.hn-f textarea{width:100%;resize:vertical}
+  .hn-f .lbl{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-weight:700;color:var(--ink,#172033)}.hn-f textarea{width:100%;resize:vertical}
   .hn-tag{font-size:10.5px;font-weight:700;text-transform:none;letter-spacing:0}.hn-tag.add{color:#b54708}.hn-tag.rec{color:var(--blue-ink)}
   .hn-ro{font-size:13.5px;line-height:1.5;background:var(--soft);border-radius:10px;padding:8px 12px;min-height:34px}
+  .hn-groups{display:flex;flex-direction:column;gap:9px;padding:8px 20px 4px}
+  .hn-group{border:1px solid var(--line-2);border-radius:12px;background:#fff;overflow:hidden}
+  .hn-group>summary{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;list-style:none;font-weight:700;color:var(--ink,#172033)}
+  .hn-group>summary::-webkit-details-marker{display:none}.hn-group>summary:before{content:'›';font-size:20px;line-height:14px;color:var(--muted);transform:rotate(0);transition:transform .15s}
+  .hn-group[open]>summary:before{transform:rotate(90deg)}
+  .hn-group-count{margin-left:auto;font-size:11px;font-weight:600;color:var(--muted)}
+  .hn-group-content{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px;padding:2px 14px 14px;border-top:1px solid var(--line-2)}
   .hn-sign{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px;margin:14px 20px 16px;padding-top:12px;border-top:1px solid var(--line-2)}
   .hn-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}.hn-tabs button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}.hn-tabs button.on{background:var(--blue-tint);border-color:var(--blue);color:var(--blue-ink)}
-  @media (max-width:900px){.hn-wrap{grid-template-columns:1fr}.hn-list{position:static}.hn-grid,.hn-sign{grid-template-columns:1fr}}`;
+  @media (max-width:900px){.hn-wrap{grid-template-columns:1fr}.hn-list{position:static}.hn-grid,.hn-group-content,.hn-sign{grid-template-columns:1fr}}`;
   document.head.appendChild(css);
 
   const today=()=>new Date().toDateString();
@@ -101,8 +108,14 @@
     };
     const sig=`<div class="hn-sign"><div><div class="lbl">Handover given by</div><div style="font-weight:600">${hesc(o.from||signer())}</div><div class="tiny muted">${hesc(o.at?'Signed '+o.at:'Signed when you send it')}</div></div>
       <div><div class="lbl">Handed over to</div><div style="font-weight:600">${hesc(o.to||store().ui.to||'Choose the doctor above')}</div><div class="tiny muted">${hesc(o.accepted?'Signed '+o.accepted:'Signs by accepting it')}</div></div></div>`;
+    const groups=[
+      ['Diagnosis and history',['dx','ddx','comorb','past']],
+      ['Current clinical picture',['psychopath','monitor','allergy']],
+      ['Treatment and next steps',['treatment','future','comm']]
+    ];
+    const content=groups.map(([title,keys],i)=>`<details class="hn-group" ${ro||i===0?'open':''}><summary>${title}<span class="hn-group-count">${keys.length} fields</span></summary><div class="hn-group-content">${keys.map(k=>fld(FIELDS.find(f=>f[0]===k))).join('')}</div></details>`).join('');
     return `<section class="card hn-page"><div class="hn-head"><div><h3>${hesc(p.name)}</h3><div class="small muted">${hesc([(window.psyAgeSex?psyAgeSex(p):''),p.room,p.uhid?'UHID '+p.uhid:''].filter(Boolean).join(' · '))} · Handover notes for Psychiatrist</div></div>${o.pdf||''}</div>
-      <div class="hn-grid">${FIELDS.map(fld).join('')}</div>${sig}</section>`;
+      <div class="hn-groups">${content}</div>${sig}</section>`;
   }
   window.psyHnSet=function(pid,k,v){uiN()[pid]=uiN()[pid]||{};uiN()[pid][k]=v;};
   window.psyHnCur=function(pid){store().ui.cur=pid;render();};
@@ -156,6 +169,7 @@
         <div class="hn-wrap"><div class="hn-list">${list}</div><div style="min-width:0">${notePage(cur,snap(cur),false,{})}</div></div></section>
       ${sent.length?`<div class="lbl">Sent by you</div>${sent.map(h=>card(h,true)).join('')}`:''}</div>`;
   }
+  window.psyHandoverPage=page;
   window.store_to=v=>{store().ui.to=v;};
 
   const prevR=ROLE.psychiatrist.render;

@@ -232,13 +232,11 @@
   const __pa=pAdmission;
   pAdmission=function(){
     const h=__pa.apply(this,arguments);if(!psy())return h;
-    /* team review (5 Nov): no separate "Medicines before admission" card; it sits under the Detailed history as Past treatment history */
-    const card=admCard().replace('<h3>Medicines before admission</h3>','<h3>Past treatment history · medicines before admission</h3>');
     /* the allergy tag is hidden in the header unless an allergy exists, so allergies are recorded and edited here */
     const al=(window.psyPx&&psyPx(S.pid).allergy)||null;
     const alTxt=!al?'Not recorded yet':(al.list&&al.list.length?'Drug allergy: '+al.list.map(i=>hesc(i.drug)+(i.rx?' ('+hesc(i.rx)+')':'')).join(', '):'No known drug allergies')+' · '+hesc(al.by)+', '+hesc(al.at);
     const alCard=`<section class="card"><div class="pad row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-weight:600">Allergies</div><div class="small muted">${alTxt}</div></div><button class="btn sm" onclick="psyAllergy('${S.pid}')">${al?'Edit':'Record allergies'}</button></div></section>`;
-    return alCard+((S.admSec||'hist')==='hist'?h+card:h);
+    return alCard+h;
   };
 
   window.psyDisSet=function(key,k,v){const r=recon();r.dis[key]=r.dis[key]||{};r.dis[key][k]=v;render();};

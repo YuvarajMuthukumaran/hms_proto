@@ -25,7 +25,31 @@
   .pp-sel label.dis{opacity:.5;cursor:default}
   .pp-r{display:flex;gap:8px;align-items:stretch}.pp-r label{flex:1;min-width:0}.pp-r .btn{align-self:center;white-space:nowrap}
   .pp-sel label b{font-weight:600}.pp-sel .tiny{display:block}
-  .pp-all{border-color:var(--blue)!important;background:var(--blue-tint)}`;
+  .pp-all{border-color:var(--blue)!important;background:var(--blue-tint)}
+  .psy-tx-plan{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+  .psy-tx-panel{min-width:0;border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}
+  .psy-tx-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 16px 10px}
+  .psy-tx-head h3{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em}
+  .psy-tx-head .small{margin-top:4px;line-height:1.4}
+  .psy-tx-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .psy-tx-panel details{border-top:1px solid var(--line-2)}
+  .psy-tx-panel details>summary{display:flex;align-items:center;gap:8px;list-style:none;padding:8px 16px;color:var(--blue-ink);font-size:12px;font-weight:650;cursor:pointer}
+  .psy-tx-panel details>summary::-webkit-details-marker{display:none}
+  .psy-tx-panel details>summary:after{content:'⌄';margin-left:auto;color:var(--muted);font-size:16px;transition:transform .15s}
+  .psy-tx-panel details[open]>summary:after{transform:rotate(180deg)}
+  .psy-tx-body{padding:0 12px 12px}
+  .psy-tx-body>.card{border:0;box-shadow:none;margin:0;border-radius:0}
+  .psy-tx-body>.card>.hd{padding:8px 4px}
+  .psy-tx-body .scroll{max-width:100%;overflow:auto}
+  .psy-hist-read{display:flex;flex-direction:column;gap:12px}
+  .psy-hist-section{border:1px solid var(--line-2,#e4e7ec);border-radius:12px;padding:12px 14px;background:#fff}
+  .psy-hist-section h4{margin:0 0 8px;font-size:15px;line-height:1.35;font-weight:700;color:var(--ink,#101828)}
+  .psy-hist-field{display:grid;grid-template-columns:minmax(190px,32%) minmax(0,1fr);gap:12px;padding:8px 0;border-top:1px solid var(--line-2,#eef0f3)}
+  .psy-hist-field b{font-size:13px;color:var(--ink-2,#344054)}
+  .psy-hist-field span{font-size:14px;line-height:1.45;color:var(--ink,#101828);overflow-wrap:anywhere}
+  .psy-hist-empty{font-size:13px;color:var(--muted,#667085)}
+  @media(max-width:620px){.psy-hist-field{grid-template-columns:1fr;gap:3px}}
+  @media(max-width:760px){.psy-tx-plan{grid-template-columns:1fr}.psy-tx-head{align-items:center}.psy-tx-actions{flex-wrap:nowrap}}`;
   document.head.appendChild(css);
 
   const pnow=()=>new Date().toLocaleString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'});
@@ -43,6 +67,10 @@
       .n{border:1px solid #e4e7ec;border-radius:8px;padding:8px 10px;margin-bottom:8px;break-inside:avoid}
       .n .h{display:flex;justify-content:space-between;gap:8px;font-weight:600}.n .m{color:#667085;font-size:11.5px;margin-bottom:4px}
       .n .s{margin-top:4px}.n .s b{display:block;font-size:11.5px;color:#475467}
+      .psy-hist-read{display:block}.psy-hist-section{border:1px solid #e4e7ec;border-radius:8px;padding:8px 10px;margin:0 0 8px;break-inside:avoid}
+      .psy-hist-section h4{font-size:13px;font-weight:700;margin:0 0 5px;color:#101828}
+      .psy-hist-field{display:grid;grid-template-columns:32% 1fr;gap:8px;padding:4px 0;border-top:1px solid #eef0f3}
+      .psy-hist-field b{font-size:10.5px;color:#475467}.psy-hist-field span{font-size:11.5px;line-height:1.4;overflow-wrap:anywhere}.psy-hist-empty{font-size:11px;color:#667085}
       table{width:100%;border-collapse:collapse}th,td{border:1px solid #e4e7ec;padding:5px 8px;text-align:left;font-size:12px}th{background:#f6f9fc}
       .ft{margin-top:16px;color:#98a2b3;font-size:10.5px}
     </style></head><body>
@@ -96,7 +124,11 @@
   const __pd=pDaily;
   pDaily=function(){
     const h=__pd.apply(this,arguments);if(!psy())return h;
-    return h.replace('<h3>Earlier notes</h3>','<h3>Earlier notes</h3><button class="btn sm" onclick="psyNotesPdf()">PDF</button>');
+    const t=document.createElement('template');t.innerHTML=h;
+    const hd=[...t.content.querySelectorAll('.hd')].find(el=>el.querySelector('h3')?.textContent.trim()==='Earlier notes');
+    if(!hd)return h;
+    const b=document.createElement('button');b.className='btn sm';b.setAttribute('onclick','psyNotesPdf()');b.textContent='PDF';hd.appendChild(b);
+    return t.innerHTML;
   };
   const notes=()=>(S.dnHist||DN_HIST);
   window.psyNotesPdf=function(){const p=ptFind(S.pid)||PTS.find(x=>x.id===S.pid);psyPdf('Daily and round notes',`<h2>Daily and round notes</h2>${notes().map(noteHtml).join('')||'<div>No notes yet.</div>'}`,p);};
@@ -199,8 +231,30 @@
   };
 
   /* the merged tab shows the preferences first, then the grievances */
+  const prefsCss=document.createElement('style');prefsCss.id='psy-prefs-view-css';
+  prefsCss.textContent=`#psyPrefsPage.prefs-read .input:disabled{opacity:1;color:var(--ink,#101828);background:var(--bg-soft,#f8fafc);cursor:default}
+    #psyPrefsPage.prefs-read .tog:disabled{opacity:1;cursor:default}`;
+  document.head.appendChild(prefsCss);
+  window.psyPrefsView=function(v){S.prefsView=v==='form'?'form':'read';render();};
   const __pp2=pPrefs;
-  pPrefs=function(){const h=__pp2.apply(this,arguments);return psy()?h+'<div class="lbl" style="margin:10px 4px 0">Grievances</div>'+pGriev():h;};
+  pPrefs=function(){
+    const h=__pp2.apply(this,arguments);if(!psy())return h;
+    const view=S.prefsView==='form'?'form':'read',t=document.createElement('template');
+    t.innerHTML=h+'<div class="lbl" style="margin:10px 4px 0">Grievances</div>'+pGriev();
+    const page=document.createElement('div');page.id='psyPrefsPage';page.className=view==='read'?'prefs-read':'prefs-form';
+    const seg=document.createElement('div');seg.className='row';seg.style.cssText='justify-content:flex-end;margin-bottom:12px';
+    seg.innerHTML=`<div class="seg" style="align-self:flex-start;min-width:240px"><button class="${view==='read'?'on':''}" onclick="psyPrefsView('read')">Read only</button><button class="${view==='form'?'on':''}" onclick="psyPrefsView('form')">Fill form</button></div>`;
+    const grievance=[...t.content.querySelectorAll('section.card')].find(s=>/^Grievances/.test((s.querySelector('h3')||{}).textContent||''));
+    const log=grievance&&[...grievance.querySelectorAll('button')].find(b=>b.textContent.trim()==='Log grievance');
+    if(log){const top=log.cloneNode(true);top.className='btn sm pri';seg.appendChild(top);log.remove();}
+    page.appendChild(seg);page.appendChild(t.content);
+    if(view==='read'){
+      page.querySelectorAll('.input').forEach(el=>{el.disabled=true;});
+      page.querySelectorAll('.radios .tog').forEach(el=>{el.disabled=true;});
+      page.querySelectorAll('button').forEach(b=>{if(/^(Save diet|Add visitor|Save and send to admin)$/.test(b.textContent.trim()))b.remove();});
+    }
+    return page.outerHTML;
+  };
 
   /* ---------- Earlier notes: easy to move around when a stay has 30+ notes (Trello "more than 30 notes - hard to navigate", Nikita: "add form wise tags") ----------
      a search box, a tag per note showing which form it came from, filter by form, and notes shown 10 at a time. */
@@ -257,11 +311,11 @@
     if(v)out.push(v.outerHTML);
     /* 3 Monitoring: orders, blood sugar and the other monitoring in one card */
     const parts=['Monitoring orders','Blood sugar monitoring','Other monitoring by nurses'].map(n=>findSec(vit,n)).filter(Boolean);
-    /* "Other monitoring by nurses" becomes a table like the vitals (it was a list, and its status chips are hidden in this view) */
+    /* Keep distinct ongoing checks under Monitoring, without the redundant "by nurses" heading or checks already captured above. */
     parts.forEach((e,i)=>{if(!/^Other monitoring/.test(ttlOf(e)))return;
-      const rows=[...e.querySelectorAll('.li')].map(li=>`<tr><td style="font-weight:600">${hesc((li.querySelector('.grow > div')||{}).textContent||'')}</td><td>${hesc((li.querySelector('.tiny')||{}).textContent||'')}</td><td>${hesc((li.querySelector('.chip')||{}).textContent||'')}</td></tr>`).join('');
+      const rows=[...e.querySelectorAll('.li')].filter(li=>!(/^(?:weight|sleep(?: chart)?|(?:blood )?sugar|lipid profile|serum lithium level)\b/i.test(((li.querySelector('.grow > div')||{}).textContent||'').trim()))).map(li=>`<tr><td style="font-weight:600">${hesc((li.querySelector('.grow > div')||{}).textContent||'')}</td><td>${hesc((li.querySelector('.tiny')||{}).textContent||'')}</td><td>${hesc((li.querySelector('.chip')||{}).textContent||'')}</td></tr>`).join('');
       const btn=e.querySelector('.pad button'),bh=btn?btn.outerHTML:'';
-      const d=document.createElement('section');d.innerHTML=`<div class="hd"><h3>Other monitoring by nurses</h3>${bh}</div><div class="scroll"><table class="t"><thead><tr><th>Monitoring</th><th>Plan and latest</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;parts[i]=d;});
+      const d=document.createElement('section');d.innerHTML=`<div class="hd"><h3>Ongoing monitoring</h3>${bh}</div>${rows?`<div class="scroll"><table class="t"><thead><tr><th>Monitoring</th><th>Plan and latest</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="pad small muted">No additional ongoing checks.</div>'}`;parts[i]=d;});
     if(parts.length)out.push(`<section class="card"><div class="hd"><div><h3>Monitoring</h3><div class="small muted" style="margin-top:4px">Blood sugar, intake and output and everything else monitored, in the same format as the vitals</div></div></div>${parts.map(e=>`<div style="border-top:1px solid var(--line-2)">${e.innerHTML}</div>`).join('')}</section>`);
     /* 4 Lab reports */
     out.push(labReports2());
@@ -269,7 +323,14 @@
     const rq=findSec(ord,'Requests and procedures'),cs=findSec(ord,'Consents');
     if(rq)out.push(rq.outerHTML.replace('<h3>Requests and procedures</h3>','<h3>Requests and permissions</h3>').replace('Each request tells the front desk which family signature to take','ECT, clozapine and other treatments that need a request or a permission. Each one tells the front desk which family signature to take'));
     if(cs)out.push(cs.outerHTML);
-    return out.length?out.join(''):__po42.apply(this,arguments);
+    if(!out.length)return __po42.apply(this,arguments);
+    const panel=(html,i)=>{
+      const node=kidsOf(html)[0];if(!node)return html;
+      const head=node.querySelector(':scope > .hd'),title=head?(head.querySelector('h3')||{}).textContent:'',desc=head?(head.querySelector('.small')||{}).textContent:'',actions=head?[...head.querySelectorAll('button')].map(b=>b.outerHTML).join(''):'';
+      const body=node.cloneNode(true);const bodyHead=body.querySelector(':scope > .hd');if(bodyHead)bodyHead.remove();
+      return `<section class="psy-tx-panel"><div class="psy-tx-head"><div><h3>${hesc(title||'Treatment plan')}</h3>${desc?`<div class="small muted">${hesc(desc)}</div>`:''}</div>${actions?`<div class="psy-tx-actions">${actions}</div>`:''}</div><details ${i<2?'open':''}><summary>Section details</summary><div class="psy-tx-body">${body.innerHTML}</div></details></section>`;
+    };
+    return `<div class="psy-tx-plan">${out.map(panel).join('')}</div>`;
   };
 
   /* A signed history for a patient other than Neel is shown from what the record holds (the prototype stores no typed history). */
@@ -288,12 +349,95 @@
     ];
     return {by,secs};
   }
+  function historyReadHtml(secs){
+    const sections=typeof HIST!=='undefined'?HIST:[],groups=new Map(sections.map(x=>[x.t,[]])),fieldSection=new Map();
+    sections.forEach(s=>(s.f||[]).forEach(f=>fieldSection.set(f[0],s.t)));
+    const put=(section,label,value)=>{
+      if(value==null||value==='')return;
+      if(!groups.has(section))groups.set(section,[]);
+      groups.get(section).push([label,value]);
+    };
+    const add=(section,label,value)=>put(section,label,value);
+    const informant=sections.find(x=>x.t==="Informant's report")?.t||"Informant's report";
+    const patient=sections.find(x=>x.t==="Patient's report")?.t||"Patient's report";
+    const treatment=sections.find(x=>x.t==='Treatment and past illness')?.t||'Treatment and past illness';
+    const formulation=sections.find(x=>x.t==='Diagnostic formulation')?.t||'Diagnostic formulation';
+    (secs||[]).forEach(row=>{
+      if(!Array.isArray(row))return;
+      const [label,value]=row,raw=Array.isArray(value)?value.join('\n'):String(value==null?'':value);
+      if(!raw.trim())return;
+      if(fieldSection.has(label)){add(fieldSection.get(label),label,value);return;}
+      switch(label){
+        case 'Informant and reliability':{
+          const family=raw.match(/sister\s+([A-Z][\w .'-]+)/i);
+          if(family){add(informant,'Name of family member',family[1].trim().replace(/\s*\(.*$/,''));add(informant,'Relationship with patient','Sister');}
+          add(informant,'Reliability',raw);break;
+        }
+        case 'Onset, course and progress':{
+          const v=raw.split(/\s*·\s*/);
+          if(v[0])add(informant,'Mode of onset',v[0].replace(/\s+onset$/i,''));
+          if(v[1])add(informant,'Course',v[1].replace(/\s+course$/i,''));
+          if(v[2])add(informant,'Progress',v[2]);break;
+        }
+        case 'Chief complaints':add(patient,'Chief complaints (chronological, with duration)',value);break;
+        case 'History of presenting illness':add(patient,'History of present illness (narrative, sequence, impact, negative history)',value);break;
+        case 'Treatment history':add(treatment,'Treatment given (dose, duration, response, side effects)',value);break;
+        case 'Current medicines':add(treatment,'Treatment given (dose, duration, response, side effects)','Current medicines: '+raw);break;
+        case 'Past history (medical and surgical)':
+          add(treatment,'Past medical or surgical illness','Absent in the recorded history');
+          add(treatment,'Details',value);break;
+        case 'Family history':add('Family history','Mental illness, suicide, alcohol or drug dependence, epilepsy in family',value);break;
+        case 'Personal history':{
+          const education=raw.match(/\b(graduate|post[- ]graduate|secondary|primary)\b/i);
+          const occupation=raw.match(/works? in ([^.]+)/i);
+          const marital=raw.match(/\b(unmarried|married|widowed|divorced|separated)\b/i);
+          const living=raw.match(/lives? with ([^.]+)/i);
+          if(education)add('Personal history','Education: highest grade, performance, peers, discipline, games, hobbies',education[1]);
+          if(occupation)add('Personal history','Occupation: age started, job changes, present job, work record, satisfaction',occupation[1]);
+          if(marital)add('Personal history','Marital history: age, type of marriage, marital and sexual adjustment',marital[1]);
+          if(living)add('Personal history','Present living conditions',living[1]);
+          if(/birth and milestones/i.test(raw))add('Personal history','Milestones','Normal');
+          if(!education&&!occupation&&!marital&&!living)add('Personal history','Present living conditions',value);
+          break;
+        }
+        case 'Premorbid personality':add('Premorbid personality','Nature of personality (mood, aspirations, relations, attitude to work)',value);break;
+        case 'Substance use history':add('Personal history','Substance use',value);break;
+        case 'Forensic history':add(treatment,'Forensic history',value);break;
+        case 'Physical examination':add('Physical examination','Physical diagnosis and investigation results',value);break;
+        case 'Mental status examination':{
+          const m=raw;
+          const addMatch=(pattern,label,v)=>{const x=m.match(pattern);if(x)add('Mental status examination',label,v||x[1]);};
+          addMatch(/(well kempt)/i,'General appearance');
+          addMatch(/(overfamiliar)/i,'Attitude towards examiner');
+          addMatch(/(restless)/i,'Motor behaviour');
+          addMatch(/(pressured speech)/i,'Speech: intensity, pitch, reaction time, speed','Rapid · pressure of speech');
+          addMatch(/(elated and irritable affect)/i,'Affect, objective');
+          addMatch(/(flight of ideas)/i,'Formal thought disorder');
+          addMatch(/(grandiose ideas)/i,'Thought content');
+          addMatch(/(no hallucinations)/i,'Hallucinations','Absent');
+          addMatch(/(oriented)/i,'Orientation');
+          addMatch(/(grade III)/i,'Insight','Grade III');
+          addMatch(/(judgement impaired)/i,'Judgement','Social impaired');
+          if(!groups.get('Mental status examination')?.length)add('Mental status examination','General appearance',value);
+          break;
+        }
+        case 'Chief complaints and diagnosis':add(formulation,'Provisional diagnosis (ICD)',value);break;
+        case 'Risk and legal status':add(formulation,'Diagnostic formulation',value);break;
+        case 'Allergies':add(treatment,'Details',value);break;
+        default:add(formulation,'Diagnostic formulation',`${label}: ${raw}`);
+      }
+    });
+    return `<div class="psy-hist-read"><h2>Detailed history</h2>${sections.map(s=>{
+      const rows=groups.get(s.t)||[];
+      return `<section class="psy-hist-section"><h4>${hesc(s.t)}</h4>${rows.length?rows.map(([label,value])=>`<div class="psy-hist-field"><b>${hesc(label)}</b><span>${(Array.isArray(value)?value.join('\n'):String(value)).split('\n').map(hesc).join('<br>')}</span></div>`).join(''):'<div class="psy-hist-empty">No information recorded in this section.</div>'}</section>`;
+    }).join('')}</div>`;
+  }
   window.psyHistView=function(){
     const d=histDoc();if(!d.n){toast('The detailed history is not written yet');return;}
     const signedNeel=S.pid==='neel',sc=signedNeel?{by:'Dr. Aanya Sharma, Priya Nair',secs:HREAD}:(S.historyStatus==='signed'?histFromRecord():{by:'Draft, not signed yet',secs:Object.keys(HDRAFT).filter(k=>HDRAFT[k]&&(!Array.isArray(HDRAFT[k])||HDRAFT[k].length)).map(k=>[k,HDRAFT[k]])});
     const p=ptFind(S.pid)||PTS.find(x=>x.id===S.pid)||{};
     openModal(`<div class="mh"><div><h3>Detailed history · ${hesc(p.name||'')}</h3><div class="tiny muted" style="margin-top:2px">${signedNeel?'Signed 21 Oct · ':''}${hesc(sc.by)}</div></div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
-      <div class="mb" style="max-height:65vh;overflow:auto">${secList(sc.secs)}</div>
+      <div class="mb" style="max-height:65vh;overflow:auto">${historyReadHtml(sc.secs)}</div>
       <div class="mf"><button class="btn" onclick="closeModal();go('#/patient/'+S.pid+'/admission')">Open in Admission</button><button class="btn pri" onclick="closeModal();psyHistPdf()">PDF</button></div>`);
     $('modal').style.width='min(720px,100%)';
   };
@@ -307,16 +451,21 @@
 
   /* Detailed history: the signed history (Neel's read view) or the AI-scribe draft; one place for the Print file list and the PDF button */
   function histDoc(){
-    const secsHtml=secs=>`<h2>Detailed history</h2>${secs.map(([h,t,al])=>`<div class="n"><div class="m"><b>${hesc(h)}</b>${al?' · important':''}</div>${Array.isArray(t)?t.map(hesc).join('<br>'):hesc(t)}</div>`).join('')}`;
-    if(S.pid==='neel'&&typeof HREAD!=='undefined')return {n:1,sub:'Signed 21 Oct · Dr. Aanya Sharma, Priya Nair',html:()=>secsHtml(HREAD)};
-    if(S.historyStatus==='signed'){const sc=histFromRecord();return {n:1,sub:'Signed · '+sc.by,html:()=>secsHtml(sc.secs)};}
+    if(S.pid==='neel'&&typeof HREAD!=='undefined')return {n:1,sub:'Signed 21 Oct · Dr. Aanya Sharma, Priya Nair',html:()=>historyReadHtml(HREAD)};
+    if(S.historyStatus==='signed'){const sc=histFromRecord();return {n:1,sub:'Signed · '+sc.by,html:()=>historyReadHtml(sc.secs)};}
     if(S.historyDraft&&typeof HDRAFT!=='undefined'){
       const secs=Object.keys(HDRAFT).filter(k=>HDRAFT[k]&&(!Array.isArray(HDRAFT[k])||HDRAFT[k].length)).map(k=>[k,HDRAFT[k]]);
-      if(secs.length)return {n:1,sub:'Draft, not signed yet',html:()=>secsHtml(secs)};
+      if(secs.length)return {n:1,sub:'Draft, not signed yet',html:()=>historyReadHtml(secs)};
     }
     return {n:0,sub:'',html:()=>''};
   }
   window.psyHistPdf=function(){const d=histDoc();if(!d.n){toast('The detailed history is not written yet');return;}psyPdf('Detailed history',d.html(),ptFind(S.pid)||PTS.find(x=>x.id===S.pid));};
+  const __paHist=pAdmission;
+  pAdmission=function(){
+    const h=__paHist.apply(this,arguments);if(!psy()||S.admSec!=='hist'||S.hview!=='read'||typeof HREAD==='undefined')return h;
+    const sc=S.pid==='neel'?{secs:HREAD}:S.historyStatus==='signed'?histFromRecord():{secs:Object.keys(HDRAFT).filter(k=>HDRAFT[k]&&(!Array.isArray(HDRAFT[k])||HDRAFT[k].length)).map(k=>[k,HDRAFT[k]])};
+    return h.replace(secList(HREAD),historyReadHtml(sc.secs));
+  };
   const __pa2=pAdmission;
   pAdmission=function(){
     const h=__pa2.apply(this,arguments);if(!psy())return h;

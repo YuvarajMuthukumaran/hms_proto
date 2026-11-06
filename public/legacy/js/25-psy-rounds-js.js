@@ -101,7 +101,7 @@
   function sinceCard(p){
     const c=ptCtxOf(p.id),vc=c.vc||{},sys=last(vc.sys),dia=last(vc.dia),pul=last(vc.pulse),sug=last(vc.sugar),slp=last(vc.sleep);
     /* lvl: '' normal, 'warn' raised, 'bad' out of range; an arrow shows which way, so colour is not the only signal */
-    const vi=(l,v,lvl,dir,u)=>`<span class="pr-vi ${lvl||''}"><span class="l">${l}</span> <b>${v==null?'—':v}</b>${u?` <span class="u">${u}</span>`:''}${lvl&&dir?` <b>${dir}</b>`:''}</span>`;
+    const vi=(l,v,lvl,dir,u)=>`<span class="pr-vi ${lvl||''}"><span class="l">${l}</span><b>${v==null?'—':v}${u?` <span class="u">${u}</span>`:''}</b>${lvl&&dir?`<span class="pr-trend" aria-label="${lvl==='bad'?'Outside expected range':'Needs attention'}">${dir}</span>`:''}</span>`;
     const bp=sys!=null?sys+'/'+dia:null;
     const eod=(S.eod||{})[p.id],pr=(c.psychRows||[]).reduce((a,r)=>[a[0]+(+r.done||0),a[1]+(+r.req||0)],[0,0]);
     const ev=evOf(p),pend=[];
@@ -110,7 +110,7 @@
     const refs=(S.referrals||[]).filter(r=>r.pid===p.id&&!S.done[r.id]).length;if(refs)pend.push(refs+' referral'+(refs>1?'s':'')+' with the RMO');
     const oor=(sys!=null&&(sys>=140||sys<90))||(pul!=null&&(pul>100||pul<55));
     return `<section class="card pad"><h3 style="margin-bottom:10px">Since last round</h3>
-      <div class="pr-vit">${vi('BP',bp,sys==null?'':(sys>=140||dia>=90||sys<90)?'bad':sys>=130?'warn':'',sys<90?'↓':'↑')}${vi('Pulse',pul,pul==null?'':(pul>100||pul<55)?'bad':'',pul<55?'↓':'↑')}${vi('Sugar',sug,sug==null?'':(sug>180||sug<70)?'bad':sug>140?'warn':'',sug<70?'↓':'↑','mg/dL')}${vi('Sleep',slp,slp==null?'':slp<5?'warn':'','↓','h')}</div>
+      <div class="pr-vit" role="group" aria-label="Latest vital readings">${vi('BP',bp,sys==null?'':(sys>=140||dia>=90||sys<90)?'bad':sys>=130?'warn':'',sys<90?'↓':'↑','mmHg')}${vi('Pulse',pul,pul==null?'':(pul>100||pul<55)?'bad':'',pul<55?'↓':'↑','bpm')}${vi('Sugar',sug,sug==null?'':(sug>180||sug<70)?'bad':sug>140?'warn':'',sug<70?'↓':'↑','mg/dL')}${vi('Sleep',slp,slp==null?'':slp<5?'warn':'','↓','h')}</div>
       <div class="pr-lines">
         <div><b>Nursing</b>${oor?'Vitals out of range at the last check':'Vitals in range, doses given as charted'}</div>
         <div><b>Psychologist</b>${hesc(((c.team||{}).psych)||'None assigned')}${pr[1]?' · '+pr[0]+' of '+pr[1]+' sessions done':''}${eod&&eod.saved?' · note written today':''}</div>

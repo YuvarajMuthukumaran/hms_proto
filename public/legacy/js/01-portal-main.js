@@ -904,7 +904,7 @@ function pAdmission(){
     ['workup','Admission workup','Signed 18 Oct','Dr. Aanya Sharma, on the day','c-green'],
     ['capadm','Detailed capacity at admission','Done 18 Oct','Needs 100% support from nominated representative','c-green'],
     ['hist','Detailed history', hs?'Signed':(S.historyDraft?'Draft ready':'1 day late'),'Within 72 hours · psychiatrist and psychologist', hs?'c-green':'c-amber'],
-    ['formc','Form C · independent admission','Not taken','Request for independent admission (rule 8); optional at admission, required before discharge','c-grey']
+    ['formc','Form C · independent admission','Clinical review pending','Psychiatrist or psychologist decides whether Form C is indicated','c-amber']
   ];
   const grid=`<div class="sumgrid">${steps.map(x=>`<div class="sbox pick ${sec===x[0]?'sel':''} ${x[4]==='c-amber'?'warn':''}" role="button" tabindex="0" onclick="S.admSec='${x[0]}';render()" onkeydown="if(event.key==='Enter'){S.admSec='${x[0]}';render()}"><div class="lbl">${x[1]}</div><div>${chip(x[2],x[4])}</div><div class="tiny muted">${x[3]}</div></div>`).join('')}</div>`;
   const hist = hs?chip('Signed','c-green'):(S.historyDraft?chip('Draft ready','c-blue'):chip('1 day late','c-amber'));
@@ -921,8 +921,8 @@ function pAdmission(){
           <div class="row" style="justify-content:flex-end"><button class="btn" onclick="toast('Saved as draft')">Save draft</button><button class="btn pri" ${S.historyStatus==='signed'?'disabled':''} onclick="S.historyStatus='signed';S.historySignedAt=atNow();S.historySignedBy=signer();S.done.hist=true;render();toast('Detailed history signed. Task closed in Inpatient dashboard.')">Review and sign</button></div>
         </div></section>`,
     ...(isPsy()&&S.capAdmOpen?{capadm:`<section class="card pad" style="display:flex;flex-direction:column;gap:10px">${capForm(true)}</section>`}:{}),
-    formc:`<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><h3>Form C · Independent admission</h3><div class="small muted">Optional at admission, on clinical judgement. Required again before discharge.</div>
-        ${isPsy()?`<button class="btn" style="align-self:flex-start" onclick="toast('Front desk asked to take the patient\\'s Form C signature on the tablet')">Ask front desk to take Form C now</button>`:'<span class="small muted">Psychiatrist decides</span>'}</section>`
+    formc:`<section class="card pad" style="display:flex;flex-direction:column;gap:10px"><h3>Form C · Independent admission</h3><div class="small muted">Optional at admission, based on the psychiatrist or psychologist's clinical judgement. Required again before discharge.</div>
+        ${['psychiatrist','psychologist'].includes(S.role)?`<button class="btn pri" style="align-self:flex-start" onclick="cdSelect('${S.pid}|form-c|admission')">Review Form C</button>`:'<span class="small muted">Clinical review assigned to the psychiatrist or psychologist</span>'}</section>`
   };
   return grid+panels[sec];
 }
@@ -2082,13 +2082,13 @@ function render(){
   if(r[0]==='timeline'&&!r[1]){window.__histNav=true;if(S.focusPid&&typeof ptFind==='function'&&ptFind(S.focusPid)){location.replace('#/patient/'+S.focusPid+'/overview');}else if(typeof ptPickHist==='function'){renderSide(r);$('app').classList.remove('compact');$('view').innerHTML=ptPickHist();}else{location.replace('#/patient/neel/overview');}return;}
   if(r[0]!=='patient')window.__histNav=false;
   V3.pre();if(S.role==='rmo')rmoInit();rmoLocBar();scaleBar();
-  if(V3.deny(r)||(r[0]==='nursing'&&S.role==='psychologist')||(r[0]==='handover'&&S.role!=='rmo')||(r[0]==='patient'&&S.role==='rmo'&&!inScope(r[1]))||(isWard()&&(r[0]==='rounds'||r[0]==='notes'))||(r[0]==='notes'&&!((isPsy()&&!isLead())||isPsych()))){go('#/myday');return;}
+  if(V3.deny(r)||(r[0]==='nursing'&&S.role==='psychologist')||(r[0]==='handover'&&!['rmo','psychiatrist'].includes(S.role))||(r[0]==='patient'&&S.role==='rmo'&&!inScope(r[1]))||(isWard()&&(r[0]==='rounds'||r[0]==='notes'))||(r[0]==='notes'&&!((isPsy()&&!isLead())||isPsych()))){go('#/myday');return;}
   $('app').classList.toggle('compact', r[0]==='patient'||r[0]==='rounds'||r[0]==='notes');
   renderSide(r);
   let html='';
   if(V3.isV3(r[0])) html=V3.route(r); else if(r[0]==='myday') html=window.__roleMyDay?window.__roleMyDay():(S.role==='nurse'?vNurseDay():(S.role==='rmo'?vRmoDay():vMyDay()));
   else if(r[0]==='nursing'){nFocus(r[1]);html=vNurseView();}
-  else if(r[0]==='handover') html=vHandover();
+  else if(r[0]==='handover') html=S.role==='psychiatrist'&&window.psyHandoverPage?window.psyHandoverPage():vHandover();
   else if(r[0]==='admissions') html=vNewAdm();
   else if(r[0]==='inpatients') html=S.role==='rmo'?vRmoWards():vInpatients();
   else if(r[0]==='rounds') html=vRounds();
@@ -2656,8 +2656,6 @@ function pDaily(){
     <div class="hd">
       <h3>Daily note · Day 6 ${chip(me().title,'c-grey')}</h3>
       <div class="dtools">
-        <select class="input" aria-label="Template" onchange="if(this.value){dnApply(dnSpec().tpl[this.value],'Template applied: '+this.value)}"><option value="">Templates</option>${Object.keys(sp.tpl).map(t=>`<option>${t}</option>`).join('')}</select>
-        <button class="btn sm" onclick="dnApply(dnSpec().yday,'Copied yesterday; change what is different')">Copy yesterday</button>
         <button class="btn sm pri" id="scrD" onclick="dnDictate()">${icon.mic} Dictate</button>
       </div>
     </div>
