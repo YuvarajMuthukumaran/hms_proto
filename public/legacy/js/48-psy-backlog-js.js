@@ -104,16 +104,15 @@
     return out.outerHTML;
   };
 
-  /* Admission workup: Physical injuries sits directly below Physical examination (form and read view). */
+  /* Admission workup: Physical injuries sits directly below Physical examination (form and read-only view). */
   const __pa49=pAdmission;
   pAdmission=function(){
     const h=__pa49.apply(this,arguments);if(!psy()||h.indexOf('id="workupCard"')<0)return h;
     const t=document.createElement('template');t.innerHTML=h;
     const card=t.content.querySelector('#workupCard');if(!card)return h;
-    /* the Read view / Fill form switch: "Read only", and as compact as the one in Capacity assessment (not stretched across the card) */
+    /* Keep the Fill form / Read only switch compact, like the one in Capacity assessment (not stretched across the card). */
     const sg=card.querySelector('.seg');
     if(sg){sg.style.width='max-content';sg.style.minWidth='240px';sg.style.maxWidth='100%';
-      [...sg.querySelectorAll('button')].forEach(b=>{if(b.textContent.trim()==='Read view')b.textContent='Read only';});
       if(sg.parentElement)sg.parentElement.style.display='flex';}
     const lbl=txt=>[...card.querySelectorAll('.lbl')].find(l=>l.textContent.trim()===txt);
     const exam=lbl('Physical examination'),inj=lbl('Physical injuries');

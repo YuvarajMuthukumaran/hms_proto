@@ -449,7 +449,7 @@
     return h.replace(/(<div style="font-weight:600">Detailed history<\/div><div class="small muted">[^<]*<\/div>)/,(m)=>m+'<button class="btn sm" style="margin-top:6px;margin-right:6px" onclick="psyHistView()">View detailed history</button>');
   };
 
-  /* Detailed history: the signed history (Neel's read view) or the AI-scribe draft; one place for the Print file list and the PDF button */
+  /* Detailed history: the signed history (Neel's read-only view) or the AI-scribe draft; one place for the Print file list and the PDF button */
   function histDoc(){
     if(S.pid==='neel'&&typeof HREAD!=='undefined')return {n:1,sub:'Signed 21 Oct · Dr. Aanya Sharma, Priya Nair',html:()=>historyReadHtml(HREAD)};
     if(S.historyStatus==='signed'){const sc=histFromRecord();return {n:1,sub:'Signed · '+sc.by,html:()=>historyReadHtml(sc.secs)};}

@@ -7,7 +7,7 @@ const PT_KEYS=['dailySaved','familySent','scribeDaily','historyStatus','historyD
 const ptClone=o=>JSON.parse(JSON.stringify(o));
 const PT_CTX={neel:ptClone(Object.fromEntries(PT_KEYS.map(k=>[k,S[k]])))};
 S.pid='neel';
-S.hview='read'; /* Detailed history opens on Read view first (3 Nov) */
+S.hview='read'; /* Detailed history opens on Read only first (3 Nov) */
 const PT_TODAY=new Date(2026,9,24); // demo "today": Neel is on day 6, admitted 18 Oct
 const ptDay=n=>{const d=new Date(PT_TODAY);d.setDate(d.getDate()-n);return d};
 const ptD=d=>d.getDate()+' '+d.toLocaleString('en-GB',{month:'short'});

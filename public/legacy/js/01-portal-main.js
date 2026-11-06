@@ -915,7 +915,7 @@ function pAdmission(){
     hist:`<section class="card"><div class="hd"><div><h3>Detailed history ${hist}</h3><div class="small muted" style="margin-top:4px">Tulasi Psychiatric History and Evaluation form · due within 72 hours · psychiatrist and psychologist each fill their sections</div></div>
         <button class="btn ${S.historyDraft?'':'pri'}" onclick="scribeHistory()" id="scrH">${icon.mic} ${S.historyDraft?'Record again':'Draft with AI scribe'}</button></div>
         <div class="pad" style="display:flex;flex-direction:column;gap:14px">
-          <div class="seg" style="align-self:flex-start;min-width:240px"><button class="${S.hview!=='read'?'on':''}" onclick="S.hview='form';render()">Fill form</button><button class="${S.hview==='read'?'on':''}" onclick="S.hview='read';render()">Read view</button></div>
+          <div class="seg" style="align-self:flex-start;min-width:240px"><button class="${S.hview!=='read'?'on':''}" onclick="S.hview='form';render()">Fill form</button><button class="${S.hview==='read'?'on':''}" onclick="S.hview='read';render()">Read only</button></div>
           ${S.hview==='read'?`<div class="nitem open" style="border:1px solid var(--line);border-radius:14px"><div class="nhead" style="cursor:default"><div class="ndate"><b>21</b><span>Oct 2026</span></div><div class="nmeta"><div class="row" style="gap:8px">${chip('Detailed history','c-green')}<span class="small"><strong>Dr. Aanya Sharma, Priya Nair</strong> <span class="muted">· Psychiatrist, Psychologist</span></span></div><div class="small muted" style="margin-top:3px">Relapse of bipolar disorder after stopping lithium; no suicidal ideation; moderate risk to others</div></div></div><div class="nbody">${secList(HREAD)}</div></div>`:histForm()}
           <div class="callout amber"><strong>Risk screen</strong> (same as consultations): no suicidal ideation today; risk of harm card updates from here.</div>
           <div class="row" style="justify-content:flex-end"><button class="btn" onclick="toast('Saved as draft')">Save draft</button><button class="btn pri" ${S.historyStatus==='signed'?'disabled':''} onclick="S.historyStatus='signed';S.historySignedAt=atNow();S.historySignedBy=signer();S.done.hist=true;render();toast('Detailed history signed. Task closed in Inpatient dashboard.')">Review and sign</button></div>
@@ -2042,7 +2042,7 @@ function pfPrint(k){
   $('modal').style.width='min(860px,100%)'; $('pfr').srcdoc=html;
 }
 
-/* ---------- doctor-portal style note list + read view ---------- */
+/* ---------- doctor-portal style note list + read-only view ---------- */
 S.nx=S.nx||{};
 function noteList(id,items){
   return `<div class="nlist">${items.map((n,i)=>{const k=id+'-'+i,open=S.nx[k];return `<div class="nitem ${open?'open':''}">
