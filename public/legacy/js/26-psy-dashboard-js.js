@@ -94,7 +94,7 @@
   };
   window.psyDtSet=function(f){S.dtF=f;render();};
   /* patient line under the name: age and sex, then room. No diagnosis, no UHID, no day count, no dates (Nikita and Anu, 5 Nov) */
-  const sub=p=>[(window.psyAgeSex?psyAgeSex(p):''),p.room].filter(Boolean).join(' · ');
+  const sub=p=>window.psyPatientLine?psyPatientLine(p):[(window.psyAgeSex?psyAgeSex(p):''),window.psyRoomLabel?psyRoomLabel(p):p.room].filter(Boolean).join(' ');
 
   /* Take Action: a drop-down under the button listing what can be done for this patient. It is a floating panel (the table scrolls
      sideways, so a menu inside it would be cut off). */

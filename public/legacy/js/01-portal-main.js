@@ -51,7 +51,7 @@ const PTS = [
   {id:'varun', age:41, sex:'M', uhid:'2026-27RG6870', name:'Varun Rao', ini:'VR', room:'Room 211', day:4, sec:'89', risk:false, dx:'Alcohol dependence, withdrawal'},
   {id:'kabir', age:26, sex:'M', uhid:'2026-27RG6731', name:'Karan Malhotra', ini:'KM', room:'Room 212 A', day:21, sec:'90', risk:false, dx:'Schizophrenia'},
   {id:'sameer', age:22, sex:'M', uhid:'2026-27RG6905', name:'Sameer Das', ini:'SD', room:'Room 213 A', day:7, sec:'89', risk:false, dx:'Obsessive-compulsive disorder'},
-  {id:'neel', age:29, sex:'M', uhid:'2026-27RG6990', name:'Neel Bose', ini:'NB', room:'Room 214 A', day:6, sec:'89', risk:true, dx:'Bipolar affective disorder, manic'},
+  {id:'neel', age:23, sex:'M', uhid:'2026-27RG6990', name:'Neel Bose', ini:'NB', room:'Room 213 A', day:6, sec:'89', risk:true, dx:'Bipolar affective disorder, manic'},
   {id:'rohit', age:38, sex:'M', uhid:'2026-27RG7012', name:'Rohit Kapoor', ini:'RK', room:'Suite 201', day:0, sec:'89', risk:false, dx:'Admitted today'},
   {id:'dev', age:31, sex:'M', uhid:'2026-27RG6788', name:'Dev Kumar', ini:'DK', room:'Room 215 A', day:15, sec:'89', risk:false, dx:'Opioid dependence', dischargeToday:true},
   {id:'tarun', age:19, sex:'M', uhid:'2026-27RG6961', name:'Tarun Roy', ini:'TR', room:'Room 216 · Observation', day:3, sec:'89', risk:true, dx:'Acute psychotic episode'}
@@ -335,7 +335,7 @@ function teamCard(){
 const FL_P=id=>PTS.find(p=>p.id===id);
 function flHas(id){return ['griev','l1','l2','l3','l5'].includes(id);}
 function flTop(title,sub){return `<div class="mh"><div><h3>${title}</h3>${sub?`<div class="tiny muted" style="margin-top:2px">${sub}</div>`:''}</div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>`;}
-function flHead(p,right,sub){return `<div class="flh">${av(p.ini,40,'c-blue')}<div class="grow"><div class="nm">${p.name} <span class="tiny muted" style="font-weight:400">· ${p.age} ${p.sex} · ${p.room} · ${p.day?'Day '+p.day:'Admitted today'}</span></div><div class="small muted">${sub||p.dx}</div></div>${right||''}</div>`;}
+function flHead(p,right,sub){return `<div class="flh">${av(p.ini,40,'c-blue')}<div class="grow"><div class="nm">${p.name} <span class="tiny muted" style="font-weight:400">· ${window.psyPatientLine?psyPatientLine(p):`${p.age}/${p.sex} ${p.room}`} · ${p.day?'Day '+p.day:'Admitted today'}</span></div><div class="small muted">${sub||p.dx}</div></div>${right||''}</div>`;}
 function flFx(id,text,cls){S.flx=S.flx||{};S.flx[id]={text,cls};}
 function flWide(w){$('modal').style.width=w||'min(640px,100%)';}
 const FL_NUDGE={
@@ -556,7 +556,7 @@ function vInpatients(){
     title:L?'Floor inpatients':isWard()?'Ward inpatients':'My inpatients',where:'Gurgaon · Male ward'+(L?' · grouped by psychiatrist':''),
     cur:filt,set:k=>`filt='${k}'`,count:k=>PTS.filter(p=>ipdIn(k,p,dis)).length,keys:['all','h24','risk','new','dis','vip'],filters:L?ptFilters(DOCS):'',
     doc:p=>PSYOF[p.id],psy:p=>PSYCHOF[p.id]||'',dc:p=>EX[p.id][2],go:()=>'#/patient/neel/overview',
-    id:p=>`${p.sex}/${p.age} · TH-${1040+PTS.indexOf(p)}`,c6l:'',c6:p=>`<span style="white-space:nowrap;${/late/.test(EX[p.id][1])?'color:var(--amber);font-weight:600':''}">${EX[p.id][1]}</span>`,
+    id:p=>`${p.age}/${p.sex} ${p.room.replace(/^Room\s*/i,'R ')} · TH-${1040+PTS.indexOf(p)}`,c6l:'',c6:p=>`<span style="white-space:nowrap;${/late/.test(EX[p.id][1])?'color:var(--amber);font-weight:600':''}">${EX[p.id][1]}</span>`,
     groups:L?(rf,vis)=>DOCS.filter(d=>!S.psyF||d===S.psyF).map(d=>{const g=f.filter(p=>PSYOF[p.id]===d&&vis(p));if(!g.length)return '';const od=g.filter(p=>/late/.test(EX[p.id][1])).length;
       return `<tr class="fh"><td colspan="6"><div class="row" style="gap:8px;padding:9px 14px"><strong>${d}</strong>${SENIOR[d]?chip(SENIOR[d],'c-violet'):''}<span class="tiny muted">${g.length} patient${g.length>1?'s':''}</span>${od?chip(od+' overdue','c-amber'):''}${d==='Unassigned'?`<button class="btn sm" style="margin-left:auto" onclick="assignModal('l0')">Assign</button>`:''}</div></td></tr>${g.map(rf).join('')}`}).join(''):null});
 }
@@ -583,7 +583,7 @@ function vRounds(){
   ${done?`<section class="card pad"><h3>${R.ward} complete</h3><p class="muted">All round notes saved as today's daily notes. Orders and to-dos went to their owners.</p><div class="row" style="gap:8px">${Object.keys(WARDS).filter(k=>R.idx[k]<WARDS[k].length).slice(0,1).map(k=>`<button class="btn pri" onclick="S.rounds.ward='${k}';render()">Next: ${k}</button>`).join('')}<button class="btn" onclick="S.rounds.idx[S.rounds.ward]=0;render()">Restart this ward</button></div></section>`:`
   <div class="rlayout"><aside class="card rqueue" aria-label="Ward order"><div style="padding:4px 6px 6px"><div class="lbl">Ward order</div><div class="tiny muted" style="margin-top:2px">${WP.length} patients · ${Math.min(RI,WP.length)} seen</div></div>${q}</aside>
   <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
-      <section class="card pad row">${av(p.ini,52,p.risk?'c-red':'c-blue')}<div class="grow"><div class="row" style="gap:10px"><h2>${p.name}</h2><span class="muted">${p.room} · Day ${p.day} · Section ${p.sec}</span></div><div class="row" style="gap:8px;margin-top:8px">${p.risk?chip('High risk','c-red'):''}${chip('Slept 6 to 7 h','c-grey')}${chip('All doses taken','c-grey')}${chip('Joined group therapy','c-grey')}${obsChip(p.id)}${vitChips(p)}</div></div><div class="row" style="gap:8px"><button class="btn" ${RI===0?'disabled':''} onclick="S.rounds.idx[S.rounds.ward]=Math.max(0,S.rounds.idx[S.rounds.ward]-1);S.rounds.drafted=false;S.rounds.mc=[];S.rounds.adv=[];S.rounds.mon=[];S.rounds.inv=[];S.rounds.ref=[];S.rounds.tnote='';render()">‹ Previous patient</button><button class="btn" onclick="S.rounds.idx[S.rounds.ward]++;S.rounds.drafted=false;S.rounds.mc=[];S.rounds.adv=[];S.rounds.mon=[];S.rounds.inv=[];S.rounds.ref=[];S.rounds.tnote='';render()">Next patient ›</button><button class="btn" onclick="go('#/patient/${p.id}/overview')">Open full record</button></div></section>
+      <section class="card pad row">${av(p.ini,52,p.risk?'c-red':'c-blue')}<div class="grow"><div class="row" style="gap:10px"><h2>${p.name}</h2><span class="muted">${window.psyPatientLine?psyPatientLine(p):`${p.age}/${p.sex} ${p.room}`} · Day ${p.day} · Section ${p.sec}</span></div><div class="row" style="gap:8px;margin-top:8px">${p.risk?chip('High risk','c-red'):''}${chip('Slept 6 to 7 h','c-grey')}${chip('All doses taken','c-grey')}${chip('Joined group therapy','c-grey')}${obsChip(p.id)}${vitChips(p)}</div></div><div class="row" style="gap:8px"><button class="btn" ${RI===0?'disabled':''} onclick="S.rounds.idx[S.rounds.ward]=Math.max(0,S.rounds.idx[S.rounds.ward]-1);S.rounds.drafted=false;S.rounds.mc=[];S.rounds.adv=[];S.rounds.mon=[];S.rounds.inv=[];S.rounds.ref=[];S.rounds.tnote='';render()">‹ Previous patient</button><button class="btn" onclick="S.rounds.idx[S.rounds.ward]++;S.rounds.drafted=false;S.rounds.mc=[];S.rounds.adv=[];S.rounds.mon=[];S.rounds.inv=[];S.rounds.ref=[];S.rounds.tnote='';render()">Next patient ›</button><button class="btn" onclick="go('#/patient/${p.id}/overview')">Open full record</button></div></section>
       <div class="rtop">
         <section style="display:flex;flex-direction:column;gap:8px;padding:0 4px"><h3>Since last round</h3><div class="small" style="color:var(--ink-2)">Yesterday: under 4 hours sleep, irritable. Psychologist today: slept through, joined group therapy.</div><div class="row" style="gap:8px">${chip('Detailed history overdue 1 day','c-amber')}</div></section>
         <section style="display:flex;flex-direction:column;gap:10px;padding:0 4px"><div class="row" style="justify-content:space-between"><h3>AI scribe</h3>${R.drafted?chip('Draft ready','c-blue'):''}</div>${draft}
@@ -656,7 +656,7 @@ function ptRows(){
   const L=PTS.filter(p=>(p.name+' '+p.room).toLowerCase().includes(q));
   const row=p=>`<button class="${p.id===S.pid?'on':''}" onclick="go('#/patient/${p.id}/'+(location.hash.split('/')[3]||'overview'))">
       ${av(p.ini,32,p.risk?'c-red':'c-blue')}
-      <span style="flex:1;min-width:0"><span style="display:block;font-weight:600;font-size:13px">${p.name}</span><span class="tiny muted">${p.room} · Day ${p.day}</span></span>
+      <span style="flex:1;min-width:0"><span style="display:block;font-weight:600;font-size:13px">${p.name}</span><span class="tiny muted">${window.psyPatientLine?psyPatientLine(p):`${p.age}/${p.sex} ${p.room}`}</span></span>
       ${due.includes(p.id)?'<span class="st" style="background:var(--amber)" title="Something is due"></span>':''}</button>`;
   const a=L.filter(p=>due.includes(p.id)), b=L.filter(p=>!due.includes(p.id));
   return (a.length?`<div class="lbl" style="padding:8px 10px 4px">Needs you now · ${a.length}</div>${a.map(row).join('')}`:'')+
@@ -711,8 +711,8 @@ function compactHeader(){
   <section class="card dph">
     <div class="dpav"><div class="avbig">NB</div><span class="chip c-green" style="font-size:11px">${S.admNo>2?'Admitted today':'Day '+(S.admNo>2?0:6)+' of stay'}</span></div>
     <div class="dpmain">
-      <div class="row" style="gap:10px;align-items:baseline"><h2 style="font-size:26px">Neel Bose</h2><span class="muted" style="font-weight:600">TH-1042 · 29/M</span><span class="tiny muted">UHID 2026-27RG6990</span></div>
-      <div class="row" style="gap:6px;flex-wrap:nowrap;overflow-x:auto">${chip('⚠ High risk','c-red')}${chip('No known allergies','c-grey')}${chip('Admission # '+S.admNo,'c-blue')}${chip('Section '+S.section,'c-violet')}${chip('Room 214 · Bed A','c-grey')}${chip(S.diet.type,'c-grey')}${S.discharged?chip('Discharged','c-green'):''}</div>
+      <div class="row" style="gap:10px;align-items:baseline"><h2 style="font-size:26px">Neel Bose</h2><span class="muted" style="font-weight:600">TH-1042 · 23/M R 213 A</span><span class="tiny muted">UHID 2026-27RG6990</span></div>
+      <div class="row" style="gap:6px;flex-wrap:nowrap;overflow-x:auto">${chip('⚠ High risk','c-red')}${chip('No known allergies','c-grey')}${chip('Admission # '+S.admNo,'c-blue')}${chip('Section '+S.section,'c-violet')}${chip('R 213 A','c-grey')}${chip(S.diet.type,'c-grey')}${S.discharged?chip('Discharged','c-green'):''}</div>
       <div class="dpcards">
         ${card(ic.dx,'Primary diagnosis',S.dx,'6A60.0 · ICD-11')}
         ${card(ic.bed,'Admitted',S.admNo>2?'24 Oct, 16:40':'18 Oct, 11:20','Referred by Dr. Aanya Sharma, OPD')}
@@ -2033,7 +2033,7 @@ function pfPrint(k){
   const f=PFORMS.flatMap(g=>g[1]).find(x=>x[0]===k);
   const html=`<!doctype html><html><head><meta charset="utf-8"><title>${f[1]} · Neel Bose</title><style>body{font:13px Arial,sans-serif;color:#000;margin:32px}h1{font-size:16px;text-align:center;margin:4px 0 14px;text-transform:uppercase}.hd{display:flex;justify-content:space-between;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px}table{width:100%;border-collapse:collapse;margin-bottom:14px}td{border:1px solid #000;padding:6px 8px;vertical-align:top}.f{border:1px solid #000;padding:8px;margin-bottom:8px;min-height:54px}.f b{display:block;margin-bottom:24px}.sig{display:flex;justify-content:space-between;margin-top:40px}.sig div{border-top:1px solid #000;width:30%;padding-top:4px;text-align:center}</style></head><body>
   <div class="hd"><strong>TULASI HEALTHCARE</strong><span>Gurugram</span></div><h1>${f[1]}</h1>
-  <table><tr><td>Name: <b>Neel Bose</b></td><td>Age/Sex: <b>29/M</b></td><td>UHID: <b>2026-27RG6990</b></td></tr><tr><td>IP No.: <b>IP-2026-1042</b></td><td>Room: <b>214 A, Male ward</b></td><td>Date: <b>26 Oct 2026</b></td></tr><tr><td colspan="2">Treating team: <b>${S.team.psy}, ${S.team.psych}</b></td><td>Section: <b>${S.section}</b></td></tr></table>
+  <table><tr><td>Name: <b>Neel Bose</b></td><td>Age/Sex: <b>23/M</b></td><td>UHID: <b>2026-27RG6990</b></td></tr><tr><td>IP No.: <b>IP-2026-1042</b></td><td>Room: <b>213 A, Male ward</b></td><td>Date: <b>26 Oct 2026</b></td></tr><tr><td colspan="2">Treating team: <b>${S.team.psy}, ${S.team.psych}</b></td><td>Section: <b>${S.section}</b></td></tr></table>
   ${(PFIELDS[k]||[]).map(x=>`<div class="f"><b>${x}</b></div>`).join('')}
   <div class="sig">${f[2].split(/,|;| and /).map(x=>x.trim()).filter(Boolean).slice(0,3).map(x=>`<div>Signature · ${x}<br><small>Date and time</small></div>`).join('')}</div></body></html>`;
   openModal(`<div class="mh"><h3>Print · ${f[1]}</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
@@ -3017,7 +3017,7 @@ function vRmoWards(){
     title:'Ward inpatients',where:`Gurgaon · ${FLOORS.length} wards`,
     cur:flt,set:k=>`S.rmoFilt='${k}'`,count:k=>rows.filter(r=>ipdIn(k,r.p,dis)).length,keys:['all','h24','risk','new','dis'],filters:`<div class="ptfil">${floorTabs()}</div>`,
     doc:p=>psyOfP(p),psy:p=>rmoPsych(p),dc:p=>rmoEx(p)[2],go:p=>`#/patient/${p.id}/overview`,
-    id:p=>{const fl=RMO_FILL[p.id]||[],sx=p.sex||fl[3],ag=p.age||fl[4],th=PTS.indexOf(p)>=0?1040+PTS.indexOf(p):fl[5];return `${sx?sx+'/'+ag:''}${th?(sx?' · ':'')+'TH-'+th:''}`;},
+    id:p=>{const fl=RMO_FILL[p.id]||[],sx=p.sex||fl[3],ag=p.age||fl[4],th=PTS.indexOf(p)>=0?1040+PTS.indexOf(p):fl[5];return `${sx?ag+'/'+sx+' '+p.room.replace(/^Room\s*/i,'R '):p.room}${th?' · TH-'+th:''}`;},
     mh:'Monitoring · physical exam',c6l:'',c6:p=>`<div class="pew">${peCell(p)}</div>`,after:rmoRefCard()});
 }
 /* ---- physical exam, nutrition status, hard copy ---- */
@@ -3686,7 +3686,7 @@ V3.pFlow = () => {
 V3.bedModal = (w,label) => {
   const b=V3.bedsOf(w).find(x=>x.label===label), st=V3.bedState(w,b), s=v3(), p=b.patient;
   if(st==='occ'){ const r=V3.dischargeReady(p.id);
-    return V3.modal(hesc(p.name)+' · '+hesc(label),hesc(w)+' · '+hesc(b.type),`<div class="flh">${av(p.ini,40,p.risk?'c-red':'c-blue')}<div class="grow"><div class="nm">${hesc(p.name)} <span class="tiny muted" style="font-weight:400">· ${p.age||''} ${p.sex||''} · Day ${p.day||0}</span></div><div class="small muted">${hesc(p.dx)}</div></div>${p.risk?chip('High risk','c-red'):''}</div>
+    return V3.modal(hesc(p.name)+' · '+hesc(label),hesc(w)+' · '+hesc(b.type),`<div class="flh">${av(p.ini,40,p.risk?'c-red':'c-blue')}<div class="grow"><div class="nm">${hesc(p.name)} <span class="tiny muted" style="font-weight:400">· ${window.psyPatientLine?psyPatientLine(p):`${p.age||''}/${p.sex||''} ${p.room||''}`} · Day ${p.day||0}</span></div><div class="small muted">${hesc(p.dx)}</div></div>${p.risk?chip('High risk','c-red'):''}</div>
       <div class="kv"><div><span class="tiny muted">Psychiatrist</span><b>${hesc(V3.eff('psy',p.id))}</b></div><div><span class="tiny muted">Psychologist</span><b>${hesc(V3.eff('psych',p.id)||'Not set')}</b></div><div><span class="tiny muted">Observation</span><b>${hesc(EX[p.id][0])}</b></div></div>
       ${s.beds.dis[p.id]?`<div class="callout blue small">Planned discharge: ${hesc(s.beds.dis[p.id].when)} · ${r.n} of ${r.t} ready.</div>`:''}`,
       `<button class="btn" onclick="V3.timelineOf('${p.id}')">Timeline</button><button class="btn" onclick="V3.allocModal('pt','${p.id}')">Change team</button><button class="btn pri" onclick="closeModal();go('#/patient/${p.id}/overview')">Open patient file</button>`);

@@ -73,7 +73,7 @@
     };
     const sig=`<div class="hn-sign"><div><div class="lbl">Handover given by</div><div style="font-weight:600">${hesc(o.from||signer())}</div><div class="tiny muted">${hesc(o.at?'Signed '+o.at:'Signed when you send it')}</div></div>
       <div><div class="lbl">Handed over to</div><div style="font-weight:600">${hesc(o.to||store().ui.to||'Choose the psychologist above')}</div><div class="tiny muted">${hesc(o.accepted?'Signed '+o.accepted:'Signs by accepting it')}</div></div></div>`;
-    return `<section class="card hn-page"><div class="hn-head"><div><h3>${hesc(p.name)}</h3><div class="small muted">${hesc([(window.psyAgeSex?psyAgeSex(p):''),p.room,p.uhid?'UHID '+p.uhid:''].filter(Boolean).join(' · '))} · Handover notes for Psychologist</div></div>${o.pdf||''}</div>
+    return `<section class="card hn-page"><div class="hn-head"><div><h3>${hesc(p.name)}</h3><div class="small muted">${hesc([window.psyPatientLine?psyPatientLine(p):'',p.uhid?'UHID '+p.uhid:''].filter(Boolean).join(' · '))} · Handover notes for Psychologist</div></div>${o.pdf||''}</div>
       <div class="hn-grid">${FIELDS.map(fld).join('')}</div>${sig}</section>`;
   }
   window.pgHnSet=function(pid,k,v){uiN()[pid]=uiN()[pid]||{};uiN()[pid][k]=v;};
@@ -118,7 +118,7 @@
     const others=(typeof TR_TO!=='undefined'?TR_TO.psych:[]).filter(n=>n!==me);
     const cur=pts.some(p=>p.id===u.cur)?u.cur:(pts[0]||{}).id;
     const list=pts.map(p=>{const inc=u.sel[p.id]!==false,miss=inc&&!valOf(p.id,'future').trim();
-      return `<div class="hn-pt ${p.id===cur?'on':''}" role="button" tabindex="0" onclick="pgHnCur('${p.id}')" onkeydown="if(event.key==='Enter')pgHnCur('${p.id}')"><input type="checkbox" ${inc?'checked':''} aria-label="Hand over ${hesc(p.name)}" onclick="event.stopPropagation()" onchange="pgHoSel('${p.id}',this.checked)"><span style="min-width:0"><b>${hesc(p.name)}</b><span class="tiny muted" style="display:block">${hesc(p.room)}</span></span><span class="hn-st ${!inc?'off':miss?'add':'ok'}">${!inc?'Stays with you':miss?'To add':'Ready'}</span></div>`;}).join('');
+      return `<div class="hn-pt ${p.id===cur?'on':''}" role="button" tabindex="0" onclick="pgHnCur('${p.id}')" onkeydown="if(event.key==='Enter')pgHnCur('${p.id}')"><input type="checkbox" ${inc?'checked':''} aria-label="Hand over ${hesc(p.name)}" onclick="event.stopPropagation()" onchange="pgHoSel('${p.id}',this.checked)"><span style="min-width:0"><b>${hesc(p.name)}</b><span class="tiny muted" style="display:block">${hesc(window.psyPatientLine?psyPatientLine(p):p.room)}</span></span><span class="hn-st ${!inc?'off':miss?'add':'ok'}">${!inc?'Stays with you':miss?'To add':'Ready'}</span></div>`;}).join('');
     return `<div class="ho"><div><h2>Handover</h2><div class="muted" style="margin-top:4px">One page per patient. What the system already knows is filled in; you add what is missing. Your entries are kept as you type.</div></div>
       ${incoming.length?`<div class="lbl">To you</div>${incoming.map(h=>card(h,false)).join('')}`:''}
       <section class="card"><div class="hd"><div><h3>Hand over my patients</h3><div class="small muted" style="margin-top:4px">Untick patients who stay with you. Until the other psychologist accepts, you still see them.</div></div>

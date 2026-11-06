@@ -88,7 +88,7 @@
   function draw(){
     const el=panel();find();place();
     el.innerHTML=`<div class="fc">${FIL.map(([k,l])=>`<button class="${fil===k?'on':''}" onclick="psySearchFil('${k}')">${l}</button>`).join('')}</div>
-      ${hits.length?hits.slice(0,12).map((p,i)=>`<button class="r ${i===sel?'on':''}" onclick="psySearchGo('${p.id}')"><b>${hesc(p.name)}</b> <span class="tiny muted">${hesc(p.sex||'')}${p.age?'/'+p.age:''} · UHID ${hesc(p.uhid||'')}</span><div class="tiny muted">${hesc(p.room)} · Day ${p.day} · ${hesc(p.dx||'')}${p.risk?' · <b style="color:var(--amber)">High risk</b>':''}</div></button>`).join(''):'<div class="small muted" style="padding:8px 10px">No patient matches</div>'}`;
+      ${hits.length?hits.slice(0,12).map((p,i)=>`<button class="r ${i===sel?'on':''}" onclick="psySearchGo('${p.id}')"><b>${hesc(p.name)}</b> <span class="tiny muted">${hesc(window.psyPatientLine?psyPatientLine(p):`${p.age}/${p.sex} ${String(p.room||'').replace(/^Room\\s*/i,'R ')}`)} · UHID ${hesc(p.uhid||'')}</span><div class="tiny muted">Day ${p.day} · ${hesc(p.dx||'')}${p.risk?' · <b style="color:var(--amber)">High risk</b>':''}</div></button>`).join(''):'<div class="small muted" style="padding:8px 10px">No patient matches</div>'}`;
     el.hidden=false;
   }
   window.psySearchFil=k=>{fil=k;sel=0;draw();const i=inp();if(i)i.focus();};

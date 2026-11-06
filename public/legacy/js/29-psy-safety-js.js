@@ -34,8 +34,10 @@
 
   /* ---------- safety strip ---------- */
   const sx=p=>p.sex||(PT_FILL[p.id]||[])[0]||'',ag=p=>p.age||(PT_FILL[p.id]||[])[1]||'';
-  /* age first, then sex: "29 Male" (team review) */
-  window.psyAgeSex=p=>{const a=ag(p),x=sx(p),f={M:'Male',F:'Female'}[x]||x;return [a,f].filter(Boolean).join(' ');};
+  /* Compact patient identity: age/sex followed by room, e.g. "23/M R 213 A". */
+  window.psyAgeSex=p=>{const a=ag(p),x=sx(p);return [a,x].filter(Boolean).join('/');};
+  window.psyRoomLabel=p=>String(p&&p.room||'').replace(/^Room\s*/i,'R ');
+  window.psyPatientLine=p=>[psyAgeSex(p),psyRoomLabel(p)].filter(Boolean).join(' ');
   function legal(p,c){
     const sec=String(c.section||p.sec||'');
     if(sec==='90'){const d=new Date();d.setDate(d.getDate()+Math.max(0,90-(p.day||0)));return ['', 'Section 90 · review due '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})];}
@@ -86,7 +88,7 @@
   compactHeader=function(){
     let h=__ch.apply(this,arguments);if(!psy())return h;
     const p=ptFind(S.pid);if(!p)return h;
-    h=h.replace(/<span class="muted" style="font-weight:600">[^<]*<\/span><span class="tiny muted">UHID [^<]*<\/span>/,`<span class="muted" style="font-weight:600">${[psyAgeSex(p),p.uhid?'UHID '+hesc(p.uhid):'',hesc(p.room)].filter(Boolean).join(' · ')}</span>`);
+    h=h.replace(/<span class="muted" style="font-weight:600">[^<]*<\/span><span class="tiny muted">UHID [^<]*<\/span>/,`<span class="muted" style="font-weight:600">${[psyPatientLine(p),p.uhid?'UHID '+hesc(p.uhid):''].filter(Boolean).join(' · ')}</span>`);
     return h.replace(/<div class="row" style="gap:6px;flex-wrap:nowrap;overflow-x:auto">[\s\S]*?<\/div>(?=\s*<div class="dpcards">)/,psySafety(S.pid)+(S.discharged?'<span class="chip c-green">Discharged</span>':''));
   };
 
@@ -95,7 +97,7 @@
   vNurseView=function(){
     const h=__nv.apply(this,arguments);if(!psy())return h;
     const pts=rmoPts().map(r=>r.p),sel=pts.find(p=>p.id===(S.ncP||S.nFocus||'neel'))||pts[0];
-    return sel?h.replace(/(<div class="row" style="gap:8px;flex-wrap:wrap">[\s\S]*?<\/button><\/div>)/,'$1<section class="card pad"><div style="font-weight:600;margin-bottom:6px">'+hesc(sel.name)+' <span class="muted small" style="font-weight:400">'+hesc((psyAgeSex(sel)?psyAgeSex(sel)+' · ':'')+(()=>{try{const u=sel.uhid||ptIdentity(sel).uhid;return u?'UHID '+u+' · ':''}catch(e){return ''}})()+sel.room)+'</span></div>'+psySafety(sel.id)+'</section>'):h;
+    return sel?h.replace(/(<div class="row" style="gap:8px;flex-wrap:wrap">[\s\S]*?<\/button><\/div>)/,'$1<section class="card pad"><div style="font-weight:600;margin-bottom:6px">'+hesc(sel.name)+' <span class="muted small" style="font-weight:400">'+hesc(psyPatientLine(sel)+' · '+(()=>{try{const u=sel.uhid||ptIdentity(sel).uhid;return u?'UHID '+u:''}catch(e){return ''}})())+'</span></div>'+psySafety(sel.id)+'</section>'):h;
   };
 
   /* ---------- NEWS2 and suicide screen ---------- */

@@ -77,7 +77,7 @@ function thSign(){const v=thVals();if(!v.aim||!v.iv){$('thE').style.display='blo
 scribeHistory=function(){
   const mine=w=>w==='both'||(w==='psy'?isPsy():isPsych()),fields=[],lab={};
   HIST.filter(s=>mine(s.who)).forEach(s=>s.f.forEach(([l,ty,op],i)=>{const key=s.k+'_'+i;lab[key]=l;fields.push({key,label:s.t+' · '+l,type:ty==='o'?'one':(ty==='m'||ty==='ap')?'many':'text',options:Array.isArray(op)?op:undefined});}));
-  scribeForm({title:'Detailed history · Neel Bose',form:'Psychiatric history and evaluation (Tulasi)',context:'Neel Bose, 29, male, admitted for bipolar affective disorder, manic',fields,apply:v=>{
+  scribeForm({title:'Detailed history · Neel Bose',form:'Psychiatric history and evaluation (Tulasi)',context:'Neel Bose, 23, male, admitted for bipolar affective disorder, manic',fields,apply:v=>{
     Object.keys(lab).forEach(k=>{delete HDRAFT[lab[k]];});Object.keys(v).forEach(k=>{HDRAFT[lab[k]]=v[k];});
     S.historyDraft=true;S.hview='form';render();}});
 };

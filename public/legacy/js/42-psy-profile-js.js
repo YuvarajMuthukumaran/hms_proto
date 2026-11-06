@@ -57,7 +57,7 @@
   document.head.appendChild(css);
 
   const pnow=()=>new Date().toLocaleString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'});
-  const idLine=p=>[window.psyAgeSex?psyAgeSex(p):'',p.uhid?'UHID '+p.uhid:'',p.room].filter(Boolean).join(' · ');
+  const idLine=p=>[window.psyPatientLine?psyPatientLine(p):'',p.uhid?'UHID '+p.uhid:''].filter(Boolean).join(' · ');
 
   /* one PDF window: clinic letterhead, patient line, then the content. The browser's Print dialog saves it as PDF. */
   window.psyPdf=function(title,body,p){

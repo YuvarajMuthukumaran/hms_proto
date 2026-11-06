@@ -118,8 +118,8 @@ function ptSwaps(){
   const p=ptFind(S.pid),id=ptIdentity(p),c=PT_CTX[S.pid]||{},set=ptDxSet(p);
   return [
     ['#/patient/neel/','#/patient/'+p.id+'/'],["go('#/patient/neel')","go('#/patient/"+p.id+"')"],
-    ['<div class="avbig">NB</div>','<div class="avbig">'+id.ini+'</div>'],['TH-1042 · 29/M',id.th+' · '+id.age+'/'+id.sex],['UHID 2026-27RG6990','UHID '+id.uhid],
-    ['Room 214 · Bed A',p.room],['6A60.0 · ICD-11',set.icd+' · ICD-11'],['18 Oct, 11:20',ptD(id.adm)+', 11:20'],['24 Oct, 16:40',ptD(id.adm)+', 16:40'],
+    ['<div class="avbig">NB</div>','<div class="avbig">'+id.ini+'</div>'],['TH-1042 · 29/M',id.th+' · '+id.age+'/'+id.sex+' '+String(p.room||'').replace(/^Room\s*/i,'R ')],['UHID 2026-27RG6990','UHID '+id.uhid],
+    ['Room 214 · Bed A','R '+String(p.room||'').replace(/^Room\s*/i,'')],['6A60.0 · ICD-11',set.icd+' · ICD-11'],['18 Oct, 11:20',ptD(id.adm)+', 11:20'],['24 Oct, 16:40',ptD(id.adm)+', 16:40'],
     ["Day 6 of stay","Day "+p.day+" of stay"],['day 6 of 30','day '+p.day+' of 30'],['+91 98XXX XXX21',id.phone],
     ['Ananya Bose (Sister)',id.nr+' ('+id.rel+')'],['Ananya Bose (sister)',id.nr+' ('+id.rel.toLowerCase()+')'],['Ananya Bose, sister',id.nr+', '+id.rel.toLowerCase()],
     ['Calmer today, sleep improved, engaging in groups. Pressured speech at times. Plan: increase olanzapine, check lithium level.',(c.dnHist&&c.dnHist[0]?c.dnHist[0].sum:'Seen on round')+'. Plan: continue '+(c.meds&&c.meds[0]?c.meds[0].name:'current medicines')+'; '+set.labs[0].toLowerCase()+'.'],
