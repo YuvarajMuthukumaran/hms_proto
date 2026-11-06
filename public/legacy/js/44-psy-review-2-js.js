@@ -454,8 +454,8 @@
     const hv=S.hview==='read'?'read':S.hview==='ai'?'ai':S.hview==='aifill'?'aifill':'form';
     const seg=card.querySelector('.seg');
     if(seg){
-      const n=document.createElement('div');n.className='seg';n.setAttribute('style','align-self:flex-start;min-width:460px');
-      n.innerHTML=`<button class="${hv==='read'?'on':''}" onclick="S.hview='read';render()">Read only</button><button class="${hv==='form'?'on':''}" onclick="S.hview='form';render()">Fill form</button><button class="${hv==='ai'?'on':''}" onclick="S.hview='ai';render()">AI summary</button><button class="${hv==='aifill'?'on':''}" onclick="S.hview='aifill';render()">AI-filled form</button>`;
+      const n=document.createElement('div');n.className='seg hist-seg';n.setAttribute('style','align-self:flex-start;min-width:460px;position:relative;z-index:2');
+      n.innerHTML=`<button type="button" style="position:relative;z-index:2;pointer-events:auto" class="${hv==='read'?'on':''}" onclick="S.hview='read';render()">Read only</button><button type="button" style="position:relative;z-index:2;pointer-events:auto" class="${hv==='form'?'on':''}" onclick="S.hview='form';render()">Fill form</button><button type="button" style="position:relative;z-index:2;pointer-events:auto" class="${hv==='ai'?'on':''}" onclick="S.hview='ai';render()">AI summary</button><button type="button" style="position:relative;z-index:2;pointer-events:auto" class="${hv==='aifill'?'on':''}" onclick="S.hview='aifill';render()">AI-filled form</button>`;
       seg.replaceWith(n);
       if(hv==='ai'){const nx=n.nextElementSibling;const tt=document.createElement('template');tt.innerHTML=aiSummary();if(nx)nx.replaceWith(tt.content);else n.after(tt.content);}
       if(hv==='aifill'){
