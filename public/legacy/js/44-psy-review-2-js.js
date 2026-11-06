@@ -7,7 +7,7 @@
    - Past admissions: the first page lists every kind of document in folders (case history, capacity assessment, management plans,
      re-assessments, round notes, daily notes by psychiatrist and by psychologist, therapy and family). Open a folder to see its entries, one line each.
    - Admission tab: blue steps instead of green; no "No known drug allergies" card (allergies are in the detailed history); Admission documents only
-     under step 1; Admission forms as a table (form, status, View form / Upload signed copy / Collect e-signature); empty treatment chart hidden in the
+     under step 2; Admission forms as a table (form, status, View form / Upload signed copy / Collect e-signature); empty treatment chart hidden in the
      workup; Physical injuries yes/no with free text (also shown to the RMO, who fills the workup).
    - Back from a form returns to where you came from. */
 (function(){
@@ -221,7 +221,7 @@
       const c=x.consent[fid],it=items.find(i=>i.form&&i.form.id===fid);
       const st=c?(c.st==='esign'?'E-signed '+hesc(c.at)+(c.by?' · '+hesc(c.by):''):c.st==='uploaded'?'Uploaded '+hesc(c.at)+(c.file?' · '+hesc(c.file):''):'Signed '+hesc(c.at))
         :'Signed '+hesc(admDate()||'on admission');
-      const view=it?`<button class="btn sm" onclick="psyDocOpen('${hesc(it.entryKey)}')">View form</button>`:`<button class="btn sm" disabled title="No on-screen version yet">View form</button>`;
+      const view=it?`<button class="btn sm" onclick="psyDocPreview('${hesc(it.entryKey)}')">View form</button>`:`<button class="btn sm" disabled title="No on-screen version yet">View form</button>`;
       return `<tr><td style="font-weight:600">${name}</td><td><span class="cs ${c&&c.st==='due'?'due':''}">${st}</span></td>
         <td><div class="ct-a">${view}<label class="btn sm" style="cursor:pointer">Upload signed copy<input type="file" hidden onchange="psyConsentUpload('${fid}',this)"></label><button class="btn sm pri" onclick="psyEsignOpen('${fid}')">Collect e-signature</button></div></td></tr>`;
     }).join('');
@@ -235,6 +235,7 @@
     const x=px();x.consent=x.consent||{};x.consent[fid]={st:'uploaded',at:when(),file:f.name,by:signer()};
     inp.value='';render();toast('Signed copy added: '+f.name);
   };
+  window.psyDocPreview=function(key){S.cdfView='page';psyDocOpen(key);};
   let pad=null;
   window.psyEsignOpen=function(fid){
     const f=FORMS.find(a=>a[1]===fid);if(!f)return;
@@ -291,6 +292,8 @@
   const riskText=w=>(w.others||w.self)?'Harm to others: '+(w.others||'not recorded').toLowerCase()+' · suicide: '+(w.self||'not recorded').toLowerCase():'';
   window.psyWk=function(k,v){const w=wkData();w[k]=v;w.edited=true;w.by=signer();w.at=atNow();w.signed=false;const e=document.getElementById('wkEdited');if(e)e.textContent='Edited by '+w.by+', '+w.at;};
   window.psyWkInv=function(name,on){const w=wkData();w.inv=(w.inv||[]).filter(i=>i!==name);if(on)w.inv.push(name);psyWk('inv',w.inv);};
+  const WK_ROUTINE_INV=['CBC','LFT','RFT','Lipid profile','HbA1c','Fasting sugar','TSH','ECG'];
+  window.psyWkRoutine=function(){const w=wkData();w.inv=[...new Set([...(w.inv||[]),...WK_ROUTINE_INV])];psyWk('inv',w.inv);render();toast('Routine admission investigations added');};
   window.psyWkView=function(v){S.wkView=v;render();};
   function workupCard(isPsyUser){
     const w=wkData(),v=S.wkView==='form'?'form':'read',full=!!S.admFull;
@@ -323,7 +326,7 @@
         <label class="field"><span class="lbl">Risk of harm to others</span>${sel('others',w.others)}</label>
         <label class="field"><span class="lbl">Risk of suicide</span>${sel('self',w.self)}</label>
         <label class="field" style="grid-column:1/-1"><span class="lbl">Physical examination</span><textarea class="input" rows="2" oninput="psyWk('exam',this.value)" placeholder="Findings, BP, pulse">${hesc(w.exam||'')}</textarea></label>
-        <div class="field" style="grid-column:1/-1"><span class="lbl">Investigations sent</span><div class="mini-chips">${INV.map(n=>`<button class="tog ${(w.inv||[]).includes(n)?'on':''}" style="height:30px;font-size:12.5px" onclick="psyWkInv('${n}',!this.classList.contains('on'));this.classList.toggle('on')">${n}</button>`).join('')}</div>
+        <div class="field" style="grid-column:1/-1"><div class="row" style="justify-content:space-between;gap:8px;margin-bottom:6px"><span class="lbl">Investigations sent</span><button class="btn sm" type="button" onclick="psyWkRoutine()">Add routine investigations</button></div><div class="mini-chips">${INV.map(n=>`<button class="tog ${(w.inv||[]).includes(n)?'on':''}" style="height:30px;font-size:12.5px" onclick="psyWkInv('${n}',!this.classList.contains('on'));this.classList.toggle('on')">${n}</button>`).join('')}</div>
           <input class="input" style="margin-top:6px" placeholder="Any other test" value="${hesc(w.invOther||'')}" oninput="psyWk('invOther',this.value)"></div>
         ${alHtml}${injuryBox()}${chartHtml}</div>`;
     }
@@ -343,8 +346,8 @@
     if(doIt){
       /* no allergy card on top of the steps: allergies are recorded in the Admission workup (step 2); a recorded allergy still shows in the header */
       root.querySelectorAll('section.card').forEach(s=>{const x=s.textContent||'';if(/^\s*Allergies/.test(x)&&s.querySelectorAll('h3').length===0)s.remove();});
-      /* Admission documents once, under step 1 only */
-      if(sec!=='forms'){const d=root.querySelector('#admdocs');if(d)d.remove();}
+      /* Admission documents once, under step 2 with the admission workup */
+      if(sec!=='workup'){const d=root.querySelector('#admdocs');if(d)d.remove();}
       /* Admission forms as a table */
       if(sec==='forms'){
         const f=[...root.querySelectorAll('section.card')].find(s=>{const h3=s.querySelector('h3');return h3&&/^Admission forms$/.test(h3.textContent.trim());});
@@ -419,13 +422,38 @@
 
   /* capacity assessment: the same Fill form / Read only layout as the detailed history */
   const CAPREAD=[['Purpose','Admission'],['Advance directive','Absent · NR: Ananya Bose, sister'],['Obvious lack of capacity','No'],['1A Oriented · 1B Informed · 1C Follows commands · 1D Acknowledges illness','Yes · Yes · Yes · No'],['2A Agrees to treatment · 2C Explains refusal','No · No'],['3A Communicates decision','Yes'],['Conclusion','4B · Needs 100% support from nominated representative'],['Assessed by','Dr. Aanya Sharma · 18 Oct, 1:30 pm · NR signed']];
+  let capPad=null;
+  function capReadBody(){
+    const d=px().capacityDraft||{};
+    if(!d.inputs&&!d.answers)return `<div class="grid2">${CAPREAD.map(f=>`<div class="box small"><div class="lbl">${f[0]}</div><div style="margin-top:4px;font-weight:600">${f[1]}</div></div>`).join('')}</div>`;
+    const t=document.createElement('template');t.innerHTML=capForm(true);const controls=[...t.content.querySelectorAll('input,select,textarea')],groups=[...t.content.querySelectorAll('.radios')];
+    if(d.inputs&&d.inputs.length===controls.length)controls.forEach((el,i)=>{el.value=d.inputs[i]||'';});
+    if(d.answers&&d.answers.length===groups.length)groups.forEach((g,i)=>[...g.querySelectorAll('.tog')].forEach((b,j)=>b.classList.toggle('on',j===d.answers[i])));
+    controls.forEach(el=>{const s=document.createElement('div');s.className='cap-read-value';s.textContent=el.value||'Not filled in';el.replaceWith(s);});
+    groups.forEach(g=>{const s=document.createElement('div');s.className='cap-read-value';s.textContent=[...g.querySelectorAll('.tog.on')].map(b=>b.textContent.trim()).join(' · ')||'Not answered';g.replaceWith(s);});
+    return `<div class="pad" style="padding:14px 20px">${t.innerHTML}</div>`;
+  }
+  window.psyCapSign=function(){
+    const card=document.getElementById('capCard');if(!card)return;
+    const conclusion=card.querySelector('.cap-concl .tog.on');
+    const patientSigns=!conclusion||/^4A/.test(conclusion.textContent.trim());
+    V3.modal('Review and sign capacity assessment','Confirm the assessment, then capture the patient or nominated representative signature.',
+      `<label class="row small" style="align-items:flex-start;gap:8px"><input type="checkbox" id="capConfirm" style="margin-top:3px"><span>I reviewed the full assessment and confirm it is accurate.</span></label>
+       <label class="field" style="margin-top:10px"><span class="lbl">${patientSigns?'Patient name':'Nominated representative name'}</span><input id="capSigner" class="input" value="${patientSigns?'':hesc((px().capacityDraft&&px().capacityDraft.rep)||'Ananya Bose')}" placeholder="Full name"></label>
+       <div class="lbl" style="margin:10px 0 6px">${patientSigns?'Patient':'Nominated representative'} signature</div><canvas id="capSigCanvas" width="520" height="130" style="width:100%;height:130px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;touch-action:none"></canvas>
+       <div id="capSigError" class="tiny" style="color:#b42318;display:none;margin-top:6px">Confirm, enter the name and sign in the box.</div>`
+      ,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="psyCapSignSave(${patientSigns})">Save signed assessment</button>`);
+    setTimeout(()=>{const c=document.getElementById('capSigCanvas');if(!c)return;const g=c.getContext('2d');g.lineWidth=2.2;g.lineCap='round';g.strokeStyle='#101828';capPad={c,g,down:false,drawn:false};const p=e=>{const r=c.getBoundingClientRect();return[(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height]};c.onpointerdown=e=>{capPad.down=true;capPad.drawn=true;const[x,y]=p(e);g.beginPath();g.moveTo(x,y);c.setPointerCapture(e.pointerId)};c.onpointermove=e=>{if(!capPad||!capPad.down)return;const[x,y]=p(e);g.lineTo(x,y);g.stroke()};c.onpointerup=()=>{if(capPad)capPad.down=false};},0);
+  };
+  window.psyCapSignSave=function(patientSigns){const name=(($('capSigner')||{}).value||'').trim(),ok=!!(($('capConfirm')||{}).checked);if(!ok||!name||!capPad||!capPad.drawn){const e=$('capSigError');if(e)e.style.display='block';return;}if(window.psyCapSave)window.psyCapSave();const d=px().capacityDraft||{};px().capacitySigned={...d,signedBy:signer(),signedAt:atNow(),person:name,personType:patientSigns?'Patient':'Nominated representative',signature:capPad.c.toDataURL('image/png')};closeModal();S.capView='read';render();toast('Capacity assessment signed and saved');};
   function capCard(){
     const v=S.capView==='form'?'form':'read',full=!!S.admFull;
-    const seg=`<div class="seg" style="align-self:flex-start;width:max-content;min-width:0;max-width:100%"><button class="${v==='form'?'on':''}" aria-pressed="${v==='form'}" onclick="S.capView='form';render()">Fill form</button><button class="${v==='read'?'on':''}" aria-pressed="${v==='read'}" onclick="S.capView='read';render()">Read only</button></div>`;
-    const body=v==='read'?`<div class="grid2">${CAPREAD.map(f=>`<div class="box small"><div class="lbl">${f[0]}</div><div style="margin-top:4px;font-weight:600">${f[1]}</div></div>`).join('')}</div>`
-      :`${capForm(true)}<div class="row" style="justify-content:flex-end;gap:8px"><button class="btn" onclick="toast('Saved as draft')">Save draft</button><button class="btn pri" onclick="toast('Capacity assessment signed by '+signer())">Review and sign</button></div>`;
+    const seg=`<div class="seg" style="align-self:flex-start;min-width:240px"><button style="white-space:nowrap" class="${v==='form'?'on':''}" aria-pressed="${v==='form'}" onclick="S.capView='form';render()">Fill form</button><button style="white-space:nowrap" class="${v==='read'?'on':''}" aria-pressed="${v==='read'}" onclick="S.capView='read';render()">Read only</button></div>`;
+    const signed=px().capacitySigned;
+    const body=v==='read'?`${capReadBody()}${signed?`<div class="box small" style="margin:12px 20px"><div class="lbl">Signatures</div><div style="margin-top:6px;font-weight:600">Assessed by ${hesc(signed.signedBy)} · ${hesc(signed.signedAt)}</div><div class="small" style="margin-top:6px">${hesc(signed.personType)}: ${hesc(signed.person)}</div><img alt="Saved signature" src="${signed.signature}" style="display:block;max-width:260px;height:65px;object-fit:contain;object-position:left center;border-bottom:1px solid #98a2b3"></div>`:''}`
+      :`${capForm(true)}<div class="row" style="justify-content:flex-end;gap:8px"><button class="btn" onclick="psyCapSave()">Save draft</button><button class="btn pri" onclick="psyCapSign()">Review and sign</button></div>`;
     return `<section class="card ${full?'adm-full':''}" id="capCard"><div class="hd"><div><h3>Capacity assessment</h3><div class="small muted" style="margin-top:4px">MHA 2017 capacity assessment for treatment decisions including admission</div></div>
-      <div class="row" style="gap:8px">${chip('Done 18 Oct','c-green')}<button class="btn sm" onclick="S.admFull=!S.admFull;render()">${full?'Exit full screen':'⤢ Full screen'}</button></div></div>
+      <div class="row" style="gap:8px">${chip(signed?'Signed '+(signed.signedAt||''):'Draft','c-green')}<button class="btn sm" onclick="S.admFull=!S.admFull;render()">${full?'Exit full screen':'⤢ Full screen'}</button></div></div>
       <div class="pad" style="display:flex;flex-direction:column;gap:14px">${seg}${body}</div></section>`;
   }
 
@@ -454,8 +482,9 @@
     const hv=S.hview==='read'?'read':S.hview==='ai'?'ai':S.hview==='aifill'?'aifill':'form';
     const seg=card.querySelector('.seg');
     if(seg){
-      const n=document.createElement('div');n.className='seg hist-seg';n.setAttribute('style','align-self:flex-start;min-width:460px;position:relative;z-index:2');
+      const n=document.createElement('div');n.className='seg hist-seg';n.setAttribute('style','align-self:flex-start;width:max-content;max-width:100%;min-width:0;overflow-x:auto;position:relative;z-index:2;white-space:nowrap');
       n.innerHTML=`<button type="button" style="position:relative;z-index:2;pointer-events:auto" class="${hv==='read'?'on':''}" onclick="S.hview='read';render()">Read only</button><button type="button" style="position:relative;z-index:2;pointer-events:auto" class="${hv==='form'?'on':''}" onclick="S.hview='form';render()">Fill form</button><button type="button" style="position:relative;z-index:2;pointer-events:auto" class="${hv==='ai'?'on':''}" onclick="S.hview='ai';render()">AI summary</button><button type="button" style="position:relative;z-index:2;pointer-events:auto" class="${hv==='aifill'?'on':''}" onclick="S.hview='aifill';render()">AI-filled form</button>`;
+      const scribe=card.querySelector('#scrH');if(scribe){scribe.classList.add('sm');scribe.style.whiteSpace='nowrap';n.appendChild(scribe);}
       seg.replaceWith(n);
       if(hv==='ai'){const nx=n.nextElementSibling;const tt=document.createElement('template');tt.innerHTML=aiSummary();if(nx)nx.replaceWith(tt.content);else n.after(tt.content);}
       if(hv==='aifill'){

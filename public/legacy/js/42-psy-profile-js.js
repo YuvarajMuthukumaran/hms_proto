@@ -26,18 +26,22 @@
   .pp-r{display:flex;gap:8px;align-items:stretch}.pp-r label{flex:1;min-width:0}.pp-r .btn{align-self:center;white-space:nowrap}
   .pp-sel label b{font-weight:600}.pp-sel .tiny{display:block}
   .pp-all{border-color:var(--blue)!important;background:var(--blue-tint)}
-  .psy-tx-plan{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
-  .psy-tx-panel{min-width:0;border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}
-  .psy-tx-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 16px 10px}
-  .psy-tx-head h3{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em}
-  .psy-tx-head .small{margin-top:4px;line-height:1.4}
-  .psy-tx-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-  .psy-tx-panel details{border-top:1px solid var(--line-2)}
-  .psy-tx-panel details>summary{display:flex;align-items:center;gap:8px;list-style:none;padding:8px 16px;color:var(--blue-ink);font-size:12px;font-weight:650;cursor:pointer}
-  .psy-tx-panel details>summary::-webkit-details-marker{display:none}
-  .psy-tx-panel details>summary:after{content:'⌄';margin-left:auto;color:var(--muted);font-size:16px;transition:transform .15s}
-  .psy-tx-panel details[open]>summary:after{transform:rotate(180deg)}
-  .psy-tx-body{padding:0 12px 12px}
+  .psy-tx-plan{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .psy-tx-tabs{display:flex;align-items:center;gap:5px;min-width:0;overflow-x:auto;padding:5px;border:1px solid #d5e1ef;border-radius:12px;background:#f1f5fa;scrollbar-width:thin}
+  .psy-tx-tab{flex:0 0 auto;min-height:40px;border:1px solid transparent;border-radius:9px;background:transparent;color:#344054;padding:9px 15px;font:inherit;font-size:13.5px;font-weight:650;white-space:nowrap;cursor:pointer;transition:color .15s ease,background .15s ease,border-color .15s ease,box-shadow .15s ease}
+  .psy-tx-tab:hover{color:var(--blue-ink,#1e5bb8);background:#e3edfb}
+  .psy-tx-tab[aria-selected="true"]{color:#fff;background:var(--blue,#1e6cdb);border-color:var(--blue,#1e6cdb);box-shadow:0 2px 5px rgba(30,108,219,.28);font-weight:700}
+  .psy-tx-tab[aria-selected="true"]:hover{background:#1759bd;border-color:#1759bd}
+  .psy-tx-tab:focus-visible{outline:2px solid var(--blue,#1e6cdb);outline-offset:2px}
+  .psy-tx-panel{min-width:0;border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,0.04),0 1px 2px rgba(15,23,42,0.02);transition:border-color .2s ease,box-shadow .2s ease;display:flex;flex-direction:column}
+  .psy-tx-panel:hover{border-color:#cbd5e1;box-shadow:0 4px 12px rgba(15,23,42,0.06)}
+  .psy-tx-panel[hidden]{display:none}
+  .psy-tx-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:16px 18px 14px;min-height:72px}
+  .psy-tx-head h3{margin:0;font-size:16px;font-weight:700;color:var(--ink,#0f172a);letter-spacing:-.01em}
+  .psy-tx-head .small{margin-top:5px;line-height:1.45;color:var(--muted,#5b6475);font-size:13px}
+  .psy-tx-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+  .psy-tx-actions .btn{padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:600;white-space:nowrap}
+  .psy-tx-body{padding:14px 16px 16px;background:#fff}
   .psy-tx-body>.card{border:0;box-shadow:none;margin:0;border-radius:0}
   .psy-tx-body>.card>.hd{padding:8px 4px}
   .psy-tx-body .scroll{max-width:100%;overflow:auto}
@@ -233,7 +237,11 @@
   /* the merged tab shows the preferences first, then the grievances */
   const prefsCss=document.createElement('style');prefsCss.id='psy-prefs-view-css';
   prefsCss.textContent=`#psyPrefsPage.prefs-read .input:disabled{opacity:1;color:var(--ink,#101828);background:var(--bg-soft,#f8fafc);cursor:default}
-    #psyPrefsPage.prefs-read .tog:disabled{opacity:1;cursor:default}`;
+    #psyPrefsPage.prefs-read .tog:disabled{opacity:1;cursor:default}
+    #psyPrefsPage .psy-prefs-seg{display:flex;flex:0 0 300px;width:300px;min-width:0;gap:3px;padding:4px;border:1px solid #e0e8f2;border-radius:12px;background:#f0f4f9}
+    #psyPrefsPage .psy-prefs-seg button{flex:1 0 max-content;min-width:max-content;min-height:40px;padding:9px 12px;border:1px solid transparent;border-radius:9px;font-size:13px;white-space:nowrap!important;word-break:keep-all;overflow-wrap:normal;color:#344054}
+    #psyPrefsPage .psy-prefs-seg button.on{background:#fff;color:#111827;border-color:#e7edf5;box-shadow:0 1px 3px rgba(15,23,42,.1);font-weight:700}
+    @media(max-width:480px){#psyPrefsPage .psy-prefs-seg{flex-basis:min(300px,100%);width:min(300px,100%)}}`;
   document.head.appendChild(prefsCss);
   window.psyPrefsView=function(v){S.prefsView=v==='form'?'form':'read';render();};
   const __pp2=pPrefs;
@@ -243,7 +251,7 @@
     t.innerHTML=h+'<div class="lbl" style="margin:10px 4px 0">Grievances</div>'+pGriev();
     const page=document.createElement('div');page.id='psyPrefsPage';page.className=view==='read'?'prefs-read':'prefs-form';
     const seg=document.createElement('div');seg.className='row';seg.style.cssText='justify-content:flex-end;margin-bottom:12px';
-    seg.innerHTML=`<div class="seg" style="align-self:flex-start;min-width:240px"><button class="${view==='read'?'on':''}" onclick="psyPrefsView('read')">Read only</button><button class="${view==='form'?'on':''}" onclick="psyPrefsView('form')">Fill form</button></div>`;
+    seg.innerHTML=`<div class="seg psy-prefs-seg"><button class="${view==='form'?'on':''}" onclick="psyPrefsView('form')">Fill form</button><button class="${view==='read'?'on':''}" onclick="psyPrefsView('read')">Read only</button></div>`;
     const grievance=[...t.content.querySelectorAll('section.card')].find(s=>/^Grievances/.test((s.querySelector('h3')||{}).textContent||''));
     const log=grievance&&[...grievance.querySelectorAll('button')].find(b=>b.textContent.trim()==='Log grievance');
     if(log){const top=log.cloneNode(true);top.className='btn sm pri';seg.appendChild(top);log.remove();}
@@ -261,6 +269,7 @@
   const cssN=document.createElement('style');cssN.id='psy-notes-nav-css';
   cssN.textContent=`
   .dn-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:2px 0 10px}.dn-bar .input{max-width:360px;min-height:38px;margin:0}
+  .psy-dn-filter-row{padding:0 20px 10px}
   .dn-more{display:flex;justify-content:center;padding:10px 0 2px}
   .ntag{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 10px;background:#eff8ff;color:#175cd3;border:1px solid #b2ddff;white-space:nowrap}
   .ntag.c-violet{background:#f4f3ff;color:#5925dc;border-color:#d9d6fe}.ntag.c-green{background:#ecfdf3;color:#067647;border-color:#abefc6}.ntag.c-amber{background:#fffaeb;color:#b54708;border-color:#fedf89}.ntag.c-grey{background:#f2f4f7;color:#475467;border-color:#e4e7ec}`;
@@ -282,7 +291,10 @@
     const h=__pdn.apply(this,arguments);if(!psy())return h;
     const all=(S.dnHist||DN_HIST),types=[...new Set(all.map(n=>n.type))],f=S.dnF||'All';
     const chips=['All'].concat(types).map(x=>`<button class="tog ${f===x?'on':''}" onclick="S.dnLim=10;dnSet('${hesc(x)}')">${x==='All'?'All':hesc(x)+' · '+all.filter(n=>n.type===x).length}</button>`).join('');
-    return h.replace(/<div class="mini-chips" role="group" aria-label="Filter notes">[\s\S]*?<\/div>/,`<div class="mini-chips" role="group" aria-label="Filter notes">${chips}</div>`);
+    const t=document.createElement('template');t.innerHTML=h.replace(/<div class="mini-chips" role="group" aria-label="Filter notes">[\s\S]*?<\/div>/,`<div class="mini-chips" role="group" aria-label="Filter notes">${chips}</div>`);
+    const section=[...t.content.querySelectorAll('section.card')].find(s=>s.querySelector('.hd h3')?.textContent.trim()==='Earlier notes'),head=section&&section.querySelector('.hd'),filters=head&&head.querySelector('.mini-chips[aria-label="Filter notes"]');
+    if(section&&head&&filters){const row=document.createElement('div');row.className='psy-dn-filter-row';row.appendChild(filters);head.after(row);}
+    return t.innerHTML;
   };
 
   /* ---------- Treatment Plan tab (Anu, Trello "Vitals and monitoring", 5 Nov): Vitals and medicines and Orders and consents become one tab, six parts in this order ----------
@@ -295,6 +307,24 @@
     const L=v3().labs.filter(l=>l.pid===S.pid).sort((a,b)=>b.t-a.t);
     return `<section class="card"><div class="hd"><div><h3>Lab reports</h3><div class="small muted" style="margin-top:4px">Report name and date. Tap a report to open the full PDF.</div></div><button class="btn sm" onclick="psyLabAdd('${S.pid}')">Upload lab report</button></div>
       ${L.length?L.map(l=>`<div class="li"><div class="grow"><div style="font-weight:600">${hesc(l.test)}</div><div class="tiny muted">${hesc(V3.stamp(l.t))}</div></div><button class="btn sm" onclick="psyLabPdf('${l.id}')">Open PDF</button></div>`).join(''):'<div class="pad small muted">No lab reports yet.</div>'}</section>`;
+  };
+  window.psyTxTab=function(i,focus){
+    const root=document.querySelector('#view .psy-tx-plan');if(!root)return;
+    const tabs=[...root.querySelectorAll('.psy-tx-tab')],panels=[...root.querySelectorAll('.psy-tx-panel')];
+    if(!tabs.length||!panels.length)return;
+    const active=Math.max(0,Math.min(Number(i)||0,tabs.length-1));S.psyTxTab=active;
+    tabs.forEach((tab,n)=>{const on=n===active;tab.setAttribute('aria-selected',String(on));tab.tabIndex=on?0:-1;});
+    panels.forEach((panel,n)=>{panel.hidden=n!==active;});
+    if(focus)tabs[active].focus();
+  };
+  window.psyTxTabKey=function(e,i){
+    let next=i;
+    if(e.key==='ArrowRight')next=i+1;
+    else if(e.key==='ArrowLeft')next=i-1;
+    else if(e.key==='Home')next=0;
+    else if(e.key==='End')next=document.querySelectorAll('#view .psy-tx-tab').length-1;
+    else return;
+    e.preventDefault();window.psyTxTab(next,true);
   };
   const __po42=pOrders;
   pOrders=function(){
@@ -324,13 +354,16 @@
     if(rq)out.push(rq.outerHTML.replace('<h3>Requests and procedures</h3>','<h3>Requests and permissions</h3>').replace('Each request tells the front desk which family signature to take','ECT, clozapine and other treatments that need a request or a permission. Each one tells the front desk which family signature to take'));
     if(cs)out.push(cs.outerHTML);
     if(!out.length)return __po42.apply(this,arguments);
-    const panel=(html,i)=>{
+    const panel=(html,i,active)=>{
       const node=kidsOf(html)[0];if(!node)return html;
       const head=node.querySelector(':scope > .hd'),title=head?(head.querySelector('h3')||{}).textContent:'',desc=head?(head.querySelector('.small')||{}).textContent:'',actions=head?[...head.querySelectorAll('button')].map(b=>b.outerHTML).join(''):'';
       const body=node.cloneNode(true);const bodyHead=body.querySelector(':scope > .hd');if(bodyHead)bodyHead.remove();
-      return `<section class="psy-tx-panel"><div class="psy-tx-head"><div><h3>${hesc(title||'Treatment plan')}</h3>${desc?`<div class="small muted">${hesc(desc)}</div>`:''}</div>${actions?`<div class="psy-tx-actions">${actions}</div>`:''}</div><details ${i<2?'open':''}><summary>Section details</summary><div class="psy-tx-body">${body.innerHTML}</div></details></section>`;
+      return `<section class="psy-tx-panel" id="psyTxPanel-${i}" role="tabpanel" aria-labelledby="psyTxTab-${i}" tabindex="0"${i===active?'':' hidden'}><div class="psy-tx-head"><div><h3>${hesc(title||'Treatment plan')}</h3>${desc?`<div class="small muted">${hesc(desc)}</div>`:''}</div>${actions?`<div class="psy-tx-actions">${actions}</div>`:''}</div><div class="psy-tx-body">${body.innerHTML}</div></section>`;
     };
-    return `<div class="psy-tx-plan">${out.map(panel).join('')}</div>`;
+    const titles=out.map(html=>{const node=kidsOf(html)[0],head=node&&node.querySelector(':scope > .hd');return ((head&&head.querySelector('h3'))||{}).textContent||'Treatment plan';});
+    const active=Math.max(0,Math.min(Number(S.psyTxTab)||0,out.length-1));
+    const tabs=titles.map((title,i)=>`<button type="button" class="psy-tx-tab" id="psyTxTab-${i}" role="tab" aria-selected="${i===active}" aria-controls="psyTxPanel-${i}" tabindex="${i===active?'0':'-1'}" onclick="psyTxTab(${i})" onkeydown="psyTxTabKey(event,${i})">${hesc(title)}</button>`).join('');
+    return `<div class="psy-tx-plan"><div class="psy-tx-tabs" role="tablist" aria-label="Treatment plan sections">${tabs}</div>${out.map((html,i)=>panel(html,i,active)).join('')}</div>`;
   };
 
   /* A signed history for a patient other than Neel is shown from what the record holds (the prototype stores no typed history). */

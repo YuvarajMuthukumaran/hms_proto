@@ -28,11 +28,11 @@
   .pd-t tbody tr:hover td{background:#f8fbff}.pd-t tr.r-red:hover td{background:#fff6f6}
   .pd-t tr.r-done{--pc:#12b76a;--pg:rgba(18,183,106,.16)}
   .pd-who{display:flex;align-items:center;gap:12px;border:0;background:none;padding:0;font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
-  .pd-who b{font-size:15px;font-weight:700}.pd-nm{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pd-who:hover b{color:var(--blue)}
+  .pd-who b{font-size:15px;font-weight:700}.pd-nm{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;white-space:nowrap}.pd-who:hover b{color:var(--blue)}
   .pd-sub{display:block;font-size:12.5px;color:var(--muted);margin-top:1px}
   .pd-dx{font-size:13px;color:var(--ink-2);margin:8px 0 0 50px;line-height:1.35}
   .pd-tags{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0 50px}
-  .pd-tag{font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 9px}.pd-tag.amber{background:#fffaeb;color:#b54708}.pd-tag.blue{background:#eff8ff;color:#175cd3}
+  .pd-tag{font-size:10px;line-height:1.15;font-weight:700;border-radius:99px;padding:1px 6px}.pd-tag.amber{font-size:9.5px;line-height:1.1;padding:0 5px;border:1px solid #f79009;background:#fff4d6;color:#93370d}.pd-tag.blue{background:#eff8ff;color:#175cd3}
   .pd-d{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;line-height:1.4;padding:2px 0}
   .pd-d+.pd-d{margin-top:4px}
   .pd-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:#98a2b3;margin-top:6px}.pd-dot.red{background:#e5484d}.pd-dot.amber{background:#f5a524}.pd-dot.blue{background:#3b82f6}.pd-dot.ok{background:#12b76a}.pd-d.done{color:#667085}.pd-d.done .tiny{color:#067647}
@@ -192,7 +192,7 @@
     const act=items.filter(i=>i.lab[1]!=='Today'); /* routine "Today" items are not shown on the dashboard any more */
     act.forEach((i,ix)=>{i.key=i.k+':'+i.txt;
       /* Take Action lists "Vitals done" / "Ondansetron done" (no Mark seen); other items keep their own button (Open, Do it now, Review and sign) */
-      if(i.k==='alert'||i.k==='order')i.btn=[itemName(i)+' done',"psyItemDone('"+p.id+"',"+ix+")",false];
+      if(i.k==='alert')i.btn=['I have seen',"psyItemDone('"+p.id+"',"+ix+")",false];
     });
     const tk=(window.psyPx&&psyPx(p.id).taken)||{},rem=act.filter(i=>!tk[i.key]),doneL=act.filter(i=>tk[i.key]);
     const allTaken=act.length>0&&!rem.length,view=rem.length?rem:act; /* chips, colour and order follow what is still open */
@@ -211,28 +211,30 @@
     const did=[];
     act.forEach(i=>{const t=tk[i.key];if(t)did.push(`<div class="pd-d done"><i class="pd-dot ok"></i><span>${hesc(t.note||'Action taken')}<span class="tiny"> · ${hesc(t.by||'')} · ${hesc(t.at||'')}</span></span></div>`);});
     v3().alerts.filter(a=>a.pid===p.id&&a.ack&&!a.closed&&!a.seen).forEach(a=>did.push(`<div class="pd-d done"><i class="pd-dot ok"></i><span>${hesc(a.ack.note||'Acknowledged')}<span class="tiny"> · ${hesc(a.ack.by||'')}${a.ack.role&&V3.roleName&&V3.roleName[a.ack.role]?' ('+hesc(V3.roleName[a.ack.role])+')':''} · ${hesc(V3.hm(a.ack.t))}</span></span></div>`));
-    const html=act.length?`<tr class="${allTaken?'r-done':(edge?'r-'+edge:'')}" data-dt="${hesc((p.name+' '+p.room).toLowerCase())}" data-need="${has('alert')||has('order')?1:0}" data-new="${isNew?1:0}" data-late="${has('late')?1:0}">
+    const html=act.length&&!allTaken?`<tr class="${edge?'r-'+edge:''}" data-dt="${hesc((p.name+' '+p.room).toLowerCase())}" data-need="${has('alert')||has('order')?1:0}" data-new="${isNew?1:0}" data-late="${has('late')?1:0}">
       <td><span class="pd-ty ${top[0]}">${hesc(top[1])}</span></td>
       <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,38,has('alert')?'c-red':'c-blue')}<span><span class="pd-nm"><b>${hesc(p.name)}</b>${p.risk?'<span class="pd-tag amber">High risk</span>':''}</span><span class="pd-sub">${hesc(sub(p))}</span></span></button>${isNew?`<div class="pd-tags" style="margin-left:50px"><span class="pd-tag blue">New admission</span></div>`:''}</td>
       <td>${shown.map(detail).join('')}${lines.length>3?`<div class="tiny muted" style="margin-top:4px">+${lines.length-3} more, press the eye</div>`:''}</td>
       <td>${did.length?did.join(''):'<span class="tiny muted">Nothing yet</span>'}${doneL.length&&rem.length?`<div class="tiny" style="margin-top:4px;color:#067647;font-weight:600">${doneL.length} of ${act.length} done</div>`:''}</td>
-      <td><div class="pd-acts"><button class="pd-eye" aria-label="View details for ${hesc(p.name)}" title="View details" onclick="psyEye('${p.id}')">${EYE}</button>${allTaken?`<span class="pd-done" title="${hesc((last.by||'')+' · '+(last.at||'')+(last.note?' · '+last.note:''))}">Action taken ✓</span>`:`<button class="btn sm pd-take" aria-haspopup="menu" onclick="psyMenu(event,'${p.id}')">Take Action <span aria-hidden="true">▾</span></button>`}</div></td></tr>`:'';
-    return {rank,html,act};
+      <td><div class="pd-acts"><button class="pd-eye" aria-label="View details for ${hesc(p.name)}" title="View details" onclick="psyEye('${p.id}')">${EYE}</button><button class="btn sm pd-take" aria-haspopup="menu" onclick="psyMenu(event,'${p.id}')">Take Action <span aria-hidden="true">▾</span></button></div></td></tr>`:'';
+    const doneHtml=allTaken?`<div class="li"><div class="grow"><div style="font-weight:600">${hesc(p.name)} <span class="pd-done">Done today ✓</span></div><div class="tiny muted">${hesc(act.length+' item'+(act.length===1?'':'s')+' completed · '+(last&&last.by||'' )+' · '+(last&&last.at||''))}</div></div><button class="btn sm" onclick="psyEye('${p.id}')">View record</button></div>`:'';
+    return {rank,html,doneHtml,act,allTaken};
   }
 
   function dash(){
     $('title').textContent='Inpatients';
     const T=tasks().filter(t=>!S.done[t.id]&&t.taskType!=='alert'&&t.taskType!=='countersign');
-    const rows=PTS.map(p=>build(p,T)).filter(r=>r.act.length).sort((a,b)=>a.rank-b.rank);
+    const rows=PTS.map(p=>build(p,T)).filter(r=>r.act.length).sort((a,b)=>a.rank-b.rank),openRows=rows.filter(r=>!r.allTaken),doneRows=rows.filter(r=>r.allTaken);
     S.dtF='all';
     setTimeout(dtFilter,0);
     return `<div class="pd">
       <div class="pd-bar"><input class="input" id="dtQ" style="width:280px;min-height:40px;margin:0" placeholder="Type a name" oninput="dtFilter()" aria-label="Search patients">
         <div class="row" style="gap:8px"><button class="btn" onclick="go('#/admissions')">New admission</button><button class="btn pri" onclick="go('#/rounds')">Start rounds</button></div></div>
-      ${rows.length?`<div style="overflow-x:auto"><table class="pd-t" style="min-width:900px"><colgroup><col style="width:122px"><col style="width:190px"><col><col style="width:21%"><col style="width:216px"></colgroup>
+      ${openRows.length?`<div style="overflow-x:auto"><table class="pd-t" style="min-width:900px"><colgroup><col style="width:122px"><col style="width:190px"><col><col style="width:21%"><col style="width:216px"></colgroup>
         <thead><tr><th>Type</th><th>Patient</th><th>Event</th><th>Action taken by others</th><th></th></tr></thead>
-        <tbody id="dtBody">${rows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="5" class="pd-empty">No patient matches</td></tr></tbody></table></div>`
+        <tbody id="dtBody">${openRows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="5" class="pd-empty">No patient matches</td></tr></tbody></table></div>`
       :`<section class="card"><div class="pd-empty">Nothing needs you right now. You can start your rounds when you are ready.</div></section>`}
+      ${doneRows.length?`<section class="card"><div class="hd"><div><h3>Done today</h3><div class="small muted" style="margin-top:4px">Completed actions are kept here for reference.</div></div></div>${doneRows.map(r=>r.doneHtml).join('')}</section>`:''}
     </div>`;
   }
   Object.assign(ROLE.psychiatrist,{myday:()=>dash()});
