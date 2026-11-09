@@ -151,14 +151,28 @@
     const t=document.createElement('template');t.innerHTML=h;
     const fc=t.content.querySelector('#famCallDue');if(!fc)return h;
     {
-      const g=fc.querySelector('.li .grow'),btns=[...fc.querySelectorAll('.li button')].map(b=>b.outerHTML).join('');
+      const g=fc.querySelector('.li .grow');
       const ti=g&&g.children[0]?g.children[0].textContent:'',su=g&&g.children[1]?g.children[1].textContent:'';
       const ph='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>';
-      if(g&&btns){const n=document.createElement('section');n.id='famCallDue';n.className='fc9';
-        n.innerHTML=`<div class="fc9-ic">${ph}</div><div class="fc9-b"><div class="fc9-k"><i style="animation-delay:-${Date.now()%1600}ms"></i>Family call due now</div><div class="fc9-t">${hesc(ti)}</div><div class="fc9-s">${hesc(su)}</div></div><div class="fc9-a">${btns}</div>`;
+      const msg='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></svg>';
+      const buttons=[...fc.querySelectorAll('.li button')].map((b,i)=>{if(sub==='past'){b.classList.remove('sm');b.insertAdjacentHTML('afterbegin',i===0?msg:ph);}return b.outerHTML;}).join('');
+      if(g&&buttons){const n=document.createElement('section');n.id='famCallDue';
+        if(sub==='past'){
+          n.className='card';n.style.borderLeft='4px solid var(--blue,#1570ef)';
+          n.innerHTML=`<div class="hd"><h3>Family call due now</h3></div><div class="li" style="justify-content:space-between;align-items:center;flex-wrap:wrap;border-top:0"><div class="grow"><div style="font-size:16px;font-weight:700">${hesc(ti)}</div><div class="small muted" style="margin-top:2px">${hesc(su)}</div></div><div class="row" style="gap:8px;justify-content:flex-end;flex-wrap:wrap">${buttons}</div></div>`;
+        }else{
+          n.className='fc9';
+          n.innerHTML=`<div class="fc9-ic">${ph}</div><div class="fc9-b"><div class="fc9-k"><i style="animation-delay:-${Date.now()%1600}ms"></i>Family call due now</div><div class="fc9-t">${hesc(ti)}</div><div class="fc9-s">${hesc(su)}</div></div><div class="fc9-a">${buttons}</div>`;
+        }
         fc.replaceWith(n);}
     }
     const fc2=t.content.querySelector('#famCallDue')||fc;
+    if(sub==='past'){
+      const admHead=[...t.content.querySelectorAll('.ws-mid h3')].find(e=>/^Admission \d+ ·/.test(e.textContent.trim()));
+      const admCard=admHead&&admHead.closest('section.card');
+      if(admCard&&!admCard.contains(fc2))admCard.parentNode.insertBefore(fc2,admCard);
+      return t.innerHTML;
+    }
     const lab=[...t.content.querySelectorAll('h3,h4,.lbl,b,div')].find(e=>e.children.length===0&&/^Stay timeline$/.test(e.textContent.trim()));
     const host=lab&&(lab.closest('section')||lab.parentElement);
     if(!host||host.contains(fc2))return h;
