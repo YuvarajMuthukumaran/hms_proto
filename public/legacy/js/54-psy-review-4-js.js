@@ -212,6 +212,7 @@
       <div class="scroll"><table class="t"><thead><tr>${c.h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${D.length?D.map(r=>`<tr>${c.f.map(f=>`<td>${hesc(r[f]||'')}</td>`).join('')}</tr>`).join(''):`<tr><td colspan="${c.h.length}" class="muted small">Nothing logged yet.</td></tr>`}</tbody></table></div></div></section>`;
   }
   window.psyTherapyPage=therapyPage;
+  window.psyVmRebuild=rebuildVitals;window.psyTmpOrders=()=>({list:orders(),defs:TMP,done:doneN});
   const __pTh=pTherapy;
   pTherapy=function(){return psy()?therapyPage():__pTh.apply(this,arguments);};
 
