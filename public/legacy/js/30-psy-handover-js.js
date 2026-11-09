@@ -343,6 +343,7 @@
     return L.map(receivedCard).join('');
   };
 
+  const covCss=document.createElement('style');covCss.id='psy-cov-css';covCss.textContent='.pd-cov{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#175cd3;background:#eff4ff;border:1px solid #c9dcfb;border-radius:6px;padding:0 6px;margin-right:6px;line-height:16px;vertical-align:1px}';document.head.appendChild(covCss);
   const hvTblCss=document.createElement('style');hvTblCss.id='psy-handover-tbl-css';
   hvTblCss.textContent=`.hv-tbl td,.hv-tbl th{vertical-align:top}.hv-tbl tbody tr.on{background:#f3f8ff}.hv-tbl .hv-line{margin:0}.hv-tbl .hv-who b{font-size:14px}.hv-tbl input[type=checkbox]{width:17px;height:17px;accent-color:var(--blue,#1d6fe0);cursor:pointer}.hv-bar label.f{display:flex;align-items:center;gap:8px;font-size:13px}`;
   document.head.appendChild(hvTblCss);
@@ -386,7 +387,7 @@
       const key='onclick="go(\'#/patient/'+pid+'/overview\')"';
       const i=h.indexOf(key);if(i<0)return;
       const j=h.indexOf('</b>',i);if(j<0||h.slice(i,j).indexOf('pd-nm')<0)return;
-      h=h.slice(0,j+4)+'<span class="pd-tag blue">Covering</span>'+h.slice(j+4);
+      const k=h.indexOf('class="pd-sub">',j);if(k>0){const e=k+'class="pd-sub">'.length;h=h.slice(0,e)+'<span class="pd-cov">Covering</span>'+h.slice(e);}
     }));
     return h;
   };
