@@ -45,7 +45,7 @@
   /* ---------- 2. Past admission: a 30 day stay with a note for every day ---------- */
   (function seed(){
     try{
-      const a=(S.pastAdm||[])[0];if(!a||a.__seeded9||(a.notes||[]).length>12)return;
+      const a=(S.pastAdm||[])[0];if(!a||a.__seeded9)return;
       a.__seeded9=1;
       const add=[],day=[];
       for(let d=5;d<=28;d++)day.push([d,'Feb']);
@@ -57,8 +57,10 @@
         const dt=d+' '+m;
         add.push([dt,'Daily note · Dr. Aanya Sharma',Sx[i%Sx.length]]);
         add.push([dt,'Daily note · Priya Nair',Py[i%Py.length]]);
-        if(i%3===1)add.push([dt,'Round note · Dr. Aanya Sharma',Rd[Math.floor(i/3)%Rd.length]]);
+        add.push([dt,'Round note · Dr. Aanya Sharma',Rd[i%Rd.length]]);
       });
+      add.push(['6 Mar','Daily note · Dr. Aanya Sharma','Settled, ready for discharge.'],['6 Mar','Daily note · Priya Nair','Discharge session with the family; plan agreed.']);
+      a.notes=a.notes.filter(n=>!/^(Round note|Daily note)/.test(String(n[1])));
       add.push(['12 Feb','Weekly re-assessment · Dr. Aanya Sharma','Improving. Continue lithium and olanzapine.'],['26 Feb','Weekly re-assessment · Dr. Aanya Sharma','Settled; planning discharge in the next week.'],['18 Feb','Management plan · Dr. Aanya Sharma','Lithium maintenance, sleep hygiene, family psychoeducation.']);
       const ord=n=>{const p=String(n[0]).split(' ');return (p[1]==='Mar'?100:0)+(+p[0]);};
       a.notes=a.notes.concat(add).sort((x,y)=>ord(y)-ord(x));
