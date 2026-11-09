@@ -316,25 +316,26 @@
   document.head.appendChild(rcCss);
   const rcCss2=document.createElement('style');rcCss2.id='psy-handover-rc-css2';
   rcCss2.textContent=`.hv-rc-wrap{position:relative}
-  .hv-rc-list{display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto;overscroll-behavior:contain;scroll-behavior:smooth;scroll-snap-type:y proximity;padding:2px 6px 2px 2px;scrollbar-width:thin;scrollbar-color:#b5c7e8 transparent;
-    background:linear-gradient(#f5f8ff 30%,rgba(245,248,255,0)) top,linear-gradient(rgba(245,248,255,0),#f5f8ff 70%) bottom,radial-gradient(farthest-side at 50% 0,rgba(16,24,40,.16),transparent) top,radial-gradient(farthest-side at 50% 100%,rgba(16,24,40,.16),transparent) bottom;background-repeat:no-repeat;background-size:100% 28px,100% 28px,100% 10px,100% 10px;background-attachment:local,local,scroll,scroll}
-  .hv-rc-list::-webkit-scrollbar{width:8px}.hv-rc-list::-webkit-scrollbar-track{background:transparent}.hv-rc-list::-webkit-scrollbar-thumb{background:#c3d3ee;border-radius:99px;border:2px solid transparent;background-clip:content-box}.hv-rc-list::-webkit-scrollbar-thumb:hover{background:#9fb8e6;background-clip:content-box}
+  .hv-rc-heads,.hv-rc-p{display:grid;grid-template-columns:minmax(180px,20%) repeat(3,minmax(0,1fr)) 96px;gap:16px;align-items:start}
+  .hv-rc-heads{padding:0 30px 6px 18px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#475467}
+  .hv-rc-list{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:2px 12px 2px 2px;scrollbar-width:thin;scrollbar-color:#b5c7e8 transparent}
+  .hv-rc-list::-webkit-scrollbar{width:8px}.hv-rc-list::-webkit-scrollbar-thumb{background:#c3d3ee;border-radius:99px}.hv-rc-list::-webkit-scrollbar-thumb:hover{background:#9fb8e6}
   .hv-rc-list:focus-visible{outline:2px solid #2e90fa;outline-offset:2px;border-radius:12px}
-  .hv-rc-hint{text-align:center;margin-top:8px;font-size:11.5px;font-weight:600;color:#667085;pointer-events:none}
-  .hv-rc-p{scroll-snap-align:start;display:grid;grid-template-columns:minmax(190px,24%) minmax(0,1fr) auto;gap:16px;align-items:start;background:#fff;border:1px solid #e3eaf6;border-left:1px solid #e3eaf6;border-radius:14px;padding:14px 16px}
-  .hv-rc-m{font-size:13px;line-height:1.55}.hv-rc-m b{font-weight:700}
-  .hv-rc-p .hv-link{border:0;background:none;padding:0;font-size:13px;font-weight:600}.hv-rc-p .hv-link:hover{background:none;text-decoration:underline}
-  @media (max-width:900px){.hv-rc-p{grid-template-columns:1fr}}`;
+  .hv-rc-p{background:#fff;border:1px solid #e3eaf6;border-radius:12px;padding:12px 16px}
+  .hv-rc-p .hv-tag,.hv-rc-p .hv-tag.red,.hv-rc-p .hv-tag.amber,.hv-rc-p .hv-tag.blue{background:#f2f4f7;color:#475467;border-color:#e4e7ec}
+  .hv-rc-m{font-size:13px;line-height:1.5;min-width:0;color:var(--ink,#101828)}
+  .hv-rc-p .hv-link{border:0;background:none;padding:0;font-size:13px;font-weight:600;text-align:right;justify-self:end}.hv-rc-p .hv-link:hover{text-decoration:underline}
+  @media (max-width:980px){.hv-rc-heads{display:none}.hv-rc-p{grid-template-columns:1fr}.hv-rc-m:before{content:attr(data-l);display:block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#667085}}`;
   document.head.appendChild(rcCss2);
   function receivedCard(h){
-    const n=h.pids.length,open=!h.hide;
+    const n=h.pids.length,open=!h.hide,KEYS=['Current symptoms','Past treatment trials','Future treatment plan'];
     return `<section class="hv-rc" aria-label="Handover received">
       <div class="hv-rc-hd"><span class="hv-rc-ic">${IC}</span><div class="t"><b>${hesc(h.from)} handed over ${n} patient${n>1?'s':''} to you</b><span>${hesc(h.reason)} · sent ${hesc(shortAt(h.at))} · ${h.acceptedBy?'accepted by '+hesc(h.acceptedBy)+', '+hesc(shortAt(h.acceptedAt)):'until you accept, '+hesc(h.from)+' still sees them'}</span></div>
         <button class="btn sm" onclick="psyHoToggle('${h.id}')">${open?'Hide':'Show'}</button>${h.acceptedBy?'':`<button class="btn sm pri" onclick="psyHoAccept('${h.id}')">Accept handover</button>`}</div>
-      ${open?`<div class="hv-rc-wrap"><div class="hv-rc-list" tabindex="0" aria-label="Patients handed over to you">${h.pids.map(pid=>{const p=ptFind(pid);if(!p)return '';const l=lineFor(h,pid),rows=lineRows(l).filter(x=>/^(Current symptoms|Past treatment trials|Future treatment plan)$/.test(x[0]));
-        return `<div class="hv-rc-p"><div class="hv-rc-who"><div style="min-width:0"><b>${hesc(p.name)}</b><div class="s">${hesc(subOf(p))}</div>${(l.tags||[]).length?`<div class="hv-tags">${l.tags.map(t=>`<span class="hv-tag ${t[1]}">${hesc(t[0])}</span>`).join('')}</div>`:''}</div></div>
-          <div class="hv-rc-m">${rows.length?rows.map(x=>`<div><b>${x[0]}:</b> ${hesc(x[1])}</div>`).join(''):'<div class="muted small">No notes added</div>'}</div>
-          <button class="hv-link" onclick="go('#/patient/${pid}/overview')">Open record</button></div>`;}).join('')}</div>${n>3?`<div class="hv-rc-hint" aria-hidden="true">${n} patients · scroll to see all</div>`:''}</div>`:''}</section>`;
+      ${open?`<div class="hv-rc-wrap"><div class="hv-rc-heads" aria-hidden="true"><span>Patient</span>${KEYS.map(k=>`<span>${k}</span>`).join('')}<span></span></div><div class="hv-rc-list" tabindex="0" aria-label="Patients handed over to you">${h.pids.map(pid=>{const p=ptFind(pid);if(!p)return '';const l=lineFor(h,pid),rows=lineRows(l),get=k=>(rows.find(x=>x[0]===k)||[])[1]||'';
+        return `<div class="hv-rc-p"><div class="hv-rc-who"><div style="min-width:0"><b>${hesc(p.name)}</b><div class="s">${hesc(subOf(p))}</div>${(l.tags||[]).length?`<div class="hv-tags">${l.tags.map(t=>`<span class="hv-tag">${hesc(t[0])}</span>`).join('')}</div>`:''}</div></div>
+          ${KEYS.map(k=>`<div class="hv-rc-m" data-l="${k}">${hesc(get(k))||'<span class="muted">—</span>'}</div>`).join('')}
+          <button class="hv-link" onclick="go('#/patient/${pid}/overview')">Open record</button></div>`;}).join('')}</div></div>`:''}</section>`;
   }
   window.psyHandoverCard=function(){
     const me=signer(),L=store().list.filter(h=>h.to===me&&!h.acceptedBy);
