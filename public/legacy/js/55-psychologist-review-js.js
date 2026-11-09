@@ -43,11 +43,11 @@
       const sub=[(window.psyAgeSex?psyAgeSex(p):(p.age||'')+'/'+(p.sex||'')),'Day '+(p.day||0)].filter(Boolean).join(' · ');
       const edge=late?'r-amber':p.risk?'r-red':'';
       const ev=items.length?items.slice(0,3).map(i=>`<div class="pd-d"><i class="pd-dot ${i.overdue?'amber':'grey'}"></i><span>${hesc(i.txt)}${i.due?`<span class="tiny muted"> · ${hesc(i.due)}</span>`:''}</span></div>`).join('')+(items.length>3?`<div class="tiny muted" style="margin-top:4px">+${items.length-3} more</div>`:''):'<span class="tiny muted">Nothing due</span>';
-      const note=saved?`<span class="chip c-green">Written${e.savedAt?' · '+hesc(e.savedAt):''}</span>`:'<span class="chip c-amber">Not written yet</span>';
+      const note=saved?`<span style="color:#067647;font-weight:700">✓ Taken${e.savedAt?' · '+hesc(e.savedAt):''}</span>`:`<button class="btn sm pri" onclick="go('#/notes')">Take</button>`;
       return {rank,html:`<tr class="${edge}" data-dt="${hesc((p.name+' '+(p.room||'')).toLowerCase())}">
         <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,38,p.risk?'c-red':'c-blue')}<span><span class="pd-nm"><b>${hesc(p.name)}</b>${p.risk?'<span class="pd-tag amber">High risk</span>':''}</span><span class="pd-sub">${hesc(sub)}</span></span></button></td>
         <td>${ev}</td><td>${note}</td>
-        <td><div class="pd-acts"><button class="pd-eye" aria-label="Open ${hesc(p.name)}" title="Open the record" onclick="go('#/patient/${p.id}/overview')">${EYE}</button>${saved?'':`<button class="btn sm pri" onclick="go('#/notes')">Write note</button>`}</div></td></tr>`};
+        <td><div class="pd-acts"><button class="pd-eye" aria-label="Open ${hesc(p.name)}" title="Open the record" onclick="go('#/patient/${p.id}/overview')">${EYE}</button></div></td></tr>`};
     }).sort((a,b)=>a.rank-b.rank);
     const done=L.filter(p=>((S.eod||{})[p.id]||{}).saved).length;
     setTimeout(()=>{try{dtFilter();}catch(e){}},0);
