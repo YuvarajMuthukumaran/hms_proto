@@ -11,8 +11,24 @@
   const psy=()=>S.role==='psychiatrist';
   const css=document.createElement('style');css.id='psy-review-9nov-css';
   css.textContent=`
-  #famCallDue{border-left-color:#f5a524!important;background:#fffaf0;box-shadow:none}
-  #famCallDue .hd{padding:10px 16px 0}#famCallDue h3{font-size:13.5px}
+  /* family call: a header chip, the call line, the actions; soft amber, one pulse on the dot and phone ring */
+  .fc9{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 20px;border:1px solid #f6dfae;border-radius:18px;background:linear-gradient(100deg,#fff8e8 0%,#fffdf8 60%,#fff 100%);box-shadow:0 1px 2px rgba(181,71,8,.06);animation:fc9-in .45s cubic-bezier(.2,.7,.2,1) both}
+  .fc9-ic{position:relative;flex:0 0 44px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#b54708;border:1px solid #f6dfae}
+  .fc9-ic:after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid #f5a524;opacity:0;animation:fc9-ring 2.4s ease-out 1.2s 2}
+  .fc9-b{flex:1;min-width:240px}
+  .fc9-k{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#b54708;background:#fff;border:1px solid #f6dfae;border-radius:99px;padding:3px 10px}
+  .fc9-k i{width:7px;height:7px;border-radius:50%;background:#f5a524;animation:fc9-dot 1.6s ease-in-out infinite}
+  .fc9-t{font-size:16px;font-weight:700;margin-top:8px;color:var(--ink,#101828)}.fc9-s{font-size:13px;color:var(--muted,#667085);margin-top:2px}
+  .fc9-a{display:flex;gap:8px;flex-wrap:wrap}
+  @keyframes fc9-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  @keyframes fc9-ring{0%{opacity:.7;transform:scale(.9)}100%{opacity:0;transform:scale(1.35)}}
+  @keyframes fc9-dot{0%,100%{opacity:1}50%{opacity:.35}}
+  /* Rx buttons: lift on hover, press down, icon nudges */
+  .rx9{display:inline-flex;align-items:center;gap:8px;transition:transform .18s cubic-bezier(.2,.7,.2,1),box-shadow .18s,border-color .18s,background .18s}
+  .rx9 svg{transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+  .rx9:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(23,92,211,.16);border-color:#9ec0f7;background:#f5f9ff}
+  .rx9:hover svg{transform:rotate(-12deg) scale(1.12)}.rx9:active{transform:translateY(0) scale(.97);box-shadow:none}
+  @media (prefers-reduced-motion:reduce){.fc9,.fc9-ic:after,.fc9-k i{animation:none}.rx9,.rx9 svg{transition:none}}
   .pf-row{display:grid;grid-template-columns:96px 170px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 14px;border-top:1px solid var(--line-2);font-size:13px}
   .pf-row .pf-b{color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pf-scroll{max-height:460px;overflow:auto;border-top:1px solid var(--line-2)}
@@ -62,6 +78,12 @@
   const __rv=render;
   render=function(){
     const out=__rv.apply(this,arguments);
+    if(psy())setTimeout(()=>{document.querySelectorAll('#view button').forEach(b=>{
+      const x=b.textContent.trim();if(b.classList.contains('rx9')||(x!=='Full Rx chart'&&x!=='Change medicines'))return;
+      b.classList.add('rx9');
+      if(x==='Full Rx chart')b.insertAdjacentHTML('afterbegin','<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>');
+      else b.insertAdjacentHTML('afterbegin','<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>');
+    });},40);
     if(psy()&&/^#\/patient\/[^/]+\/prefs/.test(location.hash||'')){setTimeout(()=>{
       const v=document.getElementById('view');if(!v||v.querySelector('.vo-note'))return;
       v.querySelectorAll('textarea,input:not([type=search])').forEach(e=>{e.disabled=true;});
@@ -111,18 +133,27 @@
   };
 
   /* ---------- 2. Patient page ---------- */
-  const prevVP=ROLE.psychiatrist.vPatient;
-  ROLE.psychiatrist.vPatient=function(sub,base){
-    let h=prevVP?prevVP.call(this,sub,base):base(sub);
+  const prevVP=vPatient;
+  vPatient=function(sub){
+    let h=prevVP.apply(this,arguments);
     if(!psy()||typeof h!=='string')return h;
     h=h.split('View full medication chart').join('Full Rx chart');
     if(h.indexOf('id="famCallDue"')<0)return h;
     const t=document.createElement('template');t.innerHTML=h;
     const fc=t.content.querySelector('#famCallDue');if(!fc)return h;
+    {
+      const g=fc.querySelector('.li .grow'),btns=[...fc.querySelectorAll('.li button')].map(b=>b.outerHTML).join('');
+      const ti=g&&g.children[0]?g.children[0].textContent:'',su=g&&g.children[1]?g.children[1].textContent:'';
+      const ph='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>';
+      if(g&&btns){const n=document.createElement('section');n.id='famCallDue';n.className='fc9';
+        n.innerHTML=`<div class="fc9-ic">${ph}</div><div class="fc9-b"><div class="fc9-k"><i></i>Family call due now</div><div class="fc9-t">${hesc(ti)}</div><div class="fc9-s">${hesc(su)}</div></div><div class="fc9-a">${btns}</div>`;
+        fc.replaceWith(n);}
+    }
+    const fc2=t.content.querySelector('#famCallDue')||fc;
     const lab=[...t.content.querySelectorAll('h3,h4,.lbl,b,div')].find(e=>e.children.length===0&&/^Stay timeline$/.test(e.textContent.trim()));
     const host=lab&&(lab.closest('section')||lab.parentElement);
-    if(!host||host.contains(fc))return h;
-    host.parentNode.insertBefore(fc,host);
+    if(!host||host.contains(fc2))return h;
+    host.parentNode.insertBefore(fc2,host);
     return t.innerHTML;
   };
 
