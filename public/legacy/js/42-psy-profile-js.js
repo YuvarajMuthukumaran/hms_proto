@@ -47,7 +47,9 @@
   .psy-tx-body .scroll{max-width:100%;overflow:auto}
   .psy-hist-read{display:flex;flex-direction:column;gap:12px}
   .psy-hist-section{border:1px solid var(--line-2,#e4e7ec);border-radius:12px;padding:12px 14px;background:#fff}
-  .psy-hist-section h4{margin:0 0 8px;font-size:15px;line-height:1.35;font-weight:700;color:var(--ink,#101828)}
+  /* 9 Nov (TL, 6 Nov recording): headings must stand out from the subheadings: a bullet (not a number) and capital letters */
+  .psy-hist-section h4{margin:0 0 8px;display:flex;align-items:center;gap:9px;font-size:13.5px;line-height:1.35;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#175cd3}
+  .psy-hist-section h4:before{content:'';flex:0 0 8px;width:8px;height:8px;border-radius:99px;background:#175cd3}
   .psy-hist-field{display:grid;grid-template-columns:minmax(190px,32%) minmax(0,1fr);gap:12px;padding:8px 0;border-top:1px solid var(--line-2,#eef0f3)}
   .psy-hist-field b{font-size:13px;color:var(--ink-2,#344054)}
   .psy-hist-field span{font-size:14px;line-height:1.45;color:var(--ink,#101828);overflow-wrap:anywhere}
@@ -381,15 +383,19 @@
     /* the separate Scores block (NEWS2 and suicide screen) stays removed from this tab (owner, 5 Nov). 9 Nov (QA, Trello "bring back scores"):
        the scores come back as ONE line inside Vitals, not as a block of their own. */
     if(v&&window.psyScoreStrip){const hd=v.querySelector(':scope > .hd'),strip=psyScoreStrip(S.pid);if(hd)hd.insertAdjacentHTML('afterend',strip);else v.insertAdjacentHTML('afterbegin',strip);}
-    if(v)out.push(v.outerHTML);
-    /* 3 Monitoring: orders, blood sugar and the other monitoring in one card */
+    /* 3 Monitoring: orders, blood sugar and the other monitoring. 9 Nov (TL, 6 Nov recording): "merge the monitoring and the vitals, it's the same thing":
+       one tab, Vitals and monitoring, with the vitals first and the monitoring orders and readings under them. */
     const parts=['Monitoring orders','Blood sugar monitoring','Other monitoring by nurses'].map(n=>findSec(vit,n)).filter(Boolean);
     /* Keep distinct ongoing checks under Monitoring, without the redundant "by nurses" heading or checks already captured above. */
     parts.forEach((e,i)=>{if(!/^Other monitoring/.test(ttlOf(e)))return;
       const rows=[...e.querySelectorAll('.li')].filter(li=>!(/^(?:weight|sleep(?: chart)?|(?:blood )?sugar|lipid profile|serum lithium level)\b/i.test(((li.querySelector('.grow > div')||{}).textContent||'').trim()))).map(li=>`<tr><td style="font-weight:600">${hesc((li.querySelector('.grow > div')||{}).textContent||'')}</td><td>${hesc((li.querySelector('.tiny')||{}).textContent||'')}</td><td>${hesc((li.querySelector('.chip')||{}).textContent||'')}</td></tr>`).join('');
       const btn=e.querySelector('.pad button'),bh=btn?btn.outerHTML:'';
       const d=document.createElement('section');d.innerHTML=`<div class="hd"><h3>Ongoing monitoring</h3>${bh}</div>${rows?`<div class="scroll"><table class="t"><thead><tr><th>Monitoring</th><th>Plan and latest</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="pad small muted">No additional ongoing checks.</div>'}`;parts[i]=d;});
-    if(parts.length)out.push(`<section class="card"><div class="hd"><div><h3>Monitoring</h3><div class="small muted" style="margin-top:4px">Blood sugar, intake and output and everything else monitored, in the same format as the vitals</div></div></div>${parts.map(e=>`<div style="border-top:1px solid var(--line-2)">${e.innerHTML}</div>`).join('')}</section>`);
+    if(v||parts.length){
+      const vh=v&&v.querySelector(':scope > .hd'),vbtn=vh?[...vh.querySelectorAll('button')].map(b=>b.outerHTML).join(''):'';
+      if(vh)vh.remove();
+      out.push(`<section class="card"><div class="hd"><div><h3>Vitals and monitoring</h3><div class="small muted" style="margin-top:4px">What the doctor ordered and what the nurses recorded, in one place. Blood sugar and other monitoring follow the vitals.</div></div>${vbtn}</div>${v?v.innerHTML:''}${parts.map(e=>`<div style="border-top:1px solid var(--line-2)">${e.innerHTML}</div>`).join('')}</section>`);
+    }
     /* 4 Lab reports */
     out.push(labReports2());
     /* 5 Requests and permissions, 6 Consents */
@@ -516,9 +522,10 @@
       const rows=(groups.get(s.t)||[]).slice().sort((a,b)=>rank(a[0])-rank(b[0]));
       const have=new Set(rows.map(r=>r[0])),miss=ord.filter((l,i)=>!have.has(l)&&ord.indexOf(l)===i);
       const body=rows.map(([label,value])=>`<div class="psy-hist-field"><b>${hesc(label)}</b><span>${(Array.isArray(value)?value.join('\n'):String(value)).split('\n').map(hesc).join('<br>')}</span></div>`).join('');
-      return `<section class="psy-hist-section"><h4>${si+1}. ${hesc(s.t)}</h4>${rows.length?body:'<div class="psy-hist-empty">Nothing answered in this section yet.</div>'}${rows.length&&miss.length?`<div class="psy-hist-empty psy-hist-miss">Not answered yet: ${miss.map(hesc).join(' · ')}</div>`:''}</section>`;
+      return `<section class="psy-hist-section"><h4>${hesc(s.t)}</h4>${rows.length?body:'<div class="psy-hist-empty">Nothing answered in this section yet.</div>'}${rows.length&&miss.length?`<div class="psy-hist-empty psy-hist-miss">Not answered yet: ${miss.map(hesc).join(' · ')}</div>`:''}</section>`;
     }).join('')}</div>`;
   }
+  window.psyHistoryReadHtml=historyReadHtml; /* used by Past admissions (44) to open a full detailed case history */
   window.psyHistView=function(){
     const d=histDoc();if(!d.n){toast('The detailed history is not written yet');return;}
     const signedNeel=S.pid==='neel',sc=signedNeel?{by:'Dr. Aanya Sharma, Priya Nair',secs:HREAD}:(S.historyStatus==='signed'?histFromRecord():{by:'Draft, not signed yet',secs:Object.keys(HDRAFT).filter(k=>HDRAFT[k]&&(!Array.isArray(HDRAFT[k])||HDRAFT[k].length)).map(k=>[k,HDRAFT[k]])});

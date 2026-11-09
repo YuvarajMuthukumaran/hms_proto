@@ -185,6 +185,17 @@
     return 'other';
   };
   const FOLD='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+  /* 9 Nov (TL, 6 Nov recording): a past admission's Detailed case history and Capacity assessment open as the FULL read-only document
+     (all headings and subheadings, the same as the current admission), not a one-line summary. The prototype holds one full sample
+     (Neel Bose's), which is used for his earlier admission. */
+  function fullDoc(k,i){
+    try{
+      if(S.pid!=='neel')return '';
+      if(k==='hist'&&typeof HREAD!=='undefined'&&window.psyHistoryReadHtml)return `<div class="small muted" style="margin-bottom:8px">Detailed case history · ${hesc(i.d)} ${hesc(i.my)} · read only</div>${psyHistoryReadHtml(HREAD)}`;
+      if(k==='cap'&&typeof capReadBody==='function')return `<div class="small muted" style="margin-bottom:8px">Capacity assessment · ${hesc(i.d)} ${hesc(i.my)} · read only</div>${capReadBody()}`;
+    }catch(e){}
+    return '';
+  }
   const __pp=pPast;
   pPast=function(){
     if(!psy())return __pp.apply(this,arguments);
@@ -195,7 +206,7 @@
         if(k==='other'&&!L.length)return '';
         if(!L.length)return `<details class="pf empty"><summary onclick="return false">${FOLD}<span>${name}</span><span class="pf-n" style="background:#f2f4f7;color:#667085">None</span></summary></details>`;
         const key=ai+'|'+k;
-        return `<details class="pf" ${(S.pfOpen||{})[key]?'open':''} ontoggle="(S.pfOpen=S.pfOpen||{})['${key}']=this.open"><summary>${FOLD}<span>${name}</span><span class="pf-n">${L.length}</span></summary>${L.map(i=>`<details class="pf-e"><summary><span class="pf-d">${hesc(i.d)} ${hesc(i.my)}</span><span class="pf-t">${hesc(i.type)}</span><span class="pf-b">${hesc(i.by)}</span><span class="pf-s">${hesc(i.sum)}</span></summary><div class="pf-body"><b>${hesc(i.type)}</b>${hesc(i.text)}<b>Written by</b>${hesc(i.by)} · ${hesc(i.role)}</div></details>`).join('')}</details>`;
+        return `<details class="pf" ${(S.pfOpen||{})[key]?'open':''} ontoggle="(S.pfOpen=S.pfOpen||{})['${key}']=this.open"><summary>${FOLD}<span>${name}</span><span class="pf-n">${L.length}</span></summary>${L.map(i=>`<details class="pf-e"><summary><span class="pf-d">${hesc(i.d)} ${hesc(i.my)}</span><span class="pf-t">${hesc(i.type)}</span><span class="pf-b">${hesc(i.by)}</span><span class="pf-s">${hesc(i.sum)}</span></summary><div class="pf-body">${fullDoc(k,i)||`<b>${hesc(i.type)}</b>${hesc(i.text)}`}<b>Written by</b>${hesc(i.by)} · ${hesc(i.role)}</div></details>`).join('')}</details>`;
       }).join('');
       return `<section class="card">
         <div class="hd"><div><h3>Admission ${a.n} · ${a.dates}</h3><div class="small muted" style="margin-top:4px">${a.days} days · ${a.sec} · ${a.psy} · ${a.psych} · read only</div></div>

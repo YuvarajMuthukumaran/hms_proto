@@ -42,7 +42,7 @@
   const px=pid=>(window.psyPx?psyPx(pid):(ptCtxOf(pid).psyx=ptCtxOf(pid).psyx||{}));
   /* handovers live at the top level of the state (they are about the doctor, not one patient) */
   function store(){
-    if(!S.psyHO)S.psyHO={list:[{id:'ho0',from:'Dr. Rohan Mehta',to:'Dr. Aanya Sharma',reason:'On leave 10 to 12 Nov',at:'3 Nov 2026, 6:10 pm',pids:['sameer','dev'],rec:{sameer:'Watch sleep tonight. Call the RMO if he refuses food.',dev:'Cravings at night. Clonidine SOS if restless.'},lines:{sameer:{watch:'Watch sleep tonight. Call the RMO if he refuses food.',plan:'Capacity assessment week 2 due. Continue fluoxetine 40 mg.',rec:'Obsessive-compulsive disorder · Fluoxetine 40 mg · Clonazepam 0.5 mg · Last round 22 Oct',tags:[['Routine','amber']]},dev:{watch:'Cravings at night. Clonidine SOS if restless.',plan:'Sign the discharge summary. Family pickup Thursday 11 am.',rec:'Opioid dependence · Buprenorphine 2 mg, Clonidine 0.1 mg · Last round 22 Oct',tags:[['Discharge planned','blue']]}},status:'sent'}],ui:{to:'',reason:'Night duty',watch:{}}};
+    if(!S.psyHO)S.psyHO={list:[{id:'ho0',from:'Dr. Rohan Mehta',to:'Dr. Aanya Sharma',reason:'On leave 10 to 12 Nov',at:'3 Nov 2026, 6:10 pm',pids:['sameer','dev'],rec:{sameer:'Watch sleep tonight. Call the RMO if he refuses food.',dev:'Cravings at night. Clonidine SOS if restless.'},lines:{sameer:{watch:'Watch sleep tonight. Call the RMO if he refuses food.',plan:'Capacity assessment week 2 due. Continue fluoxetine 40 mg.',rec:'Obsessive-compulsive disorder · Fluoxetine 40 mg · Clonazepam 0.5 mg · Last round 22 Oct',tags:[['Routine','amber']]},dev:{watch:'Cravings at night. Clonidine SOS if restless.',plan:'Sign the discharge summary. Family pickup Thursday 11 am.',rec:'Opioid dependence · Buprenorphine 2 mg, Clonidine 0.1 mg · Last round 22 Oct',tags:[['Discharge planned','blue']]}},status:'sent'}],ui:{to:'',reason:'Going on leave / Transfer',watch:{}}};
     return S.psyHO;
   }
   /* ---- Anu's handover format (draft "patient care 1 jan edited", psychiatrist page): ONE PAGE PER PATIENT.
@@ -167,8 +167,9 @@
     return [p.dx||c.dx||'',m,lastRound(c)].filter(Boolean).join(' · ');
   }
   const subOf=p=>[window.psyAgeSex?psyAgeSex(p):'',window.psyRoomLabel?psyRoomLabel(p):p.room,'Day '+(p.day||0),'Sec '+(ptCtxOf(p.id).section||p.sec||'89')].filter(Boolean).join(' · ');
-  const REASONS=[['Night duty','night doctor','Watch tonight','send by 8:00 pm'],['Going on leave','covering doctor','Watch while away','send before you leave'],['Transfer','new doctor','Watch for the new doctor','send before the transfer']];
-  const rsn=()=>REASONS.find(r=>r[0]===store().ui.reason)||REASONS[0];
+  /* 9 Nov (Nikita): no Night duty (a handover every day is not needed); Going on leave and Transfer are ONE button */
+  const REASONS=[['Going on leave / Transfer','covering doctor','What to watch','send before you leave or the transfer']];
+  const rsn=()=>REASONS[0];
   const wOf=pid=>String((store().ui.watch||{})[pid]||'').trim();
   function hvState(){
     const items=PTS.map(p=>{const t=tagsOf(p.id);return {p,t,w:wOf(p.id)};});
@@ -242,7 +243,7 @@
     if(!u.to){toast('Choose the doctor who takes over');const sel=$('hoTo');if(sel)sel.focus();return;}
     if(s.missing.length){toast('Add a line for '+s.missing.length+' flagged patient'+(s.missing.length>1?'s':'')+' first');const el=$('hvIn-'+s.missing[0].p.id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus({preventScroll:true});}return;}
     const lines={};s.items.forEach(i=>{lines[i.p.id]={watch:i.w,plan:planOf(i.p.id),rec:recOf(i.p.id),tags:i.t.tags.length?i.t.tags.slice(0,3):[['Routine','amber']],flag:i.t.flag};});
-    store().list.unshift({id:'ho'+Date.now(),from:signer(),to:u.to,reason:u.reason,at:atNow(),pids:PTS.map(p=>p.id),lines,status:'sent'});
+    store().list.unshift({id:'ho'+Date.now(),from:signer(),to:u.to,reason:rsn()[0],at:atNow(),pids:PTS.map(p=>p.id),lines,status:'sent'});
     u.watch={};render();toast('Handover sent to '+u.to+'. You still see these patients until '+u.to+' accepts.');
   };
   /* what a sent handover says for one patient (the sample handover and older ones may carry only part of it) */
@@ -252,7 +253,7 @@
     const pids=h?h.pids:PTS.map(p=>p.id);
     const rows=pids.map(pid=>{const p=ptFind(pid),l=h?lineFor(h,pid):{watch:wOf(pid),plan:planOf(pid),rec:recOf(pid)};
       return `<tr><td><b>${hesc(p.name)}</b><br>${hesc(subOf(p))}</td><td>${hesc(l.watch||'Routine, no change')}</td><td>${hesc(l.plan||'')}</td><td>${hesc(l.rec||'')}</td></tr>`;}).join('');
-    psyPdf('Handover',`<h2>Handover · ${hesc(h?h.reason:u.reason)}</h2><div style="margin-bottom:8px">From ${hesc(h?h.from:signer())} to ${hesc((h?h.to:u.to)||'—')} · ${hesc(h?h.at:atNow())}</div><table><thead><tr><th>Patient</th><th>Watch</th><th>Plan and pending</th><th>From the record</th></tr></thead><tbody>${rows}</tbody></table>`,null);
+    psyPdf('Handover',`<h2>Handover · ${hesc(h?h.reason:rsn()[0])}</h2><div style="margin-bottom:8px">From ${hesc(h?h.from:signer())} to ${hesc((h?h.to:u.to)||'—')} · ${hesc(h?h.at:atNow())}</div><table><thead><tr><th>Patient</th><th>Watch</th><th>Plan and pending</th><th>From the record</th></tr></thead><tbody>${rows}</tbody></table>`,null);
   };
 
   window.psyHoAccept=function(id){
@@ -291,9 +292,9 @@
       ${h.hide?'':`<div class="pad" style="padding-top:0">${h.pids.map(pid=>{const p=ptFind(pid),l=lineFor(h,pid);return `<div class="li"><div class="grow"><div style="font-weight:600">${hesc(p?p.name:pid)}</div><div class="small ${l.watch?'':'muted'}">${hesc(l.watch||'Routine, no change')}</div></div></div>`;}).join('')}</div>`}</section>`;
     return `<div class="hv">
       <div class="hv-top"><div><div class="tiny muted">Inpatients / Handover</div><h2>Hand over my patients</h2><div class="muted">One line per patient. Diagnosis, medicines and open items come from the record, so you only write what to watch.</div></div>
-        <div class="hv-seg" role="group" aria-label="Reason">${REASONS.map(x=>`<button class="${u.reason===x[0]?'on':''}" aria-pressed="${u.reason===x[0]}" onclick="psyHvReason('${x[0]}')">${x[0]}</button>`).join('')}</div></div>
+        <div class="hv-seg" role="group" aria-label="Reason"><button type="button" class="on" style="cursor:default">${hesc(r[0])}</button></div></div>
       <div class="hv-bar"><label class="small" style="display:flex;align-items:center;gap:8px">Hand over to <select class="input" id="hoTo" style="min-height:36px;width:auto" onchange="psyHvTo(this.value)" aria-label="Doctor who takes over"><option value="">Choose doctor…</option>${doctors.map(d=>`<option ${u.to===d?'selected':''}>${hesc(d)}</option>`).join('')}</select></label>
-        <span class="small muted">${hesc(u.reason)} · ${hesc(r[3])}</span><span class="grow"></span><span class="hv-count ${s.missing.length?'':'ok'}" id="hvCount">${n-s.missing.length} of ${n} flagged patient${n===1?'':'s'} done · ${s.routine.length} routine</span></div>
+        <span class="small muted">${hesc(r[3].replace(/^send/,'Send'))}</span><span class="grow"></span><span class="hv-count ${s.missing.length?'':'ok'}" id="hvCount">${n-s.missing.length} of ${n} flagged patient${n===1?'':'s'} done · ${s.routine.length} routine</span></div>
       <div class="hv-lab"><span>Needs attention first</span><span>Grey lines come from the record. You only write what to ${hesc(r[2].toLowerCase().replace(/^watch\s*/,'watch '))}.</span></div>
       ${s.flagged.map(card).join('')}${s.routine.length?`<div class="hv-lab"><span>Routine</span><span></span></div>`:''}${s.routine.map(card).join('')}
       <div class="hv-foot"><span class="small" id="hvFoot">${s.missing.length?s.missing.length+' flagged patient'+(s.missing.length>1?'s':'')+' still need'+(s.missing.length>1?'':'s')+' a line. Routine patients go as they are.':'Every flagged patient has a line. Routine patients go as they are.'}</span>

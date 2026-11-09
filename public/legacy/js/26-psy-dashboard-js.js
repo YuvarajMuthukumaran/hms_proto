@@ -205,7 +205,9 @@
     const top=types.slice().sort((a,b)=>tr(a)-tr(b))[0]||['grey',''];
     MAP[p.id]={p,items:act};
     const last=allTaken?tk[act[act.length-1].key]:null;
-    const lines=rem.concat(doneL),shown=lines.slice(0,3);
+    /* 9 Nov (TL, 6 Nov recording): show only what is still to do. A done task is no longer a task for me, so it is not listed here
+       (what was done, and by whom, is in "Action taken by others"), and the count says how many are LEFT, never "1 of 3 done". */
+    const lines=rem,shown=lines.slice(0,3);
     /* Event = what happened; Actions taken = what was done about it, by anyone (nurse, RMO, psychiatrist) */
     const detail=i=>tk[i.key]?`<div class="pd-d done"><i class="pd-dot ok"></i><span>${hesc(i.txt)}</span></div>`:`<div class="pd-d"><i class="pd-dot ${i.lab[0]}"></i><span>${hesc(i.txt)}${i.due?`<span class="tiny muted"> · ${hesc(i.due)}</span>`:''}</span></div>`;
     const did=[];
@@ -215,7 +217,7 @@
       <td><span class="pd-ty ${top[0]}">${hesc(top[1])}</span></td>
       <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,38,has('alert')?'c-red':'c-blue')}<span><span class="pd-nm"><b>${hesc(p.name)}</b>${p.risk?'<span class="pd-tag amber">High risk</span>':''}</span><span class="pd-sub">${hesc(sub(p))}</span></span></button>${isNew?`<div class="pd-tags" style="margin-left:50px"><span class="pd-tag blue">New admission</span></div>`:''}</td>
       <td>${shown.map(detail).join('')}${lines.length>3?`<div class="tiny muted" style="margin-top:4px">+${lines.length-3} more, press the eye</div>`:''}</td>
-      <td>${did.length?did.join(''):'<span class="tiny muted">Nothing yet</span>'}${doneL.length&&rem.length?`<div class="tiny" style="margin-top:4px;color:#067647;font-weight:600">${doneL.length} of ${act.length} done</div>`:''}</td>
+      <td>${did.length?did.join(''):'<span class="tiny muted">Nothing yet</span>'}${(doneL.length||did.length)&&rem.length?`<div class="tiny" style="margin-top:4px;color:#475467;font-weight:600">${rem.length} left</div>`:''}</td>
       <td><div class="pd-acts"><button class="pd-eye" aria-label="View details for ${hesc(p.name)}" title="View details" onclick="psyEye('${p.id}')">${EYE}</button><button class="btn sm pd-take" aria-haspopup="menu" onclick="psyMenu(event,'${p.id}')">Take Action <span aria-hidden="true">▾</span></button></div></td></tr>`:'';
     const doneHtml=allTaken?`<div class="li"><div class="grow"><div style="font-weight:600">${hesc(p.name)} <span class="pd-done">Done today ✓</span></div><div class="tiny muted">${hesc(act.length+' item'+(act.length===1?'':'s')+' completed · '+(last&&last.by||'' )+' · '+(last&&last.at||''))}</div></div><button class="btn sm" onclick="psyEye('${p.id}')">View record</button></div>`:'';
     return {rank,html,doneHtml,act,allTaken};

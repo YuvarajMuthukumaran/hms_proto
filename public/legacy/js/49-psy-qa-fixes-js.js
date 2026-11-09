@@ -110,7 +110,9 @@
   const vitToNews=r=>{const bp=String(r[1]||'').split('/');return psyNewsCalc({rr:16,spo2:+r[4]||98,o2:false,sbp:+bp[0]||120,pulse:+r[2]||80,cons:'Alert',temp:r[3]?Math.round((+r[3]-32)*5/9*10)/10:36.8});};
   const arrow=(a,b)=>a==null||b==null?'':(a>b?' ↑':a<b?' ↓':' →');
   window.psyAutoNews=function(pid){
-    const L=(ptCtxOf(pid).vit||[]).filter(r=>r&&r[1]);if(!L.length)return null;
+    /* Neel's own vitals are the table's built-in readings (his record keeps no S.vit), the same ones the Vitals table shows */
+    const own=ptCtxOf(pid).vit,DEF=[['21 Oct','128/82','92','98.6','98','—','5'],['22 Oct','126/80','90','98.4','99','71.8','4'],['23 Oct','124/80','88','98.6','98','—','6.5']];
+    const L=(own&&own.length?own:(pid==='neel'?DEF:[])).filter(r=>r&&r[1]);if(!L.length)return null;
     const cur=vitToNews(L[L.length-1]),prev=L.length>1?vitToNews(L[L.length-2]):null;
     return {total:cur.total,band:cur.band,prev:prev?prev.total:null,date:L[L.length-1][0]};
   };
@@ -128,6 +130,55 @@
       <div class="row" style="gap:10px;align-items:baseline;flex-wrap:wrap"><span class="lbl">Early warning score</span>${a?`<b class="sc-big" style="font-size:22px">${a.total}${arrow(a.total,a.prev)}</b><span class="sf"><span class="c ${cls}">${hesc(a.band)}</span></span><span class="tiny muted">from the latest vitals (${hesc(a.date)})</span>`:'<span class="small muted">No vitals yet</span>'}</div>
       <div class="row" style="gap:10px;align-items:baseline;flex-wrap:wrap"><span class="lbl">Suicide / self-harm screen</span><b>${s?hesc(s.level):'Not screened'}</b>${s?`<span class="tiny muted">${hesc(s.at)} · ${hesc(s.by)}</span>`:''}${due?'<span class="sf"><span class="c amber">Daily screen due today</span></span>':''}<button class="btn sm" onclick="psySuiOpen('${pid}')">Do screen</button></div></div>`;
   };
+  /* ---------- From the 6 Nov team recording (audited 9 Nov) ---------- */
+  /* "I don't like the dose to be written differently": name and dose in the same plain text, no pill. */
+  const css2=document.createElement('style');css2.id='psy-recording-fixes-css';
+  css2.textContent='body.psy-views .mdose{display:inline;background:none;border:0;border-radius:0;padding:0;margin-left:4px;box-shadow:none;font-size:inherit;font-weight:inherit;letter-spacing:0;color:inherit;vertical-align:baseline}';
+  document.head.appendChild(css2);
+  /* "write it from 18 to ongoing instead of this date": an active medicine has no end date (owner, 5 Nov). Medicine rows and the Treatment Plan list. */
+  function toOngoing(){
+    document.querySelectorAll('#view .medrow, #view .psy-tx-panel table td').forEach(root=>{
+      const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
+      while((n=w.nextNode())){
+        const t=n.nodeValue;
+        if(/^\s*\d{1,2} \w{3} to \d{1,2} \w{3}\s*$/.test(t))n.nodeValue=t.replace(/(\d{1,2} \w{3}) to \d{1,2} \w{3}/,'$1 to ongoing');
+      }
+    });
+  }
+  const __r49=render;
+  render=function(){const o=__r49.apply(this,arguments);if(psy()){try{toOngoing();}catch(e){}}return o;};
+
+  /* "tests are to be one big dropdown": Order lab tests is one dropdown that fills a list, with an "All routine investigations" choice
+     (what the team sends at admission: CBC, LFT, KFT, lipid profile, HbA1c, fasting sugar, TSH, ECG). */
+  const LAB_ALL=['CBC','LFT','KFT','TFT','Lipid profile','HbA1c','Fasting glucose','Serum lithium','Valproate level','Serum electrolytes','Urine drug screen','ECG'];
+  const LAB_ROUTINE=['CBC','LFT','KFT','Lipid profile','HbA1c','Fasting glucose','TFT','ECG'];
+  const __lab=labModal;
+  labModal=function(){
+    if(!psy())return __lab.apply(this,arguments);
+    window.__labSel=[];
+    openModal(`<div class="mh"><h3>Order lab tests</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
+     <div class="mb"><label class="field"><span class="lbl">Test</span><select class="input" id="labPick" onchange="psyLabPick(this)"><option value="">Choose a test…</option><option value="__routine">All routine investigations (${LAB_ROUTINE.join(', ')})</option>${LAB_ALL.map(t=>`<option>${hesc(t)}</option>`).join('')}</select></label>
+     <div class="row" id="labChosen" style="gap:6px;flex-wrap:wrap;margin:2px 0 10px"><span class="small muted">Nothing chosen yet</span></div>
+     <label class="field"><span class="lbl">When</span><select class="input" id="labw"><option>Tomorrow, 7:00 (fasting)</option><option>Today</option><option>Weekly, Mondays</option></select></label>
+     <div class="callout grey">Results come back through the live lab upload and file into Records automatically.</div></div>
+     <div class="mf"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="psyLabOrder()">Order</button></div>`);
+  };
+  window.psyLabPick=function(sel){
+    const v=sel.value;sel.value='';if(!v)return;
+    (v==='__routine'?LAB_ROUTINE:[v]).forEach(t=>{if(!window.__labSel.includes(t))window.__labSel.push(t);});
+    psyLabDraw();
+  };
+  function psyLabDraw(){
+    const box=$('labChosen');if(!box)return;
+    box.innerHTML=window.__labSel.length?window.__labSel.map((t,i)=>`<span class="chip c-blue" style="gap:6px">${hesc(t)} <button type="button" aria-label="Remove ${hesc(t)}" style="border:0;background:none;cursor:pointer;font:inherit;color:inherit;padding:0" onclick="__labSel.splice(${i},1);psyLabDraw()">×</button></span>`).join(''):'<span class="small muted">Nothing chosen yet</span>';
+  }
+  window.psyLabDraw=psyLabDraw;
+  window.psyLabOrder=function(){
+    const t=window.__labSel||[];if(!t.length){toast('Pick at least one test');return;}
+    const w=$('labw').value;t.forEach(x=>S.labs.push(Object.assign({t:x,d:w,st:'Ordered'},whoAt())));
+    closeModal();render();toast(t.length+' test'+(t.length>1?'s':'')+' ordered by '+signer());
+  };
+
   /* ---------- Rounds "Since last round": count-up of the readings (the entrance itself is CSS, see 25 and 48) ----------
      Runs only on a strip marked .enter, i.e. the first time a patient's strip is shown. It follows the shared start time, so a redraw
      during the animation carries on instead of restarting. */
