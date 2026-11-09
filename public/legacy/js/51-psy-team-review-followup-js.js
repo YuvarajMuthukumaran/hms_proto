@@ -51,7 +51,8 @@
   if(oldSafety)window.psySafety=function(pid){
     const html=oldSafety.apply(this,arguments);
     if(!psy()||typeof html!=='string')return html;
-    return html.replace(/<span class="c [^"]*" title="Set by [^"]*">Observation:\s*[^<]*<\/span>/,'');
+    /* 9 Nov: only the word "Observation" is dropped; the level (1:1, every 15 min) stays, and Routine is not shown */
+    return html.replace(/(<span class="c [^"]*" title="Set by [^"]*">)Observation:\s*([^<]*)(<\/span>)/,(m,o,v,c)=>/^\s*Routine\s*$/.test(v)?'':o+v+c);
   };
 
   /* Do not show an empty psychologist row in Rounds. Add psychologist opens a modal from that row. */
