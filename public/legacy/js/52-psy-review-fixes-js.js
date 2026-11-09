@@ -70,6 +70,24 @@
   seed();
   /* the saved copy of this stay (kept on the server) can be older than the code, so it is checked every time the page is drawn */
   const __pp=pPast;pPast=function(){if(psy()&&S.pid==='neel')seed();return __pp.apply(this,arguments);};
+  /* team review (Nikita): inside a notes folder the type ("Round note") is not repeated on every row. Columns: date | doctor or psychologist | note.
+     A row whose type differs from the folder's usual one (e.g. "Discharge round") keeps its type in front of the note. */
+  const pfCss=document.createElement('style');pfCss.id='psy-pf-compact-css';
+  pfCss.textContent=`.pf-scroll .pf-e>summary{grid-template-columns:104px 190px minmax(0,1fr)}.pf-scroll .pf-e>summary .pf-t{display:none}.pf-scroll .pf-e>summary .pf-s{white-space:normal;overflow:visible;text-overflow:clip}.pf-s b.ty{color:#175cd3;font-weight:700;margin-right:6px}.pf-scroll .pf-body{padding-left:304px}`;
+  document.head.appendChild(pfCss);
+  const __pp0=pPast;
+  pPast=function(){
+    const h=__pp0.apply(this,arguments);if(!psy()||typeof h!=='string')return h;
+    const t=document.createElement('template');t.innerHTML=h;
+    t.content.querySelectorAll('.pf-scroll').forEach(box=>{
+      const rows=[...box.querySelectorAll(':scope > .pf-e')],cnt={};
+      rows.forEach(r=>{const k=((r.querySelector('.pf-t')||{}).textContent||'').trim();cnt[k]=(cnt[k]||0)+1;});
+      const top=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
+      rows.forEach(r=>{const k=((r.querySelector('.pf-t')||{}).textContent||'').trim(),s=r.querySelector('.pf-s');
+        if(s&&k&&k!==top)s.insertAdjacentHTML('afterbegin','<b class="ty">'+hesc(k)+'</b>');});
+    });
+    return t.innerHTML;
+  };
   /* ---------- 3. 'Observation' is not written after a room on the Daily notes tabs or the Rounds ward order (it is a level, shown as a tag when it matters) ---------- */
   const noObs=h=>psy()&&typeof h==='string'?h.replace(/ · Observation(?=<)/g,''):h;
   const __vn=vNotes;vNotes=function(){return noObs(__vn.apply(this,arguments));};
