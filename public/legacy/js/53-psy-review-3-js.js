@@ -78,14 +78,14 @@
   }
   function labList(){
     const L=labRows(S.pid);
-    const row=r=>`<tr><td><b>${hesc(r.name)}</b>${r.note?`<div class="tiny muted" style="margin-top:2px">${hesc(r.note)}</div>`:''}</td><td>${hesc(r.date||'')}</td><td>${hesc(r.lab||'Not stated')}</td><td>${hesc(r.by||'')}${r.at?`<div class="tiny muted">${hesc(r.at)}</div>`:''}</td><td>${hesc(r.advisedBy||'—')}</td><td>${(r.files||[]).length||'—'}</td><td style="text-align:right"><button class="btn sm" onclick="${r.legacy?`psyLabPdf('${r.id}')`:`psyLabRepPdf('${r.id}')`}">Open PDF</button></td></tr>`;
-    return L.length?`<div class="scroll"><table class="lt9"><thead><tr><th>Report</th><th>Report date</th><th>Lab</th><th>Uploaded by</th><th>Advised by</th><th>Files</th><th></th></tr></thead><tbody>${L.map(row).join('')}</tbody></table></div>`:'<div class="pad small muted">No lab reports yet.</div>';
+    const row=r=>`<tr><td><b>${hesc(r.name)}</b>${r.note?`<div class="tiny muted" style="margin-top:2px">${hesc(r.note)}</div>`:''}</td><td>${hesc(r.date||'')}</td><td>${hesc(r.lab||'Not stated')}</td><td>${hesc(r.by||'')}${r.at?`<div class="tiny muted">${hesc(r.at)}</div>`:''}</td><td>${hesc(r.advisedBy||'Dr. Aanya Sharma')}</td><td style="text-align:right"><button class="btn sm" onclick="${r.legacy?`psyLabPdf('${r.id}')`:`psyLabRepPdf('${r.id}')`}">Open PDF</button></td></tr>`;
+    return L.length?`<div class="scroll"><table class="lt9"><thead><tr><th>Report</th><th>Report date</th><th>Lab</th><th>Uploaded by</th><th>Advised by</th><th></th></tr></thead><tbody>${L.map(row).join('')}</tbody></table></div>`:'<div class="pad small muted">No lab reports yet.</div>';
   }
   window.psyLabAdd=function(pid){
     const today=new Date().toISOString().slice(0,10);
     V3.modal('Upload lab report · '+hesc(V3.pn(pid)),'One report can hold several tests. Attach the file and say where it came from.',
       `<div class="grid2"><label class="field"><span class="lbl">Report name</span><input class="input" id="lr9_n" placeholder="e.g. Blood tests, thyroid profile"></label><label class="field"><span class="lbl">Date of report</span><input class="input" id="lr9_d" type="date" value="${today}"></label></div>
-       <div class="grid2"><label class="field"><span class="lbl">Lab or hospital</span><input class="input" id="lr9_l" placeholder="Which lab did it"></label><label class="field"><span class="lbl">Advised by</span><input class="input" id="lr9_a" placeholder="Doctor who asked for the tests"></label></div>
+       <div class="grid2"><label class="field"><span class="lbl">Lab or hospital</span><input class="input" id="lr9_l" placeholder="Which lab did it"></label><label class="field"><span class="lbl">Advised by</span><input class="input" id="lr9_a" value="${hesc(signer())}" placeholder="Doctor who asked for the tests"></label></div>
        <label class="field"><span class="lbl">Notes (optional)</span><textarea class="input" id="lr9_t" rows="2" placeholder="Anything the next doctor should know"></textarea></label>
        <label class="field"><span class="lbl">Report files (PDF or photos)</span><input class="input" id="lr9_f" type="file" multiple accept=".pdf,image/*"></label>
        <div id="lr9_e" class="small" style="color:var(--red);display:none">Write the report name and attach at least one file</div>`,
