@@ -31,15 +31,30 @@
   const __di=dueItems;
   dueItems=function(){const r=__di.apply(this,arguments);return me()&&Array.isArray(r)?r.filter(noCap):r;};
 
-  /* ---------- dashboard: start from the names ---------- */
-  const __md=ROLE.psychologist.myday;
+  /* ---------- dashboard: the psychiatrist's design with only what the psychologist needs ---------- */
+  const EYE='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   ROLE.psychologist.myday=function(){
-    const h=__md.apply(this,arguments);if(!me()||typeof h!=='string')return h;
-    const t=tpl(h),R=t.content;
-    const first=R.firstElementChild;if(first&&/Inpatient dashboard/.test(first.textContent.slice(0,40)))first.remove();
-    const card=R.querySelector('section.card.ptable');
-    if(card){const hd=card.firstElementChild;if(hd&&/Patients/.test(hd.textContent.slice(0,30))&&!hd.querySelector('table'))hd.remove();}
-    return t.innerHTML;
+    if(!me())return '';
+    $('title').textContent='Inpatients';
+    const L=PSY_EOD(),T=tasks().filter(t=>!S.done[t.id]&&t.taskType!=='alert'&&t.taskType!=='countersign');
+    const rows=L.map(p=>{
+      const items=(DT.tasks(p,T)||[]).filter(noCap),late=items.some(i=>i.overdue),e=((S.eod||{})[p.id]||{}),saved=!!e.saved;
+      const rank=late?0:(p.risk?1:items.length?2:3);
+      const sub=[(window.psyAgeSex?psyAgeSex(p):(p.age||'')+'/'+(p.sex||'')),'Day '+(p.day||0)].filter(Boolean).join(' · ');
+      const edge=late?'r-amber':p.risk?'r-red':'';
+      const ev=items.length?items.slice(0,3).map(i=>`<div class="pd-d"><i class="pd-dot ${i.overdue?'amber':'grey'}"></i><span>${hesc(i.txt)}${i.due?`<span class="tiny muted"> · ${hesc(i.due)}</span>`:''}</span></div>`).join('')+(items.length>3?`<div class="tiny muted" style="margin-top:4px">+${items.length-3} more</div>`:''):'<span class="tiny muted">Nothing due</span>';
+      const note=saved?`<span class="chip c-green">Written${e.savedAt?' · '+hesc(e.savedAt):''}</span>`:'<span class="chip c-amber">Not written yet</span>';
+      return {rank,html:`<tr class="${edge}" data-dt="${hesc((p.name+' '+(p.room||'')).toLowerCase())}">
+        <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,38,p.risk?'c-red':'c-blue')}<span><span class="pd-nm"><b>${hesc(p.name)}</b>${p.risk?'<span class="pd-tag amber">High risk</span>':''}</span><span class="pd-sub">${hesc(sub)}</span></span></button></td>
+        <td>${ev}</td><td>${note}</td>
+        <td><div class="pd-acts"><button class="pd-eye" aria-label="Open ${hesc(p.name)}" title="Open the record" onclick="go('#/patient/${p.id}/overview')">${EYE}</button>${saved?'':`<button class="btn sm pri" onclick="go('#/notes')">Write note</button>`}</div></td></tr>`};
+    }).sort((a,b)=>a.rank-b.rank);
+    const done=L.filter(p=>((S.eod||{})[p.id]||{}).saved).length;
+    setTimeout(()=>{try{dtFilter();}catch(e){}},0);
+    return `<div class="pd"><div class="pd-bar"><input class="input" id="dtQ" style="width:280px;min-height:40px;margin:0" placeholder="Type a name" oninput="dtFilter()" aria-label="Search patients"><div class="row" style="gap:8px"><button class="btn pri" onclick="go('#/notes')">✎ Daily notes <span class="fcount">${done}/${L.length}</span></button></div></div>
+      <div style="overflow-x:auto"><table class="pd-t" style="min-width:760px"><colgroup><col style="width:260px"><col><col style="width:170px"><col style="width:200px"></colgroup>
+        <thead><tr><th>Patient</th><th>Due today</th><th>Daily note</th><th></th></tr></thead>
+        <tbody id="dtBody">${rows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="4" class="pd-empty">No patient matches</td></tr></tbody></table></div></div>`;
   };
 
   /* ---------- Past admissions in the psychiatrist's format ---------- */
