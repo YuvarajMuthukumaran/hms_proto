@@ -45,11 +45,16 @@
   .th9-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px;padding:4px;background:#f0f4f9;border:1px solid #e0e8f2;border-radius:12px;width:max-content;max-width:100%}
   .th9-tabs button{border:1px solid transparent;background:transparent;border-radius:9px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;color:#344054;cursor:pointer;white-space:nowrap}
   .th9-tabs button.on{background:#fff;color:#111827;border-color:#e7edf5;box-shadow:0 1px 3px rgba(15,23,42,.1);font-weight:700}
-  /* patient tabs fit the screen: they wrap onto a second line instead of being cut off, and shrink a little on narrower screens */
-  .subtabs{display:flex!important;flex-wrap:wrap!important;gap:8px!important;overflow:visible!important}
-  .subtabs .subtab{flex:0 0 auto}
-  @media (max-width:1500px){.subtabs .subtab{padding:7px 12px!important;font-size:13px!important}}
-  @media (max-width:1100px){.subtabs .subtab{padding:6px 10px!important;font-size:12.5px!important;gap:6px}}
+  /* patient tabs: one line, sized by the screen width (they scroll sideways only on very narrow screens) */
+  .subtabs{display:flex!important;flex-wrap:nowrap!important;gap:clamp(3px,.5vw,8px)!important;overflow-x:auto!important;overflow-y:hidden;scrollbar-width:none}
+  .subtabs::-webkit-scrollbar{display:none}
+  .subtabs .subtab{flex:0 0 auto;white-space:nowrap;padding:clamp(4px,.4vw,6px) clamp(7px,.75vw,12px)!important;font-size:clamp(11px,.8vw,13px)!important;gap:clamp(4px,.5vw,8px)!important;min-height:0!important;line-height:1.2}
+  .subtabs .subtab>*:first-child:not(.dot){width:clamp(18px,1.3vw,22px)!important;height:clamp(18px,1.3vw,22px)!important;flex:0 0 auto}
+  .subtabs .subtab.psy-discharge-tab:before{content:'';display:inline-block;flex:0 0 auto;width:clamp(18px,1.3vw,22px);height:clamp(18px,1.3vw,22px);border-radius:50%;background:#eaf1ff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%23175cd3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='3' width='14' height='18' rx='2'/%3E%3Cpath d='M9 12l2 2 4-4'/%3E%3C/svg%3E") center/58% no-repeat;margin-right:clamp(4px,.5vw,8px);vertical-align:middle}
+  @media (max-width:1450px){.subtabs .subtab.psy-discharge-tab:before{display:none}}
+  .subtabs .subtab.psy-discharge-tab:not(.on){background:#fff!important;border-color:#e3eaf2!important;color:#334155!important;font-weight:600!important}
+  @media (max-width:1450px){.subtabs .subtab>*:first-child:not(.dot){display:none!important}.subtabs .subtab{padding:5px clamp(8px,.9vw,12px)!important}}
+  .subtabs .subtab svg{width:clamp(11px,.95vw,15px)!important;height:clamp(11px,.95vw,15px)!important}
   /* detailed history form: one question after the other, bold headings, numbers only in full screen */
   .hgrid{grid-template-columns:1fr!important;gap:16px!important}
   .hbody h3{font-weight:800;font-size:18px}.hgrid .hf>.lbl,.hgrid .hf .lbl{font-weight:700;color:#101828}
@@ -241,6 +246,8 @@
   vPatient=function(sub){
     if(psy())fixStay();
     let h=__vp.apply(this,arguments);if(!psy()||typeof h!=='string')return h;
+    /* the Discharge summary tab looks like the other tabs (white, with an icon) */
+    h=h.replace('aria-label="Open discharge summary">Discharge summary</button>','aria-label="Open discharge summary"><span class="sti"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg></span>Discharge summary</button>');
     const t=tpl(h),R=t.content;let ch=false;
     R.querySelectorAll('.psy-tx-panel').forEach(p=>{
       const tt=((p.querySelector('h3')||{}).textContent||'').trim();
