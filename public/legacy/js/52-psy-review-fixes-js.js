@@ -14,18 +14,26 @@
     const h=__rm.apply(this,arguments);if(!psy()||typeof h!=='string')return h;
     const t=document.createElement('template');t.innerHTML=h;
     const R=S.rounds,inv=R.inv||[];
+    /* the Collect box above the test list is gone: every test carries its own period and frequency, and each new test starts at the default */
+    R.invW='Tomorrow morning';
+    t.content.querySelectorAll('.pr-lab > div > label').forEach(l=>{if(l.querySelector('select[aria-label="Collect"]'))l.remove();});
     t.content.querySelectorAll('.pr-lab .pr-lo').forEach((row,i)=>{
       const c=inv[i];if(!c)return;
-      const when=row.children[1];if(!when||when.tagName!=='SPAN')return;
-      const sel=(id,opts,cur,fn,lab)=>`<label class="pr-ls"><span class="tiny muted">${lab}</span><select class="input" aria-label="${lab} for ${hesc(c[0])}" onchange="${fn}(${i},this.value)">${opts.map(o=>`<option ${o===cur?'selected':''}>${o}</option>`).join('')}</select></label>`;
-      const box=document.createElement('div');box.className='pr-lo-sel';
-      box.innerHTML=sel('w',WHEN,c[1],'prLabWhen','Collect')+sel('f',FREQ,c[3]||'Once','prLabFreq','Frequency');
-      when.replaceWith(box);
+      const adv=row.querySelector('input');
+      const sel=(opts,cur,fn,lab)=>`<label class="pr-ls"><span class="tiny muted">${lab}</span><select class="input" aria-label="${lab} for ${hesc(c[0])}" onchange="${fn}(${i},this.value)">${opts.map(o=>`<option ${o===cur?'selected':''}>${o}</option>`).join('')}</select></label>`;
+      const n=document.createElement('div');n.className='pr-lo9';
+      n.innerHTML=`<div class="pr-lo9-h"><b>${hesc(c[0])}</b><button class="x" aria-label="Remove ${hesc(c[0])}" onclick="S.rounds.inv.splice(${i},1);render()">×</button></div><div class="pr-lo9-s">${sel(WHEN,c[1],'prLabWhen','Collect')}${sel(FREQ,c[3]||'Once','prLabFreq','Frequency')}</div>`;
+      if(adv){adv.removeAttribute('style');n.appendChild(adv);}
+      row.replaceWith(n);
     });
     return t.innerHTML;
   };
   const css=document.createElement('style');css.id='psy-review-fixes-css';
-  css.textContent=`.pr-lab .pr-lo>.pr-lo-sel{grid-area:when;display:flex;gap:10px;flex-wrap:wrap}.pr-ls{display:flex;align-items:center;gap:6px}.pr-ls select{width:auto;min-height:32px;padding:3px 8px}`;
+  css.textContent=`.pr-lo9{margin-top:12px;padding:12px 14px;border:1px solid var(--line-2,#e4e7ec);border-radius:14px;background:linear-gradient(180deg,#fff,#fafbfd);display:flex;flex-direction:column;gap:10px}
+  .pr-lo9-h{display:flex;align-items:center;justify-content:space-between;gap:10px}.pr-lo9-h b{font-size:14.5px}
+  .pr-lo9-h .x{width:30px;height:30px;border:0;border-radius:50%;background:#f2f4f7;color:#475467;font-size:18px;cursor:pointer;transition:background .15s,transform .15s}.pr-lo9-h .x:hover{background:#fee4e2;color:#b42318;transform:scale(1.06)}
+  .pr-lo9-s{display:flex;gap:16px;flex-wrap:wrap}.pr-ls{display:flex;align-items:center;gap:8px}.pr-ls select{width:auto;min-height:34px;padding:4px 10px}
+  .pr-lo9>input{width:100%;min-height:38px;box-sizing:border-box}`;
   document.head.appendChild(css);
   /* the frequency travels with the order into the nursing instruction */
   const __cr=confirmRound;
