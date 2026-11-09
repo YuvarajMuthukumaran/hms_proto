@@ -146,7 +146,7 @@
     return {tags:t,flag};
   }
   /* the grey line: diagnosis, medicines, then the open items */
-  function lineOf(pid){
+  function lineItems(pid){
     const p=ptFind(pid),c=ptCtxOf(pid),a=[];
     a.push(p.dx||c.dx||'');
     const m=liveMeds(c);if(m.length)a.push(m.slice(0,3).map(x=>medName(x)+(x.freq?' '+x.freq:'')).join(' · ')+(m.length>3?' · +'+(m.length-3)+' more':''));
@@ -155,7 +155,7 @@
     (S.referrals||[]).filter(r=>r.pid===pid&&!S.done[r.id]).slice(0,1).forEach(r=>a.push('Referral: '+r.why));
     if(/late/.test((EX[pid]||[])[1]||''))a.push('Detailed history late');
     const lr=lastRound(c);if(lr)a.push(lr);
-    return a.filter(Boolean).join(' · ');
+    return a.filter(Boolean);
   }
   function planOf(pid){
     const p=ptFind(pid),c=ptCtxOf(pid),a=pendingTasks(p,tasks()).slice(0,3);
@@ -192,13 +192,17 @@
   .hv-count.ok{background:#ecfdf3;color:#067647;border-color:#abefc6}
   .hv-lab{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted,#667085)}
   .hv-lab span:last-child{font-weight:500;letter-spacing:0;text-transform:none;font-size:12px}
-  .hv-card{display:grid;grid-template-columns:minmax(190px,22%) minmax(0,1fr) auto;gap:6px 18px;align-items:start;background:#fff;border:1px solid var(--line,#e4e7ec);border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .hv-card{display:grid;grid-template-columns:minmax(190px,22%) minmax(0,1fr);gap:6px 18px;align-items:start;background:#fff;border:1px solid var(--line,#e4e7ec);border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
   .hv-card.flag{border-left:4px solid #f5a524}.hv-card.flag.ok{border-left-color:#12b76a}
   .hv-who{display:flex;gap:10px;min-width:0}.hv-who b{display:block;font-size:14.5px}.hv-who .s{font-size:12px;color:var(--muted,#667085);margin-top:1px}
   .hv-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
   .hv-tag{font-size:11px;font-weight:600;border-radius:99px;padding:2px 9px;border:1px solid transparent;background:#f2f4f7;color:#475467}
   .hv-tag.red{background:#fef3f2;color:#b42318;border-color:#fecdca}.hv-tag.amber{background:#fffaeb;color:#b54708;border-color:#fedf89}.hv-tag.blue{background:#eff8ff;color:#175cd3;border-color:#b2ddff}
-  .hv-line{font-size:12.5px;line-height:1.45;color:var(--muted,#667085);margin-bottom:6px}
+  .hv-line{font-size:12.5px;line-height:1.5;color:var(--muted,#667085);margin:0 0 8px;padding-left:18px;list-style:disc}.hv-line li{margin:2px 0;color:#475467}.hv-line li::marker{color:#175cd3}
+  @keyframes hv-in{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+  @keyframes hv-glow{0%{background:#dbeafe}100%{background:transparent}}
+  .hv.enter .hv-line li{border-radius:6px;animation:hv-in .5s cubic-bezier(.2,.7,.2,1) both,hv-glow 1.1s ease-out both;animation-delay:calc(var(--d,0s) + var(--i,0)*.08s - var(--el,0s))}
+  @media(prefers-reduced-motion:reduce){.hv.enter .hv-line li{animation:none}}
   .hv-card .l{display:block;font-size:12px;font-weight:700;color:var(--ink,#101828);margin-bottom:3px}
   .hv-card input.input{width:100%;min-height:38px}
   .hv-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
@@ -227,12 +231,11 @@
     const b=$('hvSend');if(b){b.textContent=u.to?'Send to '+u.to:'Send handover';b.classList.toggle('off',!s.ok);b.setAttribute('aria-disabled',s.ok?'false':'true');}
     s.items.forEach(i=>{const ch=$('hvChip-'+i.p.id),cd=$('hvCard-'+i.p.id),k=chipOf(i);if(ch){ch.className='hv-chip '+k[0];ch.textContent=k[1];}if(cd)cd.classList.toggle('ok',!!i.w);});
   };
-  function card(i){
+  function card(i,ix){
     const p=i.p,k=chipOf(i),r=rsn(),pid=p.id;
     return `<div class="hv-card ${i.t.flag?'flag':''} ${i.w?'ok':''}" id="hvCard-${pid}">
       <div class="hv-who">${av(p.ini,34,i.t.flag?'c-amber':'c-blue')}<div style="min-width:0"><b>${hesc(p.name)}</b><div class="s">${hesc(subOf(p))}</div>${i.t.tags.length?`<div class="hv-tags">${i.t.tags.map(t=>`<span class="hv-tag ${t[1]}">${hesc(t[0])}</span>`).join('')}</div>`:''}</div></div>
-      <div style="min-width:0"><div class="hv-line">${hesc(lineOf(pid))}</div><label><span class="l">${hesc(r[2])}</span><input class="input" id="hvIn-${pid}" value="${hesc((store().ui.watch||{})[pid]||'')}" placeholder="${i.t.flag?'What should the '+r[1]+' watch for?':'Optional. Leave empty if nothing changes'}" oninput="psyHvSet('${pid}',this.value)"></label></div>
-      <div class="hv-side"><span class="hv-chip ${k[0]}" id="hvChip-${pid}">${k[1]}</span><button class="hv-link" onclick="psyHvRecord('${pid}')">From the record</button></div></div>`;
+      <div style="min-width:0"><ul class="hv-line" style="--d:${((ix||0)*0.07).toFixed(2)}s">${lineItems(pid).map((x,n)=>`<li style="--i:${n}">${hesc(x)}</li>`).join("")}</ul><label><span class="l">${hesc(r[2])}</span><input class="input" id="hvIn-${pid}" value="${hesc((store().ui.watch||{})[pid]||'')}" placeholder="${i.t.flag?'What should the '+r[1]+' watch for?':'Optional. Leave empty if nothing changes'}" oninput="psyHvSet('${pid}',this.value)"></label></div></div>`;
   }
   window.psyHvRecord=function(pid){
     const p=ptFind(pid);if(!p)return;
@@ -287,15 +290,17 @@
     const sent=st.list.filter(h=>h.from===me);
     const doctors=(typeof TR_TO!=='undefined'?TR_TO.psy:[]).filter(n=>n!==me);
     const n=s.flagged.length;
+    const HN=Date.now(),HV=window.__hvAnim;let hel=-1;
+    if(!HV){window.__hvAnim={t0:HN};hel=0;}else if(HN-HV.t0<1400)hel=(HN-HV.t0)/1000;
     const sentCard=h=>`<section class="card"><div class="hd"><div><h3>To ${hesc(h.to)} · ${hesc(h.reason)}</h3><div class="small muted" style="margin-top:4px">${hesc(h.at)} · ${h.pids.length} patients${h.acceptedBy?' · <b style="color:var(--green)">Accepted by '+hesc(h.acceptedBy)+', '+hesc(h.acceptedAt)+'</b>':' · <b style="color:var(--amber)">Waiting for '+hesc(h.to)+' to accept. You still see these patients.</b>'}</div></div>
       <div class="row" style="gap:8px"><button class="btn sm" onclick="psyHoToggle('${h.id}')">${h.hide?'Show':'Hide'} lines</button><button class="btn sm" onclick="psyHvPdf('${h.id}')">PDF</button></div></div>
       ${h.hide?'':`<div class="pad" style="padding-top:0">${h.pids.map(pid=>{const p=ptFind(pid),l=lineFor(h,pid);return `<div class="li"><div class="grow"><div style="font-weight:600">${hesc(p?p.name:pid)}</div><div class="small ${l.watch?'':'muted'}">${hesc(l.watch||'Routine, no change')}</div></div></div>`;}).join('')}</div>`}</section>`;
-    return `<div class="hv">
-      <div class="hv-top"><div><div class="tiny muted">Inpatients / Handover</div><h2>Hand over my patients</h2><div class="muted">One line per patient. Diagnosis, medicines and open items come from the record, so you only write what to watch.</div></div></div>
+    return `<div class="hv ${hel>=0?'enter':''}" ${hel>=0?`style="--el:${hel.toFixed(2)}s"`:''}>
+      <div class="hv-top"><div><div class="tiny muted">Inpatients / Handover</div><h2>Hand over my patients</h2></div></div>
       <div class="hv-bar"><label class="small" style="display:flex;align-items:center;gap:8px">Hand over to <select class="input" id="hoTo" style="min-height:36px;width:auto" onchange="psyHvTo(this.value)" aria-label="Doctor who takes over"><option value="">Choose doctor…</option>${doctors.map(d=>`<option ${u.to===d?'selected':''}>${hesc(d)}</option>`).join('')}</select></label>
-        <span class="small muted">${hesc(r[3].replace(/^send/,'Send'))}</span><span class="grow"></span><span class="hv-count ${s.missing.length?'':'ok'}" id="hvCount">${n-s.missing.length} of ${n} flagged patient${n===1?'':'s'} done · ${s.routine.length} routine</span></div>
-      <div class="hv-lab"><span>Needs attention first</span><span>Grey lines come from the record. You only write what to ${hesc(r[2].toLowerCase().replace(/^watch\s*/,'watch '))}.</span></div>
-      ${s.flagged.map(card).join('')}${s.routine.length?`<div class="hv-lab"><span>Routine</span><span></span></div>`:''}${s.routine.map(card).join('')}
+        <span class="grow"></span><span class="hv-count ${s.missing.length?'':'ok'}" id="hvCount">${n-s.missing.length} of ${n} flagged patient${n===1?'':'s'} done · ${s.routine.length} routine</span></div>
+      <div class="hv-lab"><span>Needs attention first</span><span></span></div>
+      ${s.flagged.map((i,x)=>card(i,x)).join('')}${s.routine.length?`<div class="hv-lab"><span>Routine</span><span></span></div>`:''}${s.routine.map((i,x)=>card(i,s.flagged.length+x)).join('')}
       <div class="hv-foot"><span class="small" id="hvFoot">${s.missing.length?s.missing.length+' flagged patient'+(s.missing.length>1?'s':'')+' still need'+(s.missing.length>1?'':'s')+' a line. Routine patients go as they are.':'Every flagged patient has a line. Routine patients go as they are.'}</span>
         <span class="row" style="gap:8px"><button class="btn" onclick="psyHvPdf()">Download PDF</button><button class="btn pri ${s.ok?'':'off'}" id="hvSend" aria-disabled="${s.ok?'false':'true'}" onclick="psyHvSend()">${u.to?'Send to '+hesc(u.to):'Send handover'}</button></span></div>
       ${sent.length?`<div class="lbl">Sent by you</div>${sent.map(sentCard).join('')}`:''}</div>`;
@@ -323,6 +328,7 @@
   ROLE.psychiatrist.render=function(base){
     const r=(location.hash||'').slice(2).split('/');
     if(r[0]==='handover'){renderSide(r);$('app').classList.remove('compact');$('title').textContent='Handover';$('view').innerHTML=page();window.scrollTo(0,0);return;}
+    window.__hvAnim=null;
     return prevR?prevR(base):base();
   };
 
