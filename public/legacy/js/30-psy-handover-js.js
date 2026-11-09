@@ -45,6 +45,8 @@
     if(!S.psyHO)S.psyHO={list:[{id:'ho0',from:'Dr. Rohan Mehta',to:'Dr. Aanya Sharma',reason:'On leave 10 to 12 Nov',at:'3 Nov 2026, 6:10 pm',pids:['sameer','dev'],rec:{sameer:'Watch sleep tonight. Call the RMO if he refuses food.',dev:'Cravings at night. Clonidine SOS if restless.'},lines:{sameer:{watch:'Watch sleep tonight. Call the RMO if he refuses food.',plan:'Capacity assessment week 2 due. Continue fluoxetine 40 mg.',rec:'Obsessive-compulsive disorder · Fluoxetine 40 mg · Clonazepam 0.5 mg · Last round 22 Oct',tags:[['Routine','amber']]},dev:{watch:'Cravings at night. Clonidine SOS if restless.',plan:'Sign the discharge summary. Family pickup Thursday 11 am.',rec:'Opioid dependence · Buprenorphine 2 mg, Clonidine 0.1 mg · Last round 22 Oct',tags:[['Discharge planned','blue']]}},status:'sent'}],ui:{to:'',reason:'Going on leave / Transfer',watch:{}}};
     return S.psyHO;
   }
+  /* Ten existing demo inpatients for the handover layout review; other role lists stay as they are. */
+  const handoverPatients=()=>allPts().slice(0,10);
   /* ---- Anu's handover format (draft "patient care 1 jan edited", psychiatrist page): ONE PAGE PER PATIENT.
      Whatever the system already knows is filled in; the doctor adds only what is missing (differential diagnosis, comorbidity, the reason for each
      medicine, future directions, what was said to the family). Entries are kept as you type (no Save button). The sending doctor's name is the
@@ -175,7 +177,7 @@
   const detOf=pid=>{const u=store().ui;u.det=u.det||{};return u.det[pid]||null;};
   const detOk=d=>!!(d&&String(d.psychopath||'').trim()&&String(d.trials||'').trim()&&String(d.future||'').trim());
   function hvState(){
-    const items=PTS.map(p=>({p,t:tagsOf(p.id),d:detOf(p.id),on:!!selOf()[p.id]}));
+    const items=handoverPatients().map(p=>({p,t:tagsOf(p.id),d:detOf(p.id),on:!!selOf()[p.id]}));
     const sev=i=>i.t.tags.filter(t=>t[1]==='red').length*10+i.t.tags.length;
     items.sort((a,b)=>sev(b)-sev(a));
     const chosen=items.filter(i=>i.on),missing=chosen.filter(i=>!detOk(i.d));
@@ -236,14 +238,14 @@
   window.psyHvTo=function(v){store().ui.to=v;psyHvRefresh();};
   window.psyHvRefresh=function(){
     const s=hvState(),u=store().ui;
-    const c=$('hvCount');if(c){c.textContent=s.chosen.length+' of '+PTS.length+' selected';c.classList.toggle('ok',!!s.chosen.length&&!s.missing.length);}
+    const c=$('hvCount');if(c){c.textContent=s.chosen.length+' of '+handoverPatients().length+' selected';c.classList.toggle('ok',!!s.chosen.length&&!s.missing.length);}
     const f=$('hvFoot');if(f)f.textContent=hvFootMsg(s);
     const b=$('hvSend');if(b){b.textContent=u.to?'Send to '+u.to:'Send handover';b.classList.toggle('off',!s.ok);b.setAttribute('aria-disabled',s.ok?'false':'true');}
-    const all=$('hvAll');if(all){all.checked=s.chosen.length===PTS.length;all.indeterminate=s.chosen.length>0&&s.chosen.length<PTS.length;}
+    const all=$('hvAll');if(all){all.checked=s.chosen.length===handoverPatients().length;all.indeterminate=s.chosen.length>0&&s.chosen.length<handoverPatients().length;}
     s.items.forEach(i=>{const cb=$('hvCk-'+i.p.id),st=$('hvSt-'+i.p.id),row=$('hvCard-'+i.p.id);if(cb)cb.checked=i.on;if(st)st.innerHTML=stHtml(i);if(row)row.classList.toggle('on',i.on);});
   };
-  window.psyHvTick=function(pid,on){selOf()[pid]=!!on;if(on&&!detOk(detOf(pid)))psyHvDetail(pid);else psyHvRefresh();};
-  window.psyHvAll=function(on){const s=selOf();PTS.forEach(p=>{s[p.id]=!!on;});psyHvRefresh();};
+  window.psyHvTick=function(pid,on){selOf()[pid]=!!on;psyHvRefresh();}; /* 9 Nov (review 2): ticking never opens a pop-up; Send handover walks through the missing details one by one */
+  window.psyHvAll=function(on){const s=selOf();handoverPatients().forEach(p=>{s[p.id]=!!on;});psyHvRefresh();};
   window.psyHvDet=function(pid,k,v){const u=store().ui;u.det=u.det||{};(u.det[pid]=u.det[pid]||{})[k]=v;};
   window.psyHvDetail=function(pid){
     const p=ptFind(pid);if(!p)return;const u=store().ui;u.det=u.det||{};
@@ -337,7 +339,7 @@
       <div class="tiny muted">Inpatients / Handover</div>
       <div class="hv-bar"><label class="f">Handover to <select class="input" id="hoTo" style="min-height:36px;width:auto" onchange="psyHvTo(this.value)" aria-label="Doctor who takes over"><option value="">Choose doctor…</option>${doctors.map(d=>`<option ${u.to===d?'selected':''}>${hesc(d)}</option>`).join('')}</select></label>
         <label class="f">Reason <select class="input" id="hoWhy" style="min-height:36px;width:auto" onchange="psyHvReason(this.value)" aria-label="Reason for the handover"><option value="">Choose reason…</option>${REASONS.map(r=>`<option ${rsnName()===r?'selected':''}>${hesc(r)}</option>`).join('')}</select></label>
-        <span class="grow"></span><label class="f"><input type="checkbox" id="hvAll" ${s.chosen.length===PTS.length?'checked':''} onchange="psyHvAll(this.checked)"> Select all</label><span class="hv-count ${s.chosen.length&&!s.missing.length?'ok':''}" id="hvCount">${s.chosen.length} of ${PTS.length} selected</span></div>
+        <span class="grow"></span><label class="f"><input type="checkbox" id="hvAll" ${s.chosen.length===handoverPatients().length?'checked':''} onchange="psyHvAll(this.checked)"> Select all</label><span class="hv-count ${s.chosen.length&&!s.missing.length?'ok':''}" id="hvCount">${s.chosen.length} of ${handoverPatients().length} selected</span></div>
       <section class="card hv-tbl"><div class="scroll"><table class="t"><thead><tr><th style="width:36px"></th><th>Patient</th><th>Diagnosis and alerts</th><th>Ongoing medicines</th><th>Handover details</th></tr></thead><tbody>${s.items.map(row).join('')}</tbody></table></div></section>
       <div class="hv-foot"><span class="small" id="hvFoot">${hesc(hvFootMsg(s))}</span>
         <span class="row" style="gap:8px"><button class="btn" onclick="psyHvPdf()">Download PDF</button><button class="btn pri ${s.ok?'':'off'}" id="hvSend" aria-disabled="${s.ok?'false':'true'}" onclick="psyHvSend()">${u.to?'Send to '+hesc(u.to):'Send handover'}</button></span></div>

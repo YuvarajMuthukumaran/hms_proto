@@ -50,4 +50,6 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/48-psy-backlog-js.js',
   '/legacy/js/49-psy-qa-fixes-js.js',
   '/legacy/js/50-psy-review-9nov-js.js',
+  '/legacy/js/51-psy-team-review-followup-js.js',
+  '/legacy/js/52-psy-review-fixes-js.js',
 ];

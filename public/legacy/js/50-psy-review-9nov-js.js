@@ -12,7 +12,7 @@
   const css=document.createElement('style');css.id='psy-review-9nov-css';
   css.textContent=`
   /* family call: a header chip, the call line, the actions; soft amber, one pulse on the dot and phone ring */
-  .fc9{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 20px;border:1px solid #f6dfae;border-radius:18px;background:linear-gradient(100deg,#fff8e8 0%,#fffdf8 60%,#fff 100%);box-shadow:0 1px 2px rgba(181,71,8,.06)}
+  .fc9{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 16px;border:0.8px solid #f3c58c;border-radius:14px;background:#fffaf3}
   .fc9-ic{position:relative;flex:0 0 44px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#b54708;border:1px solid #f6dfae}
   .fc9-ic:after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid #f5a524;opacity:0}
   .fc9-b{flex:1;min-width:240px}
