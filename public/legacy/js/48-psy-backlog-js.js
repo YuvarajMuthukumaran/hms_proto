@@ -260,6 +260,7 @@
   const __rm=roundMon;
   roundMon=function(){
     const h=__rm.apply(this,arguments);if(!psy())return h;
+    return h; /* 9 Nov (team review): Monitoring and Investigations are two cards again; block 50 lays out the Investigations row. The merge below is no longer used. */
     const t=document.createElement('template');t.innerHTML=h;const q=s=>t.content.querySelector(s);
     const top=q('.mon-add-top'),lab=q('.pr-lab');if(!top||!lab)return h;
     const casc=top.querySelector('.mon-cascade'),pick=lab.querySelector('select[aria-label="Add a lab order"]'),when=lab.querySelector('select[aria-label="Collect"]');

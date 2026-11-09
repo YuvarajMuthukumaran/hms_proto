@@ -90,6 +90,26 @@
     return t.innerHTML;
   };
 
+  /* ---------- Rounds: Investigations card = one row (test, collect time) then the ordered tests; Monitoring stays on its own ---------- */
+  const __rm50=roundMon;
+  roundMon=function(){
+    const h=__rm50.apply(this,arguments);if(!psy()||typeof h!=='string')return h;
+    const t=document.createElement('template');t.innerHTML=h;
+    const lab=t.content.querySelector('.pr-lab');if(!lab)return h;
+    const pick=lab.querySelector('select[aria-label="Add a lab order"]'),when=lab.querySelector('select[aria-label="Collect"]');
+    if(pick&&when){
+      const row=document.createElement('div');row.setAttribute('style','display:flex;flex-wrap:wrap;gap:10px;align-items:center');
+      pick.style.flex='1 1 240px';pick.style.width='auto';
+      const w=document.createElement('label');w.setAttribute('style','display:flex;align-items:center;gap:8px');
+      w.innerHTML='<span class="tiny muted">Collect</span>';when.style.minHeight='';when.style.width='auto';w.appendChild(when);
+      row.append(pick,w);
+      lab.querySelectorAll(':scope > .row').forEach(x=>x.remove());
+      lab.prepend(row);lab.style.padding='14px 20px';lab.style.borderTop='0';
+    }
+    if(!lab.querySelector('.pr-lo'))lab.insertAdjacentHTML('beforeend','<div class="tiny muted" style="margin-top:10px">No tests ordered yet. Pick a test and when to collect it. The nurse sees it on the shift board.</div>');
+    return t.innerHTML;
+  };
+
   /* ---------- 2. Patient page ---------- */
   const prevVP=ROLE.psychiatrist.vPatient;
   ROLE.psychiatrist.vPatient=function(sub,base){
