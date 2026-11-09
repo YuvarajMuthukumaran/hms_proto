@@ -1,5 +1,5 @@
 
-/* Psychiatrist only (5 Nov 2026). UPDATED: the handover page now follows Anu's format (one page per patient); see the comment above FIELDS. The older SBAR text below is kept for history.
+/* Psychiatrist only (5 Nov 2026). UPDATED 9 Nov: the handover page follows the team's redesign (one line per patient, flagged patients first, received card on Today); see "Handover v2" below. The 10-field record view (FIELDS, notePage) is kept for From the record and Transfer patient. The older SBAR text below is kept for history.
    Trello "Handover between doctors and shifts": a Handover view under Inpatients (sidebar rail). Each patient has an SBAR summary built
    from the record: Situation (diagnosis, day, Section, observation, risk), Background (history in two lines, medicines), Assessment
    (last round note, open alerts, unreviewed events, results to review), Recommendation (pending tasks plus 1 to 2 lines from the doctor
@@ -42,7 +42,7 @@
   const px=pid=>(window.psyPx?psyPx(pid):(ptCtxOf(pid).psyx=ptCtxOf(pid).psyx||{}));
   /* handovers live at the top level of the state (they are about the doctor, not one patient) */
   function store(){
-    if(!S.psyHO)S.psyHO={list:[{id:'ho0',from:'Dr. Rohan Mehta',to:'Dr. Aanya Sharma',reason:'On leave',at:'3 Nov 2026, 6:10 pm',pids:['sameer','dev'],rec:{sameer:'Rituals reduced on fluoxetine. Watch sleep tonight; call the RMO if he refuses food.',dev:'Day 15, opioid dependence, discharge planned. Check cravings at night; naltrexone due after dinner.'},status:'sent'}],ui:{to:'',reason:'Night duty',sel:{},rec:{}}};
+    if(!S.psyHO)S.psyHO={list:[{id:'ho0',from:'Dr. Rohan Mehta',to:'Dr. Aanya Sharma',reason:'On leave 10 to 12 Nov',at:'3 Nov 2026, 6:10 pm',pids:['sameer','dev'],rec:{sameer:'Watch sleep tonight. Call the RMO if he refuses food.',dev:'Cravings at night. Clonidine SOS if restless.'},lines:{sameer:{watch:'Watch sleep tonight. Call the RMO if he refuses food.',plan:'Capacity assessment week 2 due. Continue fluoxetine 40 mg.',rec:'Obsessive-compulsive disorder · Fluoxetine 40 mg · Clonazepam 0.5 mg · Last round 22 Oct',tags:[['Routine','amber']]},dev:{watch:'Cravings at night. Clonidine SOS if restless.',plan:'Sign the discharge summary. Family pickup Thursday 11 am.',rec:'Opioid dependence · Buprenorphine 2 mg, Clonidine 0.1 mg · Last round 22 Oct',tags:[['Discharge planned','blue']]}},status:'sent'}],ui:{to:'',reason:'Night duty',watch:{}}};
     return S.psyHO;
   }
   /* ---- Anu's handover format (draft "patient care 1 jan edited", psychiatrist page): ONE PAGE PER PATIENT.
@@ -117,60 +117,208 @@
     return `<section class="card hn-page"><div class="hn-head"><div><h3>${hesc(p.name)}</h3><div class="small muted">${hesc([window.psyPatientLine?psyPatientLine(p):'',p.uhid?'UHID '+p.uhid:''].filter(Boolean).join(' · '))} · Handover notes for Psychiatrist</div></div>${o.pdf||''}</div>
       <div class="hn-groups">${content}</div>${sig}</section>`;
   }
-  window.psyHnSet=function(pid,k,v){uiN()[pid]=uiN()[pid]||{};uiN()[pid][k]=v;};
-  window.psyHnCur=function(pid){store().ui.cur=pid;render();};
-  window.psyHnHCur=function(id,pid){const h=store().list.find(x=>x.id===id);if(h){h.cur=pid;render();}};
-  window.psyHnPdf=function(id,pid){
-    const h=id?store().list.find(x=>x.id===id):null,vals=h?noteFor(h,pid):snap(pid),p=ptFind(pid);
-    const rows=FIELDS.map(([k,l])=>`<div class="n"><div class="m"><b>${hesc(l)}</b></div>${nl2br(vals[k])||'—'}</div>`).join('');
-    psyPdf('Handover notes for Psychiatrist',`<h2>Handover notes for Psychiatrist</h2>${rows}<table style="margin-top:10px"><tr><th>Handover given by</th><th>Handed over to</th></tr><tr><td>${hesc(h?h.from:signer())}${h?'<br>'+hesc(h.at):''}</td><td>${hesc(h?h.to:store().ui.to||'')}${h&&h.acceptedBy?'<br>'+hesc(h.acceptedBy+' · '+h.acceptedAt):''}</td></tr></table>`,p);
+  /* ======================= Handover v2 (9 Nov 2026, from the team's design "Handover redesign · Psychiatrist HMS") =======================
+     Giving doctor: "Hand over my patients". One line per patient. Diagnosis, medicines and open items come from the record (grey line);
+     the doctor writes only what to watch. Patients that need attention come first and must have a line before Send works; routine patients
+     go as they are. Receiving doctor: a "handed over to you" card at the top of the Today page (and on this page) with Accept handover. */
+  const shortAt=s=>String(s||'').replace(/\s20\d\d,/,',');
+  const medName=m=>String(m.name||'').replace(/\s*\(.*$/,'');
+  const liveMeds=c=>(c.meds||[]).filter(m=>!String(m.name).includes('waiting'));
+  const lastRound=c=>{const r=(c.dnHist||[]).find(h=>h.type==='Round note');return r?'Last round '+r.d+' '+String(r.my||'').split(' ')[0]:'';};
+
+  /* tags under the name; "flag" means the patient needs a line before the handover can be sent */
+  function tagsOf(pid){
+    const p=ptFind(pid),c=ptCtxOf(pid),x=px(pid),t=[];let flag=false;
+    const add=(txt,cls,f)=>{t.push([txt,cls]);if(f)flag=true;};
+    const obs=c.obs||(EX[pid]||[])[0]||'Routine';
+    if(/^1:1/.test(obs))add('1:1 observation','red',true);else if(/15/.test(obs))add('Every 15 min','amber',true);
+    if((x.riskLevel||(p.risk?'High':'Low'))==='High')add('High risk','amber',true);
+    let cs=false;try{cs=tasks().some(k=>k.taskType==='countersign'&&String(k.title||'').replace(/<[^>]+>/g,'').includes(p.name));}catch(e){}
+    if(cs)add('To countersign','blue',true);
+    const al=v3().alerts.filter(a=>a.pid===pid&&!a.closed);
+    if(al.length)add(al[0].src==='Vitals'?'Vitals alert':'Open alert','red',true);
+    if(/withdrawal/i.test(p.dx||''))add('Withdrawal','amber',false);
+    if(v3().labs.some(l=>l.pid===pid&&!l.rev))add('Result to review','amber',true);
+    if((p.day||0)<=1)add('New admission','blue',true);
+    if(/late/.test((EX[pid]||[])[1]||''))add('History late','amber',true);
+    if(x.allergy&&x.allergy.list&&x.allergy.list.length)add(x.allergy.list[0].drug+' allergy','red',false);
+    try{if(c.edd){const d=Math.round((new Date(c.edd+'T00:00:00')-new Date(2026,9,24))/864e5);if(d>=0&&d<=1)add(d===0?'Discharge today':'Discharge tomorrow','blue',false);}}catch(e){}
+    return {tags:t,flag};
+  }
+  /* the grey line: diagnosis, medicines, then the open items */
+  function lineOf(pid){
+    const p=ptFind(pid),c=ptCtxOf(pid),a=[];
+    a.push(p.dx||c.dx||'');
+    const m=liveMeds(c);if(m.length)a.push(m.slice(0,3).map(x=>medName(x)+(x.freq?' '+x.freq:'')).join(' · ')+(m.length>3?' · +'+(m.length-3)+' more':''));
+    v3().alerts.filter(x=>x.pid===pid&&!x.closed).slice(0,1).forEach(x=>a.push(x.title));
+    v3().labs.filter(l=>l.pid===pid&&!l.rev).slice(0,1).forEach(l=>a.push(l.test+' '+l.val+' '+l.unit+', not yet reviewed'));
+    (S.referrals||[]).filter(r=>r.pid===pid&&!S.done[r.id]).slice(0,1).forEach(r=>a.push('Referral: '+r.why));
+    if(/late/.test((EX[pid]||[])[1]||''))a.push('Detailed history late');
+    const lr=lastRound(c);if(lr)a.push(lr);
+    return a.filter(Boolean).join(' · ');
+  }
+  function planOf(pid){
+    const p=ptFind(pid),c=ptCtxOf(pid),a=pendingTasks(p,tasks()).slice(0,3);
+    const m=liveMeds(c)[0];if(m)a.push('Continue '+medName(m).replace(/^./,ch=>ch.toLowerCase()));
+    return a.length?a.join('. ')+'.':'No open items.';
+  }
+  function recOf(pid){
+    const p=ptFind(pid),c=ptCtxOf(pid),m=liveMeds(c).map(medName).join(', ');
+    return [p.dx||c.dx||'',m,lastRound(c)].filter(Boolean).join(' · ');
+  }
+  const subOf=p=>[window.psyAgeSex?psyAgeSex(p):'',window.psyRoomLabel?psyRoomLabel(p):p.room,'Day '+(p.day||0),'Sec '+(ptCtxOf(p.id).section||p.sec||'89')].filter(Boolean).join(' · ');
+  const REASONS=[['Night duty','night doctor','Watch tonight','send by 8:00 pm'],['Going on leave','covering doctor','Watch while away','send before you leave'],['Transfer','new doctor','Watch for the new doctor','send before the transfer']];
+  const rsn=()=>REASONS.find(r=>r[0]===store().ui.reason)||REASONS[0];
+  const wOf=pid=>String((store().ui.watch||{})[pid]||'').trim();
+  function hvState(){
+    const items=PTS.map(p=>{const t=tagsOf(p.id);return {p,t,w:wOf(p.id)};});
+    /* most urgent first: red tags (1:1, alert), then the number of reasons */
+    const sev=i=>i.t.tags.filter(t=>t[1]==='red').length*10+i.t.tags.length;
+    const flagged=items.filter(i=>i.t.flag).sort((a,b)=>sev(b)-sev(a)),routine=items.filter(i=>!i.t.flag),missing=flagged.filter(i=>!i.w);
+    return {items,flagged,routine,missing,ok:!missing.length&&!!store().ui.to};
+  }
+  const chipOf=i=>i.t.flag?(i.w?['ok','Done']:['need','Needs a line']):(i.w?['add','Line added']:['rt','Routine, no change']);
+
+  const hvCss=document.createElement('style');hvCss.id='psy-handover-v2-css';
+  hvCss.textContent=`
+  .hv{display:flex;flex-direction:column;gap:14px}
+  .hv-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .hv-top h2{margin:0 0 4px}.hv-seg{display:inline-flex;gap:3px;padding:4px;border:1px solid #e0e8f2;border-radius:12px;background:#f0f4f9}
+  .hv-seg button{border:1px solid transparent;background:transparent;border-radius:9px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;color:#344054;cursor:pointer;white-space:nowrap}
+  .hv-seg button.on{background:#fff;color:#111827;border-color:#e7edf5;box-shadow:0 1px 3px rgba(15,23,42,.1);font-weight:700}
+  .hv-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.hv-bar .grow{flex:1}
+  .hv-count{font-size:12.5px;font-weight:700;border-radius:99px;padding:5px 12px;background:var(--amber-bg,#fffaeb);color:var(--amber,#b54708);border:1px solid var(--amber-line,#fedf89)}
+  .hv-count.ok{background:#ecfdf3;color:#067647;border-color:#abefc6}
+  .hv-lab{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted,#667085)}
+  .hv-lab span:last-child{font-weight:500;letter-spacing:0;text-transform:none;font-size:12px}
+  .hv-card{display:grid;grid-template-columns:minmax(190px,22%) minmax(0,1fr) auto;gap:6px 18px;align-items:start;background:#fff;border:1px solid var(--line,#e4e7ec);border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .hv-card.flag{border-left:4px solid #f5a524}.hv-card.flag.ok{border-left-color:#12b76a}
+  .hv-who{display:flex;gap:10px;min-width:0}.hv-who b{display:block;font-size:14.5px}.hv-who .s{font-size:12px;color:var(--muted,#667085);margin-top:1px}
+  .hv-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+  .hv-tag{font-size:11px;font-weight:600;border-radius:99px;padding:2px 9px;border:1px solid transparent;background:#f2f4f7;color:#475467}
+  .hv-tag.red{background:#fef3f2;color:#b42318;border-color:#fecdca}.hv-tag.amber{background:#fffaeb;color:#b54708;border-color:#fedf89}.hv-tag.blue{background:#eff8ff;color:#175cd3;border-color:#b2ddff}
+  .hv-line{font-size:12.5px;line-height:1.45;color:var(--muted,#667085);margin-bottom:6px}
+  .hv-card .l{display:block;font-size:12px;font-weight:700;color:var(--ink,#101828);margin-bottom:3px}
+  .hv-card input.input{width:100%;min-height:38px}
+  .hv-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  .hv-chip{font-size:11.5px;font-weight:700;border-radius:99px;padding:3px 11px;white-space:nowrap;background:#f2f4f7;color:#475467}
+  .hv-chip.need{background:#fffaeb;color:#b54708}.hv-chip.ok{background:#ecfdf3;color:#067647}.hv-chip.add{background:#eff8ff;color:#175cd3}
+  .hv-link{border:0;background:none;font:inherit;font-size:12.5px;font-weight:600;color:var(--blue-ink,#175cd3);cursor:pointer;padding:0}
+  .hv-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line,#e4e7ec);border-radius:14px;padding:12px 16px;position:sticky;bottom:8px}
+  .hv-foot .btn.off{opacity:.55}
+  .hv-rc{background:#f3f7ff;border:1px solid #c9dcfb;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
+  .hv-rc-hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.hv-rc-hd .t{flex:1;min-width:220px}.hv-rc-hd .t b{display:block;font-size:14px}.hv-rc-hd .t span{font-size:12px;color:var(--muted,#667085)}
+  .hv-rc-ic{width:30px;height:30px;border-radius:99px;background:#fff;border:1px solid #c9dcfb;color:#175cd3;display:grid;place-items:center;flex:0 0 30px}
+  .hv-rc-row{display:grid;grid-template-columns:minmax(150px,19%) minmax(0,1fr) auto;gap:14px;align-items:start;background:#fff;border:1px solid var(--line-2,#e4e7ec);border-radius:12px;padding:11px 14px}
+  .hv-rc-row b.n{font-size:13.5px}.hv-rc-row .s{font-size:11.5px;color:var(--muted,#667085)}
+  .hv-rc-row .m{font-size:12.5px;line-height:1.5}.hv-rc-row .m b{font-weight:700}.hv-rc-row .m .r{color:var(--muted,#667085);font-size:11.5px;margin-top:2px}
+  .hv-box{background:#fff;border:1px solid var(--line,#e4e7ec);border-radius:12px;padding:10px 14px;font-size:12.5px}.hv-box b{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px}
+  @media (max-width:860px){.hv-card,.hv-rc-row{grid-template-columns:1fr}.hv-side{align-items:flex-start;flex-direction:row;align-items:center}}`;
+  document.head.appendChild(hvCss);
+
+  window.psyHvReason=function(r){const u=store().ui;u.reason=r;render();};
+  window.psyHvTo=function(v){store().ui.to=v;psyHvRefresh();};
+  window.psyHvSet=function(pid,v){const u=store().ui;u.watch=u.watch||{};u.watch[pid]=v;psyHvRefresh();};
+  window.psyHvRefresh=function(){
+    const s=hvState(),u=store().ui,n=s.flagged.length,done=n-s.missing.length;
+    const c=$('hvCount');if(c){c.textContent=done+' of '+n+' flagged patient'+(n===1?'':'s')+' done · '+s.routine.length+' routine';c.classList.toggle('ok',!s.missing.length);}
+    const f=$('hvFoot');if(f)f.textContent=s.missing.length?s.missing.length+' flagged patient'+(s.missing.length>1?'s':'')+' still need'+(s.missing.length>1?'':'s')+' a line. Routine patients go as they are.':'Every flagged patient has a line. Routine patients go as they are.';
+    const b=$('hvSend');if(b){b.textContent=u.to?'Send to '+u.to:'Send handover';b.classList.toggle('off',!s.ok);b.setAttribute('aria-disabled',s.ok?'false':'true');}
+    s.items.forEach(i=>{const ch=$('hvChip-'+i.p.id),cd=$('hvCard-'+i.p.id),k=chipOf(i);if(ch){ch.className='hv-chip '+k[0];ch.textContent=k[1];}if(cd)cd.classList.toggle('ok',!!i.w);});
+  };
+  function card(i){
+    const p=i.p,k=chipOf(i),r=rsn(),pid=p.id;
+    return `<div class="hv-card ${i.t.flag?'flag':''} ${i.w?'ok':''}" id="hvCard-${pid}">
+      <div class="hv-who">${av(p.ini,34,i.t.flag?'c-amber':'c-blue')}<div style="min-width:0"><b>${hesc(p.name)}</b><div class="s">${hesc(subOf(p))}</div>${i.t.tags.length?`<div class="hv-tags">${i.t.tags.map(t=>`<span class="hv-tag ${t[1]}">${hesc(t[0])}</span>`).join('')}</div>`:''}</div></div>
+      <div style="min-width:0"><div class="hv-line">${hesc(lineOf(pid))}</div><label><span class="l">${hesc(r[2])}</span><input class="input" id="hvIn-${pid}" value="${hesc((store().ui.watch||{})[pid]||'')}" placeholder="${i.t.flag?'What should the '+r[1]+' watch for?':'Optional. Leave empty if nothing changes'}" oninput="psyHvSet('${pid}',this.value)"></label></div>
+      <div class="hv-side"><span class="hv-chip ${k[0]}" id="hvChip-${pid}">${k[1]}</span><button class="hv-link" onclick="psyHvRecord('${pid}')">From the record</button></div></div>`;
+  }
+  window.psyHvRecord=function(pid){
+    const p=ptFind(pid);if(!p)return;
+    V3.modal('From the record · '+hesc(p.name),'What the system already knows. This is what the next doctor can open.',notePage(pid,snap(pid),true,{}),`<button class="btn pri" onclick="closeModal()">Close</button>`);
+  };
+  window.psyHvSend=function(){
+    const s=hvState(),u=store().ui;
+    if(!u.to){toast('Choose the doctor who takes over');const sel=$('hoTo');if(sel)sel.focus();return;}
+    if(s.missing.length){toast('Add a line for '+s.missing.length+' flagged patient'+(s.missing.length>1?'s':'')+' first');const el=$('hvIn-'+s.missing[0].p.id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus({preventScroll:true});}return;}
+    const lines={};s.items.forEach(i=>{lines[i.p.id]={watch:i.w,plan:planOf(i.p.id),rec:recOf(i.p.id),tags:i.t.tags.length?i.t.tags.slice(0,3):[['Routine','amber']],flag:i.t.flag};});
+    store().list.unshift({id:'ho'+Date.now(),from:signer(),to:u.to,reason:u.reason,at:atNow(),pids:PTS.map(p=>p.id),lines,status:'sent'});
+    u.watch={};render();toast('Handover sent to '+u.to+'. You still see these patients until '+u.to+' accepts.');
+  };
+  /* what a sent handover says for one patient (the sample handover and older ones may carry only part of it) */
+  const lineFor=(h,pid)=>{const l=(h.lines||{})[pid];if(l)return l;const n=h.notes&&h.notes[pid];return {watch:(h.rec&&h.rec[pid])||(n&&n.future)||'',plan:planOf(pid),rec:recOf(pid),tags:[['Routine','amber']],flag:false};};
+  window.psyHvPdf=function(id){
+    const h=id?store().list.find(x=>x.id===id):null,u=store().ui;
+    const pids=h?h.pids:PTS.map(p=>p.id);
+    const rows=pids.map(pid=>{const p=ptFind(pid),l=h?lineFor(h,pid):{watch:wOf(pid),plan:planOf(pid),rec:recOf(pid)};
+      return `<tr><td><b>${hesc(p.name)}</b><br>${hesc(subOf(p))}</td><td>${hesc(l.watch||'Routine, no change')}</td><td>${hesc(l.plan||'')}</td><td>${hesc(l.rec||'')}</td></tr>`;}).join('');
+    psyPdf('Handover',`<h2>Handover · ${hesc(h?h.reason:u.reason)}</h2><div style="margin-bottom:8px">From ${hesc(h?h.from:signer())} to ${hesc((h?h.to:u.to)||'—')} · ${hesc(h?h.at:atNow())}</div><table><thead><tr><th>Patient</th><th>Watch</th><th>Plan and pending</th><th>From the record</th></tr></thead><tbody>${rows}</tbody></table>`,null);
   };
 
   window.psyHoAccept=function(id){
     const h=store().list.find(x=>x.id===id);if(!h||h.acceptedBy)return;
     h.acceptedBy=signer();h.acceptedAt=atNow();h.status='accepted';
     h.pids.forEach(pid=>{try{PSYOF[pid]=h.to;ptCtxOf(pid).team.psy=h.to;}catch(e){}});
-    render();toast('Handover accepted by '+signer()+'. The patients are now yours.');
+    render();toast('Handover accepted by '+signer()+'. The patients are now yours, marked Covering on Today.');
   };
-  window.psyHoSel=function(pid,on){store().ui.sel[pid]=!!on;render();};
-  window.psyHoSend=function(){
-    const st=store(),u=st.ui;u.to=($('hoTo')||{}).value||u.to;u.reason=($('hoWhy')||{}).value||u.reason;
-    const pids=PTS.filter(p=>u.sel[p.id]!==false).map(p=>p.id);
-    if(!u.to){toast('Choose the doctor who takes over');return;}
-    if(!pids.length){toast('Pick at least one patient');return;}
-    /* what the next doctor needs most is the plan: it must not be left empty */
-    const missing=pids.filter(id=>!valOf(id,'future').trim());
-    if(missing.length){u.cur=missing[0];render();toast('Write the future directions for '+missing.map(id=>ptFind(id).name).join(', ')+' first');return;}
-    const notes={};pids.forEach(id=>{notes[id]=snap(id);});
-    st.list.unshift({id:'ho'+Date.now(),from:signer(),to:u.to,reason:u.reason,at:atNow(),pids,notes,status:'sent'});
-    u.notes={};render();toast('Handover sent to '+u.to+'. You still see these patients until '+u.to+' accepts.');
+  window.psyHoToggle=function(id){const h=store().list.find(x=>x.id===id);if(h){h.hide=!h.hide;render();}};
+
+  /* the "handed over to you" card: Today page and Handover page. Gone from Today once accepted (the patients then show as Covering). */
+  const IC='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg>';
+  function receivedCard(h){
+    const n=h.pids.length,open=!h.hide;
+    return `<section class="hv-rc" aria-label="Handover received">
+      <div class="hv-rc-hd"><span class="hv-rc-ic">${IC}</span><div class="t"><b>${hesc(h.from)} handed over ${n} patient${n>1?'s':''} to you</b><span>${hesc(h.reason)} · sent ${hesc(shortAt(h.at))} · ${h.acceptedBy?'accepted by '+hesc(h.acceptedBy)+', '+hesc(shortAt(h.acceptedAt)):'until you accept, '+hesc(h.from)+' still sees them'}</span></div>
+        <button class="btn sm" onclick="psyHoToggle('${h.id}')">${open?'Hide':'Show'}</button>${h.acceptedBy?'':`<button class="btn sm pri" onclick="psyHoAccept('${h.id}')">Accept handover</button>`}</div>
+      ${open?h.pids.map(pid=>{const p=ptFind(pid);if(!p)return '';const l=lineFor(h,pid);
+        return `<div class="hv-rc-row"><div><b class="n">${hesc(p.name)}</b><div class="s">${hesc(subOf(p))}</div><div class="hv-tags">${(l.tags||[]).map(t=>`<span class="hv-tag ${t[1]}">${hesc(t[0])}</span>`).join('')}</div></div>
+          <div class="m"><div><b>Watch:</b> ${hesc(l.watch||'Routine, no change')}</div><div><b>Plan and pending:</b> ${hesc(l.plan||'')}</div><div class="r">From the record: ${hesc(l.rec||'')}</div></div>
+          <button class="hv-link" onclick="go('#/patient/${pid}/overview')">Open record</button></div>`;}).join(''):''}</section>`;
+  }
+  window.psyHandoverCard=function(){
+    const me=signer(),L=store().list.filter(h=>h.to===me&&!h.acceptedBy);
+    if(!L.length)return '';
+    return L.map(receivedCard).join('')+`<div class="hv-box"><b>Your patients today</b>The usual Today list continues here. Handed-over patients join it, marked Covering, once you accept.</div>`;
   };
-  window.psyHoToggle=function(id){const h=store().list.find(x=>x.id===id);if(h){h.open=!h.open;render();}};
 
   function page(){
-    const st=store(),u=st.ui,me=signer();
+    const st=store(),u=st.ui,me=signer(),s=hvState(),r=rsn();
     const incoming=st.list.filter(h=>h.to===me),sent=st.list.filter(h=>h.from===me);
-    const card=(h,mine)=>{
-      const open=h.open!==false,cur=h.pids.includes(h.cur)?h.cur:h.pids[0];
-      return `<section class="card"><div class="hd"><div><h3>${mine?'To '+hesc(h.to):'From '+hesc(h.from)} · ${hesc(h.reason)}</h3><div class="small muted" style="margin-top:4px">${hesc(h.at)} · ${h.pids.length} patient${h.pids.length>1?'s':''}${h.acceptedBy?' · <b style="color:var(--green)">Accepted by '+hesc(h.acceptedBy)+', '+hesc(h.acceptedAt)+'</b>':mine?' · <b style="color:var(--amber)">Waiting for '+hesc(h.to)+' to accept. You still see these patients.</b>':''}</div></div>
-        <div class="row" style="gap:8px"><button class="btn sm" onclick="psyHoToggle('${h.id}')">${open?'Hide':'Show'} notes</button>${!mine&&!h.acceptedBy?`<button class="btn sm pri" onclick="psyHoAccept('${h.id}')">Accept handover</button>`:''}</div></div>
-        ${open?`<div style="padding:0 16px 16px"><div class="hn-tabs">${h.pids.map(pid=>`<button class="${pid===cur?'on':''}" onclick="psyHnHCur('${h.id}','${pid}')">${hesc((ptFind(pid)||{}).name||pid)}</button>`).join('')}</div>
-          ${notePage(cur,noteFor(h,cur),true,{from:h.from,to:h.to,at:h.at,accepted:h.acceptedBy?h.acceptedBy+', '+h.acceptedAt:'',pdf:`<button class="btn sm" onclick="psyHnPdf('${h.id}','${cur}')">PDF</button>`})}</div>`:''}</section>`;};
     const doctors=(typeof TR_TO!=='undefined'?TR_TO.psy:[]).filter(n=>n!==me);
-    const cur=PTS.some(p=>p.id===u.cur)?u.cur:PTS[0].id;
-    const list=PTS.map(p=>{const inc=u.sel[p.id]!==false,miss=inc&&!valOf(p.id,'future').trim();
-      return `<div class="hn-pt ${p.id===cur?'on':''}" role="button" tabindex="0" onclick="psyHnCur('${p.id}')" onkeydown="if(event.key==='Enter')psyHnCur('${p.id}')"><input type="checkbox" ${inc?'checked':''} aria-label="Hand over ${hesc(p.name)}" onclick="event.stopPropagation()" onchange="psyHoSel('${p.id}',this.checked)"><span style="min-width:0"><b>${hesc(p.name)}</b><span class="tiny muted" style="display:block">${hesc(window.psyPatientLine?psyPatientLine(p):p.room)}</span></span><span class="hn-st ${!inc?'off':miss?'add':'ok'}">${!inc?'Stays with you':miss?'To add':'Ready'}</span></div>`;}).join('');
-    return `<div class="ho"><div><h2>Handover</h2><div class="muted" style="margin-top:4px">One page per patient. What the system already knows is filled in; you add what is missing. Your entries are kept as you type.</div></div>
-      ${incoming.length?`<div class="lbl">To you</div>${incoming.map(h=>card(h,false)).join('')}`:''}
-      <section class="card"><div class="hd"><div><h3>Hand over my patients</h3><div class="small muted" style="margin-top:4px">Untick patients who stay with you. Until the other doctor accepts, you still see them.</div></div>
-        <div class="row" style="gap:8px"><select class="input" id="hoTo" style="min-height:34px;width:auto" onchange="store_to(this.value)" aria-label="Doctor who takes over"><option value="">Hand over to…</option>${doctors.map(n=>`<option ${u.to===n?'selected':''}>${hesc(n)}</option>`).join('')}</select>
-        <select class="input" id="hoWhy" style="min-height:34px;width:auto" aria-label="Reason">${['Night duty','Going on leave','Transfer'].map(r=>`<option ${u.reason===r?'selected':''}>${r}</option>`).join('')}</select>
-        <button class="btn pri" onclick="psyHoSend()">Send handover</button></div></div>
-        <div class="hn-wrap"><div class="hn-list">${list}</div><div style="min-width:0">${notePage(cur,snap(cur),false,{})}</div></div></section>
-      ${sent.length?`<div class="lbl">Sent by you</div>${sent.map(h=>card(h,true)).join('')}`:''}</div>`;
+    const n=s.flagged.length;
+    const sentCard=h=>`<section class="card"><div class="hd"><div><h3>To ${hesc(h.to)} · ${hesc(h.reason)}</h3><div class="small muted" style="margin-top:4px">${hesc(h.at)} · ${h.pids.length} patients${h.acceptedBy?' · <b style="color:var(--green)">Accepted by '+hesc(h.acceptedBy)+', '+hesc(h.acceptedAt)+'</b>':' · <b style="color:var(--amber)">Waiting for '+hesc(h.to)+' to accept. You still see these patients.</b>'}</div></div>
+      <div class="row" style="gap:8px"><button class="btn sm" onclick="psyHoToggle('${h.id}')">${h.hide?'Show':'Hide'} lines</button><button class="btn sm" onclick="psyHvPdf('${h.id}')">PDF</button></div></div>
+      ${h.hide?'':`<div class="pad" style="padding-top:0">${h.pids.map(pid=>{const p=ptFind(pid),l=lineFor(h,pid);return `<div class="li"><div class="grow"><div style="font-weight:600">${hesc(p?p.name:pid)}</div><div class="small ${l.watch?'':'muted'}">${hesc(l.watch||'Routine, no change')}</div></div></div>`;}).join('')}</div>`}</section>`;
+    return `<div class="hv">
+      <div class="hv-top"><div><div class="tiny muted">Inpatients / Handover</div><h2>Hand over my patients</h2><div class="muted">One line per patient. Diagnosis, medicines and open items come from the record, so you only write what to watch.</div></div>
+        <div class="hv-seg" role="group" aria-label="Reason">${REASONS.map(x=>`<button class="${u.reason===x[0]?'on':''}" aria-pressed="${u.reason===x[0]}" onclick="psyHvReason('${x[0]}')">${x[0]}</button>`).join('')}</div></div>
+      ${incoming.filter(h=>!h.acceptedBy).map(receivedCard).join('')}
+      <div class="hv-bar"><label class="small" style="display:flex;align-items:center;gap:8px">Hand over to <select class="input" id="hoTo" style="min-height:36px;width:auto" onchange="psyHvTo(this.value)" aria-label="Doctor who takes over"><option value="">Choose doctor…</option>${doctors.map(d=>`<option ${u.to===d?'selected':''}>${hesc(d)}</option>`).join('')}</select></label>
+        <span class="small muted">${hesc(u.reason)} · ${hesc(r[3])}</span><span class="grow"></span><span class="hv-count ${s.missing.length?'':'ok'}" id="hvCount">${n-s.missing.length} of ${n} flagged patient${n===1?'':'s'} done · ${s.routine.length} routine</span></div>
+      <div class="hv-lab"><span>Needs attention first</span><span>Grey lines come from the record. You only write what to ${hesc(r[2].toLowerCase().replace(/^watch\s*/,'watch '))}.</span></div>
+      ${s.flagged.map(card).join('')}${s.routine.length?`<div class="hv-lab"><span>Routine</span><span></span></div>`:''}${s.routine.map(card).join('')}
+      <div class="hv-foot"><span class="small" id="hvFoot">${s.missing.length?s.missing.length+' flagged patient'+(s.missing.length>1?'s':'')+' still need'+(s.missing.length>1?'':'s')+' a line. Routine patients go as they are.':'Every flagged patient has a line. Routine patients go as they are.'}</span>
+        <span class="row" style="gap:8px"><button class="btn" onclick="psyHvPdf()">Download PDF</button><button class="btn pri ${s.ok?'':'off'}" id="hvSend" aria-disabled="${s.ok?'false':'true'}" onclick="psyHvSend()">${u.to?'Send to '+hesc(u.to):'Send handover'}</button></span></div>
+      ${sent.length?`<div class="lbl">Sent by you</div>${sent.map(sentCard).join('')}`:''}</div>`;
   }
   window.psyHandoverPage=page;
-  window.store_to=v=>{store().ui.to=v;};
+
+  /* Today page: the received handover sits under the two buttons, and accepted patients carry a Covering tag */
+  const __md=ROLE.psychiatrist.myday;
+  ROLE.psychiatrist.myday=function(){
+    let h=__md.apply(this,arguments);if(S.role!=='psychiatrist'||typeof h!=='string')return h;
+    const card=window.psyHandoverCard();
+    if(card)h=h.replace('Start rounds</button></div></div>',m=>m+card);
+    const me=signer();
+    store().list.filter(x=>x.to===me&&x.acceptedBy).forEach(x=>x.pids.forEach(pid=>{
+      const key='onclick="go(\'#/patient/'+pid+'/overview\')"';
+      const i=h.indexOf(key);if(i<0)return;
+      const j=h.indexOf('</b>',i);if(j<0||h.slice(i,j).indexOf('pd-nm')<0)return;
+      h=h.slice(0,j+4)+'<span class="pd-tag blue">Covering</span>'+h.slice(j+4);
+    }));
+    return h;
+  };
+
 
   const prevR=ROLE.psychiatrist.render;
   ROLE.psychiatrist.render=function(base){
