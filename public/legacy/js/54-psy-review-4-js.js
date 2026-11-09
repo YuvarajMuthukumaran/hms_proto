@@ -167,12 +167,12 @@
       return `<div class="tm9-card"><div><b>${hesc(d.t)}</b><div class="s">${hesc(d.d)}</div></div>${o?`<div class="tm9-bar" aria-hidden="true"><i style="width:${pct}%"></i></div>`:''}<div class="row" style="justify-content:space-between;margin-top:auto"><span class="chip ${o?(n===o.steps.length?'c-green':'c-blue'):'c-grey'}">${o?n+' of '+o.steps.length+' tasks done':'Not ordered'}</span><button class="btn sm pri" onclick="psyTmOrder('${k}')">${o&&n<o.steps.length?'Continue':'Order'}</button></div></div>`;};
     return `<div class="tm9-grid">${Object.keys(TMP).map(card).join('')}</div>
       <section class="card tm9-log"><div class="hd"><div><h3>Order log</h3><div class="small muted" style="margin-top:4px">Who ordered what, when, and how many tasks are done.</div></div></div>
-      <div class="scroll"><table><thead><tr><th>Order</th><th>Ordered by</th><th>Date</th><th>Tasks done</th><th></th></tr></thead><tbody>${O.length?O.map(o=>`<tr><td><b>${hesc(TMP[o.key].t)}</b></td><td>${hesc(o.by)}</td><td>${hesc(o.at)}</td><td>${doneN(o)} of ${o.steps.length}</td><td style="text-align:right"><button class="btn sm" onclick="psyTmOpen('${o.id}',${Math.max(0,o.steps.findIndex(s=>!s.done))})">Open</button></td></tr>`).join(''):'<tr><td colspan="5" class="muted small">Nothing ordered yet.</td></tr>'}</tbody></table></div></section>`;
+      <div class="scroll"><table class="lt9"><thead><tr><th>Order</th><th>Ordered by</th><th>Date</th><th>Tasks done</th><th></th></tr></thead><tbody>${O.length?O.map(o=>`<tr><td><b>${hesc(TMP[o.key].t)}</b></td><td>${hesc(o.by)}</td><td>${hesc(o.at)}</td><td>${doneN(o)} of ${o.steps.length}</td><td style="text-align:right"><button class="btn sm" onclick="psyTmOpen('${o.id}',${Math.max(0,o.steps.findIndex(s=>!s.done))})">Open</button></td></tr>`).join(''):'<tr><td colspan="5" class="muted small">Nothing ordered yet.</td></tr>'}</tbody></table></div></section>`;
   }
   function rebuildTmp(p,R){
     const h=p.querySelector('h3');if(h)h.textContent='Treatment Management Plan';
     const sub=p.querySelector('.psy-tx-head .small.muted');if(sub)sub.textContent='Orders, consents and permissions for treatments, outings and restraint.';
-    const body=p.querySelector('.psy-tx-body');if(body)body.innerHTML=tmpBody();
+    p.querySelectorAll('.rq9').forEach(e=>e.remove());const body=p.querySelector('.psy-tx-body');if(body)body.innerHTML=tmpBody();
     const tab=[...R.querySelectorAll('.psy-tx-tab')].find(t=>/Requests and permissions/.test(t.textContent));if(tab)tab.textContent='Treatment Management Plan';
     /* the Consents tab is part of this tab now */
     const ct=[...R.querySelectorAll('.psy-tx-tab')].find(t=>/^Consents/.test(t.textContent.trim())),cp=[...R.querySelectorAll('.psy-tx-panel')].find(q=>/^Consents/.test(((q.querySelector('h3')||{}).textContent||'').trim()));
