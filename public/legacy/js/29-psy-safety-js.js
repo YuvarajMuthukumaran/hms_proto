@@ -212,7 +212,7 @@
     let h=prevVP?prevVP(sub,base):base(sub);
     if(!sub||sub==='overview'){
       const pid=S.pid,L=v3().labs.filter(l=>l.pid===pid).sort((a,b)=>b.t-a.t),un=L.filter(l=>!l.rev),n0=L[0];
-      const txt=!L.length?'No results yet':(un.length?`<b style="color:var(--amber)">${un.length} result${un.length>1?'s':''} to review</b>`:'All results reviewed')+(n0?` · latest ${hesc(n0.test)} ${n0.val} ${hesc(n0.unit)}`:'');
+      const txt=!L.length?'No results yet':(un.length?`<b style="color:var(--amber)">${un.length} result${un.length>1?'s':''} to review</b>`:'All results reviewed')+(n0?` · latest ${hesc(n0.test)}`:'');
       h=h.replace(/(<div class="subtabs"[\s\S]*?<\/div>)/,`$1<section class="card pad row" style="justify-content:space-between;gap:12px;padding:10px 20px"><div class="small"><b>Results</b> · ${txt}</div><button class="btn sm" onclick="go('#/patient/${pid}/orders')">Open results</button></section>`);
     }
     return h;
