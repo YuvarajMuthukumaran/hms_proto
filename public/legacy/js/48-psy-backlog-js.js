@@ -218,14 +218,18 @@
   rcss.textContent=`
   /* 9 Nov: the strip plays a short entrance ONCE, when a patient's strip first appears (see sinceCard in 25). Nikita saw flicker when the
      animation replayed on every redraw, so a redraw of the same patient renders it still (no .enter class), or resumes it part-way. */
-  .pr-vit{display:flex;flex-wrap:wrap;gap:10px;max-width:100%;font-size:14px}
-  .pr-vi{display:inline-flex;align-items:center;gap:10px;min-width:0;padding:8px 14px 8px 8px;border:1px solid var(--line-2,#e4e7ec);border-radius:14px;background:linear-gradient(180deg,#fff,#fafbfd);box-shadow:0 1px 2px rgba(16,24,40,.05)}
-  .pr-vi .ic{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:10px;background:#eff4ff;color:#175cd3}
+  /* one line: four tiles share the row. Unit sits beside the label, the icon is small, the trend line only shows when the card is wide. */
+  .pr-vit{display:flex;flex-wrap:nowrap;gap:8px;max-width:100%;font-size:14px;container-type:inline-size}
+  .pr-vi{display:inline-flex;flex:1 1 auto;align-items:center;gap:8px;min-width:0;padding:7px 10px 7px 7px;border:1px solid var(--line-2,#e4e7ec);border-radius:13px;background:linear-gradient(180deg,#fff,#fafbfd);box-shadow:0 1px 2px rgba(16,24,40,.05)}
+  .pr-vi .ic{display:grid;place-items:center;flex:0 0 26px;width:26px;height:26px;border-radius:9px;background:#eff4ff;color:#175cd3}
   .pr-vi .tx{display:flex;flex-direction:column;gap:2px;line-height:1.1;min-width:0}
-  .pr-vi .l{color:var(--muted,#667085);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-  .pr-vi>.tx>b{font-size:18px;font-weight:700;color:var(--ink,#101828);line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .pr-vi .u{color:var(--ink-2,#475467);font-size:11.5px;font-weight:500}
-  .pr-spark{flex:0 0 auto;color:#175cd3;overflow:visible}.pr-spark path{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.pr-spark circle{fill:currentColor}
+  .pr-vi .l{color:var(--muted,#667085);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+  .pr-vi>.tx>b{font-size:17px;font-weight:700;color:var(--ink,#101828);line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pr-vi .u{color:var(--muted,#667085);font-size:10.5px;font-weight:500;letter-spacing:0;text-transform:none;margin-left:2px}
+  .pr-spark{display:none;flex:0 0 auto;color:#175cd3;overflow:visible}
+  @container (min-width:760px){.pr-spark{display:block}}
+  @container (max-width:430px){.pr-vi .ic{display:none}.pr-vi{padding-left:10px}}
+  @container (max-width:330px){.pr-vit{gap:6px}.pr-vi{padding:6px 7px;gap:5px;border-radius:11px}.pr-vi>.tx>b{font-size:15px}.pr-vi .l{font-size:9px}.pr-vi .u{font-size:9px;margin-left:1px}}.pr-spark path{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.pr-spark circle{fill:currentColor}
   .pr-vi.warn{border-color:#fedf89;background:linear-gradient(180deg,#fffdf6,#fffaeb)}.pr-vi.warn .ic{background:#fef0c7;color:#b54708}.pr-vi.warn>.tx>b,.pr-vi.warn .pr-trend{color:#b54708}.pr-vi.warn .pr-spark{color:#dc6803}
   .pr-vi.bad{border-color:#fecdca;background:linear-gradient(180deg,#fffcfb,#fef3f2)}.pr-vi.bad .ic{background:#fee4e2;color:#d92d20}.pr-vi.bad>.tx>b,.pr-vi.bad .pr-trend{color:#d92d20}.pr-vi.bad .pr-spark{color:#d92d20}
   .pr-trend{font-size:15px;font-weight:800;color:var(--ink-2,#475467);line-height:1}
@@ -238,7 +242,7 @@
   .pr-vit.enter .pr-spark path{stroke-dasharray:1;stroke-dashoffset:1;animation:pr-draw .85s cubic-bezier(.4,0,.2,1) both;animation-delay:calc(var(--d,0s) + .3s - var(--el,0s))}
   .pr-vit.enter .pr-spark circle{transform-box:fill-box;transform-origin:center;animation:pr-dot .3s ease-out both;animation-delay:calc(var(--d,0s) + 1s - var(--el,0s))}
   .pr-vit.enter .pr-trend{display:inline-block;animation:pr-pop .5s ease-out both;animation-delay:calc(var(--d,0s) + .55s - var(--el,0s))}
-  @media(max-width:520px){.pr-vit{gap:8px}.pr-vi{padding:6px 10px 6px 6px;gap:8px}.pr-vi .ic{flex-basis:28px;width:28px;height:28px}.pr-vi>.tx>b{font-size:16px}.pr-spark{display:none}}
+  @media(max-width:520px){.pr-vit{overflow-x:auto;overflow-y:hidden;padding-bottom:4px;scrollbar-width:thin}.pr-vi{flex:0 0 auto}}
   @media(prefers-reduced-motion:reduce){.pr-vit.enter .pr-vi,.pr-vit.enter .pr-spark path,.pr-vit.enter .pr-spark circle,.pr-vit.enter .pr-trend{animation:none}}
   .pr-lines{gap:0;margin-top:14px;font-size:15px;line-height:1.45}
   .pr-lines>div{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:9px 0;border-top:1px solid var(--line-2,#e4e7ec);color:var(--ink,#101828)}
