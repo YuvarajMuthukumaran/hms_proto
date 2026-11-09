@@ -168,7 +168,7 @@
     const p=ptFind(pid),c=ptCtxOf(pid),m=liveMeds(c).map(medName).join(', ');
     return [p.dx||c.dx||'',m,lastRound(c)].filter(Boolean).join(' · ');
   }
-  const subOf=p=>[window.psyAgeSex?psyAgeSex(p):'',window.psyRoomLabel?psyRoomLabel(p):p.room,'Day '+(p.day||0)].filter(Boolean).join(' · ');
+  const subOf=p=>[window.psyAgeSex?psyAgeSex(p):'',window.psyRoomLabel?psyRoomLabel(p):p.room,'Day '+(p.day||0)].filter(Boolean).join(' · ').replace(/ · Observation/g,'');
   /* 9 Nov (team review): "Handover to" and "Reason" are two drop-downs. Each patient has a tick box; ticking opens a window with the
      three headings (current psychopathology, past treatment trials, future treatment plan). Only ticked patients are sent. */
   const REASONS=['Going on leave','Transfer of patient','Shift or duty change','Other'];
@@ -357,8 +357,8 @@
     const row=i=>{
       const p=i.p,c=ptCtxOf(p.id),meds=liveMeds(c);
       return `<tr id="hvCard-${p.id}" class="${i.on?'on':''}"><td><input type="checkbox" id="hvCk-${p.id}" ${i.on?'checked':''} onchange="psyHvTick('${p.id}',this.checked)" aria-label="Hand over ${hesc(p.name)}"></td>
-        <td><div class="hv-who">${av(p.ini,34,i.t.flag?'c-amber':'c-blue')}<div style="min-width:0"><b>${hesc(p.name)}</b><div class="s">${hesc(subOf(p))}</div></div></div></td>
-        <td><div>${hesc(p.dx||c.dx||'')}</div>${(()=>{const a=(auto(p.id)||{f:{}}).f,pt=pendingTasks(p,tasks()).slice(0,2).join('; ');return `<div class="tiny muted" style="margin-top:3px">Allergy: ${hesc(String(a.allergy||'Not recorded yet').split('\n')[0])}${pt?' · Pending: '+hesc(pt):''}</div>`;})()}${i.t.tags.length?`<div class="hv-tags">${i.t.tags.map(t=>`<span class="hv-tag ${t[1]}">${hesc(t[0])}</span>`).join('')}</div>`:''}</td>
+        <td><div class="hv-who">${av(p.ini,34,i.t.flag?'c-amber':'c-blue')}<div style="min-width:0"><b>${hesc(p.name)}</b><div class="s">${hesc(subOf(p))}</div>${i.t.tags.length?`<div class="hv-tags">${i.t.tags.map(t=>`<span class="hv-tag ${t[1]}">${hesc(t[0])}</span>`).join('')}</div>`:''}</div></div></td>
+        <td><div>${hesc(p.dx||c.dx||'')}</div>${(()=>{const a=String(((auto(p.id)||{f:{}}).f.allergy)||'').split(String.fromCharCode(10))[0],pt=pendingTasks(p,tasks()).slice(0,2).join('; '),real=a&&!/^(Not recorded|No known)/i.test(a);return (real||pt)?`<div class="tiny muted" style="margin-top:3px">${real?'Allergy: '+hesc(a):''}${real&&pt?' · ':''}${pt?'Pending: '+hesc(pt):''}</div>`:'';})()}</td>
         <td>${meds.length?`<ul class="hv-line">${meds.map(m=>`<li>${hesc(medName(m)+(m.freq?' '+m.freq:''))}</li>`).join('')}</ul>`:'<span class="muted small">No medicines</span>'}</td>
         <td id="hvSt-${p.id}">${stHtml(i)}</td></tr>`;
     };
