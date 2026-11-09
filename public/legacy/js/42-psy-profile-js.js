@@ -556,7 +556,7 @@
   window.psyHistPdf=function(){const d=histDoc();if(!d.n){toast('The detailed history is not written yet');return;}psyPdf('Detailed history',d.html(),ptFind(S.pid)||PTS.find(x=>x.id===S.pid));};
   const __paHist=pAdmission;
   pAdmission=function(){
-    const h=__paHist.apply(this,arguments);if(!psy()||S.admSec!=='hist'||S.hview!=='read'||typeof HREAD==='undefined')return h;
+    const h=__paHist.apply(this,arguments);if(!psy()||S.hview!=='read'||typeof HREAD==='undefined')return h; /* 9 Nov: no admSec check, it was not set yet when the page is first opened, so Neel's text showed for other patients */
     const sc=S.pid==='neel'?{secs:HREAD}:S.historyStatus==='signed'?histFromRecord():{secs:Object.keys(HDRAFT).filter(k=>HDRAFT[k]&&(!Array.isArray(HDRAFT[k])||HDRAFT[k].length)).map(k=>[k,HDRAFT[k]])};
     return h.replace(secList(HREAD),historyReadHtml(sc.secs));
   };
