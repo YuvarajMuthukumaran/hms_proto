@@ -128,6 +128,28 @@
       <div class="row" style="gap:10px;align-items:baseline;flex-wrap:wrap"><span class="lbl">Early warning score</span>${a?`<b class="sc-big" style="font-size:22px">${a.total}${arrow(a.total,a.prev)}</b><span class="sf"><span class="c ${cls}">${hesc(a.band)}</span></span><span class="tiny muted">from the latest vitals (${hesc(a.date)})</span>`:'<span class="small muted">No vitals yet</span>'}</div>
       <div class="row" style="gap:10px;align-items:baseline;flex-wrap:wrap"><span class="lbl">Suicide / self-harm screen</span><b>${s?hesc(s.level):'Not screened'}</b>${s?`<span class="tiny muted">${hesc(s.at)} · ${hesc(s.by)}</span>`:''}${due?'<span class="sf"><span class="c amber">Daily screen due today</span></span>':''}<button class="btn sm" onclick="psySuiOpen('${pid}')">Do screen</button></div></div>`;
   };
+  /* ---------- Rounds "Since last round": count-up of the readings (the entrance itself is CSS, see 25 and 48) ----------
+     Runs only on a strip marked .enter, i.e. the first time a patient's strip is shown. It follows the shared start time, so a redraw
+     during the animation carries on instead of restarting. */
+  window.psyVitCount=function(){
+    const V=window.__prVit;if(!V)return;
+    if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    document.querySelectorAll('.pr-vit.enter b[data-n]').forEach((el,idx)=>{
+      const t=el.dataset.n,parts=t.split('/'),nums=parts.map(Number),dec=parts.map(x=>(x.split('.')[1]||'').length),node=el.firstChild;
+      if(!node||node.nodeType!==3||nums.some(n=>!isFinite(n)))return;
+      const tail=node.nodeValue.slice(t.length),D=700,start=120+idx*70;
+      const step=()=>{
+        if(!el.isConnected)return;
+        const k=Math.min(1,Math.max(0,(Date.now()-V.t0-start)/D)),e=1-Math.pow(1-k,3);
+        node.nodeValue=(k>=1?t:parts.map((x,i)=>(nums[i]*e).toFixed(dec[i])).join('/'))+tail;
+        if(k<1)setTimeout(step,24);
+      };
+      step();
+      /* whatever happens to the timer (a hidden tab slows it), the real value is always shown at the end */
+      setTimeout(()=>{if(el.isConnected)node.nodeValue=t+tail;},start+D+150);
+    });
+  };
+
   window.psySuiOpen=function(pid){
     const Q=window.psySuiQ||[];
     V3.modal('Suicide / self-harm screen · '+hesc(V3.pn(pid)),'At admission, daily for high-risk patients, and at each re-assessment. The result sets Risk of harm in the header.',

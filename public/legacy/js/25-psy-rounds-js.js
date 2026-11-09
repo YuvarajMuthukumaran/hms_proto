@@ -101,7 +101,17 @@
   function sinceCard(p){
     const c=ptCtxOf(p.id),vc=c.vc||{},sys=last(vc.sys),dia=last(vc.dia),pul=last(vc.pulse),sug=last(vc.sugar),slp=last(vc.sleep);
     /* lvl: '' normal, 'warn' raised, 'bad' out of range; an arrow shows which way, so colour is not the only signal */
-    const vi=(l,v,lvl,dir,u)=>`<span class="pr-vi ${lvl||''}"><span class="l">${l}</span><b>${v==null?'—':v}${u?` <span class="u">${u}</span>`:''}</b>${lvl&&dir?`<span class="pr-trend" aria-label="${lvl==='bad'?'Outside expected range':'Needs attention'}">${dir}</span>`:''}</span>`;
+    /* 9 Nov: each reading is a small tile with an icon, a trend line of the last readings and a count-up. It plays once when a patient's strip
+       first appears (key = patient + page); redraws of the same patient show it still, so nothing flickers. */
+    const ICO={bp:'<path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/>',pulse:'<path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/>',sugar:'<path d="M12 3s6 6.2 6 10.5A6 6 0 0 1 6 13.5C6 9.2 12 3 12 3z"/>',sleep:'<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>'};
+    const ser=a=>Array.isArray(a)?a.slice(-7).map(Number).filter(isFinite):[];
+    const spark=(a,lvl)=>{if(a.length<2)return '';const w=56,h=20,mn=Math.min(...a),mx=Math.max(...a),r=(mx-mn)||1,pt=a.map((v,i)=>[2+i*(w-4)/(a.length-1),h-3-((v-mn)/r)*(h-6)]),d=pt.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' '),e=pt[pt.length-1];
+      return `<svg class="pr-spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${d}" pathLength="1"/><circle cx="${e[0].toFixed(1)}" cy="${e[1].toFixed(1)}" r="2.4"/></svg>`;};
+    const vi=(l,v,lvl,dir,u,k,s)=>`<span class="pr-vi ${lvl||''}"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[k]||''}</svg></span><span class="tx"><span class="l">${l}</span><b${v==null?'':` data-n="${v}"`}>${v==null?'—':v}${u?` <span class="u">${u}</span>`:''}</b></span>${spark(ser(s),lvl)}${lvl&&dir?`<span class="pr-trend" aria-label="${lvl==='bad'?'Outside expected range':'Needs attention'}">${dir}</span>`:''}</span>`;
+    /* play the entrance once per patient and page; a redraw within 1.4 s resumes it where it was instead of restarting */
+    const vkey=p.id+'|'+(location.hash||''),vnow=Date.now(),VP=window.__prVit;let vel=-1;
+    if(!VP||VP.key!==vkey){window.__prVit={key:vkey,t0:vnow};vel=0;}else if(vnow-VP.t0<1400)vel=(vnow-VP.t0)/1000;
+    if(vel>=0)setTimeout(()=>window.psyVitCount&&psyVitCount(),0);
     const bp=sys!=null?sys+'/'+dia:null;
     const eod=(S.eod||{})[p.id],pr=(c.psychRows||[]).reduce((a,r)=>[a[0]+(+r.done||0),a[1]+(+r.req||0)],[0,0]);
     const ev=evOf(p),pend=[];
@@ -110,7 +120,7 @@
     const refs=(S.referrals||[]).filter(r=>r.pid===p.id&&!S.done[r.id]).length;if(refs)pend.push(refs+' referral'+(refs>1?'s':'')+' with the RMO');
     const oor=(sys!=null&&(sys>=140||sys<90))||(pul!=null&&(pul>100||pul<55));
     return `<section class="card pad"><h3 style="margin-bottom:10px">Since last round</h3>
-      <div class="pr-vit" role="group" aria-label="Latest vital readings">${vi('BP',bp,sys==null?'':(sys>=140||dia>=90||sys<90)?'bad':sys>=130?'warn':'',sys<90?'↓':'↑','mmHg')}${vi('Pulse',pul,pul==null?'':(pul>100||pul<55)?'bad':'',pul<55?'↓':'↑','bpm')}${vi('Sugar',sug,sug==null?'':(sug>180||sug<70)?'bad':sug>140?'warn':'',sug<70?'↓':'↑','mg/dL')}${vi('Sleep',slp,slp==null?'':slp<5?'warn':'','↓','h')}</div>
+      <div class="pr-vit ${vel>=0?'enter':''}" ${vel>=0?`style="--el:${vel.toFixed(2)}s"`:''} role="group" aria-label="Latest vital readings">${vi('BP',bp,sys==null?'':(sys>=140||dia>=90||sys<90)?'bad':sys>=130?'warn':'',sys<90?'↓':'↑','mmHg','bp',vc.sys)}${vi('Pulse',pul,pul==null?'':(pul>100||pul<55)?'bad':'',pul<55?'↓':'↑','bpm','pulse',vc.pulse)}${vi('Sugar',sug,sug==null?'':(sug>180||sug<70)?'bad':sug>140?'warn':'',sug<70?'↓':'↑','mg/dL','sugar',vc.sugar)}${vi('Sleep',slp,slp==null?'':slp<5?'warn':'','↓','h','sleep',vc.sleep)}</div>
       <div class="pr-lines">
         <div><b>Nursing</b>${oor?'Vitals out of range at the last check':'Vitals in range, doses given as charted'}</div>
         <div><b>Psychologist</b>${hesc(((c.team||{}).psych)||'None assigned')}${pr[1]?' · '+pr[0]+' of '+pr[1]+' sessions done':''}${eod&&eod.saved?' · note written today':''}</div>

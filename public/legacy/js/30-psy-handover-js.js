@@ -283,7 +283,7 @@
 
   function page(){
     const st=store(),u=st.ui,me=signer(),s=hvState(),r=rsn();
-    const incoming=st.list.filter(h=>h.to===me),sent=st.list.filter(h=>h.from===me);
+    const sent=st.list.filter(h=>h.from===me);
     const doctors=(typeof TR_TO!=='undefined'?TR_TO.psy:[]).filter(n=>n!==me);
     const n=s.flagged.length;
     const sentCard=h=>`<section class="card"><div class="hd"><div><h3>To ${hesc(h.to)} · ${hesc(h.reason)}</h3><div class="small muted" style="margin-top:4px">${hesc(h.at)} · ${h.pids.length} patients${h.acceptedBy?' · <b style="color:var(--green)">Accepted by '+hesc(h.acceptedBy)+', '+hesc(h.acceptedAt)+'</b>':' · <b style="color:var(--amber)">Waiting for '+hesc(h.to)+' to accept. You still see these patients.</b>'}</div></div>
@@ -292,7 +292,6 @@
     return `<div class="hv">
       <div class="hv-top"><div><div class="tiny muted">Inpatients / Handover</div><h2>Hand over my patients</h2><div class="muted">One line per patient. Diagnosis, medicines and open items come from the record, so you only write what to watch.</div></div>
         <div class="hv-seg" role="group" aria-label="Reason">${REASONS.map(x=>`<button class="${u.reason===x[0]?'on':''}" aria-pressed="${u.reason===x[0]}" onclick="psyHvReason('${x[0]}')">${x[0]}</button>`).join('')}</div></div>
-      ${incoming.filter(h=>!h.acceptedBy).map(receivedCard).join('')}
       <div class="hv-bar"><label class="small" style="display:flex;align-items:center;gap:8px">Hand over to <select class="input" id="hoTo" style="min-height:36px;width:auto" onchange="psyHvTo(this.value)" aria-label="Doctor who takes over"><option value="">Choose doctor…</option>${doctors.map(d=>`<option ${u.to===d?'selected':''}>${hesc(d)}</option>`).join('')}</select></label>
         <span class="small muted">${hesc(u.reason)} · ${hesc(r[3])}</span><span class="grow"></span><span class="hv-count ${s.missing.length?'':'ok'}" id="hvCount">${n-s.missing.length} of ${n} flagged patient${n===1?'':'s'} done · ${s.routine.length} routine</span></div>
       <div class="hv-lab"><span>Needs attention first</span><span>Grey lines come from the record. You only write what to ${hesc(r[2].toLowerCase().replace(/^watch\s*/,'watch '))}.</span></div>
