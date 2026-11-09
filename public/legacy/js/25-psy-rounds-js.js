@@ -125,8 +125,8 @@
         <div><b>Nursing</b>${oor?'Vitals out of range at the last check':'Vitals in range, doses given as charted'}</div>
         <div><b>Psychologist</b>${hesc(((c.team||{}).psych)||'None assigned')}${pr[1]?' · '+pr[0]+' of '+pr[1]+' sessions done':''}${eod&&eod.saved?' · note written today':''}</div>
         ${window.psyScoreLine&&psyScoreLine(p.id)?`<div><b>Scores</b>${hesc(psyScoreLine(p.id))}</div>`:''}
-        <div><b>Events</b>${ev.length?ev.map(e=>hesc(e.type)+' · '+hesc(e.when)+' (not reviewed)').join('; '):'None to review'}</div>
-        <div><b>Pending</b>${pend.length?pend.map(hesc).join(' · '):'Nothing pending'}</div>
+        ${ev.length?`<div><b>Events</b>${ev.map(e=>hesc(e.type)+' · '+hesc(e.when)+' (not reviewed)').join('; ')}</div>`:''}
+        ${pend.length?`<div><b>Pending</b>${pend.map(hesc).join(' · ')}</div>`:''}
       </div></section>`;
   }
 
@@ -205,18 +205,23 @@
     const R=S.rounds;R.mon=R.mon||[];R.inv=R.inv||[];
     R.inv.forEach(c=>{if(c[2]===undefined)c[2]=labAdv(c[0]);}); /* tests added by a treatment plan get the same advice */
     const tot=R.inv.length+R.mon.length,taken=new Set(R.inv.map(c=>c[0]));
-    return `<section class="card"><div class="hd"><h3>Monitoring</h3>${tot?chip(tot+' pending','c-blue'):''}</div>
+    return `<section class="card"><div class="hd"><h3>Monitoring</h3>${R.mon.length?chip(R.mon.length+' pending','c-blue'):''}</div>
     <div class="mon-add-top"><div class="lbl" style="margin-bottom:6px">Add monitoring</div><div class="mon-cascade"><button type="button" id="monCascadeToggle" class="input mon-cascade-toggle" aria-haspopup="true" aria-expanded="false" onclick="monToggleMenu()">Choose parameter and frequency <span>▾</span></button><div id="monCascadeMenu" class="mon-cascade-menu" hidden><div class="mon-param-list">${MON_PARAMS.map((m,i)=>`<button type="button" class="mon-param-option ${i===0?'on':''}" onmouseenter="monShowFreq(${i})" onclick="monShowFreq(${i})">${m[0]} <span>›</span></button>`).join('')}</div><div id="monFreqList" class="mon-freq-list"></div></div></div></div>
+    ${R.mon.length?`<div style="padding:4px 20px 16px;display:flex;flex-direction:column;gap:8px"><div class="lbl">Pending</div>${R.mon.map((c,i)=>`<div class="box row">${chip('Monitor','c-green')}<span class="grow small">${c.act==='Stop'?'Stop monitoring '+c.p:c.p+': '+monLabel(c.f)}</span><button class="x" aria-label="Remove" onclick="S.rounds.mon.splice(${i},1);render()">×</button></div>`).join('')}</div>`:''}
+  </section>
+  <section class="card"><div class="hd"><h3>Investigations</h3>${R.inv.length?chip(R.inv.length+' pending','c-blue'):''}</div>
     <div class="pr-lab" style="padding:12px 20px;border-top:1px solid var(--line-2)">
-      <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><div class="lbl">Lab orders</div>
+      <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><div class="lbl">Test and collection time</div>
         <span class="row" style="gap:6px"><span class="tiny muted">Collect</span><select class="input" style="width:auto;min-height:30px;padding:3px 8px" aria-label="Collect" onchange="S.rounds.invW=this.value">${INV_WHEN.map(w=>`<option ${(R.invW||'Tomorrow morning')===w?'selected':''}>${w}</option>`).join('')}</select></span></div>
       <select class="input" aria-label="Add a lab order" onchange="prLabPick(this.value)"><option value="">Choose a test…</option>${INV_LIST.filter(x=>!taken.has(x)).map(x=>`<option>${x}</option>`).join('')}<option value="__other">Other test…</option></select>
       ${R.labOther?`<input class="input" id="loOther" placeholder="Type the test, then press Enter" onkeydown="if(event.key==='Enter')prLabOther(this.value)" onblur="prLabOther(this.value)">`:''}
       ${R.inv.map((c,i)=>`<div class="pr-lo"><span style="font-weight:600">${hesc(c[0])}</span><span class="tiny muted">${hesc(c[1])}</span><input class="input" aria-label="Advice for ${hesc(c[0])}" placeholder="Advice (optional)" value="${hesc(c[2]||'')}" oninput="prLabAdv(${i},this.value)"><button class="x" aria-label="Remove" onclick="S.rounds.inv.splice(${i},1);render()">×</button></div>`).join('')}
     </div>
-    ${R.mon.length?`<div style="padding:4px 20px 16px;display:flex;flex-direction:column;gap:8px"><div class="lbl">Pending</div>${R.mon.map((c,i)=>`<div class="box row">${chip('Monitor','c-green')}<span class="grow small">${c.act==='Stop'?'Stop monitoring '+c.p:c.p+': '+monLabel(c.f)}</span><button class="x" aria-label="Remove" onclick="S.rounds.mon.splice(${i},1);render()">×</button></div>`).join('')}</div>`:''}
   </section>`;
   };
+  /* 9 Nov (team review): no sub-heading above the risk drop-down; the drop-down already says what it is */
+  const __ra9=roundAdvice;
+  roundAdvice=function(){const h=__ra9.apply(this,arguments);return psy()&&typeof h==='string'?h.replace('<span class="lbl">Add a risk instruction</span>',''):h;};
   /* the advice travels with the lab order into the nursing instruction */
   const __cr0=confirmRound;
   confirmRound=function(){

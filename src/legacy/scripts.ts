@@ -49,4 +49,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/47-back-keeps-place-js.js',
   '/legacy/js/48-psy-backlog-js.js',
   '/legacy/js/49-psy-qa-fixes-js.js',
+  '/legacy/js/50-psy-review-9nov-js.js',
 ];

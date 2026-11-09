@@ -166,19 +166,30 @@
     const p=ptFind(pid),c=ptCtxOf(pid),m=liveMeds(c).map(medName).join(', ');
     return [p.dx||c.dx||'',m,lastRound(c)].filter(Boolean).join(' · ');
   }
-  const subOf=p=>[window.psyAgeSex?psyAgeSex(p):'',window.psyRoomLabel?psyRoomLabel(p):p.room,'Day '+(p.day||0),'Sec '+(ptCtxOf(p.id).section||p.sec||'89')].filter(Boolean).join(' · ');
-  /* 9 Nov (Nikita): no Night duty (a handover every day is not needed); Going on leave and Transfer are ONE button */
-  const REASONS=[['Going on leave / Transfer','covering doctor','What to watch','send before you leave or the transfer']];
-  const rsn=()=>REASONS[0];
-  const wOf=pid=>String((store().ui.watch||{})[pid]||'').trim();
+  const subOf=p=>[window.psyAgeSex?psyAgeSex(p):'',window.psyRoomLabel?psyRoomLabel(p):p.room,'Day '+(p.day||0)].filter(Boolean).join(' · ');
+  /* 9 Nov (team review): "Handover to" and "Reason" are two drop-downs. Each patient has a tick box; ticking opens a window with the
+     three headings (current psychopathology, past treatment trials, future treatment plan). Only ticked patients are sent. */
+  const REASONS=['Going on leave','Transfer of patient','Shift or duty change','Other'];
+  const rsnName=()=>{const r=store().ui.reason;return REASONS.includes(r)?r:'';};
+  const selOf=()=>{const u=store().ui;u.sel=u.sel||{};return u.sel;};
+  const detOf=pid=>{const u=store().ui;u.det=u.det||{};return u.det[pid]||null;};
+  const detOk=d=>!!(d&&String(d.psychopath||'').trim()&&String(d.trials||'').trim()&&String(d.future||'').trim());
   function hvState(){
-    const items=PTS.map(p=>{const t=tagsOf(p.id);return {p,t,w:wOf(p.id)};});
-    /* most urgent first: red tags (1:1, alert), then the number of reasons */
+    const items=PTS.map(p=>({p,t:tagsOf(p.id),d:detOf(p.id),on:!!selOf()[p.id]}));
     const sev=i=>i.t.tags.filter(t=>t[1]==='red').length*10+i.t.tags.length;
-    const flagged=items.filter(i=>i.t.flag).sort((a,b)=>sev(b)-sev(a)),routine=items.filter(i=>!i.t.flag),missing=flagged.filter(i=>!i.w);
-    return {items,flagged,routine,missing,ok:!missing.length&&!!store().ui.to};
+    items.sort((a,b)=>sev(b)-sev(a));
+    const chosen=items.filter(i=>i.on),missing=chosen.filter(i=>!detOk(i.d));
+    return {items,chosen,missing,ok:!!store().ui.to&&!!rsnName()&&chosen.length>0&&!missing.length};
   }
-  const chipOf=i=>i.t.flag?(i.w?['ok','Done']:['need','Needs a line']):(i.w?['add','Line added']:['rt','Routine, no change']);
+  const hvFootMsg=s=>{
+    const u=store().ui;
+    if(!u.to)return 'Choose the doctor who takes over.';
+    if(!rsnName())return 'Choose the reason for the handover.';
+    if(!s.chosen.length)return 'Tick the patients you are handing over.';
+    if(s.missing.length)return s.missing.length+' ticked patient'+(s.missing.length>1?'s':'')+' still need'+(s.missing.length>1?'':'s')+' details.';
+    return 'Ready to send '+s.chosen.length+' patient'+(s.chosen.length>1?'s':'')+'.';
+  };
+  const stHtml=i=>!i.on?'<span class="tiny muted">Not handing over</span>':detOk(i.d)?`<span class="hv-chip ok">Details added</span> <button class="hv-link" onclick="psyHvDetail('${i.p.id}')">Edit</button>`:`<button class="btn sm pri" onclick="psyHvDetail('${i.p.id}')">Add details</button>`;
 
   const hvCss=document.createElement('style');hvCss.id='psy-handover-v2-css';
   hvCss.textContent=`
@@ -221,22 +232,35 @@
   @media (max-width:860px){.hv-card,.hv-rc-row{grid-template-columns:1fr}.hv-side{align-items:flex-start;flex-direction:row;align-items:center}}`;
   document.head.appendChild(hvCss);
 
-  window.psyHvReason=function(r){const u=store().ui;u.reason=r;render();};
+  window.psyHvReason=function(v){store().ui.reason=v;psyHvRefresh();};
   window.psyHvTo=function(v){store().ui.to=v;psyHvRefresh();};
-  window.psyHvSet=function(pid,v){const u=store().ui;u.watch=u.watch||{};u.watch[pid]=v;psyHvRefresh();};
   window.psyHvRefresh=function(){
-    const s=hvState(),u=store().ui,n=s.flagged.length,done=n-s.missing.length;
-    const c=$('hvCount');if(c){c.textContent=done+' of '+n+' flagged patient'+(n===1?'':'s')+' done · '+s.routine.length+' routine';c.classList.toggle('ok',!s.missing.length);}
-    const f=$('hvFoot');if(f)f.textContent=s.missing.length?s.missing.length+' flagged patient'+(s.missing.length>1?'s':'')+' still need'+(s.missing.length>1?'':'s')+' a line. Routine patients go as they are.':'Every flagged patient has a line. Routine patients go as they are.';
+    const s=hvState(),u=store().ui;
+    const c=$('hvCount');if(c){c.textContent=s.chosen.length+' of '+PTS.length+' selected';c.classList.toggle('ok',!!s.chosen.length&&!s.missing.length);}
+    const f=$('hvFoot');if(f)f.textContent=hvFootMsg(s);
     const b=$('hvSend');if(b){b.textContent=u.to?'Send to '+u.to:'Send handover';b.classList.toggle('off',!s.ok);b.setAttribute('aria-disabled',s.ok?'false':'true');}
-    s.items.forEach(i=>{const ch=$('hvChip-'+i.p.id),cd=$('hvCard-'+i.p.id),k=chipOf(i);if(ch){ch.className='hv-chip '+k[0];ch.textContent=k[1];}if(cd)cd.classList.toggle('ok',!!i.w);});
+    const all=$('hvAll');if(all){all.checked=s.chosen.length===PTS.length;all.indeterminate=s.chosen.length>0&&s.chosen.length<PTS.length;}
+    s.items.forEach(i=>{const cb=$('hvCk-'+i.p.id),st=$('hvSt-'+i.p.id),row=$('hvCard-'+i.p.id);if(cb)cb.checked=i.on;if(st)st.innerHTML=stHtml(i);if(row)row.classList.toggle('on',i.on);});
   };
-  function card(i,ix){
-    const p=i.p,k=chipOf(i),r=rsn(),pid=p.id;
-    return `<div class="hv-card ${i.t.flag?'flag':''} ${i.w?'ok':''}" id="hvCard-${pid}">
-      <div class="hv-who">${av(p.ini,34,i.t.flag?'c-amber':'c-blue')}<div style="min-width:0"><b>${hesc(p.name)}</b><div class="s">${hesc(subOf(p))}</div>${i.t.tags.length?`<div class="hv-tags">${i.t.tags.map(t=>`<span class="hv-tag ${t[1]}">${hesc(t[0])}</span>`).join('')}</div>`:''}</div></div>
-      <div style="min-width:0"><ul class="hv-line" style="--d:${((ix||0)*0.07).toFixed(2)}s">${lineItems(pid).map((x,n)=>`<li style="--i:${n}">${hesc(x)}</li>`).join("")}</ul><label><span class="l">${hesc(r[2])}</span><input class="input" id="hvIn-${pid}" value="${hesc((store().ui.watch||{})[pid]||'')}" placeholder="${i.t.flag?'What should the '+r[1]+' watch for?':'Optional. Leave empty if nothing changes'}" oninput="psyHvSet('${pid}',this.value)"></label></div></div>`;
-  }
+  window.psyHvTick=function(pid,on){selOf()[pid]=!!on;if(on&&!detOk(detOf(pid)))psyHvDetail(pid);else psyHvRefresh();};
+  window.psyHvAll=function(on){const s=selOf();PTS.forEach(p=>{s[p.id]=!!on;});psyHvRefresh();};
+  window.psyHvDet=function(pid,k,v){const u=store().ui;u.det=u.det||{};(u.det[pid]=u.det[pid]||{})[k]=v;};
+  window.psyHvDetail=function(pid){
+    const p=ptFind(pid);if(!p)return;const u=store().ui;u.det=u.det||{};
+    const a=auto(pid),f=a?a.f:{};
+    const d=u.det[pid]=u.det[pid]||{psychopath:f.psychopath||'',trials:f.past||'',future:''};
+    const ta=(k,lab,ph)=>`<div class="hn-f"><div class="lbl">${lab}</div><textarea class="input" rows="3" id="hvD-${k}" placeholder="${ph}" oninput="psyHvDet('${pid}','${k}',this.value)">${hesc(d[k]||'')}</textarea></div>`;
+    V3.modal('Handover details · '+hesc(p.name),'For '+hesc(u.to||'the covering doctor')+'. Filled from the record where possible: check it and add to it. All three are needed.',
+      `<div style="display:flex;flex-direction:column;gap:12px">${ta('psychopath','Current psychopathology','Symptoms that are still present now')}${ta('trials','Past treatment trials','Medicines already tried and how the patient responded')}${ta('future','Future treatment plan','What you plan next and what the covering doctor should do')}</div>`,
+      `<button class="btn" onclick="psyHvDetCancel('${pid}')">Cancel</button><button class="btn pri" onclick="psyHvDetSave('${pid}')">Save</button>`);
+  };
+  window.psyHvDetSave=function(pid){
+    const d=detOf(pid)||{};
+    const miss=['psychopath','trials','future'].find(k=>!String(d[k]||'').trim());
+    if(miss){toast('Fill in all three headings first');const el=$('hvD-'+miss);if(el)el.focus();return;}
+    closeModal();selOf()[pid]=true;psyHvRefresh();
+  };
+  window.psyHvDetCancel=function(pid){closeModal();if(!detOk(detOf(pid)))selOf()[pid]=false;psyHvRefresh();};
   window.psyHvRecord=function(pid){
     const p=ptFind(pid);if(!p)return;
     V3.modal('From the record · '+hesc(p.name),'What the system already knows. This is what the next doctor can open.',notePage(pid,snap(pid),true,{}),`<button class="btn pri" onclick="closeModal()">Close</button>`);
@@ -244,19 +268,23 @@
   window.psyHvSend=function(){
     const s=hvState(),u=store().ui;
     if(!u.to){toast('Choose the doctor who takes over');const sel=$('hoTo');if(sel)sel.focus();return;}
-    if(s.missing.length){toast('Add a line for '+s.missing.length+' flagged patient'+(s.missing.length>1?'s':'')+' first');const el=$('hvIn-'+s.missing[0].p.id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus({preventScroll:true});}return;}
-    const lines={};s.items.forEach(i=>{lines[i.p.id]={watch:i.w,plan:planOf(i.p.id),rec:recOf(i.p.id),tags:i.t.tags.length?i.t.tags.slice(0,3):[['Routine','amber']],flag:i.t.flag};});
-    store().list.unshift({id:'ho'+Date.now(),from:signer(),to:u.to,reason:rsn()[0],at:atNow(),pids:PTS.map(p=>p.id),lines,status:'sent'});
-    u.watch={};render();toast('Handover sent to '+u.to+'. You still see these patients until '+u.to+' accepts.');
+    if(!rsnName()){toast('Choose the reason for the handover');const sel=$('hoWhy');if(sel)sel.focus();return;}
+    if(!s.chosen.length){toast('Tick the patients you are handing over');return;}
+    if(s.missing.length){toast('Add the details for '+s.missing[0].p.name+' first');psyHvDetail(s.missing[0].p.id);return;}
+    const lines={};s.chosen.forEach(i=>{const d=i.d;lines[i.p.id]={psychopath:d.psychopath.trim(),trials:d.trials.trim(),future:d.future.trim(),watch:d.psychopath.trim(),plan:d.future.trim(),rec:recOf(i.p.id),tags:i.t.tags.slice(0,3),flag:i.t.flag};});
+    store().list.unshift({id:'ho'+Date.now(),from:signer(),to:u.to,reason:rsnName(),at:atNow(),pids:s.chosen.map(i=>i.p.id),lines,status:'sent'});
+    const n=s.chosen.length;u.sel={};u.det={};render();toast('Handover of '+n+' patient'+(n>1?'s':'')+' sent to '+u.to+'. You still see them until '+u.to+' accepts.');
   };
   /* what a sent handover says for one patient (the sample handover and older ones may carry only part of it) */
-  const lineFor=(h,pid)=>{const l=(h.lines||{})[pid];if(l)return l;const n=h.notes&&h.notes[pid];return {watch:(h.rec&&h.rec[pid])||(n&&n.future)||'',plan:planOf(pid),rec:recOf(pid),tags:[['Routine','amber']],flag:false};};
+  const lineFor=(h,pid)=>{const l=(h.lines||{})[pid];if(l)return l;const n=h.notes&&h.notes[pid];return {psychopath:(h.rec&&h.rec[pid])||(n&&n.future)||'',trials:'',future:'',watch:(h.rec&&h.rec[pid])||(n&&n.future)||'',plan:planOf(pid),rec:recOf(pid),tags:[['Routine','amber']],flag:false};};
+  const lineRows=l=>[['Current symptoms',l.psychopath||l.watch],['Past treatment trials',l.trials],['Future treatment plan',l.future||l.plan]].filter(x=>x[1]);
   window.psyHvPdf=function(id){
     const h=id?store().list.find(x=>x.id===id):null,u=store().ui;
-    const pids=h?h.pids:PTS.map(p=>p.id);
-    const rows=pids.map(pid=>{const p=ptFind(pid),l=h?lineFor(h,pid):{watch:wOf(pid),plan:planOf(pid),rec:recOf(pid)};
-      return `<tr><td><b>${hesc(p.name)}</b><br>${hesc(subOf(p))}</td><td>${hesc(l.watch||'Routine, no change')}</td><td>${hesc(l.plan||'')}</td><td>${hesc(l.rec||'')}</td></tr>`;}).join('');
-    psyPdf('Handover',`<h2>Handover · ${hesc(h?h.reason:rsn()[0])}</h2><div style="margin-bottom:8px">From ${hesc(h?h.from:signer())} to ${hesc((h?h.to:u.to)||'—')} · ${hesc(h?h.at:atNow())}</div><table><thead><tr><th>Patient</th><th>Watch</th><th>Plan and pending</th><th>From the record</th></tr></thead><tbody>${rows}</tbody></table>`,null);
+    const pids=h?h.pids:hvState().chosen.map(i=>i.p.id);
+    if(!pids.length){toast('Tick the patients you want in the PDF first');return;}
+    const rows=pids.map(pid=>{const p=ptFind(pid),l=h?lineFor(h,pid):Object.assign({},detOf(pid)||{});
+      return `<tr><td><b>${hesc(p.name)}</b><br>${hesc(subOf(p))}</td><td>${hesc(l.psychopath||l.watch||'')}</td><td>${hesc(l.trials||'')}</td><td>${hesc(l.future||l.plan||'')}</td><td>${hesc(recOf(pid))}</td></tr>`;}).join('');
+    psyPdf('Handover',`<h2>Handover · ${hesc(h?h.reason:rsnName()||'—')}</h2><div style="margin-bottom:8px">From ${hesc(h?h.from:signer())} to ${hesc((h?h.to:u.to)||'—')} · ${hesc(h?h.at:atNow())}</div><table><thead><tr><th>Patient</th><th>Current psychopathology</th><th>Past treatment trials</th><th>Future treatment plan</th><th>Diagnosis and medicines</th></tr></thead><tbody>${rows}</tbody></table>`,null);
   };
 
   window.psyHoAccept=function(id){
@@ -274,34 +302,44 @@
     return `<section class="hv-rc" aria-label="Handover received">
       <div class="hv-rc-hd"><span class="hv-rc-ic">${IC}</span><div class="t"><b>${hesc(h.from)} handed over ${n} patient${n>1?'s':''} to you</b><span>${hesc(h.reason)} · sent ${hesc(shortAt(h.at))} · ${h.acceptedBy?'accepted by '+hesc(h.acceptedBy)+', '+hesc(shortAt(h.acceptedAt)):'until you accept, '+hesc(h.from)+' still sees them'}</span></div>
         <button class="btn sm" onclick="psyHoToggle('${h.id}')">${open?'Hide':'Show'}</button>${h.acceptedBy?'':`<button class="btn sm pri" onclick="psyHoAccept('${h.id}')">Accept handover</button>`}</div>
-      ${open?h.pids.map(pid=>{const p=ptFind(pid);if(!p)return '';const l=lineFor(h,pid);
+      ${open?h.pids.map(pid=>{const p=ptFind(pid);if(!p)return '';const l=lineFor(h,pid),rows=lineRows(l);
         return `<div class="hv-rc-row"><div><b class="n">${hesc(p.name)}</b><div class="s">${hesc(subOf(p))}</div><div class="hv-tags">${(l.tags||[]).map(t=>`<span class="hv-tag ${t[1]}">${hesc(t[0])}</span>`).join('')}</div></div>
-          <div class="m"><div><b>Watch:</b> ${hesc(l.watch||'Routine, no change')}</div><div><b>Plan and pending:</b> ${hesc(l.plan||'')}</div><div class="r">From the record: ${hesc(l.rec||'')}</div></div>
+          <div class="m">${rows.length?rows.map(x=>`<div><b>${x[0]}:</b> ${hesc(x[1])}</div>`).join(''):'<div class="muted">No notes added</div>'}</div>
           <button class="hv-link" onclick="go('#/patient/${pid}/overview')">Open record</button></div>`;}).join(''):''}</section>`;
   }
   window.psyHandoverCard=function(){
     const me=signer(),L=store().list.filter(h=>h.to===me&&!h.acceptedBy);
     if(!L.length)return '';
-    return L.map(receivedCard).join('')+`<div class="hv-box"><b>Your patients today</b>The usual Today list continues here. Handed-over patients join it, marked Covering, once you accept.</div>`;
+    return L.map(receivedCard).join('');
   };
 
+  const hvTblCss=document.createElement('style');hvTblCss.id='psy-handover-tbl-css';
+  hvTblCss.textContent=`.hv-tbl td,.hv-tbl th{vertical-align:top}.hv-tbl tbody tr.on{background:#f3f8ff}.hv-tbl .hv-line{margin:0}.hv-tbl .hv-who b{font-size:14px}.hv-tbl input[type=checkbox]{width:17px;height:17px;accent-color:var(--blue,#1d6fe0);cursor:pointer}.hv-bar label.f{display:flex;align-items:center;gap:8px;font-size:13px}`;
+  document.head.appendChild(hvTblCss);
   function page(){
-    const st=store(),u=st.ui,me=signer(),s=hvState(),r=rsn();
+    const st=store(),u=st.ui,me=signer(),s=hvState();
     const sent=st.list.filter(h=>h.from===me);
     const doctors=(typeof TR_TO!=='undefined'?TR_TO.psy:[]).filter(n=>n!==me);
-    const n=s.flagged.length;
     const HN=Date.now(),HV=window.__hvAnim;let hel=-1;
     if(!HV){window.__hvAnim={t0:HN};hel=0;}else if(HN-HV.t0<1400)hel=(HN-HV.t0)/1000;
-    const sentCard=h=>`<section class="card"><div class="hd"><div><h3>To ${hesc(h.to)} · ${hesc(h.reason)}</h3><div class="small muted" style="margin-top:4px">${hesc(h.at)} · ${h.pids.length} patients${h.acceptedBy?' · <b style="color:var(--green)">Accepted by '+hesc(h.acceptedBy)+', '+hesc(h.acceptedAt)+'</b>':' · <b style="color:var(--amber)">Waiting for '+hesc(h.to)+' to accept. You still see these patients.</b>'}</div></div>
+    const sentCard=h=>`<section class="card"><div class="hd"><div><h3>To ${hesc(h.to)} · ${hesc(h.reason)}</h3><div class="small muted" style="margin-top:4px">${hesc(h.at)} · ${h.pids.length} patient${h.pids.length>1?'s':''}${h.acceptedBy?' · <b style="color:var(--green)">Accepted by '+hesc(h.acceptedBy)+', '+hesc(h.acceptedAt)+'</b>':' · <b style="color:var(--amber)">Waiting for '+hesc(h.to)+' to accept. You still see these patients.</b>'}</div></div>
       <div class="row" style="gap:8px"><button class="btn sm" onclick="psyHoToggle('${h.id}')">${h.hide?'Show':'Hide'} lines</button><button class="btn sm" onclick="psyHvPdf('${h.id}')">PDF</button></div></div>
-      ${h.hide?'':`<div class="pad" style="padding-top:0">${h.pids.map(pid=>{const p=ptFind(pid),l=lineFor(h,pid);return `<div class="li"><div class="grow"><div style="font-weight:600">${hesc(p?p.name:pid)}</div><div class="small ${l.watch?'':'muted'}">${hesc(l.watch||'Routine, no change')}</div></div></div>`;}).join('')}</div>`}</section>`;
+      ${h.hide?'':`<div class="pad" style="padding-top:0">${h.pids.map(pid=>{const p=ptFind(pid),l=lineFor(h,pid),rows=lineRows(l);return `<div class="li"><div class="grow"><div style="font-weight:600">${hesc(p?p.name:pid)}</div>${rows.length?rows.map(x=>`<div class="small"><b>${x[0]}:</b> ${hesc(x[1])}</div>`).join(''):'<div class="small muted">No notes added</div>'}</div></div>`;}).join('')}</div>`}</section>`;
+    const row=i=>{
+      const p=i.p,c=ptCtxOf(p.id),meds=liveMeds(c);
+      return `<tr id="hvCard-${p.id}" class="${i.on?'on':''}"><td><input type="checkbox" id="hvCk-${p.id}" ${i.on?'checked':''} onchange="psyHvTick('${p.id}',this.checked)" aria-label="Hand over ${hesc(p.name)}"></td>
+        <td><div class="hv-who">${av(p.ini,34,i.t.flag?'c-amber':'c-blue')}<div style="min-width:0"><b>${hesc(p.name)}</b><div class="s">${hesc(subOf(p))}</div></div></div></td>
+        <td><div>${hesc(p.dx||c.dx||'')}</div>${i.t.tags.length?`<div class="hv-tags">${i.t.tags.map(t=>`<span class="hv-tag ${t[1]}">${hesc(t[0])}</span>`).join('')}</div>`:''}</td>
+        <td>${meds.length?`<ul class="hv-line">${meds.map(m=>`<li>${hesc(medName(m)+(m.freq?' '+m.freq:''))}</li>`).join('')}</ul>`:'<span class="muted small">No medicines</span>'}</td>
+        <td id="hvSt-${p.id}">${stHtml(i)}</td></tr>`;
+    };
     return `<div class="hv ${hel>=0?'enter':''}" ${hel>=0?`style="--el:${hel.toFixed(2)}s"`:''}>
-      <div class="hv-top"><div><div class="tiny muted">Inpatients / Handover</div><h2>Hand over my patients</h2></div></div>
-      <div class="hv-bar"><label class="small" style="display:flex;align-items:center;gap:8px">Hand over to <select class="input" id="hoTo" style="min-height:36px;width:auto" onchange="psyHvTo(this.value)" aria-label="Doctor who takes over"><option value="">Choose doctor…</option>${doctors.map(d=>`<option ${u.to===d?'selected':''}>${hesc(d)}</option>`).join('')}</select></label>
-        <span class="grow"></span><span class="hv-count ${s.missing.length?'':'ok'}" id="hvCount">${n-s.missing.length} of ${n} flagged patient${n===1?'':'s'} done · ${s.routine.length} routine</span></div>
-      <div class="hv-lab"><span>Needs attention first</span><span></span></div>
-      ${s.flagged.map((i,x)=>card(i,x)).join('')}${s.routine.length?`<div class="hv-lab"><span>Routine</span><span></span></div>`:''}${s.routine.map((i,x)=>card(i,s.flagged.length+x)).join('')}
-      <div class="hv-foot"><span class="small" id="hvFoot">${s.missing.length?s.missing.length+' flagged patient'+(s.missing.length>1?'s':'')+' still need'+(s.missing.length>1?'':'s')+' a line. Routine patients go as they are.':'Every flagged patient has a line. Routine patients go as they are.'}</span>
+      <div class="tiny muted">Inpatients / Handover</div>
+      <div class="hv-bar"><label class="f">Handover to <select class="input" id="hoTo" style="min-height:36px;width:auto" onchange="psyHvTo(this.value)" aria-label="Doctor who takes over"><option value="">Choose doctor…</option>${doctors.map(d=>`<option ${u.to===d?'selected':''}>${hesc(d)}</option>`).join('')}</select></label>
+        <label class="f">Reason <select class="input" id="hoWhy" style="min-height:36px;width:auto" onchange="psyHvReason(this.value)" aria-label="Reason for the handover"><option value="">Choose reason…</option>${REASONS.map(r=>`<option ${rsnName()===r?'selected':''}>${hesc(r)}</option>`).join('')}</select></label>
+        <span class="grow"></span><label class="f"><input type="checkbox" id="hvAll" ${s.chosen.length===PTS.length?'checked':''} onchange="psyHvAll(this.checked)"> Select all</label><span class="hv-count ${s.chosen.length&&!s.missing.length?'ok':''}" id="hvCount">${s.chosen.length} of ${PTS.length} selected</span></div>
+      <section class="card hv-tbl"><div class="scroll"><table class="t"><thead><tr><th style="width:36px"></th><th>Patient</th><th>Diagnosis and alerts</th><th>Ongoing medicines</th><th>Handover details</th></tr></thead><tbody>${s.items.map(row).join('')}</tbody></table></div></section>
+      <div class="hv-foot"><span class="small" id="hvFoot">${hesc(hvFootMsg(s))}</span>
         <span class="row" style="gap:8px"><button class="btn" onclick="psyHvPdf()">Download PDF</button><button class="btn pri ${s.ok?'':'off'}" id="hvSend" aria-disabled="${s.ok?'false':'true'}" onclick="psyHvSend()">${u.to?'Send to '+hesc(u.to):'Send handover'}</button></span></div>
       ${sent.length?`<div class="lbl">Sent by you</div>${sent.map(sentCard).join('')}`:''}</div>`;
   }

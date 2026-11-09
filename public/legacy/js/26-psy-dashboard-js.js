@@ -219,7 +219,12 @@
       <td>${shown.map(detail).join('')}${lines.length>3?`<div class="tiny muted" style="margin-top:4px">+${lines.length-3} more, press the eye</div>`:''}</td>
       <td>${did.length?did.join(''):'<span class="tiny muted">Nothing yet</span>'}${(doneL.length||did.length)&&rem.length?`<div class="tiny" style="margin-top:4px;color:#475467;font-weight:600">${rem.length} left</div>`:''}</td>
       <td><div class="pd-acts"><button class="pd-eye" aria-label="View details for ${hesc(p.name)}" title="View details" onclick="psyEye('${p.id}')">${EYE}</button><button class="btn sm pd-take" aria-haspopup="menu" onclick="psyMenu(event,'${p.id}')">Take Action <span aria-hidden="true">▾</span></button></div></td></tr>`:'';
-    const doneHtml=allTaken?`<div class="li"><div class="grow"><div style="font-weight:600">${hesc(p.name)} <span class="pd-done">Done today ✓</span></div><div class="tiny muted">${hesc(act.length+' item'+(act.length===1?'':'s')+' completed · '+(last&&last.by||'' )+' · '+(last&&last.at||''))}</div></div><button class="btn sm" onclick="psyEye('${p.id}')">View record</button></div>`:'';
+    const doneHtml=allTaken?`<tr data-dt="${hesc((p.name+' '+p.room).toLowerCase())}">
+      <td><span class="pd-ty">Done</span></td>
+      <td><button class="pd-who" onclick="go('#/patient/${p.id}/overview')">${av(p.ini,38,'c-blue')}<span><span class="pd-nm"><b>${hesc(p.name)}</b>${p.risk?'<span class="pd-tag amber">High risk</span>':''}</span><span class="pd-sub">${hesc(sub(p))}</span></span></button></td>
+      <td>${act.map(i=>`<div class="pd-d done"><i class="pd-dot ok"></i><span>${hesc(i.txt)}</span></div>`).join('')}</td>
+      <td>${did.join('')||'<span class="tiny muted">Done</span>'}</td>
+      <td><div class="pd-acts"><button class="pd-eye" aria-label="View details for ${hesc(p.name)}" title="View details" onclick="psyEye('${p.id}')">${EYE}</button></div></td></tr>`:'';
     return {rank,html,doneHtml,act,allTaken};
   }
 
@@ -236,7 +241,8 @@
         <thead><tr><th>Type</th><th>Patient</th><th>Event</th><th>Action taken by others</th><th></th></tr></thead>
         <tbody id="dtBody">${openRows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="5" class="pd-empty">No patient matches</td></tr></tbody></table></div>`
       :`<section class="card"><div class="pd-empty">Nothing needs you right now. You can start your rounds when you are ready.</div></section>`}
-      ${doneRows.length?`<section class="card"><div class="hd"><div><h3>Done today</h3><div class="small muted" style="margin-top:4px">Completed actions are kept here for reference.</div></div></div>${doneRows.map(r=>r.doneHtml).join('')}</section>`:''}
+      ${doneRows.length?`<div class="lbl" style="margin:10px 0 6px">Completed actions</div><div style="overflow-x:auto"><table class="pd-t" style="min-width:900px"><colgroup><col style="width:122px"><col style="width:190px"><col><col style="width:21%"><col style="width:216px"></colgroup>
+        <thead><tr><th>Type</th><th>Patient</th><th>Event</th><th>Action taken</th><th></th></tr></thead><tbody>${doneRows.map(r=>r.doneHtml).join('')}</tbody></table></div>`:''}
     </div>`;
   }
   Object.assign(ROLE.psychiatrist,{myday:()=>dash()});

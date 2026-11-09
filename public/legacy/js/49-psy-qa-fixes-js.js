@@ -92,13 +92,13 @@
     const c=ptCtxOf(pid),x=psyPx(pid),al=x.allergy;let front='';
     if(!(al&&al.list&&al.list.length)){
       front=al&&al.ndka
-        ?`<span class="c" title="Recorded by ${hesc(al.by)}, ${hesc(al.at)}">No known drug allergies</span>`
+        ?''
         :`<button type="button" class="c amber" title="Nothing recorded yet. Tap to record the allergies" onclick="psyAllergy('${pid}')">Allergies not recorded</button>`;
     }
     const lvl=c.obs||(EX[pid]||[])[0]||'Routine',by=c.obsBy||{},rv=x.obsRev,done=rv&&rv.date===today();
     const tail=done?'reviewed '+hesc(rv.time)+' by '+hesc(rv.by)+' · next review by tomorrow':'review by today 6:00 pm';
     const cls=!done&&lvl!=='Routine'?'amber':'';
-    const obs=`<span class="c ${cls}" title="Observation level is reviewed at least once a day">Observation: ${hesc(lvl)}${by.by?' · set by '+hesc(by.by)+(by.at?', '+hesc(shortAt(by.at)):''):''} · ${tail}</span>`;
+    const obs=`<span class="c ${cls}" title="Set by ${hesc(by.by||'the treating team')}${by.at?', '+hesc(shortAt(by.at)):''} · ${tail}">Observation: ${hesc(lvl)}</span>`;
     return h.replace('<div class="sf" aria-label="Patient safety">','<div class="sf" aria-label="Patient safety">'+front)
             .replace('<button class="c" style="border:1px dashed',obs+'<button class="c" style="border:1px dashed');
   };
