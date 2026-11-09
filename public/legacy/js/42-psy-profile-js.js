@@ -51,7 +51,7 @@
   .psy-hist-field{display:grid;grid-template-columns:minmax(190px,32%) minmax(0,1fr);gap:12px;padding:8px 0;border-top:1px solid var(--line-2,#eef0f3)}
   .psy-hist-field b{font-size:13px;color:var(--ink-2,#344054)}
   .psy-hist-field span{font-size:14px;line-height:1.45;color:var(--ink,#101828);overflow-wrap:anywhere}
-  .psy-hist-empty{font-size:13px;color:var(--muted,#667085)}
+  .psy-hist-empty{font-size:13px;color:var(--muted,#667085)}.psy-hist-miss{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2,#eef0f3);line-height:1.5}
   @media(max-width:620px){.psy-hist-field{grid-template-columns:1fr;gap:3px}}
   @media(max-width:760px){.psy-tx-plan{grid-template-columns:1fr}.psy-tx-head{align-items:center}.psy-tx-actions{flex-wrap:nowrap}}`;
   document.head.appendChild(css);
@@ -74,7 +74,7 @@
       .psy-hist-read{display:block}.psy-hist-section{border:1px solid #e4e7ec;border-radius:8px;padding:8px 10px;margin:0 0 8px;break-inside:avoid}
       .psy-hist-section h4{font-size:13px;font-weight:700;margin:0 0 5px;color:#101828}
       .psy-hist-field{display:grid;grid-template-columns:32% 1fr;gap:8px;padding:4px 0;border-top:1px solid #eef0f3}
-      .psy-hist-field b{font-size:10.5px;color:#475467}.psy-hist-field span{font-size:11.5px;line-height:1.4;overflow-wrap:anywhere}.psy-hist-empty{font-size:11px;color:#667085}
+      .psy-hist-field b{font-size:10.5px;color:#475467}.psy-hist-field span{font-size:11.5px;line-height:1.4;overflow-wrap:anywhere}.psy-hist-empty{font-size:11px;color:#667085}.psy-hist-miss{display:none}
       table{width:100%;border-collapse:collapse}th,td{border:1px solid #e4e7ec;padding:5px 8px;text-align:left;font-size:12px}th{background:#f6f9fc}
       .ft{margin-top:16px;color:#98a2b3;font-size:10.5px}
     </style></head><body>
@@ -241,7 +241,20 @@
     #psyPrefsPage .psy-prefs-seg{display:flex;flex:0 0 300px;width:300px;min-width:0;gap:3px;padding:4px;border:1px solid #e0e8f2;border-radius:12px;background:#f0f4f9}
     #psyPrefsPage .psy-prefs-seg button{flex:1 0 max-content;min-width:max-content;min-height:40px;padding:9px 12px;border:1px solid transparent;border-radius:9px;font-size:13px;white-space:nowrap!important;word-break:keep-all;overflow-wrap:normal;color:#344054}
     #psyPrefsPage .psy-prefs-seg button.on{background:#fff;color:#111827;border-color:#e7edf5;box-shadow:0 1px 3px rgba(15,23,42,.1);font-weight:700}
-    @media(max-width:480px){#psyPrefsPage .psy-prefs-seg{flex-basis:min(300px,100%);width:min(300px,100%)}}`;
+    @media(max-width:480px){#psyPrefsPage .psy-prefs-seg{flex-basis:min(300px,100%);width:min(300px,100%)}}
+    #psyPrefsPage .pxs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin:12px 0 10px}
+    #psyPrefsPage .pxs-card{border:1px solid var(--line-2,#e4e7ec);border-radius:14px;background:#fff;padding:14px 16px}
+    #psyPrefsPage .pxs-hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+    #psyPrefsPage .pxs-hd h4{margin:0;font-size:15px;font-weight:700;color:var(--ink,#101828)}
+    #psyPrefsPage .pxs-seen{font-size:11.5px;color:var(--muted,#667085)}
+    #psyPrefsPage .pxs-card dl{margin:0}
+    #psyPrefsPage .pxs-row{display:grid;grid-template-columns:minmax(110px,38%) minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px solid var(--line-2,#eef0f3)}
+    #psyPrefsPage .pxs-row dt{font-size:13px;color:var(--ink-2,#475467)}
+    #psyPrefsPage .pxs-row dd{margin:0;font-size:14px;font-weight:600;color:var(--ink,#101828);overflow-wrap:anywhere}
+    #psyPrefsPage .pxs-row dd.none{font-weight:400;color:var(--muted,#667085)}
+    #psyPrefsPage .pxs-vis{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line-2,#eef0f3)}
+    #psyPrefsPage .pxs-vis b{display:block;font-size:14px}#psyPrefsPage .pxs-vis span{font-size:12.5px;color:var(--muted,#667085)}
+    #psyPrefsPage .pxs-vis em{font-style:normal;font-size:12.5px;font-weight:600;color:var(--ink-2,#475467);white-space:nowrap}`;
   document.head.appendChild(prefsCss);
   window.psyPrefsView=function(v){S.prefsView=v==='form'?'form':'read';render();};
   const __pp2=pPrefs;
@@ -255,11 +268,39 @@
     const grievance=[...t.content.querySelectorAll('section.card')].find(s=>/^Grievances/.test((s.querySelector('h3')||{}).textContent||''));
     const log=grievance&&[...grievance.querySelectorAll('button')].find(b=>b.textContent.trim()==='Log grievance');
     if(log){const top=log.cloneNode(true);top.className='btn sm pri';seg.appendChild(top);log.remove();}
-    page.appendChild(seg);page.appendChild(t.content);
+    /* 9 Nov (QA): the RMO fills this with the patient experience team (the page said the psychologist) */
+    t.content.querySelectorAll('strong').forEach(x=>{if(/psychologist fills it first/i.test(x.textContent))x.textContent='The RMO fills it first, together with the patient experience team, within 24 hours of admission.';});
+    t.content.querySelectorAll('.tiny.muted').forEach(x=>{x.textContent=x.textContent.replace('First filled by Priya Nair','First filled by Dr. Sameer Khan (RMO) with the patient experience team');});
     if(view==='read'){
-      page.querySelectorAll('.input').forEach(el=>{el.disabled=true;});
-      page.querySelectorAll('.radios .tog').forEach(el=>{el.disabled=true;});
-      page.querySelectorAll('button').forEach(b=>{if(/^(Save diet|Add visitor|Save and send to admin)$/.test(b.textContent.trim()))b.remove();});
+      /* a clean summary instead of a greyed-out form: one card per topic, question and answer side by side, who sees it under the title */
+      const clean=x=>String(x||'').replace(/\s+/g,' ').trim();
+      const pick=el=>{
+        if(el.tagName==='SELECT'){const o=el.querySelector('option[selected]')||el.options[0];return clean(o&&o.textContent);}
+        return clean(el.value||el.getAttribute('value'));
+      };
+      const cards=[...t.content.querySelectorAll('.ovgrid > section.card')].map(c=>{
+        const head=c.querySelector(':scope > .row');
+        const title=clean(((head||c).querySelector('h3')||{}).textContent),seen=head?[...head.querySelectorAll('.chip')].map(x=>clean(x.textContent)).join(' · '):'';
+        const rows=[];
+        c.querySelectorAll('label.field').forEach(f=>{const l=clean((f.querySelector('.lbl')||{}).textContent),i=f.querySelector('select,input,textarea');if(l&&i)rows.push([l,pick(i)]);});
+        const on=[...c.querySelectorAll('.radios .tog.on')].map(x=>clean(x.textContent)).join(', ');
+        if(on)rows.unshift([title==='Diet'?'Diet type':'Chosen',on]);
+        const vis=[...c.querySelectorAll('.box.row')].map(b=>{const s=b.querySelector('.small'),st=b.querySelector('.chip');return [clean(s&&s.querySelector('strong')&&s.querySelector('strong').textContent),clean(s&&s.querySelector('.muted')&&s.querySelector('.muted').textContent),clean(st&&st.textContent)];});
+        const body=vis.length?vis.map(v=>`<div class="pxs-vis"><div><b>${hesc(v[0])}</b><span>${hesc(v[1])}</span></div><em>${hesc(v[2])}</em></div>`).join(''):rows.map(r=>`<div class="pxs-row"><dt>${hesc(r[0])}</dt><dd class="${r[1]?'':'none'}">${r[1]?hesc(r[1]):'Not set'}</dd></div>`).join('');
+        return `<section class="pxs-card"><div class="pxs-hd"><h4>${hesc(title)}</h4>${seen?`<span class="pxs-seen">Seen by ${hesc(seen)}</span>`:''}</div><dl>${body}</dl></section>`;
+      }).join('');
+      const foot=[...t.content.querySelectorAll('.row')].filter(r=>/First filled by/.test(r.textContent)).pop();
+      const note=foot?`<div class="tiny muted" style="margin:2px 4px 14px">${hesc(clean((foot.querySelector('.tiny')||foot).textContent))}</div>`:'';
+      const call=t.content.querySelector('.callout');
+      const grievance2=[...t.content.querySelectorAll('section.card')].find(s=>/^Grievances/.test((s.querySelector('h3')||{}).textContent||''));
+      const lblG=[...t.content.children].find(x=>x.classList&&x.classList.contains('lbl')&&/^Grievances/.test(x.textContent));
+      page.appendChild(seg);
+      if(call)page.appendChild(call);
+      page.insertAdjacentHTML('beforeend',`<div class="pxs-grid">${cards}</div>${note}`);
+      if(lblG)page.appendChild(lblG);
+      if(grievance2)page.appendChild(grievance2);
+    }else{
+      page.appendChild(seg);page.appendChild(t.content);
     }
     return page.outerHTML;
   };
@@ -337,7 +378,9 @@
     if(med){let m=med.outerHTML.replace(/onclick="psyRxOpen\(\{ctx:'orders'\}\)">/,`onclick="psyToChart('${S.pid}')">`).replace('Current medicines. The chart below shows every dose given, from Day 1.','Current medicines, read only here. Add medicine opens the full nursing chart, where medicines are added and stopped.').replace(/<button class="btn sm" onclick="medStopModal\(\d+\)">Stop<\/button>/g,'');out.push(m);}
     /* 2 Vitals, with the scores under it */
     const v=findSec(vit,'Vitals'),sc=findSec(vit,'Scores');
-    /* the Scores block (NEWS2 and suicide screen) is removed from this tab (owner, 5 Nov) */
+    /* the separate Scores block (NEWS2 and suicide screen) stays removed from this tab (owner, 5 Nov). 9 Nov (QA, Trello "bring back scores"):
+       the scores come back as ONE line inside Vitals, not as a block of their own. */
+    if(v&&window.psyScoreStrip){const hd=v.querySelector(':scope > .hd'),strip=psyScoreStrip(S.pid);if(hd)hd.insertAdjacentHTML('afterend',strip);else v.insertAdjacentHTML('afterbegin',strip);}
     if(v)out.push(v.outerHTML);
     /* 3 Monitoring: orders, blood sugar and the other monitoring in one card */
     const parts=['Monitoring orders','Blood sugar monitoring','Other monitoring by nurses'].map(n=>findSec(vit,n)).filter(Boolean);
@@ -399,6 +442,8 @@
       if(!Array.isArray(row))return;
       const [label,value]=row,raw=Array.isArray(value)?value.join('\n'):String(value==null?'':value);
       if(!raw.trim())return;
+      /* the diagnosis in the formulation also answers "Provisional diagnosis with ICD code" in Patient details */
+      if(label==='Diagnostic formulation'){const m=raw.match(/^(.*?)\s*\((6[A-Z0-9.]+)\)/);if(m)add('Patient details','Provisional diagnosis with ICD code',m[1].replace(/,\s*current episode.*$/i,'')+' · '+m[2]);}
       if(fieldSection.has(label)){add(fieldSection.get(label),label,value);return;}
       switch(label){
         case 'Informant and reliability':{
@@ -431,6 +476,10 @@
           if(living)add('Personal history','Present living conditions',living[1]);
           if(/birth and milestones/i.test(raw))add('Personal history','Milestones','Normal');
           if(!education&&!occupation&&!marital&&!living)add('Personal history','Present living conditions',value);
+          /* the same facts also answer the first section of the form (Patient details) */
+          if(marital)add('Patient details','Marital status',{unmarried:'Single',married:'Married',widowed:'Widow/Widower',divorced:'Divorced',separated:'Separated'}[marital[1].toLowerCase()]||marital[1]);
+          if(education)add('Patient details','Education',/post/i.test(education[1])?'Post graduate':education[1].charAt(0).toUpperCase()+education[1].slice(1).toLowerCase());
+          if(occupation)add('Patient details','Occupation',occupation[1].replace(/\s+for\s+.*$/i,'').replace(/^./,c=>c.toUpperCase()));
           break;
         }
         case 'Premorbid personality':add('Premorbid personality','Nature of personality (mood, aspirations, relations, attitude to work)',value);break;
@@ -460,9 +509,14 @@
         default:add(formulation,'Diagnostic formulation',`${label}: ${raw}`);
       }
     });
-    return `<div class="psy-hist-read"><h2>Detailed history</h2>${sections.map(s=>{
-      const rows=groups.get(s.t)||[];
-      return `<section class="psy-hist-section"><h4>${hesc(s.t)}</h4>${rows.length?rows.map(([label,value])=>`<div class="psy-hist-field"><b>${hesc(label)}</b><span>${(Array.isArray(value)?value.join('\n'):String(value)).split('\n').map(hesc).join('<br>')}</span></div>`).join(''):'<div class="psy-hist-empty">No information recorded in this section.</div>'}</section>`;
+    /* 9 Nov (QA): every section follows the Fill form. Same 11 headings, answers in the same order as the form's questions, and
+       one muted line listing the questions of that section that have no answer yet. */
+    return `<div class="psy-hist-read"><h2>Detailed history</h2>${sections.map((s,si)=>{
+      const ord=(s.f||[]).map(f=>f[0]),rank=l=>{const i=ord.indexOf(l);return i<0?999:i;};
+      const rows=(groups.get(s.t)||[]).slice().sort((a,b)=>rank(a[0])-rank(b[0]));
+      const have=new Set(rows.map(r=>r[0])),miss=ord.filter((l,i)=>!have.has(l)&&ord.indexOf(l)===i);
+      const body=rows.map(([label,value])=>`<div class="psy-hist-field"><b>${hesc(label)}</b><span>${(Array.isArray(value)?value.join('\n'):String(value)).split('\n').map(hesc).join('<br>')}</span></div>`).join('');
+      return `<section class="psy-hist-section"><h4>${si+1}. ${hesc(s.t)}</h4>${rows.length?body:'<div class="psy-hist-empty">Nothing answered in this section yet.</div>'}${rows.length&&miss.length?`<div class="psy-hist-empty psy-hist-miss">Not answered yet: ${miss.map(hesc).join(' · ')}</div>`:''}</section>`;
     }).join('')}</div>`;
   }
   window.psyHistView=function(){

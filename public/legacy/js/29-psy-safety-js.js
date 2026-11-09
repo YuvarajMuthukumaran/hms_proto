@@ -115,6 +115,7 @@
     const band=total>=5?'Urgent RMO review':(total>=3||single)?'Inform RMO':'Routine';
     return {P,total,band};
   }
+  window.psyNewsCalc=news; /* used by the QA block (49) for the automatic score */
   const lastVit=c=>{const r=(c.vit||[]).slice(-1)[0]||[],bp=String(r[1]||'').split('/');return {sbp:+bp[0]||120,pulse:+r[2]||80,temp:r[3]?Math.round((+r[3]-32)*5/9*10)/10:36.8,spo2:+r[4]||98};};
   const bandCls=b=>b==='Urgent RMO review'?'red':b==='Inform RMO'?'amber':'';
   const arrow=(a,b)=>a==null||b==null?'':(a>b?' ↑':a<b?' ↓':' →');
@@ -128,6 +129,7 @@
     render();toast('Score '+r.total+' · '+r.band+(r.band==='Urgent RMO review'?'. Raised to the escalation chain.':''));
   };
   const SQ=['Wished to be dead, or to go to sleep and not wake up','Non-specific active suicidal thoughts','Thought of a method, without a plan or intent','Some intent to act on the thoughts','A plan with details worked out','Self-harm or preparing to act, this stay or in the past 3 months'];
+  window.psySuiQ=SQ;
   window.psySuiSave=function(pid){
     const ans=SQ.map((_,i)=>$('sq'+i).value==='Yes');
     const lvl=(ans[3]||ans[4]||ans[5])?'High':ans[2]?'Moderate':'Low',x=pxOf(pid);

@@ -161,11 +161,19 @@
   const __vp66=vPatient;
   vPatient=function(sub){
     const h=__vp66.apply(this,arguments);
-    if(!psy()||typeof h!=='string'||/^therapy/.test(String(sub||'')))return h;
-    const pid=(window.S&&S.focusPid)||'neel';let due=[];
-    try{due=JSON.parse(ptRun(pid,()=>JSON.stringify(DUE_CALLS.filter(c=>((S.calls||{})[c[0]])!=='done'))));}catch(e){}
+    if(!psy()||typeof h!=='string'||/^therapy/.test(String(sub||''))||h.indexOf('id="famCallDue"')>=0)return h;
+    const pid=S.focusPid||'neel';let due=[],nr='the family',rel='';
+    /* 9 Nov (QA): this patient's own call and own nominated representative. The 24-hour call comes first; the Day 3 to 4 call only
+       from day 3 of the stay. Before, every patient showed Neel's sister and the Day 3 to 4 call. */
+    try{
+      const info=JSON.parse(ptRun(pid,()=>{const p=ptFind(pid),id=ptIdentity(p),c=S.calls||{},day=+p.day||0,r=[];
+        if(c.h24!=='done')r.push(['h24','24-hour call']);
+        else if(c.d34psy==='due'&&day>=3)r.push(['d34psy','Day 3 to 4 call']);
+        return JSON.stringify({due:r,nr:id.nr,rel:id.rel});}));
+      due=info.due;nr=info.nr;rel=info.rel;
+    }catch(e){}
     if(!due.length)return h;
-    const rows=due.map(c=>`<div class="li" style="flex-wrap:wrap"><div class="grow"><div style="font-weight:700">${hesc(c[1])} · psychiatrist · due now</div><div class="small muted">Ananya Bose, sister. The call is placed and logged through the HMS with your name and time.</div></div><button class="btn sm" onclick="schedMsg('Ananya Bose')">Message caregiver</button><button class="btn sm pri" onclick="psyCallDone('${pid}','${c[0]}')">Call via HMS</button></div>`).join('');
+    const rows=due.map(c=>`<div class="li" style="flex-wrap:wrap"><div class="grow"><div style="font-weight:700">${hesc(c[1])} · psychiatrist · due now</div><div class="small muted">${hesc(nr)}${rel?', '+hesc(rel.toLowerCase()):''}. The call is placed and logged through the HMS with your name and time.</div></div><button class="btn sm" onclick="schedMsg('${hesc(nr)}')">Message caregiver</button><button class="btn sm pri" onclick="psyCallDone('${pid}','${c[0]}')">Call via HMS</button></div>`).join('');
     const ban=`<section class="card" id="famCallDue" style="border-left:4px solid var(--blue,#1570ef)"><div class="hd"><h3>Family call due now</h3></div>${rows}</section>`;
     return /<\/nav>/.test(h)?h.replace('</nav>','</nav>'+ban):ban+h;
   };
@@ -208,19 +216,16 @@
   /* #55 readability of "Since last round": one animated, unboxed line with units beside their values. */
   const rcss=document.createElement('style');rcss.id='psy-backlog-css';
   rcss.textContent=`
-  @keyframes pr-vitals-enter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes pr-vital-item-enter{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
-  .pr-vit{display:flex;align-items:baseline;gap:0;max-width:100%;overflow-x:auto;white-space:nowrap;scrollbar-width:thin;font-size:14px;animation:pr-vitals-enter .38s ease-out both}
-  .pr-vi{display:inline-flex;flex:0 0 auto;align-items:baseline;gap:6px;min-width:0;padding:4px 12px;border:0;border-left:1px solid var(--line-2,#e4e7ec);border-radius:0;background:transparent;animation:pr-vital-item-enter .32s ease-out both}
+  /* No entry animation here (Nikita, 9 Nov: "why is this flickering"). The page redraws on every tap, so an animation replayed each time. */
+  .pr-vit{display:flex;align-items:baseline;gap:0;max-width:100%;overflow-x:auto;white-space:nowrap;scrollbar-width:thin;font-size:14px}
+  .pr-vi{display:inline-flex;flex:0 0 auto;align-items:baseline;gap:6px;min-width:0;padding:4px 12px;border:0;border-left:1px solid var(--line-2,#e4e7ec);border-radius:0;background:transparent}
   .pr-vi:first-child{padding-left:0;border-left:0}
-  .pr-vi:nth-child(2){animation-delay:.04s}.pr-vi:nth-child(3){animation-delay:.08s}.pr-vi:nth-child(4){animation-delay:.12s}
   .pr-vi .l{color:var(--ink-2,#475467);font-size:12px;font-weight:600}
   .pr-vi>b{font-size:16px;font-weight:700;color:var(--ink,#101828);line-height:1.2}
   .pr-vi .u{color:var(--ink-2,#475467);font-size:11.5px;font-weight:500}
   .pr-vi.warn>b,.pr-vi.warn .pr-trend{color:#b54708}.pr-vi.bad>b,.pr-vi.bad .pr-trend{color:#d92d20}
   .pr-trend{font-size:14px;font-weight:800;color:var(--ink-2,#475467);line-height:1}
   @media(max-width:520px){.pr-vi{gap:4px;padding:4px 8px}.pr-vi .l{font-size:11.5px}.pr-vi>b{font-size:15px}}
-  @media(prefers-reduced-motion:reduce){.pr-vit,.pr-vi{animation:none}}
   .pr-lines{gap:0;margin-top:14px;font-size:15px;line-height:1.45}
   .pr-lines>div{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:9px 0;border-top:1px solid var(--line-2,#e4e7ec);color:var(--ink,#101828)}
   .pr-lines b{width:auto;color:var(--ink-2,#344054);font-weight:700}
