@@ -12,9 +12,9 @@
   const css=document.createElement('style');css.id='psy-review-9nov-css';
   css.textContent=`
   /* family call: a header chip, the call line, the actions; soft amber, one pulse on the dot and phone ring */
-  .fc9{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 20px;border:1px solid #f6dfae;border-radius:18px;background:linear-gradient(100deg,#fff8e8 0%,#fffdf8 60%,#fff 100%);box-shadow:0 1px 2px rgba(181,71,8,.06);animation:fc9-in .45s cubic-bezier(.2,.7,.2,1) both}
+  .fc9{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 20px;border:1px solid #f6dfae;border-radius:18px;background:linear-gradient(100deg,#fff8e8 0%,#fffdf8 60%,#fff 100%);box-shadow:0 1px 2px rgba(181,71,8,.06)}
   .fc9-ic{position:relative;flex:0 0 44px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#b54708;border:1px solid #f6dfae}
-  .fc9-ic:after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid #f5a524;opacity:0;animation:fc9-ring 2.4s ease-out 1.2s 2}
+  .fc9-ic:after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid #f5a524;opacity:0}
   .fc9-b{flex:1;min-width:240px}
   .fc9-k{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#b54708;background:#fff;border:1px solid #f6dfae;border-radius:99px;padding:3px 10px}
   .fc9-k i{width:7px;height:7px;border-radius:50%;background:#f5a524;animation:fc9-dot 1.6s ease-in-out infinite}
@@ -78,12 +78,6 @@
   const __rv=render;
   render=function(){
     const out=__rv.apply(this,arguments);
-    if(psy())setTimeout(()=>{document.querySelectorAll('#view button').forEach(b=>{
-      const x=b.textContent.trim();if(b.classList.contains('rx9')||(x!=='Full Rx chart'&&x!=='Change medicines'))return;
-      b.classList.add('rx9');
-      if(x==='Full Rx chart')b.insertAdjacentHTML('afterbegin','<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>');
-      else b.insertAdjacentHTML('afterbegin','<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>');
-    });},40);
     if(psy()&&/^#\/patient\/[^/]+\/prefs/.test(location.hash||'')){setTimeout(()=>{
       const v=document.getElementById('view');if(!v||v.querySelector('.vo-note'))return;
       v.querySelectorAll('textarea,input:not([type=search])').forEach(e=>{e.disabled=true;});
@@ -138,6 +132,11 @@
     let h=prevVP.apply(this,arguments);
     if(!psy()||typeof h!=='string')return h;
     h=h.split('View full medication chart').join('Full Rx chart');
+    {const t0=document.createElement('template');t0.innerHTML=h;let ch=false;
+      const ic=p=>'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';
+      t0.content.querySelectorAll('button').forEach(b=>{const x=b.textContent.trim();if(b.classList.contains('rx9')||(x!=='Full Rx chart'&&x!=='Change medicines'))return;
+        b.classList.add('rx9');b.insertAdjacentHTML('afterbegin',x==='Full Rx chart'?ic('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>'):ic('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'));ch=true;});
+      if(ch)h=t0.innerHTML;}
     if(h.indexOf('id="famCallDue"')<0)return h;
     const t=document.createElement('template');t.innerHTML=h;
     const fc=t.content.querySelector('#famCallDue');if(!fc)return h;
@@ -146,7 +145,7 @@
       const ti=g&&g.children[0]?g.children[0].textContent:'',su=g&&g.children[1]?g.children[1].textContent:'';
       const ph='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>';
       if(g&&btns){const n=document.createElement('section');n.id='famCallDue';n.className='fc9';
-        n.innerHTML=`<div class="fc9-ic">${ph}</div><div class="fc9-b"><div class="fc9-k"><i></i>Family call due now</div><div class="fc9-t">${hesc(ti)}</div><div class="fc9-s">${hesc(su)}</div></div><div class="fc9-a">${btns}</div>`;
+        n.innerHTML=`<div class="fc9-ic">${ph}</div><div class="fc9-b"><div class="fc9-k"><i style="animation-delay:-${Date.now()%1600}ms"></i>Family call due now</div><div class="fc9-t">${hesc(ti)}</div><div class="fc9-s">${hesc(su)}</div></div><div class="fc9-a">${btns}</div>`;
         fc.replaceWith(n);}
     }
     const fc2=t.content.querySelector('#famCallDue')||fc;
