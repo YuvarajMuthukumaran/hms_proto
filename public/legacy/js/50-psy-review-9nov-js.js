@@ -20,6 +20,8 @@
   .fc9-k i{width:7px;height:7px;border-radius:50%;background:#f5a524;animation:fc9-dot 1.6s ease-in-out infinite}
   .fc9-t{font-size:16px;font-weight:700;margin-top:8px;color:var(--ink,#101828)}.fc9-s{font-size:13px;color:var(--muted,#667085);margin-top:2px}
   .fc9-a{display:flex;gap:8px;flex-wrap:wrap}
+  .fc9-res{border-color:#c9dcfb;background:#f5f9ff}.fc9-res .fc9-ic{color:#175cd3;border-color:#c9dcfb}.fc9-res .fc9-k{color:#175cd3;border-color:#c9dcfb}.fc9-res .fc9-k i{background:#12b76a;animation:none}
+  .fc9-res.warn{border-color:#f3c58c;background:#fffaf3}.fc9-res.warn .fc9-ic,.fc9-res.warn .fc9-k{color:#b54708;border-color:#f6dfae}.fc9-res.warn .fc9-k i{background:#f5a524}
   @keyframes fc9-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
   @keyframes fc9-ring{0%{opacity:.7;transform:scale(.9)}100%{opacity:0;transform:scale(1.35)}}
   @keyframes fc9-dot{0%,100%{opacity:1}50%{opacity:.35}}
@@ -136,6 +138,14 @@
       const ic=p=>'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';
       t0.content.querySelectorAll('button').forEach(b=>{const x=b.textContent.trim();if(b.classList.contains('rx9')||(x!=='Full Rx chart'&&x!=='Change medicines'))return;
         b.classList.add('rx9');b.insertAdjacentHTML('afterbegin',x==='Full Rx chart'?ic('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>'):ic('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'));ch=true;});
+      /* the Results line uses the same card as the family call: icon, small header chip, one headline, one sub-line, the button on the right */
+      const rb=[...t0.content.querySelectorAll('section.card')].find(s=>s.querySelector(':scope > .small > b')&&/^Results$/.test(s.querySelector(':scope > .small > b').textContent.trim())&&/Open results/.test(s.textContent));
+      if(rb){
+        const txt=rb.querySelector(':scope > .small').textContent.replace(/^\s*Results\s*·\s*/,''),parts=txt.split(' · '),btn=rb.querySelector('button'),todo=/to review/i.test(parts[0]);
+        const n=document.createElement('section');n.className='fc9 fc9-res'+(todo?' warn':'');
+        n.innerHTML=`<div class="fc9-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/><path d="M7.5 15h9"/></svg></div><div class="fc9-b"><div class="fc9-k"><i></i>Results</div><div class="fc9-t">${parts[0]}</div>${parts[1]?`<div class="fc9-s">${parts[1].replace(/^latest\s*/i,'Latest: ')}</div>`:''}</div><div class="fc9-a">${btn?btn.outerHTML:''}</div>`;
+        rb.replaceWith(n);ch=true;
+      }
       if(ch)h=t0.innerHTML;}
     if(h.indexOf('id="famCallDue"')<0)return h;
     const t=document.createElement('template');t.innerHTML=h;
