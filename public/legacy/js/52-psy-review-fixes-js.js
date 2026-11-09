@@ -73,7 +73,7 @@
   /* team review (Nikita): inside a notes folder the type ("Round note") is not repeated on every row. Columns: date | doctor or psychologist | note.
      A row whose type differs from the folder's usual one (e.g. "Discharge round") keeps its type in front of the note. */
   const pfCss=document.createElement('style');pfCss.id='psy-pf-compact-css';
-  pfCss.textContent=`.pf-scroll .pf-e>summary{grid-template-columns:104px 190px minmax(0,1fr)}.pf-scroll .pf-e>summary .pf-t{display:none}.pf-scroll .pf-e>summary .pf-s{white-space:normal;overflow:visible;text-overflow:clip}.pf-s b.ty{color:#175cd3;font-weight:700;margin-right:6px}.pf-scroll .pf-body{padding-left:304px}`;
+  pfCss.textContent=`.pf-scroll .pf-e>summary{grid-template-columns:104px 190px minmax(0,1fr)}.pf-scroll .pf-e>summary .pf-t{display:none}.pf-scroll .pf-e>summary .pf-s{white-space:normal;overflow:visible;text-overflow:clip}.pf-s b.ty{color:#175cd3;font-weight:700;margin-right:6px}.pf-scroll .pf-body{padding-left:304px}.pf-row .btn,.pf-row .btn.pri{min-height:26px;height:26px;padding:0 10px;font-size:12px;font-weight:600;background:#fff;color:var(--ink-2,#344054);border:1px solid var(--line,#e4e7ec);box-shadow:none}.pf-row .btn:hover,.pf-row .btn.pri:hover{background:#f5f8ff;border-color:#a9c6f5;color:#175cd3}.pf-row .btn svg{width:13px;height:13px}`;
   document.head.appendChild(pfCss);
   const __pp0=pPast;
   pPast=function(){
