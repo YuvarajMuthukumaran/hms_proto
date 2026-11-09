@@ -38,6 +38,7 @@
   .lr9 .note{font-size:12.5px;color:var(--ink-2,#344054);margin-top:3px}
   .rq9 table{width:100%;border-collapse:collapse;font-size:13px}.rq9 th{text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted,#667085);padding:8px 12px;border-bottom:1px solid var(--line-2)}
   .rq9 td{padding:10px 12px;border-bottom:1px solid var(--line-2);vertical-align:top}
+  .lt9{width:100%;border-collapse:collapse;font-size:13px;border:1px solid #e4e7ec}.lt9 th,.lt9 td{border:1px solid #e4e7ec;padding:10px 14px;text-align:left;vertical-align:middle}.lt9 th{background:#f8fafc;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#667085}.lt9 tbody tr:hover td{background:#f8fbff}.lt9 td:first-child{width:26%}
   /* vitals and monitoring tables */
   .psy-tx-panel table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
   .psy-tx-panel table th{text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted,#667085);font-weight:700;padding:9px 12px;background:#f8fafc;border-bottom:1px solid var(--line-2)}
@@ -76,10 +77,9 @@
     return own.concat(old);
   }
   function labList(){
-    const pid=S.pid,L=labRows(pid);
-    return L.length?L.map(r=>`<div class="li lr9"><div class="grow"><div class="t">${hesc(r.name)}</div>
-        <div class="m">Report date <b>${hesc(r.date)}</b> · Lab <b>${hesc(r.lab||'Not stated')}</b> · Uploaded by <b>${hesc(r.by||'')}</b>${r.at?', '+hesc(r.at):''}${r.advisedBy?' · Advised by <b>'+hesc(r.advisedBy)+'</b>':''}${(r.files||[]).length?' · '+r.files.length+' file'+(r.files.length>1?'s':''):''}</div>
-        ${r.note?`<div class="note">${hesc(r.note)}</div>`:''}</div><button class="btn sm" onclick="${r.legacy?`psyLabPdf('${r.id}')`:`psyLabRepPdf('${r.id}')`}">Open PDF</button></div>`).join(''):'<div class="pad small muted">No lab reports yet.</div>';
+    const L=labRows(S.pid);
+    const row=r=>`<tr><td><b>${hesc(r.name)}</b>${r.note?`<div class="tiny muted" style="margin-top:2px">${hesc(r.note)}</div>`:''}</td><td>${hesc(r.date||'')}</td><td>${hesc(r.lab||'Not stated')}</td><td>${hesc(r.by||'')}${r.at?`<div class="tiny muted">${hesc(r.at)}</div>`:''}</td><td>${hesc(r.advisedBy||'—')}</td><td>${(r.files||[]).length||'—'}</td><td style="text-align:right"><button class="btn sm" onclick="${r.legacy?`psyLabPdf('${r.id}')`:`psyLabRepPdf('${r.id}')`}">Open PDF</button></td></tr>`;
+    return L.length?`<div class="scroll"><table class="lt9"><thead><tr><th>Report</th><th>Report date</th><th>Lab</th><th>Uploaded by</th><th>Advised by</th><th>Files</th><th></th></tr></thead><tbody>${L.map(row).join('')}</tbody></table></div>`:'<div class="pad small muted">No lab reports yet.</div>';
   }
   window.psyLabAdd=function(pid){
     const today=new Date().toISOString().slice(0,10);
