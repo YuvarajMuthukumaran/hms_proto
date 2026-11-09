@@ -45,6 +45,11 @@
   .th9-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px;padding:4px;background:#f0f4f9;border:1px solid #e0e8f2;border-radius:12px;width:max-content;max-width:100%}
   .th9-tabs button{border:1px solid transparent;background:transparent;border-radius:9px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;color:#344054;cursor:pointer;white-space:nowrap}
   .th9-tabs button.on{background:#fff;color:#111827;border-color:#e7edf5;box-shadow:0 1px 3px rgba(15,23,42,.1);font-weight:700}
+  /* patient tabs fit the screen: they wrap onto a second line instead of being cut off, and shrink a little on narrower screens */
+  .subtabs{display:flex!important;flex-wrap:wrap!important;gap:8px!important;overflow:visible!important}
+  .subtabs .subtab{flex:0 0 auto}
+  @media (max-width:1500px){.subtabs .subtab{padding:7px 12px!important;font-size:13px!important}}
+  @media (max-width:1100px){.subtabs .subtab{padding:6px 10px!important;font-size:12.5px!important;gap:6px}}
   /* detailed history form: one question after the other, bold headings, numbers only in full screen */
   .hgrid{grid-template-columns:1fr!important;gap:16px!important}
   .hbody h3{font-weight:800;font-size:18px}.hgrid .hf>.lbl,.hgrid .hf .lbl{font-weight:700;color:#101828}
