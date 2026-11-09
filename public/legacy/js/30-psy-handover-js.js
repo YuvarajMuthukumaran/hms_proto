@@ -248,10 +248,10 @@
   window.psyHvDetail=function(pid){
     const p=ptFind(pid);if(!p)return;const u=store().ui;u.det=u.det||{};
     const a=auto(pid),f=a?a.f:{};
-    const d=u.det[pid]=u.det[pid]||{psychopath:f.psychopath||'',trials:f.past||'',future:''};
+    const d=u.det[pid]=u.det[pid]||{ddx:'',comorb:f.comorb||'',psychopath:f.psychopath||'',trials:f.past||'',future:''};
     const ta=(k,lab,ph)=>`<div class="hn-f"><div class="lbl">${lab}</div><textarea class="input" rows="3" id="hvD-${k}" placeholder="${ph}" oninput="psyHvDet('${pid}','${k}',this.value)">${hesc(d[k]||'')}</textarea></div>`;
     V3.modal('Handover details · '+hesc(p.name),'For '+hesc(u.to||'the covering doctor')+'. Filled from the record where possible: check it and add to it. All three are needed.',
-      `<div style="display:flex;flex-direction:column;gap:12px">${ta('psychopath','Current psychopathology','Symptoms that are still present now')}${ta('trials','Past treatment trials','Medicines already tried and how the patient responded')}${ta('future','Future treatment plan','What you plan next and what the covering doctor should do')}</div>`,
+      `<div style="display:flex;flex-direction:column;gap:12px">${ta('ddx','Differential diagnosis (if any)','Leave empty if none')}${ta('comorb','Medical or surgical comorbidity (if any)','Leave empty if none')}${ta('psychopath','Current psychopathology','Symptoms that are still present now')}${ta('trials','Past treatment trials','Medicines already tried and how the patient responded')}${ta('future','Future treatment plan','What you plan next and what the covering doctor should do')}</div>`,
       `<button class="btn" onclick="psyHvDetCancel('${pid}')">Cancel</button><button class="btn pri" onclick="psyHvDetSave('${pid}')">Save</button>`);
   };
   window.psyHvDetSave=function(pid){
@@ -271,13 +271,13 @@
     if(!rsnName()){toast('Choose the reason for the handover');const sel=$('hoWhy');if(sel)sel.focus();return;}
     if(!s.chosen.length){toast('Tick the patients you are handing over');return;}
     if(s.missing.length){toast('Add the details for '+s.missing[0].p.name+' first');psyHvDetail(s.missing[0].p.id);return;}
-    const lines={};s.chosen.forEach(i=>{const d=i.d;lines[i.p.id]={psychopath:d.psychopath.trim(),trials:d.trials.trim(),future:d.future.trim(),watch:d.psychopath.trim(),plan:d.future.trim(),rec:recOf(i.p.id),tags:i.t.tags.slice(0,3),flag:i.t.flag};});
+    const lines={};s.chosen.forEach(i=>{const d=i.d;lines[i.p.id]={ddx:(d.ddx||'').trim(),comorb:(d.comorb||'').trim(),psychopath:d.psychopath.trim(),trials:d.trials.trim(),future:d.future.trim(),watch:d.psychopath.trim(),plan:d.future.trim(),rec:recOf(i.p.id),tags:i.t.tags.slice(0,3),flag:i.t.flag};});
     store().list.unshift({id:'ho'+Date.now(),from:signer(),to:u.to,reason:rsnName(),at:atNow(),pids:s.chosen.map(i=>i.p.id),lines,status:'sent'});
     const n=s.chosen.length;u.sel={};u.det={};render();toast('Handover of '+n+' patient'+(n>1?'s':'')+' sent to '+u.to+'. You still see them until '+u.to+' accepts.');
   };
   /* what a sent handover says for one patient (the sample handover and older ones may carry only part of it) */
   const lineFor=(h,pid)=>{const l=(h.lines||{})[pid];if(l)return l;const n=h.notes&&h.notes[pid];return {psychopath:(h.rec&&h.rec[pid])||(n&&n.future)||'',trials:'',future:'',watch:(h.rec&&h.rec[pid])||(n&&n.future)||'',plan:planOf(pid),rec:recOf(pid),tags:[['Routine','amber']],flag:false};};
-  const lineRows=l=>[['Current symptoms',l.psychopath||l.watch],['Past treatment trials',l.trials],['Future treatment plan',l.future||l.plan]].filter(x=>x[1]);
+  const lineRows=l=>[['Differential diagnosis',l.ddx],['Comorbidity',l.comorb],['Current symptoms',l.psychopath||l.watch],['Past treatment trials',l.trials],['Future treatment plan',l.future||l.plan]].filter(x=>x[1]);
   window.psyHvPdf=function(id){
     const h=id?store().list.find(x=>x.id===id):null,u=store().ui;
     const pids=h?h.pids:hvState().chosen.map(i=>i.p.id);
@@ -329,7 +329,7 @@
       const p=i.p,c=ptCtxOf(p.id),meds=liveMeds(c);
       return `<tr id="hvCard-${p.id}" class="${i.on?'on':''}"><td><input type="checkbox" id="hvCk-${p.id}" ${i.on?'checked':''} onchange="psyHvTick('${p.id}',this.checked)" aria-label="Hand over ${hesc(p.name)}"></td>
         <td><div class="hv-who">${av(p.ini,34,i.t.flag?'c-amber':'c-blue')}<div style="min-width:0"><b>${hesc(p.name)}</b><div class="s">${hesc(subOf(p))}</div></div></div></td>
-        <td><div>${hesc(p.dx||c.dx||'')}</div>${i.t.tags.length?`<div class="hv-tags">${i.t.tags.map(t=>`<span class="hv-tag ${t[1]}">${hesc(t[0])}</span>`).join('')}</div>`:''}</td>
+        <td><div>${hesc(p.dx||c.dx||'')}</div>${(()=>{const a=(auto(p.id)||{f:{}}).f,pt=pendingTasks(p,tasks()).slice(0,2).join('; ');return `<div class="tiny muted" style="margin-top:3px">Allergy: ${hesc(String(a.allergy||'Not recorded yet').split('\n')[0])}${pt?' · Pending: '+hesc(pt):''}</div>`;})()}${i.t.tags.length?`<div class="hv-tags">${i.t.tags.map(t=>`<span class="hv-tag ${t[1]}">${hesc(t[0])}</span>`).join('')}</div>`:''}</td>
         <td>${meds.length?`<ul class="hv-line">${meds.map(m=>`<li>${hesc(medName(m)+(m.freq?' '+m.freq:''))}</li>`).join('')}</ul>`:'<span class="muted small">No medicines</span>'}</td>
         <td id="hvSt-${p.id}">${stHtml(i)}</td></tr>`;
     };

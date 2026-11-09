@@ -47,8 +47,30 @@
   }
   window.psyDnView=function(i){
     const n=myNotes()[i];if(!n)return;
-    V3.modal(hesc(ptName(n.pid))+' · daily note','Written by '+hesc(n.by)+' · '+hesc(n.at)+' · saved notes are not edited',`<div class="dn9-txt">${hesc(n.full||n.sum)}</div>`,
-      `<button class="btn" onclick="closeModal()">Close</button><button class="btn pri" onclick="closeModal();psyDnAnother('${n.pid}')">Add another note</button>`);
+    /* Trello (9 Nov): a signed note is locked; an addendum shows who and when under it, the note itself never changes */
+    S.psyDnAdd=S.psyDnAdd||{};const ad=(S.psyDnAdd[n.pid]=S.psyDnAdd[n.pid]||[]).map(a=>`<div class="small" style="margin-top:8px;padding:8px 10px;background:#f3f7ff;border-radius:8px"><b>Addendum by ${hesc(a.by)}, ${hesc(a.at)}:</b> ${hesc(a.text)}</div>`).join('');
+    V3.modal(hesc(ptName(n.pid))+' · daily note','Signed by '+hesc(n.by)+' · '+hesc(n.at)+' · locked, add an addendum to correct it',
+      `<div class="dn9-txt">${hesc(n.full||n.sum)}</div>${ad}<label class="field" style="margin-top:12px"><span class="lbl">Add addendum</span><textarea class="input" id="dnAd" rows="2" placeholder="What changed or was missed. The note above stays as it is."></textarea></label>`,
+      `<button class="btn" onclick="closeModal()">Close</button><button class="btn" onclick="closeModal();psyDnAnother('${n.pid}')">Add another note</button><button class="btn pri" onclick="psyDnAddendum(${i})">Save addendum</button>`);
+  };
+  window.psyDnAddendum=function(i){
+    const n=myNotes()[i],t=((($('dnAd')||{}).value)||'').trim();if(!n)return;
+    if(!t){toast('Write the addendum first');return;}
+    S.psyDnAdd[n.pid].push({by:signer(),at:atNow(),text:t});closeModal();toast('Addendum added. The original note is unchanged.');psyDnView(i);
+  };
+  /* Trello "make patient experience view only": the psychiatrist reads it; the RMO and the patient experience team fill it in */
+  const __rv=render;
+  render=function(){
+    const out=__rv.apply(this,arguments);
+    if(psy()&&/^#\/patient\/[^/]+\/prefs/.test(location.hash||'')){setTimeout(()=>{
+      const v=document.getElementById('view');if(!v||v.querySelector('.vo-note'))return;
+      v.querySelectorAll('textarea,input:not([type=search])').forEach(e=>{e.disabled=true;});
+      v.querySelectorAll('select').forEach(e=>{e.disabled=true;});
+      v.querySelectorAll('button.btn').forEach(b=>{if(/^(save|add|submit|raise|log|record|send|resolve|close)/i.test(b.textContent.trim()))b.style.display='none';});
+      const note=document.createElement('div');note.className='callout grey small vo-note';note.style.margin='0 0 12px';note.textContent='View only. The RMO and the patient experience team fill this in.';
+      const t=v.querySelector('.sgtabs');(t&&t.nextElementSibling?t.nextElementSibling:v.firstElementChild)?.prepend(note);
+    },60);}
+    return out;
   };
   window.psyDnAnother=function(pid){
     const e=(S.eod||{})[pid];

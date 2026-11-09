@@ -495,7 +495,8 @@
     if(seg){
       const n=document.createElement('div');n.className='seg hist-seg';n.setAttribute('style','align-self:flex-start;width:max-content;max-width:100%;min-width:0;overflow-x:auto;position:relative;z-index:2;white-space:nowrap');
       n.innerHTML=`<button type="button" style="position:relative;z-index:2;pointer-events:auto" class="${hv==='read'?'on':''}" onclick="S.hview='read';render()">Read only</button><button type="button" style="position:relative;z-index:2;pointer-events:auto" class="${hv==='form'?'on':''}" onclick="S.hview='form';render()">Fill form</button><button type="button" style="position:relative;z-index:2;pointer-events:auto" class="${hv==='ai'?'on':''}" onclick="S.hview='ai';render()">AI summary</button><button type="button" style="position:relative;z-index:2;pointer-events:auto" class="${hv==='aifill'?'on':''}" onclick="S.hview='aifill';render()">AI-filled form</button>`;
-      const scribe=card.querySelector('#scrH');if(scribe){scribe.classList.add('sm');scribe.style.whiteSpace='nowrap';n.appendChild(scribe);}
+      const bs=[...n.children];['Fill form','AI-filled form','AI summary','Read only'].forEach(t=>{const b=bs.find(x=>x.textContent.trim()===t);if(b)n.appendChild(b);});
+      const scribe=card.querySelector('#scrH');if(scribe){scribe.classList.add('sm');scribe.style.whiteSpace='nowrap';n.prepend(scribe);}
       seg.replaceWith(n);
       if(hv==='ai'){const nx=n.nextElementSibling;const tt=document.createElement('template');tt.innerHTML=aiSummary();if(nx)nx.replaceWith(tt.content);else n.after(tt.content);}
       if(hv==='aifill'){
