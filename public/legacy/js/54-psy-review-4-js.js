@@ -222,7 +222,7 @@
       <div class="scroll"><table class="t"><thead><tr>${c.h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${D.length?D.map(r=>`<tr>${c.f.map(f=>`<td>${hesc(r[f]||'')}</td>`).join('')}</tr>`).join(''):`<tr><td colspan="${c.h.length}" class="muted small">Nothing logged yet.</td></tr>`}</tbody></table></div></div></section>`;
   }
   window.psyTherapyPage=therapyPage;
-  window.psyVmRebuild=rebuildVitals;window.psyTmpOrders=()=>({list:orders(),defs:TMP,done:doneN});
+  window.psyVmRebuild=rebuildVitals;window.psyThAuto=function(pid){const keep=S.pid;S.pid=pid;try{thData().grp.unshift({date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),group:'Group therapy',by:signer(),took:'Attended',note:'',src:'Daily note'});}finally{S.pid=keep;}};window.psyTmpOrders=()=>({list:orders(),defs:TMP,done:doneN});
   const __pTh=pTherapy;
   pTherapy=function(){return psy()?therapyPage():__pTh.apply(this,arguments);};
 
@@ -267,12 +267,13 @@
   /* ---------------- 5. Admission: Form C in step 1; history form full screen ---------------- */
   const __pa=pAdmission;
   pAdmission=function(){
-    if(psy()&&S.hview==='form'&&!S.__fsAuto){S.__fsAuto=1;S.admFull=true;}
-    let h=__pa.apply(this,arguments);if(!psy()||typeof h!=='string')return h;
+    const who=psy()||S.role==='psychologist';
+    if(who&&S.hview==='form'&&!S.__fsAuto){S.__fsAuto=1;S.admFull=true;}
+    let h=__pa.apply(this,arguments);if(!who||typeof h!=='string')return h;
     const t=tpl(h),R=t.content;let ch=false;
     R.querySelectorAll('.hnav button').forEach(b=>{const n=((b.querySelectorAll('span')[1]||{}).textContent||'').trim();if(n){b.setAttribute('data-t',n);b.setAttribute('title',n);ch=true;}});
     const tb=R.querySelector('#consentCard tbody');
-    if(tb&&!tb.querySelector('[data-formc]')){
+    if(psy()&&tb&&!tb.querySelector('[data-formc]')){
       const c=(px().consent||{})['form-c'],st=c?(c.st==='uploaded'?'Uploaded '+c.at+(c.file?' · '+c.file:''):'Signed '+c.at):'Not signed';
       tb.insertAdjacentHTML('beforeend',`<tr data-formc="1"><td style="font-weight:600">Form C · independent admission (Mental Healthcare Act)</td><td><span class="cs ${c?'':'due'}">${hesc(st)}</span></td><td><div class="ct-a"><label class="btn sm" style="cursor:pointer">Upload signed copy<input type="file" hidden onchange="psyConsentUpload('form-c',this)"></label></div></td></tr>`);ch=true;
     }

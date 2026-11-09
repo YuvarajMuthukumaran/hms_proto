@@ -98,7 +98,15 @@
     return t.innerHTML;
   };
   const __pd=pDaily;
-  pDaily=function(){return me()?tidy(__pd.apply(this,arguments)):__pd.apply(this,arguments);};
+  /* the patient's Daily notes tab is the psychiatrist's design (link to the all-patients page, then Earlier notes with filters, search, print) */
+  pDaily=function(){return me()?tidy(asDoctor(__pd).apply(this,arguments)):__pd.apply(this,arguments);};
+  /* a saved note that ticks Group therapy shows up in Therapy and family > Group Therapy by itself */
+  const __sv=psySave;
+  psySave=function(kind,id){
+    const before=!!((S.eod||{})[id]||{}).saved,r=__sv.apply(this,arguments);
+    try{if(me()&&kind!=='dn'&&!before&&((S.eod||{})[id]||{}).saved&&/Group therapy/.test(String(psyGet(kind,id,'sessions'))))psyThAuto(id);}catch(e){}
+    return r;
+  };
   const __vn=vNotes;
   vNotes=function(){
     const h=__vn.apply(this,arguments);if(!me()||typeof h!=='string')return h;
@@ -125,5 +133,17 @@
   };
   /* ---------- patient page: the new tab ---------- */
   const __vp=vPatient;
-  vPatient=function(){if(me())fixStay();return __vp.apply(this,arguments);};
+  /* Orders and consents only shows when the doctor has ordered something */
+  const cutOrders=h=>{const k=h.indexOf("/orders')");if(k<0)return h;const a=h.lastIndexOf('<button',k),b=h.indexOf('</button>',k);return a<0||b<0?h:h.slice(0,a)+h.slice(b+9);};
+  vPatient=function(){
+    if(me())fixStay();
+    let h=__vp.apply(this,arguments);
+    /* Stay summary: the psychiatrist's format, with the psychologist's own tab bar */
+    const hp=String(location.hash||'').split('/');
+    if(me()&&typeof h==='string'&&hp[1]==='patient'&&(!hp[3]||hp[3]==='overview')){
+      try{const d=asDoctor(__vp).apply(this,arguments),D=tpl(d),N=tpl(h),dn=D.content.querySelector('.subtabs'),nn=N.content.querySelector('.subtabs');if(dn&&nn){dn.replaceWith(nn.cloneNode(true));h=D.innerHTML;}}catch(e){}
+    }
+    if(me()&&typeof h==='string'&&!(window.psyTmpOrders&&psyTmpOrders().list.length))h=cutOrders(h);
+    return h;
+  };
 })();
