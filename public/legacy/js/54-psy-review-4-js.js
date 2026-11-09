@@ -257,6 +257,13 @@
     return ch?t.innerHTML:h;
   };
 
+  /* Daily notes page: no "Daily notes" title inside the card; the progress ("0 of 8 done") sits on the left */
+  const __vn=vNotes;
+  vNotes=function(){
+    const h=__vn.apply(this,arguments);if(!psy()||typeof h!=='string')return h;
+    return h.replace('<div><div class="row" style="gap:8px"><h3>Daily notes</h3></div></div>','').replace('<div class="row" style="gap:8px"><h3>Daily notes</h3></div>','').replace(/(class="eodhd" style="[^"]*?)justify-content:s*space-between/,'$1justify-content:flex-start');
+  };
+
   /* ---------------- 5. Admission: Form C in step 1; history form full screen ---------------- */
   const __pa=pAdmission;
   pAdmission=function(){
