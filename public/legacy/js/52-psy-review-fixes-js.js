@@ -43,10 +43,11 @@
   };
 
   /* ---------- 2. Past admission: a 30 day stay with a note for every day ---------- */
-  (function seed(){
+  function seed(){
     try{
-      const a=(S.pastAdm||[])[0];if(!a||a.__seeded9)return;
-      a.__seeded9=1;
+      const a=(S.pastAdm||[])[0];if(!a||a.n!==1||(a.notes||[]).length>=100)return;
+      a.dates='4 Feb to 6 Mar 2025';a.days=30;
+      a.notes=[['6 Mar','Discharge round · Dr. Aanya Sharma','Settled, partial insight. Continue lithium; follow-up after 7 days.'],['1 Mar','Family session · Priya Nair','Sister briefed on early warning signs and medicine supervision.'],['10 Feb','Capacity assessment','Needs 100% support from nominated representative.'],['5 Feb','Detailed history','First manic episode after job stress; maternal uncle treated for bipolar disorder.']];
       const add=[],day=[];
       for(let d=5;d<=28;d++)day.push([d,'Feb']);
       for(let d=1;d<=5;d++)day.push([d,'Mar']);
@@ -65,7 +66,10 @@
       const ord=n=>{const p=String(n[0]).split(' ');return (p[1]==='Mar'?100:0)+(+p[0]);};
       a.notes=a.notes.concat(add).sort((x,y)=>ord(y)-ord(x));
     }catch(e){}
-  })();
+  }
+  seed();
+  /* the saved copy of this stay (kept on the server) can be older than the code, so it is checked every time the page is drawn */
+  const __pp=pPast;pPast=function(){if(psy()&&S.pid==='neel')seed();return __pp.apply(this,arguments);};
   /* ---------- 3. 'Observation' is not written after a room on the Daily notes tabs or the Rounds ward order (it is a level, shown as a tag when it matters) ---------- */
   const noObs=h=>psy()&&typeof h==='string'?h.replace(/ · Observation(?=<)/g,''):h;
   const __vn=vNotes;vNotes=function(){return noObs(__vn.apply(this,arguments));};
