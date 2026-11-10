@@ -117,26 +117,43 @@
   };
 
   const fmtToday=()=>new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  let rec=null;
-  const stopRec=()=>{try{if(rec){rec.onend=null;rec.stop();}}catch(e){}rec=null;};
+  let rec=null,stream=null,chunks=[],cancelled=false;
+  const stopRec=()=>{try{if(rec&&rec.state==='recording'){cancelled=true;rec.stop();}}catch(e){}try{if(stream)stream.getTracks().forEach(t=>t.stop());}catch(e){}rec=null;stream=null;chunks=[];};
   window.pgSession=function(){
-    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    V3.modal('Start session','Only the words are written down, as a transcript. The voice is not recorded or stored. Tell the patient before you start; if they do not want it, type the notes instead.',
-      `<div class="row" style="gap:8px;margin-bottom:10px"><button class="btn pri" id="pgRecB" onclick="pgSessionToggle()" ${SR?'':'disabled'}>Start listening</button><span class="small muted" id="pgRecS">${SR?'Not listening':'This browser cannot listen. Type or paste the transcript below.'}</span></div>
-       <label class="field"><span class="lbl">Session transcript</span><textarea class="input" id="pgTx" rows="9" placeholder="The conversation appears here as text"></textarea></label>`,
+    const ok=!!(navigator.mediaDevices&&window.MediaRecorder);
+    V3.modal('Start session','The conversation is turned into text (a transcript). The recording is not saved anywhere: it is thrown away as soon as the text is ready. Tell the patient before you start; if they do not want it, type the notes instead.',
+      `<div class="row" style="gap:12px;margin-bottom:10px;align-items:center"><button class="btn pri" id="pgRecB" onclick="pgSessionToggle()" ${ok?'':'disabled'}>Start recording</button><span class="small muted" id="pgRecS">${ok?'Not recording':'This browser cannot record. Type or paste the transcript below.'}</span></div>
+       <label class="field"><span class="lbl">Session transcript</span><textarea class="input" id="pgTx" rows="9" placeholder="The conversation appears here as text after you stop"></textarea></label>`,
       `<button class="btn" onclick="pgSessionClose()">Cancel</button><button class="btn pri" onclick="pgSessionSave()">Save session</button>`);
   };
   window.pgSessionClose=function(){stopRec();closeModal();};
-  window.pgSessionToggle=function(){
-    const b=$('pgRecB'),s=$('pgRecS'),ta=$('pgTx');
-    if(rec){stopRec();b.textContent='Start listening';s.textContent='Stopped';return;}
-    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;
-    rec=new SR();rec.continuous=true;rec.interimResults=false;rec.lang='en-IN';
-    rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)ta.value+=(ta.value&&!/\s$/.test(ta.value)?' ':'')+e.results[i][0].transcript.trim();}};
-    rec.onerror=()=>{s.textContent='Could not listen. Check the microphone permission, or type below.';};
-    /* if the pop-up was dismissed another way (Escape, backdrop), stop listening: the microphone must never stay open */
-    rec.onend=()=>{if(rec&&$('pgTx')){try{rec.start();}catch(e){}}else rec=null;};
-    try{rec.start();b.textContent='Stop listening';s.textContent='Listening…';}catch(e){rec=null;}
+  window.pgSessionToggle=async function(){
+    const b=$('pgRecB'),s=$('pgRecS');if(!b)return;
+    if(rec&&rec.state==='recording'){cancelled=false;rec.stop();b.disabled=true;b.textContent='Transcribing…';s.textContent='Turning the conversation into text…';return;}
+    try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});}
+    catch(e){s.textContent='Microphone blocked. Allow it for this site, or type the transcript below.';return;}
+    const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(t=>MediaRecorder.isTypeSupported(t))||'';
+    chunks=[];cancelled=false;
+    const r=rec=new MediaRecorder(stream,Object.assign({audioBitsPerSecond:24000},mime?{mimeType:mime}:{}));
+    r.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
+    r.onstop=async()=>{
+      try{stream&&stream.getTracks().forEach(t=>t.stop());}catch(e){}
+      const parts=chunks,type=(r.mimeType||'audio/webm').split(';')[0];chunks=[];rec=null;stream=null;
+      if(cancelled)return;
+      const bb=$('pgRecB'),ss=$('pgRecS'),ta=$('pgTx');
+      try{
+        const blob=new Blob(parts,{type}),fd=new FormData();
+        fd.append('audio',blob,'session.'+(type.includes('mp4')?'mp4':'webm'));
+        fd.append('schema',JSON.stringify({mode:'transcript',hint:'Therapy session between a psychologist and a patient.'}));
+        const resp=await fetch(waCfg().url+'/scribe',{method:'POST',body:fd,signal:AbortSignal.timeout(90000)});
+        const j=await resp.json().catch(()=>({}));
+        if(!resp.ok||!j.ok)throw new Error(j.error||'Transcription error '+resp.status);
+        if(ta){ta.value+=(ta.value&&!/\s$/.test(ta.value)?'\n\n':'')+j.transcript;}
+        if(ss)ss.textContent='Done. Read the transcript and correct anything before saving.';
+      }catch(e){if(ss)ss.textContent=/fetch|network|TypeError/i.test(e.message+e.name)?'Could not reach the transcription service. Type the transcript below.':e.message;}
+      finally{if(bb){bb.disabled=false;bb.textContent='Record more';}}
+    };
+    r.start(1000);b.textContent='Stop recording';s.textContent='Recording… press Stop when the session ends';
   };
   window.pgSessionSave=function(){
     const t=((($('pgTx')||{}).value)||'').trim();

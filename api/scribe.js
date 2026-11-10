@@ -97,6 +97,15 @@ module.exports = async (req, res) => {
       const fd = await new Response(raw, { headers: { 'content-type': ctype } }).formData();
       const audio = fd.get('audio');
       let schema; try { schema = JSON.parse(fd.get('schema') || '{}'); } catch (e) { return send(400, { ok: false, error: 'Bad form schema' }); }
+      if (schema.mode === 'transcript') { // words only (therapy session transcript); the audio is dropped right after
+        if (!audio || audio.size < 2000) return send(400, { ok: false, error: 'The recording is empty. Check the microphone and try again.' });
+        const ext = extOf(audio.type || 'audio/webm');
+        let text = await transcribeOnce(audio, ext, schema.hint, 'hi').catch(() => '');
+        if (!text) text = await transcribeOnce(audio, ext, schema.hint, 'en').catch(() => '');
+        if (!text) return send(422, { ok: false, error: 'No speech was heard in the recording.' });
+        console.log(JSON.stringify({ kind: 'scribe-transcript', bytes: audio.size, words: text.split(/\s+/).length }));
+        return send(200, { ok: true, mode: 'transcript', transcript: text });
+      }
       const fields = arr(schema.fields).filter(f => f && f.key && /^(one|many|text)$/.test(f.type));
       if (!audio || audio.size < 2000) return send(400, { ok: false, error: 'The recording is empty. Check the microphone and try again.' });
       if (!fields.length) return send(400, { ok: false, error: 'No form fields were sent' });
