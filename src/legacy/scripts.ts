@@ -67,4 +67,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/65-psy-meeting-carry-js.js',
   '/legacy/js/66-psychologist-meeting-2-js.js',
   '/legacy/js/67-psychologist-rounds-3-js.js',
+  '/legacy/js/68-psychologist-rounds-ui-js.js',
 ];
