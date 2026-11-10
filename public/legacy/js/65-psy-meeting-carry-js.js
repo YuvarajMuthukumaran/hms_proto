@@ -18,6 +18,8 @@
   .modal.pcd-wide{width:min(1100px,96vw)!important;max-width:none!important}
   .pcd-nm{max-height:68vh;overflow:auto}
   .pcd-nm .pn-bar,.pcd-nm .pn-side,.pcd-nm .pn-start{display:none!important}
+  .pcd-nm .pn-nx{display:none!important}
+  .pcd-nm .pn-h{cursor:default}
   .pcd-nm .pn-main{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .pcd-nm .pn-main>.pn-step{border-right:0!important;border-bottom:1px solid var(--line)!important}
   .pcd-nm #pnS-0,.pcd-nm #pnS-2{border-right:1px solid var(--line)!important}
@@ -29,7 +31,7 @@
   window.psyPopNote=function(pid){
     if(typeof psyNote!=='function'){go('#/patient/'+pid+'/notes');return;}
     V3.modal('Daily note · '+hesc(nm(pid)),'Today’s note for this patient only. You stay on the dashboard.',
-      `<div class="pcd-nm">${psyNote('eod',pid)}</div>`,
+      `<div class="pcd-nm">${psyNote('eod',pid,true)}</div>`,
       `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="psyPopNoteSave('${pid}')">Save note</button>`);
     const m=document.querySelector('.modal');if(m)m.classList.add('pcd-wide');
   };

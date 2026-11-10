@@ -1,6 +1,6 @@
 export const ROLES = [
   { key: 'lead', label: 'Floor lead', desc: 'Whole floor, all wards and psychiatrists' },
-  { key: 'floor-coordinator', label: 'Floor Co-ordinator', desc: 'Floor overview, admissions and ward coordination' },
+  { key: 'floor-coordinator', label: 'Floor Lead Psychiatrist', desc: 'Psychiatry oversight across all wards and psychiatrists' },
   { key: 'psychiatrist', label: 'Psychiatrist', desc: 'Your inpatients, rounds and orders' },
   { key: 'patient-experience-lead', label: 'Patient Experience Lead', desc: 'Review concerns, log grievances and update preferences' },
   { key: 'psychologist', label: 'Psychologist', desc: 'Therapy, daily notes and family updates' },
@@ -18,7 +18,7 @@ export const roleLabel = (k: RoleKey) => ROLES.find((r) => r.key === k)?.label ?
 export const workspaceRole = (k: RoleKey): RoleKey => {
   switch (k) {
     case 'rmo': return 'psychiatrist';
-    case 'floor-coordinator': return 'lead';
+    case 'floor-coordinator': return 'psychiatrist';
     case 'patient-experience-lead': return 'psychologist';
     default: return k;
   }

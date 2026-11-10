@@ -2108,7 +2108,7 @@ const ROLES = {lead:{name:'Floor lead',short:'Floor lead',ini:'FL',title:'Male w
 const me = () => {
   const current=ROLES[S.role] || __me0(), requested=window.__TULASI__&&window.__TULASI__.role;
   if(requested==='rmo')return {...current,name:'Dr. Sameer Khan',short:'Dr. Sameer',ini:'SK',title:'RMO on duty'};
-  if(requested==='floor-coordinator')return {...current,name:'Floor Co-ordinator',short:'Floor Co-ordinator',title:'Floor Co-ordinator'};
+  if(requested==='floor-coordinator')return {...current,name:'Dr. Nandini Rao',short:'Dr. Nandini',ini:'NR',title:'Floor Lead Psychiatrist'};
   if(requested==='patient-experience-lead')return {...current,name:'Patient Experience Lead',short:'Patient Experience',title:'Patient Experience Lead'};
   return current;
 };
@@ -2776,16 +2776,16 @@ function psySec(kind,id,i){const s=PSY_SECS[i],miss=psyMiss(kind,id).filter(k=>s
   return {miss,done:s.opt?any:!miss.length};}
 function psyOpenIdx(kind,id){const pin=(S.psyPin||{})[psyCtx(kind,id)];if(pin!==undefined)return pin;
   for(let i=0;i<PSY_SECS.length;i++){if(!PSY_SECS[i].opt&&psySec(kind,id,i).miss.length)return i;}return -1;}
-function psyHeadIn(kind,id,i){const s=PSY_SECS[i],st=psySec(kind,id,i),open=psyOpenIdx(kind,id)===i,sum=psySum(kind,id,i);
+function psyHeadIn(kind,id,i,forceOpen=false){const s=PSY_SECS[i],st=psySec(kind,id,i),open=forceOpen||!!document.querySelector('.pcd-nm')||psyOpenIdx(kind,id)===i,sum=psySum(kind,id,i);
   const badge=s.opt?(st.done?chip('Added','c-green'):chip('Optional','c-grey')):(st.miss.length?chip(st.miss.length+' left','c-amber'):chip('Done','c-green'));
   return `<span class="pn-n">${st.done&&(!s.opt||sum)?'✓':i+1}</span><span class="pn-ht"><b>${s.t}</b><span>${open?s.sub:(sum||s.sub)}</span></span>${badge}<span class="pn-chev" aria-hidden="true">›</span>`;}
 function psyQ(kind,id,k){const f=PSY_F[k],v=psyGet(kind,id,k),miss=(S.psyTried||{})[psyCtx(kind,id)]&&psyMiss(kind,id).includes(k);let body;
   if(f.t){body=`<textarea class="input" id="pnT-${k}" rows="${k==='brief'?3:2}" placeholder="${f.ph}" oninput="psyTxt('${kind}','${id}','${k}',this.value)">${hesc(v)}</textarea>${k==='brief'?`<div class="pn-ph">${PSY_BRIEF.map((q,i)=>`<button type="button" onclick="psyBrief('${kind}','${id}',${i})">+ ${q}</button>`).join('')}</div>`:''}`;}
   else body=`<div class="pn-os" role="group" aria-label="${f.l}">${f.o.map(([o,t])=>{const on=f.m?v.includes(o):v===o;return `<button type="button" class="pn-o ${on?'on '+(f.m?'':(t||'')):''}" data-k="${k}" data-v="${o}" aria-pressed="${on}" onclick="psyPick('${kind}','${id}','${k}',this.dataset.v)">${on?'<i>✓</i>':''}${o}</button>`;}).join('')}</div>`;
   return `<div class="pn-q ${miss?'miss':''}" id="q-${k}"><div class="pn-ql">${f.l}${f.m?'<span>pick any</span>':''}${miss?'<em>Needed</em>':''}</div>${body}</div>`;}
-function psyStep(kind,id,i){const s=PSY_SECS[i],open=psyOpenIdx(kind,id)===i,st=psySec(kind,id,i),nxt=PSY_SECS[i+1];
+function psyStep(kind,id,i,forceOpen=false){const s=PSY_SECS[i],allOpen=forceOpen||!!document.querySelector('.pcd-nm'),open=allOpen||psyOpenIdx(kind,id)===i,st=psySec(kind,id,i),nxt=PSY_SECS[i+1];
   const qs=s.ks.filter(k=>k!=='evl'||psyGet(kind,id,'evy')==='Something happened');
-  return `<div class="pn-step ${open?'open':''} ${st.done?'ok':''}" id="pnS-${i}"><button type="button" class="pn-h" id="pnH-${i}" aria-expanded="${open}" onclick="psyGo('${kind}','${id}',${i})">${psyHeadIn(kind,id,i)}</button>${open?`<div class="pn-body">${qs.map(k=>psyQ(kind,id,k)).join('')}${nxt?`<div class="pn-nx"><button type="button" class="btn ${st.done?'pri':''}" onclick="psyGo('${kind}','${id}',${i+1},1)">Next: ${nxt.t} →</button></div>`:''}</div>`:''}</div>`;}
+  return `<div class="pn-step ${open?'open':''} ${st.done?'ok':''}" id="pnS-${i}"><button type="button" class="pn-h" id="pnH-${i}" aria-expanded="${open}" onclick="psyGo('${kind}','${id}',${i})">${psyHeadIn(kind,id,i,open)}</button>${open?`<div class="pn-body">${qs.map(k=>psyQ(kind,id,k)).join('')}${!allOpen&&nxt?`<div class="pn-nx"><button type="button" class="btn ${st.done?'pri':''}" onclick="psyGo('${kind}','${id}',${i+1},1)">Next: ${nxt.t} →</button></div>`:''}</div>`:''}</div>`;}
 function psyStart(kind,id){const rec=S.psyRec===psyCtx(kind,id);
   const y=kind==='dn'?DN_PSY.ytxt:(id!=='neel'&&typeof ptCtxOf==='function'?ptCtxOf(id).dnY:'Yesterday ('+S.team.psych+'): 6 to 7 h sleep, all meals, calmer, calm on the ward, group therapy.');
   return `<div class="pn-start"><span class="t">Start from</span><button type="button" class="btn sm" onclick="psyFill('${kind}','${id}','usual')">Usual day</button><button type="button" class="btn sm" onclick="psyFill('${kind}','${id}','yday')">Same as yesterday</button><button type="button" class="btn sm" ${rec?'disabled':''} onclick="psyDictate('${kind}','${id}')">${rec?'<span class="rec"><i></i>Listening…</span>':icon.mic+' Dictate'}</button><div class="y">${hesc(y)} Only blank answers are filled, so nothing you chose is replaced.</div></div>`;}
@@ -2798,10 +2798,10 @@ function psySide(kind,id){const miss=psyMiss(kind,id),tot=psyReq(kind,id).length
     <div class="pn-card"><div class="pn-lb">Note preview</div><div class="pn-pv">${PSY_SECS.map((s,i)=>{const t=psySum(kind,id,i);return `<div><div class="pn-lb" style="font-size:10.5px">${s.t}</div><div class="v ${t?'':'e'}">${t||'Not answered yet'}</div></div>`;}).join('')}</div></div>`;}
 function psyBar(kind,id){const miss=psyMiss(kind,id),lab=kind==='dn'?(S.dailySaved?'Update note':'Save note'):'Save and next';
   return `<div>${miss.length?`<b>${miss.length} left</b> <span class="small muted pn-bs">before this note is complete</span>`:`<b style="color:var(--green)">Ready to save</b>`}${kind==='dn'?` <span class="tiny muted" style="margin-left:6px"><span class="kbd">Ctrl</span> + <span class="kbd">S</span></span>`:''}</div><button type="button" class="btn pri" onclick="psySave('${kind}','${id}')">${lab}</button>`;}
-function psyInner(kind,id){return `<div class="pn-main">${psyStart(kind,id)}${PSY_SECS.map((s,i)=>psyStep(kind,id,i)).join('')}<div class="pn-bar" id="pnBar">${psyBar(kind,id)}</div></div><div class="pn-side" id="pnSide">${psySide(kind,id)}</div>`;}
-function psyNote(kind,id){
+function psyInner(kind,id,forceAllOpen=false){const allOpen=forceAllOpen||!!document.querySelector('.pcd-nm');return `<div class="pn-main">${psyStart(kind,id)}${PSY_SECS.map((s,i)=>psyStep(kind,id,i,allOpen)).join('')}<div class="pn-bar" id="pnBar">${psyBar(kind,id)}</div></div><div class="pn-side" id="pnSide">${psySide(kind,id)}</div>`;}
+function psyNote(kind,id,forceAllOpen=false){
   const top=kind==='dn'?`<div class="pn-top"><div><h3>Daily note · Day 6 ${chip(me().title,'c-grey')}</h3><div class="small muted" style="margin-top:4px">Four short steps. Tap what applies; the preview on the right builds as you go.</div></div>${S.dailySaved?chip('Saved · you can still update it','c-green'):''}</div>`:'';
-  return `<div class="pn-wrap">${top}<div class="pn" id="pn">${psyInner(kind,id)}</div></div>`;}
+  return `<div class="pn-wrap">${top}<div class="pn" id="pn">${psyInner(kind,id,forceAllOpen)}</div></div>`;}
 function psyRepaint(kind,id,fk,fv){const el=$('pn');if(!el)return;el.innerHTML=psyInner(kind,id);
   if(fk){const b=el.querySelector(`.pn-o[data-k="${fk}"][data-v="${fv}"]`);if(b)b.focus({preventScroll:true});}
   if(kind==='dn')dnProg();}
@@ -2837,7 +2837,7 @@ function psySave(kind,id){
   const fl=psyFlags(kind,id),al=fl.length?'; '+S.team.psy+' alerted':'';
   if(S.psyTried)delete S.psyTried[c];if(S.psyPin)delete S.psyPin[c];
   if(kind==='dn'){S.dn.line=psyGet('dn',id,'evy')==='Something happened'?psyGet('dn',id,'evl'):'None';saveDaily();toast('Note saved'+al+'. Family update drafted.');return;}
-  const p=PTS.find(x=>x.id===id);S.eod[id].saved=true;S.eodI=0;render();toast('Daily note saved for '+p.name+al);
+  const p=ptFind(id);S.eod[id].saved=true;S.eodI=0;render();toast('Daily note saved for '+(p?p.name:'this patient')+al);
 }
 const PSY_EOD=()=>PTS.slice(0,5); /* ward order, first patient first (3 Nov) */
 function psyEodEdit(id){S.eod[id].saved=false;const pend=PSY_EOD().filter(p=>!(S.eod[p.id]||{}).saved);S.eodI=Math.max(0,pend.findIndex(p=>p.id===id));render();}
