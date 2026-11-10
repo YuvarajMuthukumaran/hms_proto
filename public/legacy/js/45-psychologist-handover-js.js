@@ -58,6 +58,7 @@
   const valOf=(pid,k)=>{const e=uiN()[pid];return e&&e[k]!==undefined?e[k]:((auto(pid)||{f:{}}).f[k]||'');};
   const snap=pid=>{const o={};FIELDS.forEach(([k])=>{o[k]=valOf(pid,k);});return o;};
   const noteFor=(h,pid)=>{if(h.notes&&h.notes[pid])return h.notes[pid];const a=auto(pid),f=Object.assign({},a?a.f:{});if(h.rec&&h.rec[pid])f.future=h.rec[pid];return f;};
+  window.pgHoNote=noteFor;
   const nl2br=t=>hesc(t||'').replace(/\n/g,'<br>');
   const mypts=()=>{try{return PSY_EOD();}catch(e){return PTS;}};
 
@@ -94,17 +95,27 @@
   window.pgHoTo=v=>{store().ui.to=v;};
   window.pgHoSend=function(){
     const st=store(),u=st.ui;u.to=($('pgTo')||{}).value||u.to;u.reason=($('pgWhy')||{}).value||u.reason;
-    const pids=mypts().filter(p=>u.sel[p.id]!==false).map(p=>p.id);
+    const pids=mypts().filter(p=>u.sel[p.id]===true).map(p=>p.id);
     if(!u.to){toast('Choose the psychologist who takes over');return;}
     if(!pids.length){toast('Pick at least one patient');return;}
     /* what the next psychologist needs most is the plan: it must not be left empty */
     const missing=pids.filter(id=>!valOf(id,'future').trim());
-    if(missing.length){u.cur=missing[0];render();toast('Write the future directions for '+missing.map(id=>ptFind(id).name).join(', ')+' first');return;}
+    if(missing.length){u.edit=missing[0];render();toast('Write the future directions for '+missing.map(id=>ptFind(id).name).join(', ')+' first');return;}
     const notes={};pids.forEach(id=>{notes[id]=snap(id);});
     st.list.unshift({id:'pg'+Date.now(),from:signer(),to:u.to,reason:u.reason,at:atNow(),pids,notes,status:'sent'});
     u.notes={};render();toast('Handover sent to '+u.to+'. You still see these patients until '+u.to+' accepts.');
   };
   window.pgHoToggle=function(id){const h=store().list.find(x=>x.id===id);if(h){h.open=!h.open;render();}};
+
+  const rc=h=>{
+    const IC='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h14l-3-3"/><path d="M20 16H6l3 3"/></svg>';
+    const KEYS=[['Current psychopathology','psychopath'],['Ongoing interventions','interv'],['Future directions','future']],open=h.open!==false,n=h.pids.length;
+    return `<section class="hv-rc"><div class="hv-rc-hd"><span class="hv-rc-ic">${IC}</span><div class="t"><b>${hesc(h.from)} handed over ${n} patient${n>1?'s':''} to you</b><span>${hesc(h.reason)} · sent ${hesc(h.at)} · ${h.acceptedBy?'accepted by '+hesc(h.acceptedBy)+', '+hesc(h.acceptedAt):'until you accept, '+hesc(h.from)+' still sees them'}</span></div>
+      <button class="btn sm" onclick="pgHoToggle('${h.id}')">${open?'Hide':'Show'}</button><button class="btn sm" onclick="pgHoFull('${h.id}')">${h.full?'Hide full notes':'Full notes'}</button>${h.acceptedBy?'':`<button class="btn sm pri" onclick="pgHoAccept('${h.id}')">Accept handover</button>`}</div>
+      ${open?`<div class="hv-rc-wrap"><div class="hv-rc-heads" aria-hidden="true"><span>Patient</span>${KEYS.map(k=>`<span>${k[0]}</span>`).join('')}<span></span></div><div class="hv-rc-list">${h.pids.map(pid=>{const p=ptFind(pid);if(!p)return '';const f=noteFor(h,pid)||{},g=k=>String(f[k]||'');
+        return `<div class="hv-rc-p"><div class="hv-rc-who"><div style="min-width:0"><b>${hesc(p.name)}</b><div class="s">${hesc([window.psyPatientLine?psyPatientLine(p):'',p.risk?'High risk':''].filter(Boolean).join(' · '))}</div>${p.dx?`<div class="hv-tags"><span class="hv-tag blue">${hesc(p.dx)}</span></div>`:''}</div></div>${KEYS.map(k=>`<div class="hv-rc-m" data-l="${k[0]}">${hesc(g(k[1]))||'<span class="muted">—</span>'}</div>`).join('')}<button class="hv-link" onclick="go('#/patient/${pid}/overview')">Open record</button></div>`;}).join('')}</div></div>`:''}</section>`;
+  };
+  window.pgHoFull=function(id){const h=store().list.find(x=>x.id===id);if(h){h.full=!h.full;render();}};
 
   function page(){
     const st=store(),u=st.ui,me=signer(),pts=mypts();
@@ -116,18 +127,37 @@
         ${open?`<div style="padding:0 16px 16px"><div class="hn-tabs">${h.pids.map(pid=>`<button class="${pid===cur?'on':''}" onclick="pgHnHCur('${h.id}','${pid}')">${hesc((ptFind(pid)||{}).name||pid)}</button>`).join('')}</div>
           ${notePage(cur,noteFor(h,cur),true,{from:h.from,to:h.to,at:h.at,accepted:h.acceptedBy?h.acceptedBy+', '+h.acceptedAt:'',pdf:`<button class="btn sm" onclick="pgHnPdf('${h.id}','${cur}')">PDF</button>`})}</div>`:''}</section>`;};
     const others=(typeof TR_TO!=='undefined'?TR_TO.psych:[]).filter(n=>n!==me);
-    const cur=pts.some(p=>p.id===u.cur)?u.cur:(pts[0]||{}).id;
-    const list=pts.map(p=>{const inc=u.sel[p.id]!==false,miss=inc&&!valOf(p.id,'future').trim();
-      return `<div class="hn-pt ${p.id===cur?'on':''}" role="button" tabindex="0" onclick="pgHnCur('${p.id}')" onkeydown="if(event.key==='Enter')pgHnCur('${p.id}')"><input type="checkbox" ${inc?'checked':''} aria-label="Hand over ${hesc(p.name)}" onclick="event.stopPropagation()" onchange="pgHoSel('${p.id}',this.checked)"><span style="min-width:0"><b>${hesc(p.name)}</b><span class="tiny muted" style="display:block">${hesc(window.psyPatientLine?psyPatientLine(p):p.room)}</span></span><span class="hn-st ${!inc?'off':miss?'add':'ok'}">${!inc?'Stays with you':miss?'To add':'Ready'}</span></div>`;}).join('');
-    return `<div class="ho"><div><h2>Handover</h2><div class="muted" style="margin-top:4px">One page per patient. What the system already knows is filled in; you add what is missing. Your entries are kept as you type.</div></div>
-      ${incoming.length?`<div class="lbl">To you</div>${incoming.map(h=>card(h,false)).join('')}`:''}
-      <section class="card"><div class="hd"><div><h3>Hand over my patients</h3><div class="small muted" style="margin-top:4px">Untick patients who stay with you. Until the other psychologist accepts, you still see them.</div></div>
-        <div class="row" style="gap:8px"><select class="input" id="pgTo" style="min-height:34px;width:auto" onchange="pgHoTo(this.value)" aria-label="Psychologist who takes over"><option value="">Hand over to…</option>${others.map(n=>`<option ${u.to===n?'selected':''}>${hesc(n)}</option>`).join('')}</select>
-        <select class="input" id="pgWhy" style="min-height:34px;width:auto" aria-label="Reason">${['Going on leave','Night duty','Transfer'].map(r=>`<option ${u.reason===r?'selected':''}>${r}</option>`).join('')}</select>
-        <button class="btn pri" onclick="pgHoSend()">Send handover</button></div></div>
-        ${cur?`<div class="hn-wrap"><div class="hn-list">${list}</div><div style="min-width:0">${notePage(cur,snap(cur),false,{})}</div></div>`:'<div class="pad small muted">No patients to hand over.</div>'}</section>
+    const REASONS=['Going on leave','Night duty','Transfer'];
+    const sel=pts.filter(p=>u.sel[p.id]===true),ready=sel.filter(p=>valOf(p.id,'future').trim()),miss=sel.filter(p=>!valOf(p.id,'future').trim());
+    const ok=!!u.to&&sel.length&&!miss.length;
+    const foot=!u.to?'Choose the psychologist who takes over.':!sel.length?'Tick the patients you are handing over.':miss.length?'Add the future directions for '+miss.map(x=>x.name).join(', ')+' first.':sel.length+' patient'+(sel.length>1?'s':'')+' ready to hand over to '+u.to+'.';
+    const pend=p=>{try{return (DT.tasks(p,tasks().filter(t=>!S.done[t.id]))||[]).slice(0,2).map(i=>i.txt).join('; ');}catch(e){return '';}};
+    const row=p=>{
+      const on=u.sel[p.id]===true,det=!!valOf(p.id,'future').trim(),a=auto(p.id)||{f:{}},pt=pend(p);
+      const iv=String(a.f.interv||'').split('\n').filter(Boolean).map(x=>x.split(' · ')[0]);
+      const sub=[window.psyPatientLine?psyPatientLine(p):'','Day '+(p.day||0)].filter(Boolean).join(' · ');
+      const tags=[p.risk?'<span class="hv-tag red">High risk</span>':''].join('');
+      const st=!on?'<span class="tiny muted">Not handing over</span>':det?`<span class="hv-chip ok">Details added</span> <button class="hv-link" onclick="pgHoEdit('${p.id}')">Edit</button>`:`<span class="hv-chip need">Future directions needed</span> <button class="hv-link" onclick="pgHoEdit('${p.id}')">Add details</button>`;
+      return `<tr class="${on?'on':''}"><td><input type="checkbox" ${on?'checked':''} onchange="pgHoSel('${p.id}',this.checked)" aria-label="Hand over ${hesc(p.name)}"></td>
+        <td><div class="hv-who">${av(p.ini,34,p.risk?'c-amber':'c-blue')}<div style="min-width:0"><b>${hesc(p.name)}</b><div class="s">${hesc(sub)}</div>${tags?`<div class="hv-tags">${tags}</div>`:''}</div></div></td>
+        <td><div>${hesc(p.dx||'')}</div>${pt?`<div class="tiny muted" style="margin-top:3px">Pending: ${hesc(pt)}</div>`:''}</td>
+        <td>${iv.length?`<ul class="hv-line">${iv.map(x=>`<li>${hesc(x)}</li>`).join('')}</ul>`:'<span class="muted small">No interventions recorded</span>'}</td>
+        <td>${st}</td></tr>`;
+    };
+    const ed=u.edit&&pts.some(p=>p.id===u.edit)?u.edit:'';
+    return `<div class="hv"><div class="tiny muted">Inpatients / Handover</div>
+      ${incoming.map(h=>rc(h)+(h.full?card(h,false):'')).join('')}
+      <div class="hv-bar"><label class="f">Handover to <select class="input" id="pgTo" style="min-height:36px;width:auto" onchange="pgHoTo(this.value)" aria-label="Psychologist who takes over"><option value="">Choose psychologist…</option>${others.map(n=>`<option ${u.to===n?'selected':''}>${hesc(n)}</option>`).join('')}</select></label>
+        <label class="f">Reason <select class="input" id="pgWhy" style="min-height:36px;width:auto" onchange="pgHoWhy(this.value)" aria-label="Reason">${REASONS.map(r=>`<option ${u.reason===r?'selected':''}>${r}</option>`).join('')}</select></label>
+        <span class="grow"></span><label class="f"><input type="checkbox" ${pts.length&&sel.length===pts.length?'checked':''} onchange="pgHoAll(this.checked)"> Select all</label><span class="hv-count ${ok?'ok':''}">${sel.length} of ${pts.length} selected</span></div>
+      <section class="card hv-tbl"><div class="scroll"><table class="t"><thead><tr><th style="width:36px"></th><th>Patient</th><th>Diagnosis and pending</th><th>Ongoing interventions</th><th>Handover details</th></tr></thead><tbody>${pts.map(row).join('')}</tbody></table></div></section>
+      ${ed?`<section class="card"><div class="hd"><div><h3>Handover details · ${hesc(ptFind(ed).name)}</h3><div class="small muted" style="margin-top:4px">What the system knows is filled in; add what is missing. Kept as you type.</div></div><button class="btn sm" onclick="pgHoEdit('')">Close</button></div><div style="padding:0 16px 16px">${notePage(ed,snap(ed),false,{})}</div></section>`:''}
+      <div class="hv-foot"><span class="small">${hesc(foot)}</span><span class="row" style="gap:8px"><button class="btn pri ${ok?'':'off'}" aria-disabled="${ok?'false':'true'}" onclick="pgHoSend()">${u.to?'Send to '+hesc(u.to):'Send handover'}</button></span></div>
       ${sent.length?`<div class="lbl">Sent by you</div>${sent.map(h=>card(h,true)).join('')}`:''}</div>`;
   }
+  window.pgHoEdit=function(pid){store().ui.edit=pid;render();};
+  window.pgHoWhy=v=>{store().ui.reason=v;};
+  window.pgHoAll=function(on){const u=store().ui;mypts().forEach(p=>{u.sel[p.id]=!!on;});render();};
 
   /* routing: only the psychologist's #/handover is handled here */
   const prevR=ROLE.psychologist.render;
