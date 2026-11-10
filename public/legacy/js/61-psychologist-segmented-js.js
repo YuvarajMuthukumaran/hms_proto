@@ -18,13 +18,14 @@
   .pg-seg button:focus-visible{outline:2px solid #175cd3;outline-offset:2px}
   .pg-seg .pg-n{font-size:11.5px;font-weight:700;line-height:1;min-width:20px;text-align:center;padding:3px 7px;border-radius:99px;background:#d1e0ff;color:#175cd3}
   .pg-seg button.on .pg-n{background:rgba(255,255,255,.24);color:#fff}
-  /* My / Ward / All patients and Mine / Whole ward: small, as wide as its words, on the right */
-  .pg-scope.pg-seg,.pg-mine.pg-seg{display:flex;width:fit-content;max-width:100%;margin:0 0 10px auto;padding:3px;background:#dbe7fd;border:1px solid #9fbdf5;box-shadow:0 1px 4px rgba(23,92,211,.12),inset 0 1px 2px rgba(23,92,211,.08)}
+  /* My / Ward / All patients and Mine / Whole ward: small, as wide as its words, on the left */
+  .pg-scope.pg-seg,.pg-mine.pg-seg{display:flex;width:fit-content;max-width:100%;margin:0 0 10px 0;padding:3px;background:#dbe7fd;border:1px solid #9fbdf5;box-shadow:0 1px 4px rgba(23,92,211,.12),inset 0 1px 2px rgba(23,92,211,.08)}
   .pg-scope.pg-seg .pg-ind,.pg-mine.pg-seg .pg-ind{top:3px;bottom:3px}
   .pg-scope.pg-seg button,.pg-mine.pg-seg button{font-size:13px;font-weight:700;padding:5px 12px;gap:6px;color:#0f4bb5;flex:none}
   .pg-scope.pg-seg button.on,.pg-mine.pg-seg button.on{color:#fff}
   .pg-scope.pg-seg .pg-n,.pg-mine.pg-seg .pg-n{font-size:10.5px;min-width:16px;padding:2px 6px;background:#b9d0fa;color:#0f4bb5}
   .pg-scope.pg-seg button.on .pg-n,.pg-mine.pg-seg button.on .pg-n{background:rgba(255,255,255,.28);color:#fff}
+  .pg-add.pg-start:hover .pg-pl{transform:none}
   /* Daily notes filters */
   .pg-frow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:2px 0 4px}
   .pg-frow .pg-seg{background:#edf3fe;border:1px solid #cfdffb;box-shadow:none}

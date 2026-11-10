@@ -56,6 +56,37 @@
         const t=((c.querySelector('h3,h4,.lbl')||{}).textContent||'').trim();
         if(/^(Monitoring|Investigations|Risks and instructions|Referral)/.test(t))c.remove();
       });
+      R.querySelectorAll('.pg-ro').forEach(x=>x.remove()); /* no "Read only" banner */
+      return T.innerHTML;
+    }catch(e){return h;}
+  };
+
+  /* Today table, like the psychiatrist's dashboard: the first column is the Type (one plain word, the most urgent type of what is due),
+     the Current psychopathology column is gone; Patient (with the High risk tag) and Ongoing interventions stay. */
+  const RANK=['Critical','Clinical event','Medication','Investigation','MHCA','Overdue review','Admission','Documentation','Family'];
+  const __md=ROLE.psychologist.myday;
+  ROLE.psychologist.myday=function(){
+    const h=__md.apply(this,arguments);
+    if(!me()||typeof h!=='string')return h;
+    try{
+      const T=tpl(h),R=T.content,tbl=R.querySelector('table.pd-t');if(!tbl||tbl.dataset.pgType)return h;
+      tbl.dataset.pgType='1';
+      const ths=[...tbl.querySelectorAll('thead th')],pi=ths.findIndex(t=>/Current psychopathology/i.test(t.textContent));
+      if(pi<0)return h;
+      ths[pi].remove();ths[0].insertAdjacentHTML('beforebegin','<th>Type</th>');
+      tbl.querySelectorAll('tbody tr').forEach(tr=>{
+        if(!tr.hasAttribute('data-dt')){const td=tr.querySelector('td');if(td&&td.colSpan>1)td.colSpan=td.colSpan;return;}
+        const tds=[...tr.children];
+        if(tds[pi])tds[pi].remove();
+        const texts=[...tr.querySelectorAll('.pd-d span')].map(x=>x.textContent);
+        const hits=texts.map(t=>window.pgCatOf?pgCatOf(t):null).filter(Boolean).sort((a,b)=>RANK.indexOf(a[0])-RANK.indexOf(b[0]));
+        const top=hits[0]||(texts.length?['Documentation','grey']:null);
+        tr.insertAdjacentHTML('afterbegin',top?`<td><span class="pd-ty ${top[1]==='grey'?'':top[1]}">${hesc(top[0])}</span></td>`:'<td><span class="pd-ty" style="font-weight:500;color:#98a2b3">Up to date</span></td>');
+        const pid=(tr.innerHTML.match(/#\/patient\/([^/']+)\//)||[])[1],p=pid&&ptFind(pid),nm=tr.querySelector('.pd-nm');
+        if(p&&p.risk&&nm&&!nm.querySelector('.pd-tag'))nm.insertAdjacentHTML('beforeend','<span class="pd-tag amber">High risk</span>');
+      });
+      const none=tbl.querySelector('#dtNone td');if(none)none.colSpan=5;
+      const cg=tbl.querySelector('colgroup');if(cg)cg.innerHTML='<col style="width:150px"><col style="width:270px"><col><col style="width:22%"><col style="width:210px">';
       return T.innerHTML;
     }catch(e){return h;}
   };
