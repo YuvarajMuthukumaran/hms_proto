@@ -1,11 +1,11 @@
 export const ROLES = [
-  { key: 'lead', label: 'Floor lead', desc: 'Whole floor, all wards and psychiatrists' },
-  { key: 'floor-coordinator', label: 'Floor Lead Psychiatrist', desc: 'Psychiatry oversight across all wards and psychiatrists' },
-  { key: 'psychiatrist', label: 'Psychiatrist', desc: 'Your inpatients, rounds and orders' },
-  { key: 'patient-experience-lead', label: 'Patient Experience Lead', desc: 'Review concerns, log grievances and update preferences' },
-  { key: 'psychologist', label: 'Psychologist', desc: 'Therapy, daily notes and family updates' },
-  { key: 'nurse', label: 'Nurse', desc: 'Ward care, vitals and medicine chart' },
-  { key: 'rmo', label: 'RMO on duty', desc: 'Psychiatrist workspace for rounds, records and orders' },
+  { key: 'lead', label: 'Floor lead', desc: 'All wards and teams' },
+  { key: 'floor-coordinator', label: 'Floor Lead Psychiatrist', desc: 'Psychiatry across wards' },
+  { key: 'psychiatrist', label: 'Psychiatrist', desc: 'Patients, rounds and orders' },
+  { key: 'patient-experience-lead', label: 'Patient Experience Lead', desc: 'Concerns and preferences' },
+  { key: 'psychologist', label: 'Psychologist', desc: 'Therapy and family updates' },
+  { key: 'nurse', label: 'Nurse', desc: 'Ward care and medicines' },
+  { key: 'rmo', label: 'RMO on duty', desc: 'Rounds, records and orders' },
 ] as const;
 
 export type RoleKey = (typeof ROLES)[number]['key'];
