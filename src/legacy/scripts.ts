@@ -62,4 +62,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/60-psychologist-forms-js.js',
   '/legacy/js/61-psychologist-segmented-js.js',
   '/legacy/js/62-psychologist-rounds-js.js',
+  '/legacy/js/63-psychologist-history-js.js',
 ];

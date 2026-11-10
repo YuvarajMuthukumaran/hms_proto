@@ -9,24 +9,27 @@
   const css=document.createElement('style');css.id='psychologist-segmented-css';
   css.textContent=`
   .pg-seg{position:relative;display:inline-flex;gap:0;padding:4px;background:#e8f0fe;border:1px solid #cfdffb;border-radius:99px;box-shadow:inset 0 1px 2px rgba(23,92,211,.08);max-width:100%}
-  .pg-scope.pg-seg,.pg-mine.pg-seg{margin:0 0 16px;padding:5px;background:#dbe7fd;border:1.5px solid #9fbdf5;box-shadow:0 2px 8px rgba(23,92,211,.14),inset 0 1px 2px rgba(23,92,211,.1)}
-  .pg-scope.pg-seg .pg-ind,.pg-mine.pg-seg .pg-ind{top:5px;bottom:5px}
-  .pg-scope.pg-seg button,.pg-mine.pg-seg button{font-size:16px;font-weight:700;padding:11px 26px;color:#0f4bb5}
-  .pg-scope.pg-seg button.on,.pg-mine.pg-seg button.on{color:#fff}
-  .pg-scope.pg-seg .pg-n,.pg-mine.pg-seg .pg-n{font-size:13px;padding:4px 9px;background:#b9d0fa;color:#0f4bb5}
-  .pg-scope.pg-seg button.on .pg-n,.pg-mine.pg-seg button.on .pg-n{background:rgba(255,255,255,.28);color:#fff}
-  .pg-seg .pg-ind{position:absolute;top:4px;bottom:4px;left:0;width:0;background:linear-gradient(180deg,#2f7df0,#175cd3);border-radius:99px;box-shadow:0 1px 2px rgba(16,24,40,.2),0 6px 14px rgba(23,92,211,.32),inset 0 1px 0 rgba(255,255,255,.28);transition:left .45s cubic-bezier(.34,1.45,.64,1),width .45s cubic-bezier(.34,1.45,.64,1),opacity .2s ease;z-index:1;pointer-events:none}
+  .pg-seg .pg-ind{position:absolute;top:4px;bottom:4px;left:0;width:0;background:linear-gradient(180deg,#2f7df0,#175cd3);border-radius:99px;box-shadow:0 1px 2px rgba(16,24,40,.2),0 4px 10px rgba(23,92,211,.3),inset 0 1px 0 rgba(255,255,255,.28);transition:left .45s cubic-bezier(.34,1.45,.64,1),width .45s cubic-bezier(.34,1.45,.64,1),opacity .2s ease;z-index:1;pointer-events:none}
   .pg-seg.pg-none .pg-ind{opacity:0}
   .pg-seg.pg-noanim .pg-ind{transition:none}
-  .pg-seg button{position:relative;z-index:2;display:inline-flex;align-items:center;gap:8px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:#175cd3;padding:8px 18px;border-radius:99px;cursor:pointer;white-space:nowrap;transition:color .25s ease;box-shadow:none!important;min-height:0;height:auto}
+  .pg-seg button{position:relative;z-index:2;display:inline-flex;align-items:center;gap:8px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:#175cd3;padding:8px 18px;border-radius:99px;cursor:pointer;white-space:nowrap;box-shadow:none!important;min-height:0;height:auto}
   .pg-seg button.on{background:none!important;color:#fff}
   .pg-seg button:hover:not(.on){color:#0b3f9a}
   .pg-seg button:focus-visible{outline:2px solid #175cd3;outline-offset:2px}
-  .pg-seg .pg-n{font-size:11.5px;font-weight:700;line-height:1;min-width:20px;text-align:center;padding:3px 7px;border-radius:99px;background:#d1e0ff;color:#175cd3;transition:background .25s ease,color .25s ease}
+  .pg-seg .pg-n{font-size:11.5px;font-weight:700;line-height:1;min-width:20px;text-align:center;padding:3px 7px;border-radius:99px;background:#d1e0ff;color:#175cd3}
   .pg-seg button.on .pg-n{background:rgba(255,255,255,.24);color:#fff}
+  /* My / Ward / All patients and Mine / Whole ward: small, as wide as its words, on the right */
+  .pg-scope.pg-seg,.pg-mine.pg-seg{display:flex;width:fit-content;max-width:100%;margin:0 0 10px auto;padding:3px;background:#dbe7fd;border:1px solid #9fbdf5;box-shadow:0 1px 4px rgba(23,92,211,.12),inset 0 1px 2px rgba(23,92,211,.08)}
+  .pg-scope.pg-seg .pg-ind,.pg-mine.pg-seg .pg-ind{top:3px;bottom:3px}
+  .pg-scope.pg-seg button,.pg-mine.pg-seg button{font-size:13px;font-weight:700;padding:5px 12px;gap:6px;color:#0f4bb5;flex:none}
+  .pg-scope.pg-seg button.on,.pg-mine.pg-seg button.on{color:#fff}
+  .pg-scope.pg-seg .pg-n,.pg-mine.pg-seg .pg-n{font-size:10.5px;min-width:16px;padding:2px 6px;background:#b9d0fa;color:#0f4bb5}
+  .pg-scope.pg-seg button.on .pg-n,.pg-mine.pg-seg button.on .pg-n{background:rgba(255,255,255,.28);color:#fff}
   /* Daily notes filters */
   .pg-frow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:2px 0 4px}
-  .pg-frow .pg-seg button{font-size:13.5px;padding:6px 14px}
+  .pg-frow .pg-seg{background:#edf3fe;border:1px solid #cfdffb;box-shadow:none}
+  .pg-frow .pg-seg button{font-size:13px;padding:5px 13px;gap:6px}
+  .pg-frow .pg-seg .pg-n{font-size:10.5px;min-width:16px;padding:2px 6px}
   .pg-frow .pg-seg{padding:3px}
   .pg-frow .pg-seg .pg-ind{top:3px;bottom:3px}
   .pg-frow #dnQ,.pg-frow .dn-search{margin-left:auto}
@@ -84,20 +87,23 @@
   /* Daily notes: split the chip row at its separators into groups, one segmented control each */
   const upgradeFilters=row=>{
     if(row.dataset.pgFrow)return;row.dataset.pgFrow='1';
-    const kids=[...row.children],groups=[[]],rest=[];
+    row.classList.add('pg-frow');
+    /* keep the order of the row: type of note, who wrote it, period, search */
+    const kids=[...row.children],groups=[[]];
     kids.forEach(k=>{
       if(k.classList&&k.classList.contains('dn9-sep')){groups.push([]);k.remove();}
-      else if(k.matches&&k.matches('button.tog'))groups[groups.length-1].push(k);
-      else rest.push(k);
+      else groups[groups.length-1].push(k);
     });
-    row.classList.add('pg-frow');
-    const keys=['ftype','fwho','fwhen'];
-    groups.filter(g=>g.length).forEach((g,i)=>{
+    const keys=['ftype','fwho','fwhen'];let gi=0;
+    groups.filter(g=>g.length).forEach(g=>{
+      const btns=g.filter(k=>k.matches&&k.matches('button'));
+      const chips=g.find(k=>k.classList&&k.classList.contains('mini-chips'));
+      if(chips){seg(chips,keys[gi++]||'f0','label');chips.setAttribute('role','tablist');return;}
+      if(!btns.length)return;
       const wrap=document.createElement('div');wrap.setAttribute('role','tablist');
-      row.insertBefore(wrap,g[0]);g.forEach(b=>wrap.appendChild(b));
-      seg(wrap,keys[i]||('f'+i),i===0?'label':null);
+      row.insertBefore(wrap,btns[0]);btns.forEach(b=>wrap.appendChild(b));
+      seg(wrap,keys[gi++]||'f1',null);
     });
-    rest.forEach(r=>row.appendChild(r));
   };
   const __r=render;
   render=function(){

@@ -51,6 +51,13 @@
   .pg-scope{display:inline-flex;gap:4px;padding:4px;margin:0 0 12px;background:#f2f4f7;border-radius:12px}
   .pg-scope button{border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:#475467;padding:7px 16px;border-radius:9px;cursor:pointer}
   .pg-scope button.on{background:#fff;color:#175cd3;box-shadow:0 1px 2px rgba(16,24,40,.12)}
+  .modal.pg-wide{width:min(1100px,96vw)!important;max-width:none!important}
+  .pg-nm{max-height:68vh;overflow:auto}
+  .pg-nm .pn-bar,.pg-nm .pn-side,.pg-nm .pn-start{display:none!important}
+  .pg-nm .pn-main{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .pg-nm .pn-main>.pn-step{border-right:0!important;border-bottom:1px solid var(--line)!important}
+  .pg-nm #pnS-0,.pg-nm #pnS-2{border-right:1px solid var(--line)!important}
+  @media (max-width:760px){.pg-nm .pn-main{grid-template-columns:1fr!important}.pg-nm #pnS-0,.pg-nm #pnS-2{border-right:0!important}}
   .pg-mp-chips{display:flex;flex-wrap:wrap;gap:8px}
   .pg-mp-chips label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:13.5px;cursor:pointer;background:#fff}
   .pg-mp-chips label:has(input:checked){background:#eff8ff;border-color:#84caff;color:#175cd3;font-weight:600}
@@ -62,14 +69,18 @@
 
   /* ---------- 2. Take Action: pop-ups for that patient ---------- */
   const nm=pid=>{const p=ptFind(pid);return p?p.name:'';};
+  /* Write daily note: the same four-group daily note as the Daily notes page, for this one patient, in a pop-up.
+     The answers are the patient's real daily note (saved with Save note, flags the psychiatrist like the page does). */
   window.pgNoteModal=function(pid){
-    V3.modal('Daily note · '+hesc(nm(pid)),'Written for this patient only. It is saved in the events log with your name and time.',
-      `<label class="field"><span class="lbl">Today's note</span><textarea class="input" id="pgDn" rows="5" placeholder="Mood and behaviour, sleep and routine, therapy done today, anything the team should know"></textarea><div id="pgDnE" class="small" style="color:var(--red);display:none">Write the note first</div></label>`,
+    V3.modal('Daily note · '+hesc(nm(pid)),'Today’s note for this patient only. Tap what applies; the same note as on the Daily notes page.',
+      `<div class="pg-nm">${psyNote('eod',pid).split('Body and routine').join('Biological Function and Routine').split('BODY AND ROUTINE').join('BIOLOGICAL FUNCTION AND ROUTINE')}</div>`,
       `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="pgNoteSave('${pid}')">Save note</button>`);
+    const m=document.querySelector('.modal');if(m)m.classList.add('pg-wide');
+    try{if(window.pgDictBits)pgDictBits(document);}catch(e){}
   };
   window.pgNoteSave=function(pid){
-    const n=(($('pgDn')||{}).value||'').trim();if(!n){$('pgDnE').style.display='block';return;}
-    const w=whoAt();V3.log(pid,S.role,'note','Daily note: '+n+' · '+w.by);closeModal();render();toast('Daily note saved by '+w.by);
+    psySave('eod',pid);
+    if(((S.eod||{})[pid]||{}).saved)closeModal();
   };
   window.pgTherapyModal=function(pid){S.pid=pid;psyThAdd('ind');};
 

@@ -44,6 +44,22 @@
       <div class="pg-rp-b"><h4>Management plan</h4><div class="pg-rp-sub">Read only. Your plan for this stay.</div><div class="pg-rp-ro">${plan?hesc(plan):'Not written yet.'}</div>
         <div class="row" style="margin-top:10px;gap:8px"><button class="btn sm" onclick="pgMpModal('${pid}')">${m.signed?'View management plan':'Open management plan'}</button></div></div></section>`;
   };
+  /* Rounds: Monitoring, Investigations, Risks and instructions and Referral are not shown to the psychologist (team, 10 Nov).
+     Nothing is added in their place. */
+  const __vr=vRounds;
+  vRounds=function(){
+    const h=__vr.apply(this,arguments);
+    if(!me()||typeof h!=='string')return h;
+    try{
+      const T=tpl(h),R=T.content;
+      R.querySelectorAll('section.card').forEach(c=>{
+        const t=((c.querySelector('h3,h4,.lbl')||{}).textContent||'').trim();
+        if(/^(Monitoring|Investigations|Risks and instructions|Referral)/.test(t))c.remove();
+      });
+      return T.innerHTML;
+    }catch(e){return h;}
+  };
+
   /* Dictate next to the Therapy brief (words only; nothing is recorded or stored) */
   let rec=null;
   const stop=()=>{try{if(rec){rec.onend=null;rec.stop();}}catch(e){}rec=null;document.querySelectorAll('.pg-dict.live').forEach(b=>{b.classList.remove('live');b.textContent='Dictate';});};
@@ -63,10 +79,17 @@
       ta.insertAdjacentHTML('afterend',`<button type="button" class="pg-dict" onclick="pgDictate('${ta.id}',this)" aria-label="Dictate the therapy brief">Dictate</button>`);
     });
   };
+  window.pgDictBits=bits;
+  const __rp=psyRepaint;
+  psyRepaint=function(){const r=__rp.apply(this,arguments);if(me()){try{bits(document);}catch(e){}}return r;};
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
-    if(me()){try{const v=$('view');if(v)bits(v);}catch(e){}}
+    if(me()){try{const v=$('view');if(v){bits(v);
+      /* Admission > step 1 (Admission forms): no Form C row for the psychologist; Form C has its own step 5 */
+      v.querySelectorAll('tr[data-formc]').forEach(r=>r.remove());
+      /* Review Form C opens the form in the patient (same as the other forms), not the removed documents page */
+      v.querySelectorAll('button[onclick^="cdSelect("]').forEach(b=>{const m=(b.getAttribute('onclick')||'').match(/cdSelect\('([^']+)'\)/);if(m)b.setAttribute('onclick',"psyDocOpen('"+m[1]+"')");});}}catch(e){}}
     return out;
   };
 })();
