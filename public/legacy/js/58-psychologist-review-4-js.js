@@ -100,8 +100,8 @@
   window.pgMonDelYes=function(id){const x=px();x.monTables=monList().filter(t=>t.id!==id);closeModal();render();};
   const monExtras=sec=>{
     const hd=sec.querySelector('.hd');
-    if(hd){hd.style.alignItems='center';hd.insertAdjacentHTML('beforeend','<button type="button" class="btn sm pri" style="margin-left:auto" onclick="pgMonAdd()">+ Add monitoring table</button>');}
-    const html=monList().map(t=>`<section class="card vm9" data-mt="${t.id}"><div class="hd" style="align-items:center"><h3>${hesc(t.name)}</h3><span class="tiny muted">${hesc(t.unit?t.unit+' · ':'')}${t.slots.length} times a day · added by ${hesc(t.by)}</span><span style="margin-left:auto;display:flex;gap:8px"><button type="button" class="btn sm" onclick="pgMonDay('${t.id}')">+ Add next day</button><button type="button" class="btn sm" onclick="pgMonDel('${t.id}')">Remove table</button></span></div>
+    if(hd){hd.style.alignItems='center';hd.insertAdjacentHTML('beforeend','<button type="button" class="btn sm pri keep" style="margin-left:auto" onclick="pgMonAdd()">+ Add monitoring table</button>');}
+    const html=monList().map(t=>`<section class="card vm9" data-mt="${t.id}"><div class="hd" style="align-items:center"><h3>${hesc(t.name)}</h3><span class="tiny muted">${hesc(t.unit?t.unit+' · ':'')}${t.slots.length} times a day · added by ${hesc(t.by)}</span><span style="margin-left:auto;display:flex;gap:8px"><button type="button" class="btn sm keep" onclick="pgMonDay('${t.id}')">+ Add next day</button><button type="button" class="btn sm keep" onclick="pgMonDel('${t.id}')">Remove table</button></span></div>
       <div class="vscroll"><table><thead><tr><th>Date</th>${t.slots.map(x=>`<th>${hesc(x)}</th>`).join('')}</tr></thead><tbody>${t.rows.map((r,ri)=>`<tr><td class="d">${hesc(r.d)}</td>${t.slots.map((x,ci)=>`<td><input class="input" style="min-height:32px;max-width:110px" value="${hesc(r.v[ci]||'')}" placeholder="${hesc(t.unit||'')}" aria-label="${hesc(t.name+' '+r.d+' '+x)}" onchange="pgMonSet('${t.id}',${ri},${ci},this.value)"></td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`).join('');
     if(html)sec.insertAdjacentHTML('afterend',html);
   };
