@@ -77,6 +77,7 @@
   /* the Management Plan form is shared by the page and the pop-up */
   const MODS=['PHQ-9 (depression)','GAD-7 (anxiety)','BDI-II','BAI','Y-BOCS (OCD)','HAM-D','HAM-A','PANSS','MoCA','MMSE','Rosenberg self-esteem','WHO-5 well-being'];
   const ACTS=['Take a walk','Join group yoga','Music or art','Gardening','Plan an outing','Keep a daily activity diary','Fixed sleep routine','Call a family member'];
+  window.pgMpLists={MODS,ACTS};
   const FIELDS=[['therapyPlan','Therapy plan','area','Therapies planned, how many sessions and how often, and anything new that came up'],['formulation','Psychological formulation','area'],['goals','Goals of therapy','area'],['family','Family involvement','area'],['risk','Risks to watch for','area'],['assess','Planned assessments','pick',MODS],['acts','Planned behavioural activations','pick',ACTS],['review','Review date','date']];
   window.psychMpTog=function(k,v,on){const m=px().mgmtPsych=px().mgmtPsych||{};const a=m[k]=m[k]||[];const i=a.indexOf(v);if(on&&i<0)a.push(v);if(!on&&i>=0)a.splice(i,1);};
   window.psychMpSign=function(){

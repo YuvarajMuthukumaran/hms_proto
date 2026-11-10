@@ -67,6 +67,43 @@
       <div class="tiny muted" style="padding:8px 16px 12px">If the doctor orders more frequent checks (for example temperature four times a day), that check gets its own table.</div>`;
     bp.parentNode.insertBefore(sec,bp);
     ['Blood pressure','Pulse','Temperature','SpO2','Weight','Sleep'].forEach(k=>{if(by[k])by[k].remove();});
+    monExtras(sec);
+  };
+
+  /* ---------- 3b. separate monitoring tables the psychologist adds (e.g. temperature four times on one day) ---------- */
+  const MON=[['Temperature','°F'],['Blood pressure','mmHg'],['Pulse','bpm'],['SpO2','%'],['Weight','kg'],['Sleep','hours'],['Blood sugar','mg/dL'],['Other (type the name)','']];
+  const TIMES={2:['9 am','9 pm'],3:['9 am','1 pm','9 pm'],4:['6 am','12 pm','6 pm','12 am'],5:['6 am','10 am','2 pm','6 pm','10 pm'],6:['6 am','9 am','12 pm','3 pm','6 pm','9 pm']};
+  const monList=()=>{const x=px();return x.monTables=x.monTables||[];};
+  const nextDay=lab=>{const d=new Date(String(lab)+' 2026');if(isNaN(d))return lab;d.setDate(d.getDate()+1);return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});};
+  const todayLab=()=>{try{return new Date(2026,9,24).toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){return '';}};
+  window.pgMonAdd=function(){
+    V3.modal('Add a monitoring table','A separate table for one check that is taken more often than the usual vitals, for example temperature four times on the same day.',
+      `<div style="display:flex;flex-direction:column;gap:12px"><label class="field"><span class="lbl">What is being monitored</span><select class="input" id="pgMn" onchange="document.getElementById('pgMnOW').style.display=this.selectedIndex===${MON.length-1}?'block':'none'">${MON.map(m=>`<option>${hesc(m[0])}</option>`).join('')}</select></label>
+        <label class="field" id="pgMnOW" style="display:none"><span class="lbl">Name</span><input class="input" id="pgMnO" placeholder="e.g. Fluid intake"></label>
+        <label class="field"><span class="lbl">How many times a day</span><select class="input" id="pgMnT">${[2,3,4,5,6].map(n=>`<option ${n===4?'selected':''}>${n}</option>`).join('')}</select></label>
+        <div class="tiny muted">Times are filled in by default (for example 6 am, 12 pm, 6 pm, 12 am for four times) and the table starts with today.</div></div>`,
+      `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="pgMonSave()">Add table</button>`);
+  };
+  window.pgMonSave=function(){
+    const i=$('pgMn').selectedIndex,m=MON[i];let name=m[0];
+    if(i===MON.length-1){name=(($('pgMnO')||{}).value||'').trim();if(!name){toast('Type the name of the check');return;}}
+    const n=+$('pgMnT').value||4;
+    monList().push({id:'mt'+Date.now(),name,unit:m[1],slots:TIMES[n].slice(),rows:[{d:todayLab(),v:{}}],by:signer()});
+    closeModal();render();toast(name+' table added');
+  };
+  window.pgMonSet=function(id,r,c,v){const t=monList().find(x=>x.id===id);if(t&&t.rows[r])t.rows[r].v[c]=v;};
+  window.pgMonDay=function(id){const t=monList().find(x=>x.id===id);if(!t)return;t.rows.unshift({d:nextDay(t.rows[0].d),v:{}});render();};
+  window.pgMonDel=function(id){
+    const t=monList().find(x=>x.id===id);if(!t)return;
+    V3.modal('Remove this table?','The '+hesc(t.name)+' table and the readings in it will be removed.','',`<button class="btn" onclick="closeModal()">Keep it</button><button class="btn pri" onclick="pgMonDelYes('${id}')">Remove</button>`);
+  };
+  window.pgMonDelYes=function(id){const x=px();x.monTables=monList().filter(t=>t.id!==id);closeModal();render();};
+  const monExtras=sec=>{
+    const hd=sec.querySelector('.hd');
+    if(hd){hd.style.alignItems='center';hd.insertAdjacentHTML('beforeend','<button type="button" class="btn sm pri" style="margin-left:auto" onclick="pgMonAdd()">+ Add monitoring table</button>');}
+    const html=monList().map(t=>`<section class="card vm9" data-mt="${t.id}"><div class="hd" style="align-items:center"><h3>${hesc(t.name)}</h3><span class="tiny muted">${hesc(t.unit?t.unit+' · ':'')}${t.slots.length} times a day · added by ${hesc(t.by)}</span><span style="margin-left:auto;display:flex;gap:8px"><button type="button" class="btn sm" onclick="pgMonDay('${t.id}')">+ Add next day</button><button type="button" class="btn sm" onclick="pgMonDel('${t.id}')">Remove table</button></span></div>
+      <div class="vscroll"><table><thead><tr><th>Date</th>${t.slots.map(x=>`<th>${hesc(x)}</th>`).join('')}</tr></thead><tbody>${t.rows.map((r,ri)=>`<tr><td class="d">${hesc(r.d)}</td>${t.slots.map((x,ci)=>`<td><input class="input" style="min-height:32px;max-width:110px" value="${hesc(r.v[ci]||'')}" placeholder="${hesc(t.unit||'')}" aria-label="${hesc(t.name+' '+r.d+' '+x)}" onchange="pgMonSet('${t.id}',${ri},${ci},this.value)"></td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`).join('');
+    if(html)sec.insertAdjacentHTML('afterend',html);
   };
   const fixHandover=v=>{
     const sel=v.querySelector('#pgWhy');

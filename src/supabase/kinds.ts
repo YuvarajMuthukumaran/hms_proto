@@ -36,4 +36,23 @@ export const keysOf = (kind: RecordKind): readonly string[] =>
   kind in CONTEXT_KINDS ? CONTEXT_KINDS[kind as ContextKind] : [];
 
 /** Stable text form of a value, used to tell whether it changed since it was last saved or loaded. */
-export const stamp = (v: unknown) => JSON.stringify(v === undefined ? null : v);
+/**
+ * A text form used only to ask "did this record change?". Object keys are sorted so the same data always gives the same text.
+ * Supabase (jsonb) hands objects back with the keys in a different order; with plain JSON.stringify that looked like a change
+ * every time, so each save came back as "someone else changed this", the page was redrawn, saved again, and so on:
+ * every dashboard flickered by itself.
+ */
+const canon = (v: unknown): unknown => {
+  if (Array.isArray(v)) return v.map(canon);
+  if (v && typeof v === 'object') {
+    const o = v as Record<string, unknown>;
+    return Object.keys(o)
+      .sort()
+      .reduce<Record<string, unknown>>((acc, k) => {
+        acc[k] = canon(o[k]);
+        return acc;
+      }, {});
+  }
+  return v;
+};
+export const stamp = (v: unknown) => JSON.stringify(canon(v === undefined ? null : v));
