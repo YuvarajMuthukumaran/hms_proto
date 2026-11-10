@@ -153,13 +153,50 @@
   window.pgDictBits=bits;
   const __rp=psyRepaint;
   psyRepaint=function(){const r=__rp.apply(this,arguments);if(me()){try{bits(document);}catch(e){}}return r;};
+  /* ---------- Form C (Admission step 5): status, Upload signed copy and Collect e-signature, like the other consent forms ---------- */
+  const formPages=fid=>{
+    try{
+      const meta=CDF_FORMS&&CDF_FORMS[fid];if(!meta)return '';
+      CD_DATA=cdLoad();const it=cdItems(S.pid).find(i=>i.form&&i.form.id===fid),p=ptFind(S.pid);if(!it||!p)return '';
+      const ep=(CD_DATA.episodes||{})[p.id]||{};try{cdfPrefill(it,p,ep,meta);}catch(e){}
+      const vals=cdfVals(it.entryKey),auto=vals.__autoIds||{};
+      return meta.pages.map((pg,i)=>`<div class="cdf-page" style="width:${pg.w*CDF_K}px;height:${pg.h*CDF_K}px;margin:0 auto 10px"><img src="${pg.img}" alt="Form page ${i+1}" draggable="false">${pg.fields.map(f=>cdfFieldHtml(f,vals,!!auto[f.id],false)).join('')}</div>`).join('');
+    }catch(e){return '';}
+  };
+  /* the e-signature pop-up knows three forms; open it, then switch it to Form C (page images, title, and where Save stores the signature) */
+  window.pgFormCEsign=function(){
+    psyEsignOpen('form-e');
+    setTimeout(()=>{
+      const m=document.querySelector('.modal .mb,#modal .mb');if(!m)return;
+      const h=document.querySelector('.modal h3,#modal h3');if(h)h.textContent='Collect e-signature · Form C';
+      const f=m.querySelector('.es-form>div'),pg=formPages('form-c');if(f&&pg)f.innerHTML=pg;
+      const sm=[...m.querySelectorAll('.small')].find(x=>/Form E/.test(x.textContent));if(sm)sm.textContent='Form C · independent admission (Mental Healthcare Act)';
+      const save=[...document.querySelectorAll('.modal .mf button,#modal .mf button')].find(b=>/Save signature/.test(b.textContent));if(save)save.setAttribute('onclick',"psyEsignSave('form-c')");
+    },250);
+  };
+  const formC=v=>{
+    const card=[...v.querySelectorAll('section.card')].find(c=>{const h=c.querySelector('h3');return h&&/^Form C · Independent admission/.test(h.textContent.trim());});
+    if(!card||card.querySelector('.pg-fc'))return;
+    const review=[...card.querySelectorAll('button')].find(b=>/Review Form C/.test(b.textContent));if(!review)return;
+    const c=((psyPx(S.pid).consent)||{})['form-c'];
+    const st=c?(c.st==='esign'?'E-signed '+(c.at||'')+(c.by?' · '+c.by:''):c.st==='uploaded'?'Uploaded '+(c.at||'')+(c.file?' · '+c.file:''):'Signed '+(c.at||'')):'Not signed';
+    const row=document.createElement('div');row.className='pg-fc';row.style.cssText='display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px';
+    review.parentNode.insertBefore(row,review);review.remove(); /* no Review Form C button: Collect e-signature shows the whole form first */
+    row.insertAdjacentHTML('beforeend',`<span class="cs ${c?'':'due'}">${hesc(st)}</span><span style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap"><label class="btn keep" style="cursor:pointer">Upload signed copy<input type="file" hidden onchange="psyConsentUpload('form-c',this)"></label><button type="button" class="btn pri keep" onclick="pgFormCEsign()">Collect e-signature</button></span>`);
+  };
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
     if(me()){try{const v=$('view');if(v){bits(v);
       /* Admission > step 1 (Admission forms): no Form C row for the psychologist; Form C has its own step 5 */
+      formC(v);
       v.querySelectorAll('tr[data-formc]').forEach(r=>r.remove());
       /* Review Form C opens the form in the patient (same as the other forms), not the removed documents page */
+      v.querySelectorAll('button[onclick^="cdSelect("]').forEach(b=>{const m=(b.getAttribute('onclick')||'').match(/cdSelect\('([^']+)'\)/);if(m)b.setAttribute('onclick',"psyDocOpen('"+m[1]+"')");});}}catch(e){}}
+    /* the psychiatrist's Admission has the same two problems: a Form C row in step 1 and Review Form C opening the removed documents page */
+    if(S.role==='psychiatrist'){try{const v=$('view');if(v){
+      formC(v);
+      v.querySelectorAll('tr[data-formc]').forEach(r=>r.remove());
       v.querySelectorAll('button[onclick^="cdSelect("]').forEach(b=>{const m=(b.getAttribute('onclick')||'').match(/cdSelect\('([^']+)'\)/);if(m)b.setAttribute('onclick',"psyDocOpen('"+m[1]+"')");});}}catch(e){}}
     return out;
   };
