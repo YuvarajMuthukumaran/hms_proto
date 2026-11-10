@@ -49,6 +49,8 @@
   .pg-add:active{transform:translateY(0)}
   .pg-add .pg-pl{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;transition:transform .25s ease}
   .pg-add:hover .pg-pl{transform:rotate(90deg)}
+  .pg-ro{display:flex;align-items:center;gap:10px;padding:9px 16px;background:#f2f4f7;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink-2)}
+  .pg-ro-b{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:99px;padding:2px 9px;background:#fff;border:1px solid var(--line);color:#475467}
   .pg-ps{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:6px}
   .pg-risk{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border-radius:99px;padding:2px 10px}
   .pg-risk i{width:7px;height:7px;border-radius:50%;background:currentColor}
@@ -273,4 +275,30 @@
     el.style.cursor='help';
   });
   document.addEventListener('mouseout',e=>{if(e.target&&e.target.closest&&e.target.closest('#view'))tip.style.display='none';});
+
+  /* ---------- Rounds: the psychiatrist's Rounds page; medicines, monitoring and investigations are read only ---------- */
+  const __vr=vRounds;
+  vRounds=function(){
+    if(!me())return __vr.apply(this,arguments);
+    let h;try{h=asDoctor(__vr).apply(this,arguments);}catch(e){return __vr.apply(this,arguments);}
+    if(typeof h!=='string'||h.indexOf('pr-med')<0)return h;
+    const T=tpl(h),R=T.content;
+    const ro=(c,msg)=>{
+      c.querySelectorAll('button').forEach(b=>{if(!/^(Full chart|View)/.test(b.textContent.trim()))b.remove();});
+      c.querySelectorAll('input,select,textarea').forEach(x=>{x.disabled=true;});
+      c.insertAdjacentHTML('afterbegin',`<div class="pg-ro"><span class="pg-ro-b">Read only</span><span>${msg}</span></div>`);
+    };
+    R.querySelectorAll('section.card').forEach(c=>{
+      const t=((c.querySelector('h3,h4,.lbl')||{}).textContent||'').trim();
+      if(c.classList.contains('pr-med')||/^Medicine/.test(t))ro(c,'Medicines are added, changed and stopped by the psychiatrist.');
+      else if(/^(Monitoring|Investigations)/.test(t))ro(c,'Ordered by the psychiatrist.');
+    });
+    return T.innerHTML;
+  };
+  /* the note written on this page is the psychologist's round note */
+  const __cr=confirmRound;
+  confirmRound=function(){
+    if(me()){const R=S.rounds;if(R&&!R.tnote&&R.scribeNote)R.tnote=R.scribeNote;}
+    return __cr.apply(this,arguments);
+  };
 })();
