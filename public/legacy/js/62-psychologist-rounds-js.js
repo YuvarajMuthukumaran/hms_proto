@@ -63,7 +63,35 @@
 
   /* Today table, like the psychiatrist's dashboard: the first column is the Type (one plain word, the most urgent type of what is due),
      the Current psychopathology column is gone; Patient (with the High risk tag) and Ongoing interventions stay. */
+  /* The Type is one of the nine alert types the TL gave: Critical, Clinical event, Medication, Investigation, MHCA, Overdue review,
+     Admission, Documentation, Family. Each patient's items are worked out from the real record (alerts, events, calls, capacity,
+     admission day, notes and plans) and the most urgent type is shown. */
   const RANK=['Critical','Clinical event','Medication','Investigation','MHCA','Overdue review','Admission','Documentation','Family'];
+  const COLOR={'Critical':'red','Clinical event':'amber','Medication':'amber','Investigation':'amber','MHCA':'amber','Overdue review':'amber','Admission':'grey','Documentation':'grey','Family':'grey'};
+  const dueItems=pid=>{
+    const p=ptFind(pid)||{},c=(window.ptCtxOf?ptCtxOf(pid):{})||{},L=[],add=(cat,txt,due)=>L.push({cat,txt,due:due||''});
+    try{v3().alerts.filter(a=>a.pid===pid&&!a.closed).forEach(a=>{
+      const t=String(a.src||'')+' '+String(a.title||'');
+      const cat=a.sev==='critical'?'Critical':/refus|adverse|\bprn\b|\bsos\b|medic/i.test(t)?'Medication':/\blab\b|\becg\b|result/i.test(t)?'Investigation':'Clinical event';
+      add(cat,a.title,a.ack?'seen by '+a.ack.by:'new');});}catch(e){}
+    (c.events||[]).filter(e=>!e.ack).forEach(e=>{
+      const serious=/seizure|self-harm|abscond|chok|emergency/i.test(e.type||'')||/major|serious/i.test(e.sev||'');
+      add(serious?'Critical':/adverse drug/i.test(e.type||'')?'Medication':'Clinical event',(e.type||'Event'),e.when||'');});
+    if(!c.capacityDone)add('MHCA','Capacity assessment',(c.section==='90'?'fortnightly':'weekly')+' (Section '+(c.section||'89')+')');
+    if(p.day<=1)add('Admission','Admission workup and add psychologist','first 24 hours');
+    if(c.calls&&c.calls.h24!=='done')add('Admission','24-hour family call','');
+    if(c.calls&&c.calls.d34psych==='due')add('Family','Day 3 to 4 family call','');
+    try{if(!((S.eod||{})[pid]||{}).saved)add('Documentation','Daily note','today');}catch(e){}
+    try{if(c.historyStatus&&c.historyStatus!=='signed')add('Documentation','Detailed history',c.historyStatus==='overdue'?'overdue':'within 72 h');}catch(e){}
+    try{if(!((psyPx(pid).mgmtPsych)||{}).signed)add('Documentation','Management plan',p.day>7?'overdue':'this week');}catch(e){}
+    return L.sort((a,b)=>RANK.indexOf(a.cat)-RANK.indexOf(b.cat));
+  };
+  window.pgDueItems=dueItems;
+  const dueCell=L=>{
+    if(!L.length)return '<span class="tiny muted">Nothing due</span>';
+    const shown=L.slice(0,3);
+    return shown.map(i=>`<div class="pd-d"><i class="pd-dot ${COLOR[i.cat]==='red'?'red':COLOR[i.cat]==='amber'?'amber':'grey'}"></i><span><span class="pg-cat ${COLOR[i.cat]}">${hesc(i.cat)}</span>${hesc(i.txt)}${i.due?`<span class="tiny muted"> · ${hesc(i.due)}</span>`:''}</span></div>`).join('')+(L.length>3?`<div class="tiny muted" style="margin-top:4px">+${L.length-3} more</div>`:'');
+  };
   const __md=ROLE.psychologist.myday;
   ROLE.psychologist.myday=function(){
     const h=__md.apply(this,arguments);
@@ -74,19 +102,21 @@
       const ths=[...tbl.querySelectorAll('thead th')],pi=ths.findIndex(t=>/Current psychopathology/i.test(t.textContent));
       if(pi<0)return h;
       ths[pi].remove();ths[0].insertAdjacentHTML('beforebegin','<th>Type</th>');
-      tbl.querySelectorAll('tbody tr').forEach(tr=>{
-        if(!tr.hasAttribute('data-dt')){const td=tr.querySelector('td');if(td&&td.colSpan>1)td.colSpan=td.colSpan;return;}
+      tbl.querySelectorAll('tbody tr[data-dt]').forEach(tr=>{
         const tds=[...tr.children];
         if(tds[pi])tds[pi].remove();
-        const texts=[...tr.querySelectorAll('.pd-d span')].map(x=>x.textContent);
-        const hits=texts.map(t=>window.pgCatOf?pgCatOf(t):null).filter(Boolean).sort((a,b)=>RANK.indexOf(a[0])-RANK.indexOf(b[0]));
-        const top=hits[0]||(texts.length?['Documentation','grey']:null);
-        tr.insertAdjacentHTML('afterbegin',top?`<td><span class="pd-ty ${top[1]==='grey'?'':top[1]}">${hesc(top[0])}</span></td>`:'<td><span class="pd-ty" style="font-weight:500;color:#98a2b3">Up to date</span></td>');
-        const pid=(tr.innerHTML.match(/#\/patient\/([^/']+)\//)||[])[1],p=pid&&ptFind(pid),nm=tr.querySelector('.pd-nm');
+        const pid=(tr.innerHTML.match(/#\/patient\/([^/']+)\//)||[])[1],p=pid&&ptFind(pid),L=pid?dueItems(pid):[];
+        const top=L[0];
+        tr.insertAdjacentHTML('afterbegin',top?`<td><span class="pd-ty ${COLOR[top.cat]==='grey'?'':COLOR[top.cat]}">${hesc(top.cat)}</span></td>`:'<td><span class="pd-ty" style="font-weight:500;color:#98a2b3">Up to date</span></td>');
+        /* Due today lists every item with its type */
+        const cells=[...tr.children];if(cells[3])cells[3].innerHTML=dueCell(L);
+        tr.classList.remove('r-red','r-amber','r-blue');
+        if(top&&COLOR[top.cat]!=='grey')tr.classList.add(COLOR[top.cat]==='red'?'r-red':'r-amber');
+        const nm=tr.querySelector('.pd-nm');
         if(p&&p.risk&&nm&&!nm.querySelector('.pd-tag'))nm.insertAdjacentHTML('beforeend','<span class="pd-tag amber">High risk</span>');
       });
       const none=tbl.querySelector('#dtNone td');if(none)none.colSpan=5;
-      const cg=tbl.querySelector('colgroup');if(cg)cg.innerHTML='<col style="width:150px"><col style="width:270px"><col><col style="width:22%"><col style="width:210px">';
+      const cg=tbl.querySelector('colgroup');if(cg)cg.innerHTML='<col style="width:150px"><col style="width:270px"><col><col style="width:28%"><col style="width:210px">';
       return T.innerHTML;
     }catch(e){return h;}
   };
