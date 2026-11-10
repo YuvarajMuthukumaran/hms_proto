@@ -24,6 +24,16 @@
   .pg-rp-chip{display:inline-flex;align-items:center;gap:6px;background:#eff8ff;border:1px solid #84caff;color:#175cd3;border-radius:99px;padding:4px 6px 4px 12px;font-size:13.5px;font-weight:600}
   .pg-rp-chip button{border:0;background:#d1e0ff;color:#175cd3;width:20px;height:20px;border-radius:50%;line-height:1;cursor:pointer;font-weight:700}
   .pg-rp-ro{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;white-space:pre-wrap}
+  /* Today > Due today: one line per item, the dot carries the colour of its type */
+  .pg-dl{display:flex;flex-direction:column;gap:12px;padding:2px 0}
+  .pg-di{display:flex;align-items:flex-start;gap:12px}
+  .pg-dd{flex:none;width:9px;height:9px;border-radius:50%;margin-top:6px;background:#98a2b3;box-shadow:0 0 0 3px #f2f4f7}
+  .pg-dd.red{background:#e5484d;box-shadow:0 0 0 3px #fee4e2}
+  .pg-dd.amber{background:#f5a524;box-shadow:0 0 0 3px #fef0c7}
+  .pg-dt{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .pg-dt b{font-size:14.5px;font-weight:600;color:#101828;line-height:1.35}
+  .pg-dt span{font-size:12.5px;color:#667085}
+  .pg-dm{font-size:12.5px;font-weight:600;color:#175cd3;padding-left:21px}
   .pg-dict{display:inline-flex;align-items:center;gap:6px;margin-top:6px;border:1px solid #84caff;background:#eff8ff;color:#175cd3;border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
   .pg-dict.live{background:#175cd3;color:#fff;border-color:#175cd3}
   `;
@@ -90,7 +100,7 @@
   const dueCell=L=>{
     if(!L.length)return '<span class="tiny muted">Nothing due</span>';
     const shown=L.slice(0,3);
-    return shown.map(i=>`<div class="pd-d"><i class="pd-dot ${COLOR[i.cat]==='red'?'red':COLOR[i.cat]==='amber'?'amber':'grey'}"></i><span><span class="pg-cat ${COLOR[i.cat]}">${hesc(i.cat)}</span>${hesc(i.txt)}${i.due?`<span class="tiny muted"> · ${hesc(i.due)}</span>`:''}</span></div>`).join('')+(L.length>3?`<div class="tiny muted" style="margin-top:4px">+${L.length-3} more</div>`:'');
+    return `<div class="pg-dl">${shown.map(i=>`<div class="pg-di"><i class="pg-dd ${COLOR[i.cat]}" aria-hidden="true"></i><div class="pg-dt"><b>${hesc(i.txt)}</b>${i.due?`<span>${hesc(i.due)}</span>`:''}</div></div>`).join('')}${L.length>3?`<div class="pg-dm">+${L.length-3} more</div>`:''}</div>`;
   };
   const __md=ROLE.psychologist.myday;
   ROLE.psychologist.myday=function(){
