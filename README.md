@@ -7,7 +7,7 @@ they move into React components one screen at a time.
 
 | Part | Where |
 | --- | --- |
-| Role picker (login page) and role links `/lead`, `/psychiatrist`, `/psychologist`, `/nurse`, `/rmo` | `src/App.tsx`, `src/components/RolePicker.tsx`, `src/roles.ts` |
+| Role picker (login page) and role links `/lead`, `/floor-coordinator`, `/psychiatrist`, `/patient-experience-lead`, `/psychologist`, `/nurse`, `/rmo` | `src/App.tsx`, `src/components/RolePicker.tsx`, `src/roles.ts` |
 | Mounting the old screens | `src/components/LegacyPortal.tsx`, `src/legacy/loadLegacy.ts` |
 | Supabase sync (load, save, pull every 30 s, audit log), per-role write rules | `src/supabase/` |
 | Sync status pill ("Synced", "Demo data") | `src/components/SyncBadge.tsx` |
@@ -42,4 +42,4 @@ Supabase locally: copy `.env.example` to `.env.local` and fill the project URL a
 
 ## Deploy
 
-Same Vercel project and environment variables. `vercel.json` sets the Vite build and keeps the five role rewrites.
+Same Vercel project and environment variables. `vercel.json` sets the Vite build and rewrites all seven role links to the app shell.
