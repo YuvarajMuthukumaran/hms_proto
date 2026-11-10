@@ -6,11 +6,12 @@ import { RecordSync } from '../supabase/sync';
 import { setSyncStatus } from '../supabase/syncStore';
 import { SyncBadge } from './SyncBadge';
 import { Splash } from './Splash';
-import type { RoleKey } from '../roles';
+import { workspaceRole, type RoleKey } from '../roles';
 
 /** The inpatient workspace for one role. The screens are still the original ones (mounted from the old markup and scripts);
  *  login, role links and Supabase sync are React/TypeScript. Screens move into React components one at a time. */
 export function LegacyPortal({ role }: { role: RoleKey }) {
+  const screenRole = workspaceRole(role);
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
 
@@ -19,11 +20,11 @@ export function LegacyPortal({ role }: { role: RoleKey }) {
     let cancelled = false;
     (async () => {
       try {
-        const bridge = await bootLegacy(role, (m) => setError((prev) => prev || m));
+        const bridge = await bootLegacy(role, screenRole, (m) => setError((prev) => prev || m));
         if (!cancelled) setReady(true);
         const cfg = await loadSupabaseConfig();
         if (cancelled || !cfg) return;
-        sync = new RecordSync(cfg, bridge, role);
+        sync = new RecordSync(cfg, bridge, screenRole);
         await sync.start();
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
@@ -34,7 +35,7 @@ export function LegacyPortal({ role }: { role: RoleKey }) {
       cancelled = true;
       sync?.stop();
     };
-  }, [role]);
+  }, [role, screenRole]);
 
   return (
     <>

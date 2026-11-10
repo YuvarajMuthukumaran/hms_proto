@@ -35,9 +35,9 @@ function runScript(url: string, code: string) {
 let booted: Promise<LegacyBridge> | null = null;
 
 /** Loads the old portal once per page load. A role link is a real page load, so a page only ever runs one role. */
-export function bootLegacy(role: RoleKey, onError: (message: string) => void): Promise<LegacyBridge> {
+export function bootLegacy(role: RoleKey, viewRole: RoleKey, onError: (message: string) => void): Promise<LegacyBridge> {
   if (booted) return booted;
-  window.__TULASI__ = { role };
+  window.__TULASI__ = { role, viewRole };
   // The first block draws the page before the later blocks exist, so opening a page such as #/admissions directly throws once
   // ("vNewAdm is not defined") and then recovers when the bridge redraws. Only a script that cannot even be parsed is shown at
   // once; anything else is shown only if the portal really fails to start.

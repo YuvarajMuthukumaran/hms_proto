@@ -3,6 +3,7 @@ import type { RoleKey } from '../roles';
 /** What the React shell hands to the legacy portal before its scripts run. */
 export interface TulasiBoot {
   role: RoleKey;
+  viewRole: RoleKey;
 }
 
 export interface AuditEntry {

@@ -5,18 +5,19 @@
      read and write a patient's records, hear about renders, new patients and audit entries. */
 (function(){
   const boot=window.__TULASI__||{};
-  const lock=boot.role||'';
-  const NAMES={lead:'Floor lead',psychiatrist:'Psychiatrist',psychologist:'Psychologist',nurse:'Nurse',rmo:'RMO on duty'};
+  const requested=boot.role||'';
+  const lock=boot.viewRole||requested;
+  const NAMES={lead:'Floor lead','floor-coordinator':'Floor Co-ordinator',psychiatrist:'Psychiatrist','patient-experience-lead':'Patient Experience Lead',psychologist:'Psychologist',nurse:'Nurse',rmo:'RMO on duty'};
   const nameOf=r=>NAMES[r]||r;
   const linkOf=r=>location.origin+'/'+r;
 
   /* locked: the role cannot change inside this link */
   if(lock){
     if(S.role!==lock){S.role=lock;S.tf='';S.rtf='';}
-    document.title='Tulasi · '+nameOf(lock);
+    document.title='Tulasi · '+nameOf(requested);
     const __setRole=setRole;
     setRole=function(r){
-      if(r!==lock){toast('This link is for '+nameOf(lock)+'. Open the '+nameOf(r)+' link instead.');return;}
+      if(r!==lock){toast('This link is for '+nameOf(requested)+'. Open the '+nameOf(r)+' link instead.');return;}
       return __setRole.apply(this,arguments);
     };
   }
@@ -27,7 +28,7 @@
     __acc.apply(this,arguments);
     const f=document.querySelector('#modal .mf');
     if(f)f.insertAdjacentHTML('afterbegin','<button class="btn" onclick="TulasiBridge.logout()">Log out</button>');
-    const b=document.querySelector('#modal .mb'),r=lock||S.role;
+    const b=document.querySelector('#modal .mb'),r=requested||S.role;
     if(b&&r)b.insertAdjacentHTML('beforeend',`<div class="callout grey small" style="margin-top:12px">Your link: <b>${hesc(linkOf(r))}</b><div class="tiny muted" style="margin-top:4px">Each role has its own link. Bookmark this one; it opens ${hesc(nameOf(r))} only.</div></div>`);
   };
 

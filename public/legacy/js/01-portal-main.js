@@ -103,7 +103,7 @@ function go(h){location.hash=h;}
 function chip(text,c){return `<span class="chip ${c}">${text}</span>`;}
 /* SNDT (signature, name, date, time): every entry says who did it and when */
 const atNow=()=>{const d=new Date();return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+', '+d.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});};
-const signer=()=>__me0().name;
+const signer=()=>me().name;
 const whoAt=()=>({by:signer(),at:atNow()});
 const byl=(by,at,verb)=>by?`<span class="byl">${verb?verb+' ':''}${by}${at?' · '+at:''}</span>`:'';
 /* every task marked done records who did it and when */
@@ -2105,7 +2105,13 @@ const __due = () => S.role==='nurse' ? dueItems().filter(d=>['vitals','orders'].
 
 /* ===== login hand-off, file saving, demo reset ===== */
 const ROLES = {lead:{name:'Floor lead',short:'Floor lead',ini:'FL',title:'Male ward'},psychiatrist:{name:'Psychiatrist',short:'Psychiatrist',ini:'PS',title:'Treating doctor'},psychologist:{name:'Psychologist',short:'Psychologist',ini:'PY',title:'Therapy and counselling'},rmo:{name:'RMO on duty',short:'RMO',ini:'RMO',title:'Ward duty doctor'},nurse:{name:'Nurse',short:'Nurse',ini:'NU',title:'Male ward'}};
-const me = () => ROLES[S.role] || __me0();
+const me = () => {
+  const current=ROLES[S.role] || __me0(), requested=window.__TULASI__&&window.__TULASI__.role;
+  if(requested==='rmo')return {...current,name:'Dr. Sameer Khan',short:'Dr. Sameer',ini:'SK',title:'RMO on duty'};
+  if(requested==='floor-coordinator')return {...current,name:'Floor Co-ordinator',short:'Floor Co-ordinator',title:'Floor Co-ordinator'};
+  if(requested==='patient-experience-lead')return {...current,name:'Patient Experience Lead',short:'Patient Experience',title:'Patient Experience Lead'};
+  return current;
+};
 let __dl = null;
 try { if (window.claude && window.claude.use) window.claude.use('downloads').then(d => { __dl = d || null; }).catch(() => {}); } catch (e) {}
 function __slug(s){return String(s).replace(/<[^>]+>/g,'').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_').slice(0,60)||'document';}
