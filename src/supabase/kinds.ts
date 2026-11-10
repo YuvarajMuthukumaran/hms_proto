@@ -7,7 +7,7 @@ export const CONTEXT_KINDS = {
   psychology: ['psychRows', 'therapyNotes', 'dn'],
   consents: ['consents'],
   events: ['events', 'restraints', 'pgriev'],
-  prefs: ['diet', 'pf', 'pfAt', 'pfUp', 'prefBy', 'contacts', 'billing'],
+  prefs: ['diet', 'pf', 'pfAt', 'pfUp', 'prefBy', 'contacts', 'billing', 'famCons'],
   vitals: ['vit', 'sugar', 'sugarHd', 'adh', 'adhT', 'vc', 'monx', 'nsum'],
 } as const satisfies Record<string, readonly string[]>;
 
