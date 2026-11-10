@@ -2,7 +2,7 @@ export const ROLES = [
   { key: 'lead', label: 'Floor lead', desc: 'Whole floor, all wards and psychiatrists' },
   { key: 'floor-coordinator', label: 'Floor Co-ordinator', desc: 'Floor overview, admissions and ward coordination' },
   { key: 'psychiatrist', label: 'Psychiatrist', desc: 'Your inpatients, rounds and orders' },
-  { key: 'patient-experience-lead', label: 'Patient Experience Lead', desc: 'Patient records, family updates and patient experience' },
+  { key: 'patient-experience-lead', label: 'Patient Experience Lead', desc: 'Review concerns, log grievances and update preferences' },
   { key: 'psychologist', label: 'Psychologist', desc: 'Therapy, daily notes and family updates' },
   { key: 'nurse', label: 'Nurse', desc: 'Ward care, vitals and medicine chart' },
   { key: 'rmo', label: 'RMO on duty', desc: 'Psychiatrist workspace for rounds, records and orders' },
