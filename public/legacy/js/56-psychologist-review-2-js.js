@@ -33,9 +33,33 @@
   body.psg .pn-ql{font-size:15px;font-weight:600;color:var(--ink-2);margin:10px 0 8px}
   body.psg .pn-ql span{font-size:11px;font-weight:500;margin-left:6px}
   body.psg .pn-o{padding:6px 14px!important;font-size:14px!important;min-height:34px!important;border-radius:99px}
+  /* one screen, no scrolling: the progress/preview column is gone and the four groups sit side by side */
+  body.psg .pn{grid-template-columns:minmax(0,1fr)!important}
+  body.psg .pn-side{display:none!important}
+  body.psg .pn-main>.pn-bar{position:static!important;box-shadow:none!important;border-radius:0!important;padding:10px 18px}
   @media (min-width:900px){
     body.psg .pn-main{grid-template-columns:repeat(2,minmax(0,1fr))}
     body.psg #pnS-0,body.psg #pnS-2{border-right:1px solid var(--line)!important}
+  }
+  @media (min-width:1250px){
+    body.psg .pn-main{grid-template-columns:repeat(4,minmax(0,1fr))}
+    body.psg .pn-main>.pn-step{border-bottom:0!important;border-right:1px solid var(--line)!important}
+    body.psg #pnS-3{border-right:0!important}
+    body.psg .pn-main>.pn-bar{border-top:1px solid var(--line)}
+    body.psg .pn-step .pn-h{padding:12px 16px 2px}
+    body.psg .pn-step .pn-body{padding:2px 16px 12px!important}
+    body.psg .pn-ql{margin:6px 0 4px;font-size:13.5px}
+    body.psg .pn-main>.pn-bar{padding:8px 18px}
+    body.psg .eodhd{padding:6px 18px!important}
+    body.psg .pn-o{padding:4px 10px!important;font-size:12.5px!important;min-height:28px!important}
+    body.psg .pn-os{gap:5px}
+    body.psg .pn-pt{margin-bottom:6px}
+    body.psg .pn-ph{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+    body.psg .pn-ph button{padding:3px 9px;font-size:12px;min-height:26px}
+    body.psg .pn-q textarea{min-height:56px}
+    body.psg .eodhd{padding:10px 18px}
+    body.psg .estrip{padding:6px 18px}
+    body.psg .pn-wrap{margin:0}
   }
   /* Rounds: Medicines and the therapeutic plan side by side, using the full width */
   body.psg .rbox:has(.rquad){display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,2fr);gap:12px;align-items:start;border:0;background:none;box-shadow:none;padding:0}
@@ -300,5 +324,14 @@
   confirmRound=function(){
     if(me()){const R=S.rounds;if(R&&!R.tnote&&R.scribeNote)R.tnote=R.scribeNote;}
     return __cr.apply(this,arguments);
+  };
+
+  /* the therapy brief moves under Significant events so the four groups are about the same height (fits one screen) */
+  const __pi=psyInner;
+  psyInner=function(){
+    const h=__pi.apply(this,arguments);if(!me()||typeof h!=='string')return h;
+    try{const T=tpl(h),R=T.content,q=R.querySelector('#q-brief'),b=R.querySelector('#pnS-3 .pn-body');
+      if(q&&b){b.appendChild(q);return T.innerHTML;}}catch(e){}
+    return h;
   };
 })();
