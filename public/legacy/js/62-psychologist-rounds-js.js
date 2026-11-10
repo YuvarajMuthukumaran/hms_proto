@@ -44,21 +44,6 @@
       <div class="pg-rp-b"><h4>Management plan</h4><div class="pg-rp-sub">Read only. Your plan for this stay.</div><div class="pg-rp-ro">${plan?hesc(plan):'Not written yet.'}</div>
         <div class="row" style="margin-top:10px;gap:8px"><button class="btn sm" onclick="pgMpModal('${pid}')">${m.signed?'View management plan':'Open management plan'}</button></div></div></section>`;
   };
-  const __vr=vRounds;
-  vRounds=function(){
-    const h=__vr.apply(this,arguments);
-    if(!me()||typeof h!=='string')return h;
-    try{
-      const pid=curPid();if(!pid)return h;
-      const T=tpl(h),R=T.content;if(R.querySelector('#pgRp'))return h;
-      const save=[...R.querySelectorAll('button')].find(b=>/Save and next patient/.test(b.textContent));
-      const holder=save&&(save.closest('.row,.bar,.foot,div')||save.parentElement);
-      const html=tpl(card(pid)).content;
-      if(holder&&holder.parentNode)holder.parentNode.insertBefore(html,holder);else R.appendChild(html);
-      return T.innerHTML;
-    }catch(e){return h;}
-  };
-
   /* Dictate next to the Therapy brief (words only; nothing is recorded or stored) */
   let rec=null;
   const stop=()=>{try{if(rec){rec.onend=null;rec.stop();}}catch(e){}rec=null;document.querySelectorAll('.pg-dict.live').forEach(b=>{b.classList.remove('live');b.textContent='Dictate';});};

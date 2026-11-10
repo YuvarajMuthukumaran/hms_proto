@@ -2,7 +2,6 @@
    1. Today: three tabs, My patients, Ward patients, All patients (the same table, more rows).
    2. Take Action opens pop-ups for that one patient (daily note, therapy session, management plan, action taken) instead of going to another page.
    3. Management Plan: therapy plan free text, planned assessments and planned behavioural activations; a read view once it is signed.
-   4. Rounds: the Medicines, Monitoring and Investigations boxes are not shown to the psychologist (the therapy plan sits in the Rounds page).
    Every change is gated by S.role==='psychologist'. */
 (function(){
   const me=()=>S.role==='psychologist';
@@ -132,20 +131,5 @@
     if(m.signed)return `<section class="card"><div class="hd"><div><h3>Management Plan · Psychologist</h3><div class="small muted" style="margin-top:4px">Read view. Your plan for therapy during this stay.</div></div></div><div style="padding:0 20px 20px">${mpRead(m)}</div></section>`;
     return `<section class="card"><div class="hd"><div><h3>Management Plan · Psychologist</h3><div class="small muted" style="margin-top:4px">Done once when the patient is admitted. After you sign it, this page shows the plan as a read view.</div></div></div>
       <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:14px">${mpForm(m)}<div class="row" style="justify-content:flex-end"><button class="btn pri" onclick="psychMpSign()">Sign the plan</button></div></div></section>`;
-  };
-
-  /* ---------- 4. Rounds: no Medicines, Monitoring or Investigations boxes for the psychologist ---------- */
-  const __vr=vRounds;
-  vRounds=function(){
-    const h=__vr.apply(this,arguments);
-    if(!me()||typeof h!=='string')return h;
-    try{
-      const T=tpl(h),R=T.content;
-      R.querySelectorAll('section.card').forEach(c=>{
-        const t=((c.querySelector('h3,h4,.lbl')||{}).textContent||'').trim();
-        if(c.classList.contains('pr-med')||/^(Medicine|Monitoring|Investigations|Referral|Risks and instructions)/.test(t))c.remove();
-      });
-      return T.innerHTML;
-    }catch(e){return h;}
   };
 })();
