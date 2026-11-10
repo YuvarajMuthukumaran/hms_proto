@@ -87,7 +87,7 @@
     const list=sc==='mine'?o.list.filter(p=>mine.includes(p.id)):o.list;
     const sw=`<div class="pg-mine" role="tablist" aria-label="Which patients"><button role="tab" aria-selected="${sc==='mine'}" class="${sc==='mine'?'on':''}" onclick="pgPatScope('mine')">Mine</button><button role="tab" aria-selected="${sc==='ward'}" class="${sc==='ward'?'on':''}" onclick="pgPatScope('ward')">Whole ward</button></div>`;
     const o2=Object.assign({},o,{list,total:list.length,mh:'Next due',title:sc==='mine'?'My inpatients':'Whole ward',filters:sw+(o.filters||''),
-      c6:p=>{const L=dueItems(p);return L.length?`<div class="pg-due">${L.map(i=>`<div>${catTag(i[2]||['Documentation','grey'])}${hesc(i[0])} <span class="tiny muted">· ${hesc(i[1])}</span></div>`).join('')}</div>`:'<span class="tiny muted">Nothing due</span>';}});
+      c6:p=>{const L=dueItems(p);return L.length?`<div class="pg-due">${L.map(i=>`<div>${hesc(i[0])} <span class="tiny muted">· ${hesc(i[1])}</span></div>`).join('')}</div>`:'<span class="tiny muted">Nothing due</span>';}});
     return base(o2);
   };
 
