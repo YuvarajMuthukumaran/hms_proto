@@ -26,6 +26,7 @@ const SAVE_DELAY_MS = 1_200;
 export class RecordSync {
   private readonly client: SupabaseClient;
   private readonly saved = new Map<string, string>(); // "<patient>|<kind>" -> text form last saved or loaded
+  private readonly seen = new Map<string, string>(); // same keys -> the server's text we already applied (so a re-save of the same content never redraws the page)
   private since = '';
   private sinceDocs = '';
   private busy = false;
@@ -191,9 +192,12 @@ export class RecordSync {
       this.since = r.updated_at;
       const key = `${r.patient_id}|${r.kind}`;
       const text = stamp(r.data);
-      if (this.saved.get(key) === text) continue;
+      if (this.saved.get(key) === text || this.seen.get(key) === text) continue;
       this.bridge.apply(r.patient_id, r.kind, keysOf(r.kind), r.data);
-      this.saved.set(key, text);
+      this.seen.set(key, text);
+      // what this browser shows now is what it would save back; never save the same content again just because it reads differently
+      const now = this.read(r.patient_id, r.kind);
+      this.saved.set(key, now != null ? stamp(now) : text);
       n++;
     }
 
@@ -203,9 +207,21 @@ export class RecordSync {
     if (docErr) throw new Error(`${docErr.code ?? ''} ${docErr.message}`.trim());
     const docRows = (docs ?? []) as Array<DocRow & { updated_at: string }>;
     if (docRows.length) {
-      n += this.bridge.applyDocs(docRows);
+      // Only documents whose content really differs from what this browser already has are applied (and redraw the page).
+      // Another browser re-saving the same documents moves their updated_at, but that is not a change for us.
+      const fresh = docRows.filter((d) => {
+        const text = stamp(d.doc ?? {});
+        return this.saved.get(`doc|${d.entry_key}`) !== text && this.seen.get(`doc|${d.entry_key}`) !== text;
+      });
+      if (fresh.length) n += this.bridge.applyDocs(fresh);
+      const local = fresh.length ? this.bridge.docs() : null;
       docRows.forEach((d) => {
-        this.saved.set(`doc|${d.entry_key}`, stamp(d.doc ?? {}));
+        const k = `doc|${d.entry_key}`,text = stamp(d.doc ?? {});
+        if (fresh.includes(d)) {
+          this.seen.set(k, text);
+          const submission = local?.submissions.find((x) => x.entryKey === d.entry_key) ?? null;
+          this.saved.set(k, stamp({ submission, fills: local?.fills[d.entry_key] ?? null }));
+        } else if (!this.saved.has(k)) this.saved.set(k, text);
         this.sinceDocs = d.updated_at;
       });
     }
