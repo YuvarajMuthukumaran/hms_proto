@@ -23,28 +23,6 @@
   css.textContent=`
   body.pgr .pr-grid{gap:22px;align-items:start}
 
-  /* ---------- the round, as a route down the ward ---------- */
-  /* the rail keeps the base's sticky position (it follows you down the sheet): only its skin changes here */
-  body.pgr .pr-queue{background:transparent;border:0;box-shadow:none;padding:4px 0;overflow:visible}
-  body.pgr .pr-queue>div:first-child{padding:0 0 10px 30px}
-  body.pgr .pr-queue .lbl{font-size:11.5px;letter-spacing:.01em;text-transform:none;color:var(--muted);font-weight:600}
-  body.pgr .pr-queue .ebar{display:none}
-  body.pgr .pr-queue::before{content:"";position:absolute;left:10.5px;top:34px;bottom:14px;width:3px;border-radius:3px;z-index:0;
-    background:linear-gradient(#7f56d9 0 0) no-repeat, #e4e7ec;background-size:100% var(--pgr-walked,0%)}
-  body.pgr .pr-q{z-index:1}
-  body.pgr .pr-q{position:relative;display:flex;align-items:center;gap:10px;width:100%;
-    padding:11px 12px 11px 30px;margin:0;border:0;border-radius:11px;background:transparent;text-align:left;
-    transition:background .14s ease,transform .14s ease}
-  body.pgr .pr-q:hover{background:#f6f7f9}
-  body.pgr .pr-q:focus-visible{outline:2px solid #6941c6;outline-offset:2px}
-  body.pgr .pr-q .pr-dot{position:absolute;left:5px;top:50%;margin-top:-7px;width:14px;height:14px;border-radius:50%;
-    background:#fff;border:2px solid #d5d9e0;box-shadow:none;transition:border-color .16s ease,background .16s ease}
-  body.pgr .pr-q[data-seen] .pr-dot{background:#7f56d9;border-color:#7f56d9}
-  body.pgr .pr-q[data-seen]>span:nth-child(2){color:var(--muted)}
-  body.pgr .pr-q.on{background:#f7f5ff;transform:translateX(3px)}
-  body.pgr .pr-q.on .pr-dot{left:2px;margin-top:-10px;width:20px;height:20px;border-color:#6941c6;border-width:3px;background:#fff}
-  body.pgr .pr-q.on>span:nth-child(2){font-weight:700}
-  body.pgr .pr-q .pr-tag{margin-left:auto}
 
   /* ---------- one sheet, not six cards ---------- */
   body.pgr .pr-grid>div:last-child{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
@@ -89,7 +67,6 @@
   /* the generic per-redraw entrance stagger is gone; motion answers an action instead */
   body.pgr .pr-vit,body.pgr .pr-vi,body.pgr .enter,body.pgr .pr-grid [style*="--el"]{
     animation:none!important;opacity:1!important;transform:none!important}
-  body.pgr .pr-queue::before{transition:background-size .34s cubic-bezier(.4,0,.2,1)}
 
   @media (prefers-reduced-motion:reduce){
     body.pgr .pr-q,body.pgr .pr-queue::before,body.pgr .pg-rp-chip{transition:none!important;animation:none!important}
