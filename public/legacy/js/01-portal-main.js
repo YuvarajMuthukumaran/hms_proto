@@ -148,7 +148,7 @@ function renderSide(route){
     ${nav('#/existing/Setting',icon.gear,'Setting',false)}
     <div class="me" style="cursor:pointer" onclick="accountModal()" title="Account and log out"><div class="row" style="gap:10px">${av(m.ini,32)}<div class="who"><div style="font-weight:600;font-size:13px">${m.name}</div><div class="tiny muted">${m.title}</div></div></div></div>`;
   $('topAv').textContent = m.ini; $('topName').textContent = m.short;
-  $('roleSeg').innerHTML = [['lead','Floor lead'],['psychiatrist','Psychiatrist'],['psychologist','Psychologist'],['nurse','Nurse'],['rmo','RMO on duty']].map(([k,l])=>`<button class="${S.role===k?'on':''}" onclick="setRole('${k}')">${l}</button>`).join('');
+  $('roleSeg').innerHTML = [['lead','Floor Coordinator'],['psychiatrist','Psychiatrist'],['psychologist','Psychologist'],['nurse','Nurse'],['rmo','RMO on duty']].map(([k,l])=>`<button class="${S.role===k?'on':''}" onclick="setRole('${k}')">${l}</button>`).join('');
 }
 
 /* ---------- journey ---------- */
@@ -2104,11 +2104,12 @@ const __due = () => S.role==='nurse' ? dueItems().filter(d=>['vitals','orders'].
 
 
 /* ===== login hand-off, file saving, demo reset ===== */
-const ROLES = {lead:{name:'Floor lead',short:'Floor lead',ini:'FL',title:'Male ward'},psychiatrist:{name:'Psychiatrist',short:'Psychiatrist',ini:'PS',title:'Treating doctor'},psychologist:{name:'Psychologist',short:'Psychologist',ini:'PY',title:'Therapy and counselling'},rmo:{name:'RMO on duty',short:'RMO',ini:'RMO',title:'Ward duty doctor'},nurse:{name:'Nurse',short:'Nurse',ini:'NU',title:'Male ward'}};
+const ROLES = {lead:{name:'Floor Coordinator',short:'Floor Coordinator',ini:'FC',title:'Male ward'},psychiatrist:{name:'Psychiatrist',short:'Psychiatrist',ini:'PS',title:'Treating doctor'},psychologist:{name:'Psychologist',short:'Psychologist',ini:'PY',title:'Therapy and counselling'},rmo:{name:'RMO on duty',short:'RMO',ini:'RMO',title:'Ward duty doctor'},nurse:{name:'Nurse',short:'Nurse',ini:'NU',title:'Male ward'}};
 const me = () => {
   const current=ROLES[S.role] || __me0(), requested=window.__TULASI__&&window.__TULASI__.role;
   if(requested==='rmo')return {...current,name:'Dr. Sameer Khan',short:'Dr. Sameer',ini:'SK',title:'RMO on duty'};
-  if(requested==='floor-coordinator')return {...current,name:'Dr. Nandini Rao',short:'Dr. Nandini',ini:'NR',title:'Floor Lead Psychiatrist'};
+  if(requested==='floor-lead-psychiatrist')return {...current,name:'Dr. Nandini Rao',short:'Dr. Nandini',ini:'NR',title:'Floor Lead Psychiatrist'};
+  if(requested==='floor-lead-psychologist')return {...current,name:'Priya Nair',short:'Priya',ini:'PN',title:'Floor Lead Psychologist'};
   if(requested==='patient-experience-lead')return {...current,name:'Patient Experience Lead',short:'Patient Experience',title:'Patient Experience Lead'};
   return current;
 };
@@ -3282,7 +3283,7 @@ V3.clockUI = () => { const e=$('v3clock'); if(!e)return; e.innerHTML=`<span clas
 
 /* ---------- small helpers ---------- */
 V3.who = { nurse:'Sister Rekha', rmo:'Dr. Sameer Khan', psychiatrist:'Dr. Aanya Sharma', lead:'Dr. Nandini Rao', psychologist:'Priya Nair' };
-V3.roleName = { nurse:'Nurse', rmo:'RMO', psychiatrist:'Psychiatrist', lead:'Floor lead', psychologist:'Psychologist', family:'Family', system:'System' };
+V3.roleName = { nurse:'Nurse', rmo:'RMO', psychiatrist:'Psychiatrist', lead:'Floor Coordinator', psychologist:'Psychologist', family:'Family', system:'System' };
 V3.byMe = () => V3.who[S.role] || 'Staff';
 V3.P = pid => allPts().find(x => x.id === pid);
 V3.pn = pid => (V3.P(pid)||{}).name || pid;

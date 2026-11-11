@@ -8,7 +8,7 @@
   const PSYX_SHARED=['mgmtPsych','th','roundPlan','monTables','assignedAssess']; /* the parts of psyx that the psychologist writes (see readCtx) */
   const requested=boot.role||'';
   const lock=boot.viewRole||requested;
-  const NAMES={lead:'Floor lead','floor-coordinator':'Floor Lead Psychiatrist',psychiatrist:'Psychiatrist','patient-experience-lead':'Patient Experience Lead',psychologist:'Psychologist',nurse:'Nurse',rmo:'RMO on duty'};
+  const NAMES={lead:'Floor Coordinator','floor-coordinator':'Floor Coordinator','floor-lead-psychiatrist':'Floor Lead Psychiatrist','floor-lead-psychologist':'Floor Lead Psychologist',psychiatrist:'Psychiatrist','patient-experience-lead':'Patient Experience Lead',psychologist:'Psychologist',nurse:'Nurse',rmo:'RMO on duty'};
   const nameOf=r=>NAMES[r]||r;
   const linkOf=r=>location.origin+'/'+r;
 

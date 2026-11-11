@@ -7,7 +7,7 @@
    person, and a CSV download for appraisals. It only reads what the alert engine already records (v3().alerts); it changes nothing. */
 (function(){
   const lead=()=>S.role==='lead';
-  const RN={rmo:'RMO',psychiatrist:'Psychiatrist',lead:'Floor lead',nurse:'Nurse'};
+  const RN={rmo:'RMO',psychiatrist:'Psychiatrist',lead:'Floor Coordinator',nurse:'Nurse'};
   const css=document.createElement('style');css.id='lead-audit-css';
   css.textContent=`
   .au{display:flex;flex-direction:column;gap:14px}

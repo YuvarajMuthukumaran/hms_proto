@@ -58,7 +58,7 @@
   .pd-who2{display:flex;align-items:center;gap:12px}.pd-who2 h3{font-size:19px;margin:0}.pd-who2 .tiny{margin-top:2px}
   .pd-empty{padding:28px;text-align:center;color:var(--muted)}
   /* narrow windows: drop the Actions taken column so the buttons stay in view (it is still in the eye window) */
-  @media (max-width:1180px){.pd-t col:nth-child(4){display:none}.pd-t th:nth-child(4),.pd-t td:nth-child(4){display:none}.pd-t{min-width:720px!important}}
+  @media (max-width:1180px){.pd-t col:nth-child(3){width:auto!important}.pd-t col:nth-child(4){display:none}.pd-t th:nth-child(4),.pd-t td:nth-child(4){display:none}.pd-t{min-width:720px!important}}
   #pdMenu{position:fixed;z-index:120;width:300px;max-width:calc(100vw - 24px);background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px rgba(15,23,42,.18);padding:6px}
   #pdMenu .pdm-i{display:block;width:100%;text-align:left;border:0;background:none;font:inherit;padding:9px 12px;border-radius:9px;cursor:pointer;color:var(--ink)}
   #pdMenu .pdm-i:hover{background:var(--soft)}#pdMenu .pdm-i b{display:block;font-size:14px;font-weight:600}
@@ -238,11 +238,11 @@
     return `<div class="pd">
       <div class="pd-bar"><input class="input" id="dtQ" style="width:280px;min-height:40px;margin:0" placeholder="Type a name" oninput="dtFilter()" aria-label="Search patients">
         <div class="row" style="gap:8px"><button class="btn" onclick="go('#/admissions')">New admission</button><button class="btn pri" onclick="go('#/rounds')">Start rounds</button></div></div>
-      ${openRows.length?`<div style="overflow-x:auto"><table class="pd-t" style="min-width:900px"><colgroup><col style="width:122px"><col style="width:190px"><col><col style="width:21%"><col style="width:216px"></colgroup>
+      ${openRows.length?`<div style="overflow-x:auto"><table class="pd-t" style="min-width:900px"><colgroup><col style="width:122px"><col style="width:190px"><col style="width:31%"><col><col style="width:216px"></colgroup>
         <thead><tr><th>Type</th><th>Patient</th><th>Event</th><th>Action taken by others</th><th></th></tr></thead>
         <tbody id="dtBody">${openRows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="5" class="pd-empty">No patient matches</td></tr></tbody></table></div>`
       :`<section class="card"><div class="pd-empty">Nothing needs you right now. You can start your rounds when you are ready.</div></section>`}
-      ${doneRows.length?`<section class="pd-completed"><div class="lbl" style="margin:10px 0 6px">Completed actions</div><div style="overflow-x:auto"><table class="pd-t" style="min-width:900px"><colgroup><col style="width:122px"><col style="width:190px"><col><col style="width:21%"><col style="width:216px"></colgroup>
+      ${doneRows.length?`<section class="pd-completed"><div class="lbl" style="margin:10px 0 6px">Completed actions</div><div style="overflow-x:auto"><table class="pd-t" style="min-width:900px"><colgroup><col style="width:122px"><col style="width:190px"><col style="width:31%"><col><col style="width:216px"></colgroup>
         <thead><tr><th>Type</th><th>Patient</th><th>Event</th><th>Action taken</th><th></th></tr></thead><tbody>${doneRows.map(r=>r.doneHtml).join('')}</tbody></table></div></section>`:''}
     </div>`;
   }

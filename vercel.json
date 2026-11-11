@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/(lead|floor-coordinator|psychiatrist|patient-experience-lead|psychologist|nurse|rmo)", "destination": "/index.html" }
+    { "source": "/(lead|floor-coordinator|floor-lead-psychiatrist|floor-lead-psychologist|psychiatrist|patient-experience-lead|psychologist|nurse|rmo)", "destination": "/index.html" }
   ],
   "functions": {
     "api/scribe.js": { "maxDuration": 60 }

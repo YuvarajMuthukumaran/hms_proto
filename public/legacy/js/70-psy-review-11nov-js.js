@@ -625,6 +625,64 @@
     psyPdf(d.title,d.html,p);
   };
 
+  /* ---------- 3b. Past admissions: big folders with the small folders inside (team review 11 Nov, Nikita: "a big folder, then the subfolders") ----------
+     The 25 flat folders of one admission are grouped under eight big folders. Closed by default; the small folders keep their own open state.
+     Psychiatrist only. "View full file" and the PDF read the small folders as before (they are found inside the big ones). */
+  const PBIG=[
+    ['Admission and consents',['Identity proof','Admission consent form','Application form','High risk informed consent','Form C and Form E','Admission notes']],
+    ['Assessments',['Capacity assessment','Weekly re-assessments','Psycho-diagnostic scales','Detailed case history']],
+    ['Treatment plans and notes',['Management plans','Daily notes · psychiatrist','Daily notes · psychologist','Round notes','Outing notes']],
+    ['Therapy and family',['Therapy and family sessions','Family consultation','WhatsApp chats']],
+    ['Medicines and investigations',['Prescription','Medicine charts','Investigation reports','Medicine reconciliation form']],
+    ['Nursing and nutrition',['Nursing admission assessment','Daily nursing assessment','Nursing daily notes','Nutritional assessment']],
+    ['Discharge',['Discharge consent','Discharge summary','Discharge checklist']],
+    ['Other',['Other notes']]
+  ];
+  const pbCss=document.createElement('style');pbCss.id='psy-pbig-css';
+  pbCss.textContent=`.pbig{border:1px solid var(--line);border-radius:14px;background:#fff;margin:0 16px 10px;overflow:hidden}
+  .pbig>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:13px 16px;font-weight:700;font-size:15px;background:#f8fafc}
+  .pbig>summary::-webkit-details-marker{display:none}
+  .pbig>summary::after{content:'›';margin-left:auto;color:var(--muted);font-size:20px;transition:transform .15s}
+  .pbig[open]>summary::after{transform:rotate(90deg)}
+  .pbig[open]>summary{border-bottom:1px solid var(--line)}
+  .pbig-m{font-size:12px;font-weight:500;color:var(--muted)}
+  .pbig-body{padding:10px 0 2px}
+  .pbig .pf{margin:0 14px 8px}`;
+  document.head.appendChild(pbCss);
+  const __pbig=pPast;
+  pPast=function(){
+    const h=__pbig.apply(this,arguments);
+    if(!psy()||typeof h!=='string')return h;
+    const t=document.createElement('template');t.innerHTML=h;
+    const FOLDIC='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#175cd3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+    [...t.content.querySelectorAll('section.card')].forEach((card,ai)=>{
+      const pfs=[...card.children].filter(e=>e.matches&&e.matches('details.pf'));
+      if(!pfs.length)return;
+      const nameOf=f=>((f.querySelector(':scope>summary>span')||{}).textContent||'').trim();
+      const used=new Set(),big=[];
+      PBIG.forEach(([title,names],gi)=>{
+        const kids=names.map(n=>pfs.find(f=>nameOf(f)===n)).filter(Boolean);
+        kids.forEach(k=>used.add(k));
+        if(kids.length)big.push({title,gi,kids});
+      });
+      const left=pfs.filter(f=>!used.has(f));
+      if(left.length){const o=big.find(b=>b.title==='Other');if(o)o.kids=o.kids.concat(left);else big.push({title:'Other',gi:99,kids:left});}
+      const marker=document.createComment('');pfs[0].parentNode.insertBefore(marker,pfs[0]);
+      big.forEach(b=>{
+        const docs=b.kids.reduce((n,f)=>n+(parseInt(((f.querySelector(':scope>summary .pf-n')||{}).textContent||'').trim(),10)||0),0);
+        const filled=b.kids.filter(f=>!f.classList.contains('empty')).length;
+        const key=ai+'|big'+b.gi,d=document.createElement('details');
+        d.className='pbig';if((S.pfOpen||{})[key])d.open=true;
+        d.setAttribute('ontoggle',"(S.pfOpen=S.pfOpen||{})['"+key+"']=this.open");
+        d.innerHTML='<summary>'+FOLDIC+'<span>'+hesc(b.title)+'</span><span class="pbig-m">'+filled+' of '+b.kids.length+' folders · '+docs+' document'+(docs===1?'':'s')+'</span></summary><div class="pbig-body"></div>';
+        const body=d.querySelector('.pbig-body');b.kids.forEach(k=>body.appendChild(k));
+        marker.parentNode.insertBefore(d,marker);
+      });
+      marker.remove();
+    });
+    return t.innerHTML;
+  };
+
   /* ---------- 14. Add treatment modality: the team's list of eleven (Anu, 11 Nov) ----------
      Long acting injections opens three choices (Risperidone, Paliperidone, Olanzapine). Each one opens the same "Plan for" window as before
      (tick the consent, the tests and the team tasks to create). The consent and task wording is a starter the team will confirm. */

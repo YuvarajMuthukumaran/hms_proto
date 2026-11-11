@@ -3,7 +3,7 @@
 (function(){
   const requested=window.__TULASI__&&window.__TULASI__.role;
 
-  if(requested==='floor-coordinator'){
+  if(requested==='floor-lead-psychiatrist'){
     ROLE.psychiatrist.myday=function(){
       const pts=allPts(),newPts=pts.filter(p=>p.day<=1),highRisk=pts.filter(p=>p.risk),alerts=V3.openAlerts(a=>!a.ack);
       const actions=`<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn pri" onclick="go('#/admissions')">New admission</button><button class="btn" onclick="go('#/inpatients')">All patients</button></div>`;
