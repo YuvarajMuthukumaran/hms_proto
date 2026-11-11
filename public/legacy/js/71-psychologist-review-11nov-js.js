@@ -31,6 +31,9 @@
   .dn11 .st.ok{background:#ecfdf3;color:#067647;border-color:#abefc6}.dn11 .st.no{background:#fffaeb;color:#b54708;border-color:#fedf89}
   .dn11 .st.bad{background:#fef3f2;color:#b42318;border-color:#fecdca}
   .dn11 .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  /* inpatients: title on the left, Mine / Whole ward on the right */
+  .ipd-h11{display:flex!important;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap}
+  .ipd-h11 .pg-mine.pg-seg{margin:0!important;flex:none}
   /* therapy: transcript column */
   .tx11-pre{white-space:pre-wrap;max-height:55vh;overflow:auto;font-size:14.5px;line-height:1.55}
   `;
@@ -157,10 +160,44 @@
       <div class="dn11" style="overflow-x:auto"><table><thead><tr><th>Patient</th><th>Daily note written</th><th>Sent to family</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   };
 
+  /* ---------- 4. Assessments the doctor assigned in Rounds show on Today, with a Mark done button ---------- */
+  const mineAsg=pid=>{let L=[];try{L=(psyPx(pid).assignedAssess||[]);}catch(e){}const me1=signer();return L.map((a,i)=>({a,i})).filter(o=>o.a.status!=='Done'&&(!o.a.to||o.a.to===me1));};
+  window.pgAsgDone=function(pid,i){
+    const a=((psyPx(pid).assignedAssess)||[])[i];if(!a)return;
+    a.status='Done';a.doneBy=signer();a.doneAt=atNow();render();toast(a.name.replace(/ \(.*\)/,'')+' marked done by '+signer());
+  };
+  const asgToday=v=>{
+    v.querySelectorAll('tr[data-dt]').forEach(tr=>{
+      if(tr.dataset.asg)return;tr.dataset.asg='1';
+      const pid=(tr.innerHTML.match(/#\/patient\/([^/']+)\//)||[])[1];if(!pid)return;
+      const L=mineAsg(pid);if(!L.length)return;
+      const cell=[...tr.children].find(td=>td.querySelector('.pg-dl')||/Nothing due/.test(td.textContent));
+      const items=L.map(o=>`<div class="pg-di"><i class="pg-dd blue" style="background:#3b82f6" aria-hidden="true"></i><div class="pg-dt"><b>Assessment: ${hesc(o.a.name)}</b><span>assigned by ${hesc(o.a.by)}, ${hesc(o.a.at)}</span><button class="btn sm" style="margin-top:6px" onclick="pgAsgDone('${pid}',${o.i})">Mark done</button></div></div>`).join('');
+      if(cell){let dl=cell.querySelector('.pg-dl');if(!dl){cell.innerHTML='<div class="pg-dl"></div>';dl=cell.querySelector('.pg-dl');}dl.insertAdjacentHTML('afterbegin',items);}
+      const ty=tr.querySelector('.pd-ty');if(ty&&/^(Up to date|Nothing due)$/i.test(ty.textContent.trim())){ty.textContent='Assessment';ty.classList.remove('red','amber');ty.classList.add('blue');ty.removeAttribute('style');}
+    });
+  };
+
+  /* ---------- 5. Nikita, 11 Nov: the patient tabs belong on the inpatient page, not on Today ---------- */
+  /* Today shows the psychologist's own patients; the My / Ward / All tab is gone from it */
+  const __md71=ROLE.psychologist.myday;
+  ROLE.psychologist.myday=function(){
+    if(!me())return __md71.apply(this,arguments);
+    S.pgScope='my';
+    const h=__md71.apply(this,arguments);
+    return typeof h==='string'?h.replace(/<div class="pg-scope"[\s\S]*?<\/div>/,''):h;
+  };
+  /* Inpatients: the Mine / Whole ward tab moves up to the right of the page title */
+  const ipdTabs=v=>{
+    const ipd=v.querySelector('.ipd'),tabs=ipd&&ipd.querySelector('.pg-mine'),head=ipd&&ipd.firstElementChild;
+    if(!tabs||!head||head.classList.contains('ipd-h11')||head.contains(tabs))return;
+    head.classList.add('ipd-h11');head.appendChild(tabs);
+  };
+
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
-    if(me()){try{const v=$('view');if(v){therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
+    if(me()){try{const v=$('view');if(v){ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
     return out;
   };
 })();

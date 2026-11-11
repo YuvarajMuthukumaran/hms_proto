@@ -74,7 +74,7 @@ export class RecordSync {
           const keys = keysOf(kind);
           if (!keys.length) continue;
           const k = `${pid}|${kind}`;
-          if (!this.saved.has(k)) this.saved.set(k, stamp(Object.fromEntries(keys.map((x) => [x, ctx[x]]))));
+          if (!this.saved.has(k)) this.saved.set(k, stamp(this.bridge.readCtx(ctx, keys)));
         }
       }),
       this.bridge.on('audit', (e) => {

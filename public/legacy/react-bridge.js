@@ -5,6 +5,7 @@
      read and write a patient's records, hear about renders, new patients and audit entries. */
 (function(){
   const boot=window.__TULASI__||{};
+  const PSYX_SHARED=['mgmtPsych','th','roundPlan','monTables','assignedAssess']; /* the parts of psyx that the psychologist writes (see readCtx) */
   const requested=boot.role||'';
   const lock=boot.viewRole||requested;
   const NAMES={lead:'Floor lead','floor-coordinator':'Floor Lead Psychiatrist',psychiatrist:'Psychiatrist','patient-experience-lead':'Patient Experience Lead',psychologist:'Psychologist',nurse:'Nurse',rmo:'RMO on duty'};
@@ -59,8 +60,17 @@
         Object.keys(MAR_ST).forEach(k=>{if(k.startsWith(pid+':'))out[k]={st:MAR_ST[k],who:MAR_WHO[k]||null};});
         return Object.keys(out).length?out:null;
       }
-      const c=ptCtxOf(pid);
-      return Object.fromEntries(keys.map(k=>[k,c[k]]));
+      return bridge.readCtx(ptCtxOf(pid),keys);
+    },
+    /* The psychiatrist's and the psychologist's working notes share one object (psyx). The parts both of them write live in their own
+       slice, psyxShared, saved with the psychology records that both roles may write. Everything else in psyx stays a doctor record, so a
+       psychologist's entries reach the psychiatrist and the other way round. */
+    readCtx(c,keys){
+      const out=Object.fromEntries(keys.map(k=>[k,c[k]]));
+      const px=c.psyx||{};
+      if(keys.indexOf('psyxShared')>=0)out.psyxShared=Object.fromEntries(PSYX_SHARED.filter(k=>px[k]!==undefined).map(k=>[k,px[k]]));
+      if(keys.indexOf('psyx')>=0&&out.psyx){const o=Object.assign({},out.psyx);PSYX_SHARED.forEach(k=>{delete o[k];});out.psyx=o;}
+      return out;
     },
     apply(pid,kind,keys,data){
       if(!ptFind(pid)||data==null)return;
@@ -70,7 +80,12 @@
         return;
       }
       const c=ptCtxOf(pid);
-      keys.forEach(k=>{if(k in data)c[k]=data[k];});
+      keys.forEach(k=>{
+        if(!(k in data))return;
+        if(k==='psyxShared'){c.psyx=c.psyx||{};PSYX_SHARED.forEach(s=>{if(data[k]&&s in data[k])c.psyx[s]=data[k][s];});}
+        else if(k==='psyx'){const o=Object.assign({},data[k]);PSYX_SHARED.forEach(s=>{delete o[s];});c.psyx=Object.assign(c.psyx||{},o);}
+        else c[k]=data[k];
+      });
     },
     /* clinical documents: submissions and in-progress fills, keyed by "<patient>|<form>" */
     docs:()=>typeof CD_DATA!=='undefined'?{submissions:CD_DATA.submissions||[],fills:CD_DATA.fills||{}}:null,

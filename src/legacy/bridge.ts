@@ -31,6 +31,7 @@ export interface LegacyBridge {
   pids(): string[];
   hasPatient(pid: string): boolean;
   read(pid: string, kind: string, keys: readonly string[]): unknown;
+  readCtx(ctx: Record<string, unknown>, keys: readonly string[]): unknown;
   apply(pid: string, kind: string, keys: readonly string[], data: unknown): void;
   docs(): DocsSnapshot | null;
   applyDocs(rows: DocRow[]): number;

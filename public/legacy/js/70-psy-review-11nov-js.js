@@ -26,6 +26,18 @@
   body.psy-views:not(.psg) .hwrap .hgrid textarea.input{min-height:72px}
   body.psy-views:not(.psg) .hwrap .hbody{gap:14px!important}
   @media(max-width:900px){body.psy-views:not(.psg) .hwrap .hgrid{grid-template-columns:1fr!important}}
+  /* detailed history, full screen: the Draft / Fill form toolbar sits at the top right */
+  body.psy-views:not(.psg) .hist-seg{align-self:flex-end!important}
+  /* detailed history, full screen: the number rail opens smoothly to show the section names on hover or focus (same as the psychologist's) */
+  body.psy-views:not(.psg) .adm-full .hwrap{grid-template-columns:76px minmax(0,1fr)!important;column-gap:36px;align-items:start}
+  body.psy-views:not(.psg) .adm-full .hnav{position:sticky;top:12px;z-index:30;justify-self:start;display:flex;flex-direction:column;gap:6px;width:64px;min-width:64px;padding:10px 8px;background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:width .42s cubic-bezier(.22,1,.36,1),box-shadow .35s ease,border-color .35s ease}
+  body.psy-views:not(.psg) .adm-full .hnav:hover,body.psy-views:not(.psg) .adm-full .hnav:focus-within{width:300px;border-color:#cfdffb;box-shadow:0 20px 44px rgba(16,24,40,.16)}
+  body.psy-views:not(.psg) .adm-full .hnav button{width:100%;display:flex;align-items:center;justify-content:flex-start;gap:14px;padding:8px 10px;border-radius:14px;white-space:nowrap;text-align:left}
+  body.psy-views:not(.psg) .adm-full .hnav button:hover:after{content:none!important;display:none!important}
+  body.psy-views:not(.psg) .adm-full .hnav .hn{flex:none}
+  body.psy-views:not(.psg) .adm-full .hnav button>span:not(.hn){display:block!important;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:600;opacity:0;transform:translateX(-8px);transition:opacity .22s ease,transform .32s cubic-bezier(.22,1,.36,1)}
+  body.psy-views:not(.psg) .adm-full .hnav:hover button>span:not(.hn),body.psy-views:not(.psg) .adm-full .hnav:focus-within button>span:not(.hn){opacity:1;transform:none;transition-delay:.08s}
+  @media (prefers-reduced-motion:reduce){body.psy-views:not(.psg) .adm-full .hnav,body.psy-views:not(.psg) .adm-full .hnav button>span:not(.hn){transition:none}}
   /* Admission step 5 (Form C) looks like step 1 */
   .fcT .ct-a{display:flex;gap:8px;flex-wrap:wrap}
   /* Vitals and monitoring: one table */
@@ -328,7 +340,7 @@
       <div style="padding:12px 20px 16px;border-top:1px solid var(--line-2)">
         <div class="small muted" style="margin-bottom:10px">${own?`Goes to the treating psychologist, ${hesc(own)}, unless you pick someone else.`:'This patient has no treating psychologist yet. Choose who should do the assessment.'}</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">${who}${what}</div>
-        ${L.map((a,i)=>`<div class="pr-lo9" style="margin-top:10px"><div class="pr-lo9-h"><span><b>${hesc(a.name)}</b><span class="tiny muted" style="display:block">For ${hesc(a.to||own||'the psychologist')} · assigned by ${hesc(a.by)} · ${hesc(a.at)}</span></span><button class="x" aria-label="Remove ${hesc(a.name)}" onclick="psyAsgDel(${i})">×</button></div></div>`).join('')}
+        ${L.map((a,i)=>`<div class="pr-lo9" style="margin-top:10px"><div class="pr-lo9-h"><span><b>${hesc(a.name)}</b><span class="tiny muted" style="display:block">For ${hesc(a.to||own||'the psychologist')} · assigned by ${hesc(a.by)} · ${hesc(a.at)}${a.status==='Done'?` · <b style="color:#067647">done by ${hesc(a.doneBy||'')}, ${hesc(a.doneAt||'')}</b>`:''}</span></span><button class="x" aria-label="Remove ${hesc(a.name)}" onclick="psyAsgDel(${i})">×</button></div></div>`).join('')}
       </div></section>`;
   };
   const __rm70=roundMon;
