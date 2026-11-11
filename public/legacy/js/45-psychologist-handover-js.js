@@ -43,9 +43,9 @@
     const call=c.calls&&c.calls.h24==='done'?'24-hour family call done.':'';
     const left=rows.filter(r=>(+r.done||0)<(+r.req||0)).map(r=>r.area+': '+((+r.req)-(+r.done))+' more session'+(((+r.req)-(+r.done))===1?'':'s'));
     return {p,f:{
-      dx:p.dx||c.dx||'',ddx:hr(/^Differential/i),
+      dx:p.dx||c.dx||'',ddx:hr(/^Differential/i)||(window.psyRecordDdx?(psyRecordDdx(pid).text||''):''),
       cc:hr(/^Chief complaints/i),
-      reason:pid==='neel'?'Manic symptoms, overspending, irritability for 3 weeks':'',
+      reason:pid==='neel'?'Manic symptoms, overspending, irritability for 3 weeks':((p.dx||c.dx)?'Admitted with '+String(p.dx||c.dx).toLowerCase()+' (Section '+(c.section||p.sec)+')':''),
       expect:'',
       psychopath:L([mine?mine.sum:'','Risk of harm: '+lvl+(tags?' ('+tags+')':'')+'.']),
       interv:rows.map(fmtRow).join('\n'),

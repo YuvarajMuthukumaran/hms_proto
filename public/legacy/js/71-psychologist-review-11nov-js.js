@@ -66,6 +66,11 @@
   .dn11 .st.ok{background:#ecfdf3;color:#067647;border-color:#abefc6}.dn11 .st.no{background:#fffaeb;color:#b54708;border-color:#fedf89}
   .dn11 .st.bad{background:#fef3f2;color:#b42318;border-color:#fecdca}
   .dn11 .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  /* inpatients: bigger Mine / Whole ward switch (the whole ward is about twenty patients) */
+  .ipd-h11 .pg-mine.pg-seg button{font-size:15px!important;padding:9px 22px!important}
+  .ipd-h11 .pg-mine.pg-seg .pg-n{font-size:12px!important;padding:3px 8px!important}
+  /* Today: the due list reads as clean lines */
+  .pg-dl .pg-di{padding:5px 0}.pg-dl .pg-dt b{font-weight:650}
   /* inpatients: title on the left, Mine / Whole ward on the right */
   .ipd-h11{display:flex!important;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap}
   .ipd-h11 .pg-mine.pg-seg{margin:0!important;flex:none}
@@ -298,10 +303,34 @@
     seg.parentNode.insertBefore(row,seg);row.appendChild(seg);row.appendChild(nav);
   };
 
+  /* Today: the psychologist does not do capacity assessments or the weekly re-assessments, so those items are not shown */
+  const todayTrim=v=>{
+    if(!/^#\/myday/.test(location.hash||''))return;
+    v.querySelectorAll('tr[data-dt] .pg-di').forEach(d=>{if(/capacity assessment|re-?assessment|weekly/i.test(d.textContent))d.remove();});
+  };
+  /* Rounds: the assessments the psychiatrist assigned come first */
+  const asgTop=v=>{
+    const asg=v.querySelector('#pgRp .pg-asg'),box=asg&&asg.closest('.pg-rp-b');
+    if(asg&&box&&box.firstElementChild!==asg){asg.style.cssText='margin:0 0 16px;padding:0 0 14px;border-top:0;border-bottom:1px dashed #e4dcf8';box.insertBefore(asg,box.firstElementChild);}
+  };
+  /* Management Plan: filled once at admission, so it opens read only once there is something in it (same switch as the psychiatrist's) */
+  window.pgMpView=function(m){S.pgMpView=m;render();};
+  const MPF=[['therapyPlan','Therapy plan'],['formulation','Psychological formulation'],['goals','Goals of therapy'],['family','Family involvement'],['risk','Risks to watch for'],['assess','Planned assessments'],['acts','Planned behavioural activations'],['review','Review date']];
+  const __pl71=pPlans;
+  pPlans=function(){
+    if(!me())return __pl71.apply(this,arguments);
+    const m=(px().mgmtPsych)||{},filled=!!(m.therapyPlan||m.therapies||m.goals||m.formulation);
+    const mode=S.pgMpView||(filled?'read':'form');
+    const seg='<div class="seg" style="align-self:flex-start;min-width:240px;margin-bottom:12px"><button class="'+(mode==='read'?'on':'')+'" onclick="pgMpView(\'read\')">Read only</button><button class="'+(mode==='form'?'on':'')+'" onclick="pgMpView(\'form\')">Fill form</button></div>';
+    if(mode==='form')return seg+__pl71.apply(this,arguments);
+    const val=k=>{let x=m[k];if(k==='therapyPlan'&&!x)x=m.therapies;return Array.isArray(x)?x.join(', '):(x||'');};
+    const st=m.signed?'<span class="small" style="color:#067647;font-weight:600">Signed '+hesc(m.signed.at)+' · '+hesc(m.signed.by)+'</span>':'<span class="small muted">'+(filled?'Not signed yet':'Not filled in yet')+'</span>';
+    return seg+'<section class="card"><div class="hd"><div><h3>Management Plan</h3><div style="margin-top:4px">'+st+'</div></div></div><div class="pad grid2">'+MPF.map(([k,l])=>'<div class="box small"><div class="lbl">'+l+'</div><div style="margin-top:4px;white-space:pre-wrap">'+(val(k)?hesc(val(k)):'<span class="muted">Not filled in</span>')+'</div></div>').join('')+'</div><div class="pad small muted">Filled once when the patient is admitted. Switch to Fill form to change it.</div></section>';
+  };
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
-    if(me()){try{const v=$('view');if(v){v.querySelector('#asgCard')?.remove();tidy(v);colourKey(v);histNav(v);startBtn(v);scribeBtn(v);asgRounds(v);ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
+    if(me()){try{const v=$('view');if(v){v.querySelector('#asgCard')?.remove();tidy(v);colourKey(v);histNav(v);startBtn(v);scribeBtn(v);asgRounds(v);asgTop(v);todayTrim(v);ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
     return out;
   };
 })();

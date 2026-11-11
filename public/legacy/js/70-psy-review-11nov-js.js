@@ -40,6 +40,14 @@
   body.psy-views:not(.psg) #view .ecard .ef button:active{transform:scale(.97)}
   body.psy-views:not(.psg) #view .ecard .eact{background:#fff;border:1px solid #e6ecf6;border-radius:14px;padding:12px;gap:8px}
   body.psy-views:not(.psg) #view .ecard .eact .btn.pri{background:linear-gradient(180deg,#2f7df0,#175cd3);border-color:#175cd3;box-shadow:0 4px 12px rgba(23,92,211,.25)}
+  /* Admission step 3 (capacity): one tile per group, each question on a line with its answers beside it */
+  body.psy-views:not(.psg) #view .cap-g{border:1px solid #e3eaf5;border-radius:16px;background:#fff;padding:14px 18px 6px;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  body.psy-views:not(.psg) #view .cap-g>*:first-child:not(.q){margin-bottom:6px;font-weight:800}
+  body.psy-views:not(.psg) #view .cap-g .q{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 18px;align-items:center;padding:11px 0;border-top:1px solid #eef2f7}
+  body.psy-views:not(.psg) #view .cap-g .q>.small{grid-column:1;font-size:13.5px;line-height:1.4}
+  body.psy-views:not(.psg) #view .cap-g .q>.radios{grid-column:2;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  body.psy-views:not(.psg) #view .cap-g .q>input{grid-column:1/-1;min-height:34px;font-size:13px}
+  @media(max-width:760px){body.psy-views:not(.psg) #view .cap-g .q{grid-template-columns:1fr}body.psy-views:not(.psg) #view .cap-g .q>.radios{grid-column:1;justify-content:flex-start}}
   /* View full file */
   .pfv-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px;position:sticky;top:0;background:#fff;z-index:2;padding-bottom:8px}
   .pfv-q{flex:0 1 220px;min-height:34px;padding:4px 12px}
@@ -518,6 +526,16 @@
     seg.parentNode.insertBefore(row,seg);row.appendChild(seg);row.appendChild(nav);
   }
 
+  /* Rounds and patient headers: "R 210" reads as "Room 210" */
+  const roomFix=v=>{
+    v.querySelectorAll('.pr-head *,.dph *').forEach(e=>{if(e.children.length===0&&/\bR \d/.test(e.textContent))e.textContent=e.textContent.replace(/\bR (\d+[ A-Z]?)\b/,'Room $1');});
+  };
+  /* Detailed history: the patient's name sits on the card */
+  const histName=v=>{
+    let n='';try{n=(ptFind(S.pid)||{}).name||'';}catch(e){}if(!n)return;
+    v.querySelectorAll('.card h3').forEach(h=>{if(h.dataset.hn)return;const t=[...h.childNodes].find(x=>x.nodeType===3&&x.nodeValue.trim()==='Detailed history');if(t){h.dataset.hn='1';t.nodeValue=t.nodeValue.replace('Detailed history','Detailed history · '+n);}});
+  };
+  window.pxRoomFix=roomFix;window.pxHistName=histName;
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
@@ -525,7 +543,7 @@
       if(psy()){
         const v=$('view');
         if(v){
-          famCallCard(v);histNav(v);
+          famCallCard(v);histNav(v);roomFix(v);histName(v);
           /* Daily notes: "Priya Nair · psychologist" is just the name */
           v.querySelectorAll('.eod *').forEach(e=>{if(e.children.length===0&&/^Today from .* · psychologist$/.test(e.textContent.trim()))e.textContent=e.textContent.replace(/ · psychologist$/,'');});
           /* Daily notes filters: the same animated segmented controls as the psychologist's */
@@ -536,7 +554,7 @@
         }
       }else if(S.role==='psychologist'){
         /* the psychologist's Patient Experience page gets the same icons as the psychiatrist's */
-        const v=$('view');if(v){pxIcons(v);therapyBtns(v);}
+        const v=$('view');if(v){pxIcons(v);roomFix(v);histName(v);therapyBtns(v);}
       }
       if(String(location.hash||'').indexOf('#/handover')===0&&psy()){try{const me1=signer(),sent=new Set();((S.psyHO&&S.psyHO.list)||[]).forEach(h=>{if(h.status==='sent'&&h.from===me1)(h.pids||[]).forEach(p=>sent.add(p));});sent.forEach(p=>{const c=document.getElementById('hvCard-'+p);if(c)c.remove();});}catch(e){}}
     }catch(e){}
@@ -688,6 +706,7 @@
     const hit=DDX_BY_DX.find(x=>x[0].test(dx));
     return hit?{text:hit[1],src:'suggested'}:{text:'',src:''};
   }
+  window.psyRecordDdx=recordDdx;
   function recordComorb(pid){
     const n=hoNote(pid).comorb;if(String(n||'').trim())return {text:String(n),src:'record'};
     if(pid==='neel'){const v=hxRow(/^Past history|past medical or surgical/i);if(v)return {text:v,src:'record'};}
