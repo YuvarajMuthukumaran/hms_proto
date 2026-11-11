@@ -304,21 +304,31 @@
   /* ---------- 8. Rounds: assign assessments to the psychologist ---------- */
   const MODS=(window.pgMpLists&&pgMpLists.MODS)||['PHQ-9 (depression)','GAD-7 (anxiety)','BDI-II','BAI','Y-BOCS (OCD)','HAM-D','HAM-A','PANSS','MoCA','MMSE','Rosenberg self-esteem','WHO-5 well-being'];
   const asgPid=()=>{try{return scribePt().id;}catch(e){return S.pid;}};
+  /* the patient's own psychologist is the default; the doctor can pick another one */
+  const treating=pid=>{try{return (PSYCHOF&&PSYCHOF[pid])||'';}catch(e){return '';}};
+  const PSYCHS=()=>{const s=new Set(['Priya Nair','Kiran Mehra']);try{Object.keys(PSYCHOF).forEach(k=>{if(PSYCHOF[k])s.add(PSYCHOF[k]);});}catch(e){}return [...s];};
+  const asgTo=pid=>((S.asgTo||{})[pid])||treating(pid);
+  window.psyAsgWho=function(v){S.asgTo=S.asgTo||{};S.asgTo[asgPid()]=v;render();};
   window.psyAsgAdd=function(v){
-    if(!v)return;const pid=asgPid(),x=psyPx(pid);x.assignedAssess=x.assignedAssess||[];
+    if(!v)return;const pid=asgPid(),to=asgTo(pid);
+    if(!to){toast('Choose the psychologist first');render();return;}
+    const x=psyPx(pid);x.assignedAssess=x.assignedAssess||[];
     if(x.assignedAssess.some(a=>a.name===v))return;
-    x.assignedAssess.unshift({name:v,by:signer(),at:atNow(),status:'Assigned'});
+    x.assignedAssess.unshift({name:v,to,by:signer(),at:atNow(),status:'Assigned'});
     /* the psychologist sees it under Planned assessments in the psychologist's management plan */
     const m=x.mgmtPsych=x.mgmtPsych||{};m.assess=m.assess||[];if(!m.assess.includes(v))m.assess.push(v);
-    render();toast(v.replace(/ \(.*\)/,'')+' assigned to the psychologist');
+    render();toast(v.replace(/ \(.*\)/,'')+' assigned to '+to);
   };
   window.psyAsgDel=function(i){const x=psyPx(asgPid());(x.assignedAssess||[]).splice(i,1);render();};
   const assessCard=()=>{
-    const pid=asgPid(),L=(psyPx(pid).assignedAssess||[]);
+    const pid=asgPid(),L=(psyPx(pid).assignedAssess||[]),own=treating(pid),to=asgTo(pid);
+    const who=`<label class="field" style="margin:0"><span class="lbl" style="margin-bottom:6px">Psychologist</span><select class="input" aria-label="Psychologist to assign to" onchange="psyAsgWho(this.value)">${to?'':'<option value="">Choose a psychologist…</option>'}${PSYCHS().map(n=>`<option value="${hesc(n)}" ${n===to?'selected':''}>${hesc(n)}${n===own?' (treating psychologist)':''}</option>`).join('')}</select></label>`;
+    const what=`<label class="field" style="margin:0"><span class="lbl" style="margin-bottom:6px">Assessment</span><select class="input" aria-label="Assign an assessment" onchange="psyAsgAdd(this.value)"><option value="">Choose an assessment…</option>${MODS.filter(m=>!L.some(a=>a.name===m)).map(m=>`<option>${hesc(m)}</option>`).join('')}</select></label>`;
     return `<section class="card" id="asgCard"><div class="hd"><h3>Assessments</h3>${L.length?chip(L.length+' assigned','c-blue'):''}</div>
-      <div style="padding:12px 20px 16px;border-top:1px solid var(--line-2)"><div class="lbl" style="margin-bottom:6px">Assign an assessment to the psychologist</div>
-        <select class="input" aria-label="Assign an assessment" onchange="psyAsgAdd(this.value)"><option value="">Choose an assessment…</option>${MODS.filter(m=>!L.some(a=>a.name===m)).map(m=>`<option>${hesc(m)}</option>`).join('')}</select>
-        ${L.map((a,i)=>`<div class="pr-lo9" style="margin-top:10px"><div class="pr-lo9-h"><span><b>${hesc(a.name)}</b><span class="tiny muted" style="display:block">Assigned by ${hesc(a.by)} · ${hesc(a.at)} · for the psychologist</span></span><button class="x" aria-label="Remove ${hesc(a.name)}" onclick="psyAsgDel(${i})">×</button></div></div>`).join('')}
+      <div style="padding:12px 20px 16px;border-top:1px solid var(--line-2)">
+        <div class="small muted" style="margin-bottom:10px">${own?`Goes to the treating psychologist, ${hesc(own)}, unless you pick someone else.`:'This patient has no treating psychologist yet. Choose who should do the assessment.'}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">${who}${what}</div>
+        ${L.map((a,i)=>`<div class="pr-lo9" style="margin-top:10px"><div class="pr-lo9-h"><span><b>${hesc(a.name)}</b><span class="tiny muted" style="display:block">For ${hesc(a.to||own||'the psychologist')} · assigned by ${hesc(a.by)} · ${hesc(a.at)}</span></span><button class="x" aria-label="Remove ${hesc(a.name)}" onclick="psyAsgDel(${i})">×</button></div></div>`).join('')}
       </div></section>`;
   };
   const __rm70=roundMon;
