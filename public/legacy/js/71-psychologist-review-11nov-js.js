@@ -212,6 +212,17 @@
     });
   };
 
+  /* the colour key on Today, same look as the psychiatrist's (the styles are in the psychiatrist block); the second dot is the psychologist's own */
+  const KEY=`<div class="pdk" role="note" aria-label="What the coloured dots mean"><b>Key</b>
+    <span><i class="red"></i>Alert <em>· needs you now</em></span>
+    <span><i class="blue"></i>Assigned by the doctor <em>· assessments to do</em></span>
+    <span><i class="amber"></i>Due or late <em>· overdue notes, reviews, results to check</em></span>
+    <span><i class="ok"></i>Action taken</span></div>`;
+  const colourKey=v=>{
+    const pd=v.querySelector('.pd');if(!pd||pd.querySelector('.pdk'))return;
+    const bar=pd.querySelector('.pd-bar');if(bar)bar.insertAdjacentHTML('afterend',KEY);
+  };
+
   /* ---------- 5. Nikita, 11 Nov: the patient tabs belong on the inpatient page, not on Today ---------- */
   /* Today shows the psychologist's own patients; the My / Ward / All tab is gone from it */
   const __md71=ROLE.psychologist.myday;
@@ -266,7 +277,7 @@
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
-    if(me()){try{const v=$('view');if(v){histNav(v);startBtn(v);scribeBtn(v);asgRounds(v);ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
+    if(me()){try{const v=$('view');if(v){colourKey(v);histNav(v);startBtn(v);scribeBtn(v);asgRounds(v);ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
     return out;
   };
 })();

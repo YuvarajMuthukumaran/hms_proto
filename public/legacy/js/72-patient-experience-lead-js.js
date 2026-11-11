@@ -50,8 +50,8 @@
   .pxl .pc .st{font-size:12.5px}
   .pxl .st.red{background:none;color:#b42318}.pxl .st.amber{background:none;color:#92500a}.pxl .st.green{background:none;color:#11703a}
   .pxl .cols{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
-  .pxl .cm{flex:3 1 520px;min-width:0;display:flex;flex-direction:column;gap:18px}
-  .pxl .cs{flex:2 1 320px;min-width:0;display:flex;flex-direction:column;gap:18px}
+  .pxl .pxcm{flex:3 1 520px;min-width:0;display:flex;flex-direction:column;gap:18px}
+  .pxl .pxcs{flex:2 1 320px;min-width:0;display:flex;flex-direction:column;gap:18px}
   .pxl .seg{display:inline-flex;gap:2px;background:#eef4fd;border:1px solid #cfe0fb;border-radius:12px;padding:3px;flex-wrap:wrap}
   .pxl .seg button{border:0;background:none;padding:7px 12px;border-radius:9px;font:inherit;font-size:13px;font-weight:600;color:#334155;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:34px}
   .pxl .seg button.on{background:#1e6cdb;color:#fff}
@@ -148,49 +148,49 @@
     ['pack','Welcome pack shared','Visiting rules, phone rule, what to bring'],['team','Treating team introduced','Psychiatrist and psychologist names'],['cadence','Weekly update rhythm explained','Who calls, and when'],
     ['belong','Belongings logged with front desk','Valuables kept in the locker']];
   const P=[
-    {id:'p1',name:'Arjun Mehta',ini:'AM',uhid:'2026-27RG6812',room:'Room 210',floor:'f2',day:2,admitted:'10 Nov, 6:10 pm',admType:'Supported admission',doctor:'Dr. Aanya Sharma',docIni:'AS',psych:'Priya Nair',psyIni:'PN',guardian:'Shalini Mehta (wife)',gName:'Shalini Mehta',gRel:'Wife',nr:'Shalini Mehta',phone:'+91 98188 XXX51',discharge:'Not set yet',vip:false,isNew:true,lastContact:'10 Nov',
+    {id:'arjun',name:'Arjun Mehta',ini:'AM',uhid:'2026-27RG6812',room:'Room 210',floor:'f2',day:2,admitted:'10 Nov, 6:10 pm',admType:'Supported admission',doctor:'Dr. Aanya Sharma',docIni:'AS',psych:'Priya Nair',psyIni:'PN',guardian:'Shalini Mehta (wife)',gName:'Shalini Mehta',gRel:'Wife',nr:'Shalini Mehta',phone:'+91 98188 XXX51',discharge:'Not set yet',vip:false,isNew:true,lastContact:'10 Nov',
       st:['done','done','overdue','up','up','due','up','up','up'],random:'0 of 3',ck:['meet','intro','wa','pack','team','belong'],
       log:[{d:'10 Nov',what:'Family meeting at admission',who:'Prabh',time:'6:40 pm',how:'In person',note:'Wife and brother present. WhatsApp group made.'}],
       prefs:[['Food','Vegetarian, no onion or garlic'],['Language','Hindi, English'],['Faith and routine','Morning prayer, 15 minutes'],['Updates go to','Shalini Mehta (wife)'],['Do not share with','Employer, if they call'],['Other','Prefers morning walks']],
       visits:[['Allowed visitors','Wife, brother'],['Visiting slot','Sundays, 4 to 6 pm'],['Next visit','Sun 15 Nov, wife'],['Outings','None approved yet']],
       belongings:[['Phone','Kept in locker, switched off'],['Wallet and cards','Kept in locker'],['Clothes','6 sets, on ward'],['Signed by','Shalini Mehta, 10 Nov']]},
-    {id:'p2',name:'Neel Bose',ini:'NB',uhid:'2026-27RG6988',room:'Room 213 A',floor:'f2',day:6,admitted:'6 Nov, 2:30 pm',admType:'Supported admission',doctor:'Dr. Aanya Sharma',docIni:'AS',psych:'Kiran Mehra',psyIni:'KM',guardian:'Anjali Bose (mother)',gName:'Anjali Bose',gRel:'Mother',nr:'Anjali Bose',phone:'+91 98110 XXX24',discharge:'Around 20 Nov',vip:false,isNew:false,lastContact:'10 Nov',
+    {id:'neel',name:'Neel Bose',ini:'NB',uhid:'2026-27RG6988',room:'Room 213 A',floor:'f2',day:6,admitted:'6 Nov, 2:30 pm',admType:'Supported admission',doctor:'Dr. Aanya Sharma',docIni:'AS',psych:'Kiran Mehra',psyIni:'KM',guardian:'Anjali Bose (mother)',gName:'Anjali Bose',gRel:'Mother',nr:'Anjali Bose',phone:'+91 98110 XXX24',discharge:'Around 20 Nov',vip:false,isNew:false,lastContact:'10 Nov',
       st:['done','done','done','done','overdue','done','due','up','up'],random:'0 of 3',ck:['meet','intro','wa','pack','team','cadence','belong'],
       log:[{d:'10 Nov',what:'Psychiatrist call (Day 3-4)',who:'Dr. Aanya Sharma',time:'1:15 pm',how:'HMS call, logged automatically',note:''},{d:'7 Nov',what:'Psychiatrist call (24 hours)',who:'Dr. Aanya Sharma',time:'11:05 am',how:'HMS call, logged automatically',note:''},{d:'6 Nov',what:'Family meeting at admission',who:'Prabh',time:'5:20 pm',how:'In person',note:'Mother anxious about the phone rule. Explained the weekly rhythm.'}],
       prefs:[['Food','Non-vegetarian, fish preferred'],['Language','Bengali, English'],['Faith and routine','None noted'],['Updates go to','Anjali Bose (mother)'],['Do not share with','None noted'],['Other','Light sleeper, asked for a quieter room']],
       visits:[['Allowed visitors','Mother, father'],['Visiting slot','Wednesdays and Sundays, 4 to 6 pm'],['Next visit','Today, 4 pm, mother'],['Outings','Not yet, review at next round']],
       belongings:[['Phone','Kept in locker, switched off'],['Laptop','Taken home by father'],['Clothes','5 sets, on ward'],['Signed by','Anjali Bose, 6 Nov']]},
-    {id:'p3',name:'Meera Iyer',ini:'MI',uhid:'2026-27RG7031',room:'Room 310 A',floor:'f3',day:1,admitted:'11 Nov, 9:30 am (today)',admType:'Independent admission',doctor:'Dr. Alisha Nagar',docIni:'AN',psych:'Not assigned yet',psyIni:'?',guardian:'S. Iyer (father)',gName:'S. Iyer',gRel:'Father',nr:'S. Iyer',phone:'+91 99100 XXX88',discharge:'Not set yet',vip:true,isNew:true,lastContact:'today',
+    {id:'meera',name:'Meera Iyer',ini:'MI',uhid:'2026-27RG7031',room:'Room 310 A',floor:'f3',day:1,admitted:'11 Nov, 9:30 am (today)',admType:'Independent admission',doctor:'Dr. Alisha Nagar',docIni:'AN',psych:'Not assigned yet',psyIni:'?',guardian:'S. Iyer (father)',gName:'S. Iyer',gRel:'Father',nr:'S. Iyer',phone:'+91 99100 XXX88',discharge:'Not set yet',vip:true,isNew:true,lastContact:'today',
       st:['due','due','up','up','up','up','up','up','up'],random:'0 of 3',ck:[],log:[],
       prefs:[['Food','South Indian vegetarian'],['Language','Tamil, English'],['Faith and routine','Not set yet'],['Updates go to','S. Iyer (father)'],['Do not share with','Not set yet'],['Other','VIP: senior staff to meet family']],
       visits:[['Allowed visitors','Not set yet'],['Visiting slot','Not set yet'],['Next visit','Not set yet'],['Outings','Not set yet']],
       belongings:[['Status','Not logged yet. Do this at the family meeting.']]},
-    {id:'p4',name:'Varun Rao',ini:'VR',uhid:'2025-26RG5521',room:'Room 211',floor:'f2',day:14,admitted:'29 Oct, 11:00 am',admType:'Supported admission',doctor:'Dr. Ichpreet Singh',docIni:'IS',psych:'Priya Nair',psyIni:'PN',guardian:'Kiran Rao (brother)',gName:'Kiran Rao',gRel:'Brother',nr:'Kiran Rao',phone:'+91 98450 XXX12',discharge:'Around 15 Nov',vip:false,isNew:false,lastContact:'9 Nov',
+    {id:'varun',name:'Varun Rao',ini:'VR',uhid:'2025-26RG5521',room:'Room 211',floor:'f2',day:14,admitted:'29 Oct, 11:00 am',admType:'Supported admission',doctor:'Dr. Ichpreet Singh',docIni:'IS',psych:'Priya Nair',psyIni:'PN',guardian:'Kiran Rao (brother)',gName:'Kiran Rao',gRel:'Brother',nr:'Kiran Rao',phone:'+91 98450 XXX12',discharge:'Around 15 Nov',vip:false,isNew:false,lastContact:'9 Nov',
       st:['done','done','done','done','done','done','done','up','up'],random:'3 of 3',ck:['meet','intro','wa','pack','team','cadence','belong'],
       log:[{d:'9 Nov',what:'Random call 3',who:'Prabh',time:'4:00 pm',how:'Phone',note:'Brother happy with care. Wants a doctor call after rounds.'}],
       prefs:[['Food','No restrictions'],['Language','Kannada, English'],['Faith and routine','None noted'],['Updates go to','Kiran Rao (brother)'],['Do not share with','None noted'],['Other','None']],
       visits:[['Allowed visitors','Brother, mother'],['Visiting slot','Sundays, 4 to 6 pm'],['Next visit','Sun 15 Nov'],['Outings','2-hour outing approved for Sat 14 Nov']],
       belongings:[['Phone','Kept in locker'],['Clothes','4 sets, on ward'],['Signed by','Kiran Rao, 29 Oct']]},
-    {id:'p5',name:'Kavya Menon',ini:'KM',uhid:'2026-27RG6950',room:'Room 313',floor:'f3',day:9,admitted:'3 Nov, 4:45 pm',admType:'Supported admission',doctor:'Dr. Alisha Nagar',docIni:'AN',psych:'Kiran Mehra',psyIni:'KM',guardian:'Latha Menon (mother)',gName:'Latha Menon',gRel:'Mother',nr:'Latha Menon',phone:'+91 97400 XXX65',discharge:'Not set yet',vip:false,isNew:false,lastContact:'8 Nov',
+    {id:'kavya',name:'Kavya Menon',ini:'KM',uhid:'2026-27RG6950',room:'Room 313',floor:'f3',day:9,admitted:'3 Nov, 4:45 pm',admType:'Supported admission',doctor:'Dr. Alisha Nagar',docIni:'AN',psych:'Kiran Mehra',psyIni:'KM',guardian:'Latha Menon (mother)',gName:'Latha Menon',gRel:'Mother',nr:'Latha Menon',phone:'+91 97400 XXX65',discharge:'Not set yet',vip:false,isNew:false,lastContact:'8 Nov',
       st:['done','overdue','done','done','done','overdue','done','up','up'],random:'1 of 3',ck:['meet','intro','wa','team'],
       log:[{d:'8 Nov',what:'Random call 1',who:'Prabh',time:'3:30 pm',how:'Phone',note:'Mother upset about meals. Logged as a grievance.'}],
       prefs:[['Food','Meal plan from dietician'],['Language','Malayalam, English'],['Faith and routine','None noted'],['Updates go to','Latha Menon (mother)'],['Do not share with','Relatives other than mother'],['Other','Meals supervised by nursing']],
       visits:[['Allowed visitors','Mother only'],['Visiting slot','Sundays, 4 to 6 pm'],['Next visit','Sun 15 Nov'],['Outings','Not approved']],
       belongings:[['Phone','Kept in locker'],['Clothes','5 sets, on ward'],['Signed by','Latha Menon, 3 Nov']]},
-    {id:'p6',name:'Rahul Sethi',ini:'RS',uhid:'2025-26RG6219',room:'Room 123 B',floor:'f1',day:22,admitted:'21 Oct, 1:00 pm',admType:'Supported admission',doctor:'Dr. Madhura Samudra',docIni:'MS',psych:'Barkha',psyIni:'B',guardian:'Vikas Sethi (father)',gName:'Vikas Sethi',gRel:'Father',nr:'Vikas Sethi',phone:'+91 98990 XXX40',discharge:'13 Nov',vip:false,isNew:false,lastContact:'6 Nov',discharging:true,
+    {id:'rahul',name:'Rahul Sethi',ini:'RS',uhid:'2025-26RG6219',room:'Room 123 B',floor:'f1',day:22,admitted:'21 Oct, 1:00 pm',admType:'Supported admission',doctor:'Dr. Madhura Samudra',docIni:'MS',psych:'Barkha',psyIni:'B',guardian:'Vikas Sethi (father)',gName:'Vikas Sethi',gRel:'Father',nr:'Vikas Sethi',phone:'+91 98990 XXX40',discharge:'13 Nov',vip:false,isNew:false,lastContact:'6 Nov',discharging:true,
       st:['done','done','done','done','done','done','done','up','up'],random:'2 of 3',ck:['meet','intro','wa','pack','team','cadence','belong'],
       log:[{d:'6 Nov',what:'Random call 2',who:'Prabh',time:'12:10 pm',how:'Phone',note:'Father asked about the discharge plan and medicines.'}],
       prefs:[['Food','No restrictions'],['Language','Hindi'],['Faith and routine','None noted'],['Updates go to','Vikas Sethi (father)'],['Do not share with','None noted'],['Other','None']],
       visits:[['Allowed visitors','Father, sister'],['Visiting slot','Sundays, 4 to 6 pm'],['Next visit','Discharge day, 13 Nov'],['Outings','Home leave done 8 Nov']],
       belongings:[['Phone','Kept in locker'],['Wallet','Kept in locker'],['Clothes','6 sets, on ward'],['Signed by','Vikas Sethi, 21 Oct']]}];
   const C0=[
-    {id:'C-0142',type:'request',pid:'p4',title:'Wants a call from the doctor after rounds',raisedBy:'Kiran Rao, brother',via:'Front desk',owner:'Dr. Ichpreet Singh',ownerRole:'Treating psychiatrist',category:'Doctor communication',sla:'Due by 2 pm',slaTone:'amber',logged:'today, 9:10 am',status:'Open',desc:'Called the front desk asking for a short call after rounds to hear how Varun is doing this week.'},
-    {id:'C-0141',type:'concern',pid:'p2',title:'Daily updates feel the same every day',raisedBy:'Anjali Bose, mother',via:'Coordinator call',owner:'Kiran Mehra',ownerRole:'Treating psychologist',category:'Family updates',sla:'1 h 20 m left',slaTone:'amber',logged:'today, 6:30 am',status:'In progress',desc:'The WhatsApp updates say the same thing daily. She wants to know what is actually changing and what the plan is for this week.'},
-    {id:'C-0140',type:'concern',pid:'p2',title:'Room too noisy at night',raisedBy:'Neel Bose, patient',via:'Ward staff',owner:'Sister Rekha',ownerRole:'Nursing in-charge, Floor 2',category:'Room and housekeeping',sla:'4 h 10 m left',slaTone:'grey',logged:'today, 8:50 am',status:'Open',desc:'Told the night nurse he cannot sleep because of noise from the corridor.'},
-    {id:'C-0139',type:'grievance',pid:'p5',title:'Meals served cold twice this week',raisedBy:'Latha Menon, mother',via:'Coordinator call',owner:'S Chandra',ownerRole:'GM Operations',category:'Food and dietary',sla:'Breached 40 m ago',slaTone:'red',logged:'yesterday, 7:15 pm',status:'Escalated',desc:'Lunch was cold on Monday and Tuesday and Kavya skipped it. Mother is worried because meals are part of her plan.'},
-    {id:'C-0138',type:'request',pid:'p3',title:'Asked for visiting hours and what to bring',raisedBy:'S. Iyer, father',via:'Front desk',owner:'Prabh',ownerRole:'Patient experience',category:'Other',sla:'Due by 6 pm',slaTone:'grey',logged:'today, 10:05 am',status:'Open',desc:'Father wants the visiting rules and a list of what to bring. Share the welcome pack at the family meeting.'},
-    {id:'C-0137',type:'concern',pid:'p6',title:'Bill estimate not shared before discharge',raisedBy:'Vikas Sethi, father',via:'Coordinator call',owner:'Billing desk',ownerRole:'Billing and TPA',category:'Billing and insurance',sla:'5 h left',slaTone:'grey',logged:'today, 9:40 am',status:'Open',desc:'Father wants the final bill estimate and insurance paperwork a day before discharge, not on the day.'},
-    {id:'C-0135',type:'concern',pid:'p6',title:'Laundry not returned',raisedBy:'Vikas Sethi, father',via:'Front desk',owner:'Housekeeping supervisor',ownerRole:'Housekeeping',category:'Room and housekeeping',sla:'Closed in 3.4 h',slaTone:'green',logged:'6 Nov, 10:15 am',status:'Resolved',desc:'Two shirts sent for laundry were not returned.',resolution:'Housekeeping found the clothes in the Floor 1 laundry bag and returned them the same day. Father told by Prabh.'}];
+    {id:'C-0142',type:'request',pid:'varun',title:'Wants a call from the doctor after rounds',raisedBy:'Kiran Rao, brother',via:'Front desk',owner:'Dr. Ichpreet Singh',ownerRole:'Treating psychiatrist',category:'Doctor communication',sla:'Due by 2 pm',slaTone:'amber',logged:'today, 9:10 am',status:'Open',desc:'Called the front desk asking for a short call after rounds to hear how Varun is doing this week.'},
+    {id:'C-0141',type:'concern',pid:'neel',title:'Daily updates feel the same every day',raisedBy:'Anjali Bose, mother',via:'Coordinator call',owner:'Kiran Mehra',ownerRole:'Treating psychologist',category:'Family updates',sla:'1 h 20 m left',slaTone:'amber',logged:'today, 6:30 am',status:'In progress',desc:'The WhatsApp updates say the same thing daily. She wants to know what is actually changing and what the plan is for this week.'},
+    {id:'C-0140',type:'concern',pid:'neel',title:'Room too noisy at night',raisedBy:'Neel Bose, patient',via:'Ward staff',owner:'Sister Rekha',ownerRole:'Nursing in-charge, Floor 2',category:'Room and housekeeping',sla:'4 h 10 m left',slaTone:'grey',logged:'today, 8:50 am',status:'Open',desc:'Told the night nurse he cannot sleep because of noise from the corridor.'},
+    {id:'C-0139',type:'grievance',pid:'kavya',title:'Meals served cold twice this week',raisedBy:'Latha Menon, mother',via:'Coordinator call',owner:'S Chandra',ownerRole:'GM Operations',category:'Food and dietary',sla:'Breached 40 m ago',slaTone:'red',logged:'yesterday, 7:15 pm',status:'Escalated',desc:'Lunch was cold on Monday and Tuesday and Kavya skipped it. Mother is worried because meals are part of her plan.'},
+    {id:'C-0138',type:'request',pid:'meera',title:'Asked for visiting hours and what to bring',raisedBy:'S. Iyer, father',via:'Front desk',owner:'Prabh',ownerRole:'Patient experience',category:'Other',sla:'Due by 6 pm',slaTone:'grey',logged:'today, 10:05 am',status:'Open',desc:'Father wants the visiting rules and a list of what to bring. Share the welcome pack at the family meeting.'},
+    {id:'C-0137',type:'concern',pid:'rahul',title:'Bill estimate not shared before discharge',raisedBy:'Vikas Sethi, father',via:'Coordinator call',owner:'Billing desk',ownerRole:'Billing and TPA',category:'Billing and insurance',sla:'5 h left',slaTone:'grey',logged:'today, 9:40 am',status:'Open',desc:'Father wants the final bill estimate and insurance paperwork a day before discharge, not on the day.'},
+    {id:'C-0135',type:'concern',pid:'rahul',title:'Laundry not returned',raisedBy:'Vikas Sethi, father',via:'Front desk',owner:'Housekeeping supervisor',ownerRole:'Housekeeping',category:'Room and housekeeping',sla:'Closed in 3.4 h',slaTone:'green',logged:'6 Nov, 10:15 am',status:'Resolved',desc:'Two shirts sent for laundry were not returned.',resolution:'Housekeeping found the clothes in the Floor 1 laundry bag and returned them the same day. Father told by Prabh.'}];
   const FLOOR=[['Rooms clean, beds made, bathrooms checked','Housekeeping supervisor'],['Lunch served hot and on time','Kitchen supervisor'],['Diet plans followed for patients who have one','Kitchen, with dietician'],['Attendant present on the floor','Floor supervisor'],
     ['Visitor register filled at the floor door','Security'],['Daily session logs filled (filled or not only)','Psychology team lead'],['Vitals charted on time (filled or not only)','Nursing in-charge'],['Rights and grievance contact on the notice board','Patient experience']];
   const OWNERS=[['NI','Nursing in-charge','Sister Rekha (Floor 2)','nursing care, vitals, night noise'],['FS','Floor supervisor','Day shift','attendants, patient escorts'],['KS','Kitchen supervisor','With dietician','meals, diet plans'],
@@ -206,8 +206,8 @@
   const pById={};P.forEach(p=>{pById[p.id]=p;});
 
   /* ---------------- state ---------------- */
-  const S0={screen:'today',pid:'p2',recTab:'stay',stayFilter:'admitted',filter:'open',cid:'C-0141',showMore:false,overrides:{},reminded:{},concernStatus:{},extraConcerns:[],checks:{},resNote:'',familyTold:false,needFamilyTold:false,
-    floor:'f2',floorMarks:{'f2:0':'ok','f2:1':'issue','f2:2':'ok'},roundDone:false,logOpen:false,form:{type:'concern',pid:'p2',raised:'Family',category:'Family updates',severity:'Medium',desc:''},
+  const S0={screen:'today',pid:'neel',recTab:'stay',stayFilter:'admitted',filter:'open',cid:'C-0141',showMore:false,overrides:{},reminded:{},checks:{},resNote:'',familyTold:false,needFamilyTold:false,
+    floor:'f2',floorMarks:{'f2:0':'ok','f2:1':'issue','f2:2':'ok'},roundDone:false,logOpen:false,form:{type:'concern',pid:'neel',raised:'Family',category:'Family updates',severity:'Medium',desc:''},
     nps:4,ratings:[5,4,4,2,4],outcomes:{f1:'',f2:'',f3:'Came for appointment',f4:'Did not show up',f5:'Found another hospital'}};
   const X=JSON.parse(JSON.stringify(S0));
   const stepStatus=(p,i)=>X.overrides[p.id+':'+i]||p.st[i];
@@ -223,12 +223,59 @@
   const TY={request:['Request','ty blue'],concern:['Concern','ty amber'],grievance:['Grievance','ty red']};
   const SR={request:'#1e6cdb',concern:'#d48806',grievance:'#b42318'};
   const STATUS={'Open':'chip grey','In progress':'chip blue','Escalated':'chip red','Resolved':'chip green'};
-  function allConcerns(){
-    return C0.concat(X.extraConcerns).map(c=>{const s=X.concernStatus[c.id];return s?Object.assign({},c,s):c;}).map(c=>{
-      const closed=c.status==='Resolved',p=pById[c.pid];
-      return Object.assign({},c,{typeLabel:TY[c.type][0],tyCls:TY[c.type][1],sr:'--sr:'+(closed?'#11703a':SR[c.type]),slaText:closed&&c.slaTone!=='green'?'Closed':c.sla,slaCls:'chip '+(closed?'green':c.slaTone),
-        statusCls:STATUS[c.status]||'chip grey',patient:p?p.name:'',room:p?p.room:'',isOpen:!closed,isClosed:closed,resolution:c.resolution||''});
+  /* ---------------- connected to the main prototype ----------------
+     Concerns are the patients' grievance records (ptCtxOf(id).pgriev): the ones the doctors and psychologists see under Patient Experience, and the ones that
+     sync through the shared records. The prototype's own demo concerns are added to those records once. The identity, treating team, family contact,
+     food preference and the doctors' calls come from the main patient data. */
+  const nm2=n=>String(n||'').replace(/^Dr\.\s*/,'').split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+  const fmtDt=iso=>{try{const d=new Date(iso);return d.getDate()+' '+d.toLocaleString('en-GB',{month:'short'})+', '+d.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}).toLowerCase();}catch(e){return '';}};
+  function link(){
+    P.forEach(p=>{
+      try{
+        const mp=ptFind(p.id);if(!mp)return;
+        const id=ptIdentity(mp),c=ptCtxOf(p.id)||{};
+        p.name=id.name||p.name;p.ini=id.ini||p.ini;p.uhid=id.uhid||p.uhid;p.room=id.room||mp.room||p.room;
+        if(c.team){if(c.team.psy){p.doctor=c.team.psy;p.docIni=nm2(c.team.psy);}if(c.team.psych){p.psych=c.team.psych;p.psyIni=nm2(c.team.psych);}}
+        if(id.nr){p.gName=id.nr;p.nr=id.nr;p.gRel=id.rel||p.gRel;p.guardian=id.nr+' ('+String(id.rel||p.gRel).toLowerCase()+')';}
+        if(id.phone)p.phone=id.phone;
+        /* food preference and who may get updates, from the Patient Experience record */
+        const food=c.diet?[c.diet.type,c.diet.notes].filter(Boolean).join(', '):'';
+        if(food)setPref(p,'Food',food);
+        const fc=c.famCons&&c.famCons[p.id];if(fc&&fc.to)setPref(p,'Updates go to',fc.to);else if(id.nr)setPref(p,'Updates go to',id.nr+' ('+String(id.rel||p.gRel).toLowerCase()+')');if(fc&&fc.not)setPref(p,'Do not share with',fc.not);
+        /* the doctors' calls tick off from the call log */
+        const cl=c.calls||{};
+        if(cl.h24==='done'&&p.st[2]!=='done')p.st[2]='done';
+        if(cl.d34psy==='done'&&p.st[3]!=='done')p.st[3]='done';
+        if(cl.d34psych==='done'&&p.st[4]!=='done')p.st[4]='done';
+      }catch(e){}
     });
+  }
+  function setPref(p,k,v){const r=p.prefs.find(x=>x[0]===k);if(r)r[1]=v;else p.prefs.push([k,v]);}
+  const toG=c=>({id:c.id,type:c.type,title:c.title,t:c.title,from:/patient/i.test(c.raisedBy)?'Patient':'Family',raisedBy:c.raisedBy,via:c.via,category:c.category,own:c.owner,ownerRole:c.ownerRole,
+    st:c.status==='Resolved'?'Resolved':'Open',status:c.status,sla:c.sla,slaTone:c.slaTone,logged:c.logged,desc:c.desc,resolution:c.resolution||'',by:'Prabh, patient experience',at:c.logged});
+  let seeded=false;
+  function seed(){
+    if(seeded)return;seeded=true;
+    C0.forEach(c=>{try{const ctx=ptCtxOf(c.pid);if(!ctx)return;ctx.pgriev=Array.isArray(ctx.pgriev)?ctx.pgriev:[];if(ctx.pgriev.some(g=>g.id===c.id))return;const same=ctx.pgriev.find(g=>!g.id&&(g.t===c.title||g.title===c.title));if(same)Object.assign(same,toG(c));else ctx.pgriev.push(toG(c));}catch(e){}});
+  }
+  const findG=cid=>{for(const p of allPts()){const ctx=ptCtxOf(p.id);const g=ctx&&Array.isArray(ctx.pgriev)?ctx.pgriev.find(x=>x.id===cid):null;if(g)return g;}return null;};
+  function allConcerns(){
+    seed();
+    const out=[];let n=0;
+    allPts().forEach(p=>{
+      const ctx=ptCtxOf(p.id);if(!ctx||!Array.isArray(ctx.pgriev))return;
+      ctx.pgriev.forEach((g,i)=>{
+        if(!g.id)g.id='G-'+p.id+'-'+(i+1); /* an entry made elsewhere gets a number the first time it is seen here */
+        const open=g.st!=='Resolved',status=g.status||(open?'Open':'Resolved'),tone=g.slaTone||(open?(/breach/i.test(g.sla||'')?'red':'amber'):'green'),type=g.type||'concern';
+        const pp=pById[p.id];
+        out.push({id:g.id,type,pid:p.id,title:g.title||g.t||'Concern',raisedBy:g.raisedBy||g.from||'Family',via:g.via||'Logged',owner:g.own||'Patient experience team',ownerRole:g.ownerRole||'',category:g.category||'Other',
+          sla:g.sla||'',slaTone:tone,logged:g.logged||g.at||'',status,desc:g.desc||g.t||'',resolution:g.resolution||'',
+          typeLabel:TY[type][0],tyCls:TY[type][1],sr:'--sr:'+(!open?'#11703a':SR[type]),slaText:!open&&tone!=='green'?'Closed':(g.sla||''),slaCls:'chip '+(!open?'green':tone),
+          statusCls:STATUS[status]||'chip grey',patient:pp?pp.name:p.name,room:pp?pp.room:p.room,isOpen:open,isClosed:!open,order:n++});
+      });
+    });
+    const num=id=>{const m=String(id).match(/C-0?(\d+)/);return m?+m[1]:-1;};
+    return out.sort((a,b)=>num(b.id)-num(a.id)||a.order-b.order);
   }
   function tasksOf(){
     const t=[];
@@ -261,12 +308,12 @@
     return `<div class="hello"><div><h2>Good morning, Prabh</h2><div class="muted">Wednesday 11 November · ${tasks.length+openC.length} things to do</div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" onclick="PXL.nav('floor')">Start floor round</button><button class="btn pri" type="button" onclick="PXL.log(true)">${ICO.plus}Log a concern</button></div></div>
     ${first?`<div class="starthere"><div class="muted small">Start here · This is late</div><div><span class="name">${h(first.step)}</span> · ${h(first.patient)} · <span style="color:#b42318;font-weight:600">${h(first.when)}</span></div><div class="muted small">${rest.length+openC.length} more things waiting after this one.</div><div><button class="btn pri" type="button" onclick="PXL.task('${first.pid}',${first.i})">${h(first.btnLabel)}</button></div></div>`:''}
-    <div class="cols"><div class="cm">
+    <div class="cols"><div class="pxcm">
       <section class="card"><div class="chead"><h3>Then</h3><span class="muted small">Doctor and psychologist calls tick off from the HMS call log</span></div><div>
         ${then.map(t=>`<div class="listrow"><span class="${t.tagCls}">${t.tag}</span><div class="grow"><span class="name">${h(t.patient)}</span> · ${h(t.step)}<div class="muted small">${h(t.owner)}</div></div><button class="${t.btnCls}" type="button" onclick="PXL.task('${t.pid}',${t.i})">${ICO.done}${h(t.btnLabel)}</button><button class="btn sm link" type="button" onclick="PXL.open('${t.pid}')">Open record</button></div>`).join('')}</div>
         ${rest.length>5?`<button class="more" type="button" onclick="PXL.more()">${X.showMore?'Show fewer':'See '+(rest.length-5)+' more'}</button>`:''}</section>
       <section class="card"><div class="chead"><h3>My patients</h3><button class="btn sm link" type="button" onclick="PXL.nav('stays')">All stays</button></div><div class="pgrid">${pcards}</div></section>
-    </div><div class="cs">
+    </div><div class="pxcs">
       <section class="card"><div class="chead"><h3>Concerns on the clock</h3><button class="btn sm link" type="button" onclick="PXL.nav('concerns','open')">See all</button></div><div>
         ${conc.map(c=>`<div class="listrow"><div class="grow"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="${c.tyCls}">${c.typeLabel}</span><span class="${c.slaCls}">${h(c.slaText)}</span></div><div class="name" style="margin-top:4px">${h(c.title)}</div><div class="muted small">${h(c.patient)} · ${h(c.owner)}</div></div><button class="btn sm" type="button" onclick="PXL.concern('${c.id}')">Open</button></div>`).join('')}</div></section>
       <section class="card"><div class="chead"><h3>Family call requests</h3><span class="muted small">In the doctor's call queue</span></div><div>
@@ -318,7 +365,7 @@
         ${sp.log.map(l=>`<div class="tl"><div class="tld">${h(l.d)}</div><span class="tlm" style="background:#1e6cdb"></span><div class="grow"><div class="name">${h(l.what)}</div><div class="muted small">${h(l.who)} · ${h(l.time)} · ${h(l.how)}</div>${l.note?`<div class="small" style="margin-top:4px">${h(l.note)}</div>`:''}</div></div>`).join('')}
         ${sp.log.length?'':'<div class="cpad muted">No contact logged yet.</div>'}</div></section>
         <section class="card" style="flex:2 1 320px"><div class="chead"><h3>Visits and outings</h3><span class="muted small">Security sees this list</span></div><div>${kv(sp.visits)}</div></section></div>`;
-    else if(tab==='prefs')body=`<div class="cols"><section class="card" style="flex:1 1 380px"><div class="chead"><h3>Preferences</h3><button class="btn sm" type="button" onclick="PXL.stub('Preferences are edited in the patient record')">Edit</button></div><div class="muted small" style="padding:10px 20px 0">Shared by the care team. Nursing, kitchen and front desk can read this.</div><div style="padding-top:6px">${kv(sp.prefs)}</div></section>
+    else if(tab==='prefs')body=`<div class="cols"><section class="card" style="flex:1 1 380px"><div class="chead"><h3>Preferences</h3><button class="btn sm" type="button" onclick="PXL.prefs('${sp.id}')">Edit</button></div><div class="muted small" style="padding:10px 20px 0">Shared by the care team. Nursing, kitchen and front desk can read this.</div><div style="padding-top:6px">${kv(sp.prefs)}</div></section>
         <section class="card" style="flex:1 1 380px"><div class="chead"><h3>Belongings</h3><span class="muted small">Logged at admission with front desk</span></div><div>${kv(sp.belongings)}</div></section></div>`;
     else if(tab==='concerns')body=`<section class="card"><div class="chead"><h3>Concerns for this stay</h3><button class="btn sm soft" type="button" onclick="PXL.log(true)">+ Log concern</button></div><div>
         ${sc.map(c=>`<div class="listrow"><span class="${c.tyCls}" style="flex:0 0 90px">${c.typeLabel}</span><div class="grow"><div class="name">${h(c.title)}</div><div class="muted small">${h(c.raisedBy)} · ${h(c.owner)}</div></div><span class="${c.slaCls}">${h(c.slaText)}</span><button class="btn sm" type="button" onclick="PXL.concern('${c.id}')">Open</button></div>`).join('')}
@@ -405,7 +452,7 @@
     return `<div class="pxl-overlay" onclick="if(event.target===this)PXL.log(false)"><div class="pxl" role="dialog" aria-label="Log a concern">
       <div class="toolbar"><h3>Log a concern</h3><button class="btn sm link" type="button" onclick="PXL.log(false)">Close</button></div>
       <div class="field"><label>Type</label><div class="seg">${TYPES.map(t=>`<button class="${f.type===t[0]?'on':''}" type="button" onclick="PXL.type('${t[0]}')">${t[1]}</button>`).join('')}</div><div class="muted small">${HINT[f.type]}</div></div>
-      <div class="fgrid"><div class="field"><label for="pxLp">Patient</label><select id="pxLp" onchange="PXL.fset('pid',this.value)">${P.map(p=>`<option value="${p.id}" ${f.pid===p.id?'selected':''}>${h(p.name)} · ${h(p.room)}</option>`).join('')}</select></div>
+      <div class="fgrid"><div class="field"><label for="pxLp">Patient</label><select id="pxLp" onchange="PXL.fset('pid',this.value)">${allPts().map(p=>`<option value="${p.id}" ${f.pid===p.id?'selected':''}>${h(p.name)} · ${h(p.room)}</option>`).join('')}</select></div>
         <div class="field"><label for="pxLr">Raised by</label><select id="pxLr" onchange="PXL.fset('raised',this.value)">${opt(['Family','Patient','Ward staff','Front desk','Call centre','Floor round'],f.raised)}</select></div>
         <div class="field"><label for="pxLc">Category</label><select id="pxLc" onchange="PXL.fset('category',this.value,true)">${opt(Object.keys(ROUTES),f.category)}</select></div>
         <div class="field"><label for="pxLs">Severity</label><select id="pxLs" onchange="PXL.fset('severity',this.value)">${opt(['Low','Medium','High'],f.severity)}</select></div></div>
@@ -448,6 +495,7 @@
     const r=(location.hash||'#/myday').slice(2).split('/');
     if(!own(r))return __render.apply(this,arguments);
     const scr=screenOf(r);X.screen=scr;
+    link();
     try{$('app').classList.remove('compact');}catch(e){}
     renderSide(r);
     const all=allConcerns(),openC=all.filter(c=>c.isOpen),tasks=tasksOf();
@@ -475,9 +523,9 @@
     told(){X.familyTold=!X.familyTold;X.needFamilyTold=false;rerender();},
     resolve(cid){
       if(!X.familyTold){X.needFamilyTold=true;rerender();return;}
-      X.concernStatus[cid]=Object.assign({},X.concernStatus[cid]||{},{status:'Resolved',slaTone:'green',sla:'Closed today',resolution:(X.resNote||'Resolved.')+' Family told by Prabh.'});X.resNote='';X.familyTold=false;rerender();
+      const g=findG(cid);if(g){Object.assign(g,{st:'Resolved',status:'Resolved',slaTone:'green',sla:'Closed today',resolution:(X.resNote||'Resolved.')+' Family told by Prabh.',doneBy:'Prabh, patient experience',doneAt:atNow()});}X.resNote='';X.familyTold=false;rerender();toast('Marked resolved. The treating team can see it on the patient record.');
     },
-    escalate(cid){X.concernStatus[cid]=Object.assign({},X.concernStatus[cid]||{},{status:'Escalated',owner:'S Chandra',ownerRole:'GM Operations'});rerender();},
+    escalate(cid){const g=findG(cid);if(g)Object.assign(g,{status:'Escalated',own:'S Chandra',ownerRole:'GM Operations'});rerender();toast('Escalated to GM Operations');},
     floor(f){X.floor=f;X.roundDone=false;rerender();},
     mark(i,v){X.floorMarks[X.floor+':'+i]=v;rerender();},
     finish(){X.roundDone=true;rerender();},
@@ -486,12 +534,18 @@
     outcome(id,v){X.outcomes[id]=v;rerender();},
     saveFb(){toast(X.nps<=6?'Feedback saved. A concern was opened for you to follow up.':'Feedback saved');},
     stub(msg){toast(msg);},
+    prefs(pid){go('#/patient/'+pid+'/prefs');},
     log(open){X.logOpen=!!open;if(open)X.form=Object.assign({},X.form,{pid:X.screen==='record'?X.pid:X.form.pid});rerender();},
     type(t){X.form.type=t;rerender();},
     fset(k,v,re){X.form[k]=v;if(re)rerender();},
     save(){
-      const f=X.form,id='C-0'+(143+X.extraConcerns.length),t=f.type,rt=t==='grievance'?['S Chandra','GM Operations']:(ROUTES[f.category]||ROUTES.Other);
-      X.extraConcerns.push({id,type:t,pid:f.pid,title:(f.desc||'New '+t).split('.')[0].slice(0,70),raisedBy:f.raised,via:'Logged by Prabh',owner:rt[0],ownerRole:rt[1],category:f.category,sla:t==='request'?'Due by end of day':'6 h left',slaTone:'grey',logged:'just now',status:t==='grievance'?'Escalated':'Open',desc:f.desc||'No description added.'});
+      const f=X.form,t=f.type,rt=t==='grievance'?['S Chandra','GM Operations']:(ROUTES[f.category]||ROUTES.Other);
+      let max=0;allConcerns().forEach(c=>{const m=String(c.id).match(/^C-0?(\d+)$/);if(m)max=Math.max(max,+m[1]);});
+      const id='C-0'+(max+1),ctx=ptCtxOf(f.pid);if(!ctx){toast('Choose a patient');return;}
+      ctx.pgriev=Array.isArray(ctx.pgriev)?ctx.pgriev:[];
+      const title=(f.desc||'New '+t).split('.')[0].slice(0,70),w=(typeof whoAt==='function')?whoAt():{by:'Prabh, patient experience',at:''};
+      ctx.pgriev.unshift({id,type:t,title,t:title,from:f.raised,raisedBy:f.raised,via:'Logged by Prabh',category:f.category,own:rt[0],ownerRole:rt[1],st:'Open',status:t==='grievance'?'Escalated':'Open',
+        sla:t==='request'?'Due by end of day':'6 h left',slaTone:'grey',logged:'just now',desc:f.desc||'No description added.',by:'Prabh, patient experience',at:w.at||'just now'});
       X.logOpen=false;X.filter='open';X.cid=id;X.form=Object.assign({},f,{desc:''});setHash('concerns');toast('Saved and assigned to '+rt[0]);
     }
   };
