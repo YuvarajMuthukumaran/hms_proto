@@ -483,6 +483,9 @@
           therapyBtns(v);pxIcons(v);
           v.querySelectorAll('.psy-tx-panel').forEach(p=>{if(/^Treatment Management Plan/.test(((p.querySelector('h3')||{}).textContent||'').trim()))tmpLog(p);});
         }
+      }else if(S.role==='psychologist'){
+        /* the psychologist's Patient Experience page gets the same icons as the psychiatrist's */
+        const v=$('view');if(v)pxIcons(v);
       }
     }catch(e){}
     return out;
