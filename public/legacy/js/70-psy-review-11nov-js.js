@@ -109,8 +109,7 @@
     card.className='card';card.removeAttribute('style');card.id='formcCard';
     card.innerHTML=`<div class="hd"><h3>Form C · Independent admission</h3><span class="chip c-grey">Taken by front desk</span></div>
       <div class="scroll fcT"><table class="ct-t"><thead><tr><th>Form</th><th>Status</th><th></th></tr></thead><tbody><tr><td style="font-weight:600">Form C · independent admission (Mental Healthcare Act)<div class="tiny muted" style="font-weight:400;margin-top:2px">Optional at admission, based on the psychiatrist or psychologist's clinical judgement. Required again before discharge.</div></td><td><span class="cs ${c?'':'due'}">${hesc(st)}</span></td>
-        <td><div class="ct-a">${view}<label class="btn sm" style="cursor:pointer">Upload signed copy<input type="file" hidden onchange="psyConsentUpload('form-c',this)"></label><button class="btn sm pri" onclick="pgFormCEsign()">Collect e-signature</button></div></td></tr></tbody></table></div>
-      <div class="pad small muted">E-signature is a trial: the legal team is still checking that it is valid.</div>`;
+        <td><div class="ct-a">${view}<label class="btn sm" style="cursor:pointer">Upload signed copy<input type="file" hidden onchange="psyConsentUpload('form-c',this)"></label><button class="btn sm pri" onclick="pgFormCEsign()">Collect e-signature</button></div></td></tr></tbody></table></div>`;
   }
 
   window.psyFormCTable=formCTable; /* the psychologist's Admission step 5 uses the same table (called from the psychologist block) */

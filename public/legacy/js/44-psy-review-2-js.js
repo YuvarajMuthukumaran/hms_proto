@@ -237,8 +237,7 @@
         <td><div class="ct-a">${view}<label class="btn sm" style="cursor:pointer">Upload signed copy<input type="file" hidden onchange="psyConsentUpload('${fid}',this)"></label><button class="btn sm pri" onclick="psyEsignOpen('${fid}')">Collect e-signature</button></div></td></tr>`;
     }).join('');
     return `<section class="card" id="consentCard"><div class="hd"><h3>Admission forms</h3><span class="chip c-grey">Taken by front desk</span></div>
-      <div class="scroll"><table class="ct-t"><thead><tr><th>Form</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="pad small muted">E-signature is a trial: the legal team is still checking that it is valid. Other consents are on Treatment Plan.</div></section>`;
+      <div class="scroll"><table class="ct-t"><thead><tr><th>Form</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
   }
   window.psyConsentUpload=function(fid,inp){
     const f=inp.files&&inp.files[0];if(!f)return;
