@@ -203,6 +203,17 @@
     head.classList.add('ipd-h11');head.appendChild(tabs);
   };
 
+  /* Therapy Plans: Start session gets the same recording-button design as the psychiatrist's "Record with AI scribe" (mic, becomes a waveform on hover; styles are in the psychiatrist block) */
+  const MIC='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+  const startBtn=v=>{
+    v.querySelectorAll('button.pg-start').forEach(b=>{
+      if(b.querySelector('.rc-ic'))return;
+      b.className='btn sm th10-rec pg-start';b.removeAttribute('style');b.style.marginRight='10px';
+      b.innerHTML=`<span class="rc-ic" aria-hidden="true">${MIC}<span class="rc-bars"><i></i><i></i><i></i><i></i></span></span><span>Start session</span>`;
+      b.setAttribute('aria-label','Start session and record with the AI scribe');
+    });
+  };
+
   /* detailed history: put the section numbers in the toolbar row */
   const histNav=v=>{
     const seg=v.querySelector('.hist-seg'),nav=v.querySelector('.hwrap .hnav');
@@ -214,7 +225,7 @@
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
-    if(me()){try{const v=$('view');if(v){histNav(v);ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
+    if(me()){try{const v=$('view');if(v){histNav(v);startBtn(v);ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
     return out;
   };
 })();

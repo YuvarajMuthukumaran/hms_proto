@@ -29,8 +29,6 @@
     const mp=[m.therapyPlan||m.therapies,m.goals&&('Goals: '+m.goals)].filter(Boolean).join('\n');
     const L=lists();
     return `<section class="card pg-rp" id="pgRp">
-      <div class="pg-rp-b"><h4>Therapy plan</h4><div class="pg-rp-sub">Free text: therapies, assessment plans and anything new that came up in this round.</div>
-        <textarea class="input" rows="4" placeholder="Write the therapy plan" oninput="pgRpTxt('${pid}',this.value)">${hesc(plan(pid).therapyPlan||'')}</textarea></div>
       <div class="pg-rp-b"><h4>Planned assessments</h4><div class="pg-rp-sub">From the assessments the psychiatrist allocates in the doctor portal.</div>${pick(pid,'assess',L.MODS,'Choose an assessment…')}${chips(pid,'assess')}</div>
       <div class="pg-rp-b"><h4>Planned behavioural activations</h4><div class="pg-rp-sub">Activities planned with the patient.</div>${pick(pid,'acts',L.ACTS,'Choose an activity…')}${chips(pid,'acts')}</div>
       <div class="pg-rp-b"><h4>Management plan</h4><div class="pg-rp-sub">Read only. Your plan for this stay.</div><div class="pg-rp-ro">${mp?hesc(mp):'Not written yet.'}</div>
