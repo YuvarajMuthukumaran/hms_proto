@@ -30,12 +30,11 @@
   body.psg .hrow11.hrow11 .hnav button{width:auto!important;display:inline-flex!important;align-items:center;justify-content:center!important;gap:5px;padding:4px 7px!important;border-radius:99px;position:relative;white-space:nowrap}
   body.psg .hrow11.hrow11 .hnav button>span:not(.hn){display:none!important}
   body.psg .hrow11.hrow11 .hnav button:hover:after,body.psg .hrow11.hrow11 .hnav button:focus-visible:after{content:attr(data-t)!important;display:block!important;position:absolute;left:auto;right:0;top:calc(100% + 10px);transform:none;background:#101828;color:#fff;font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:9px;white-space:nowrap;z-index:60;pointer-events:none;box-shadow:0 8px 20px rgba(16,24,40,.22)}
-  /* Rounds: the planning card (assessments, activations, management plan). Same content, calmer layout: two columns, a small icon on each heading,
+  /* Rounds: the planning card (assessments and activations). Same content, calmer layout: two columns, a small icon on each heading,
      violet chips like the rest of the psychologist's Rounds, and the vitals strip wraps instead of overlapping on narrower screens */
   body.pgr .pg-rp{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0}
   body.pgr .pg-rp .pg-rp-b{padding:20px 24px!important;border-top:1px solid var(--line)}
   body.pgr .pg-rp .pg-rp-b:nth-of-type(1){border-right:1px solid var(--line)}
-  body.pgr .pg-rp .pg-rp-b:nth-of-type(3){grid-column:1/-1}
   body.pgr .pg-rp h4{display:flex;align-items:center;gap:10px;margin:0 0 4px;font-size:15px;font-weight:700}
   body.pgr .pg-rp h4::before{content:none!important}body.pgr .pg-rp .pg-rp-sub{display:none}
   body.pgr .pg-rp .pg-rp-b:nth-of-type(1) h4::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236941c6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='6' y='4' width='12' height='17' rx='2'/%3E%3Cpath d='M9 4V3h6v1M9 13l2 2 4-4'/%3E%3C/svg%3E")}
@@ -47,11 +46,13 @@
   body.pgr .pg-rp-chip{background:#f4f0ff;border-color:#d9ccfa;color:#5925dc}
   body.pgr .pg-rp-chip button{background:#e9defc;color:#5925dc}
   body.pgr .pg-rp-chip button:hover{background:#d9ccfa}
-  body.pgr .pg-rp-ro{background:#fbfaff;border:1px solid #e4dcf8;border-left:3px solid #7f56d9;border-radius:12px;padding:14px 16px;line-height:1.55}
-  body.pgr .pg-asg{margin-top:14px;padding-top:12px;border-top:1px dashed #e4dcf8}
-  body.pgr .pg-asg-h{font-size:12px;font-weight:700;color:#6941c6;margin-bottom:6px}
-  body.pgr .pg-asg-r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0}
+  body.pgr .pg-asg{margin-top:16px;padding-top:14px;border-top:1px dashed #e4dcf8}
+  body.pgr .pg-asg-h{font-size:14px;font-weight:700;color:#6941c6;margin-bottom:3px}
+  body.pgr .pg-asg-sub{font-size:12px;color:var(--muted);margin-bottom:7px}
+  body.pgr .pg-asg-r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid #f2eff8}
   body.pgr .pg-asg-r b{display:block;font-size:13.5px}
+  body.pgr .pg-asg-demo{display:inline-flex;margin-top:4px;padding:2px 7px;border:1px solid #e4dcf8;border-radius:99px;background:#fbfaff;color:#6941c6;font-size:10.5px;font-weight:650}
+  body.pgr .pg-asg-done{color:#067647;font-size:12px;font-weight:700;white-space:nowrap}
   body.pgr .pr-vit{flex-wrap:wrap}
   body.pgr .pr-vit .pr-vi{flex:1 1 96px;min-width:96px}
   @media (max-width:900px){body.pgr .pg-rp{grid-template-columns:1fr}body.pgr .pg-rp .pg-rp-b:nth-of-type(1){border-right:0}}
@@ -195,7 +196,19 @@
   };
 
   /* ---------- 4. Assessments the doctor assigned in Rounds show on Today, with a Mark done button ---------- */
-  const mineAsg=pid=>{let L=[];try{L=(psyPx(pid).assignedAssess||[]);}catch(e){}const me1=signer();return L.map((a,i)=>({a,i})).filter(o=>o.a.status!=='Done'&&(!o.a.to||o.a.to===me1));};
+  const seedRoundAssessments=pid=>{
+    /* Visible demo assignments for Arjun (Priya's patient); the stable keys prevent duplicates across redraws. */
+    if(pid!=='arjun'||!me())return;
+    try{
+      const x=psyPx(pid);x.assignedAssess=x.assignedAssess||[];
+      const demo=[
+        {demoKey:'round-demo-phq9',name:'PHQ-9 (depression)',to:'Priya Nair',by:'Dr. Aanya Sharma',at:'11 Nov 2026, 9:15 am',status:'Assigned'},
+        {demoKey:'round-demo-gad7',name:'GAD-7 (anxiety)',to:'Priya Nair',by:'Dr. Aanya Sharma',at:'11 Nov 2026, 9:18 am',status:'Assigned'}
+      ];
+      demo.forEach(d=>{if(!x.assignedAssess.some(a=>a.demoKey===d.demoKey))x.assignedAssess.push(d);});
+    }catch(e){}
+  };
+  const mineAsg=pid=>{let L=[];try{L=(psyPx(pid).assignedAssess||[]);}catch(e){}const me1=signer();return L.map((a,i)=>({a,i})).filter(o=>!o.a.to||o.a.to===me1);};
   window.pgAsgDone=function(pid,i){
     const a=((psyPx(pid).assignedAssess)||[])[i];if(!a)return;
     a.status='Done';a.doneBy=signer();a.doneAt=atNow();render();toast(a.name.replace(/ \(.*\)/,'')+' marked done by '+signer());
@@ -219,7 +232,6 @@
     <span><i class="amber"></i>Due or late <em>· overdue notes, reviews, results to check</em></span>
     <span><i class="ok"></i>Action taken</span></div>`;
   const tidy=v=>{
-    v.querySelectorAll("#pgRp .pg-rp-b").forEach(x=>{const h4=x.querySelector("h4");if(h4&&/^Management plan/.test(h4.textContent.trim()))x.remove();});
     v.querySelectorAll("h3,h4,.lbl,b,span").forEach(e=>{if(e.children.length===0&&e.textContent.trim()==="Round note")e.textContent="Therapy note";});
     v.querySelectorAll(".subtab").forEach(t=>{const tn=[...t.childNodes].reverse().find(n=>n.nodeType===3&&/Vitals and medicines/.test(n.nodeValue));if(tn)tn.nodeValue=tn.nodeValue.replace("Vitals and medicines","Treatment Plan");});
   };
@@ -260,7 +272,7 @@
     });
   };
 
-  /* Rounds: Start AI scribe gets the recording-button design; assessments the psychiatrist assigned are listed under Planned assessments */
+  /* Rounds: Start AI scribe gets the recording-button design; psychiatrist assignments appear under Received assessments */
   const scribeBtn=v=>{
     v.querySelectorAll('button[onclick="listenRound()"]').forEach(b=>{
       if(b.querySelector('.rc-ic')||!/^\s*Start AI scribe\s*$/.test(b.textContent))return;
@@ -269,11 +281,13 @@
     });
   };
   const asgRounds=v=>{
-    const box=v.querySelector('#pgRp .pg-rp-b');if(!box||box.querySelector('.pg-asg'))return;
     let pid=null;try{const R=S.rounds,w=(WARDS||{})[R.ward]||[];const p=w[R.idx[R.ward]];pid=p&&p.id;}catch(e){}
     if(!pid)return;
-    const L=mineAsg(pid);if(!L.length)return;
-    box.insertAdjacentHTML('beforeend',`<div class="pg-asg"><div class="pg-asg-h">Assigned by the psychiatrist</div>${L.map(o=>`<div class="pg-asg-r"><span><b>${hesc(o.a.name)}</b><span class="tiny muted">${hesc(o.a.by)}, ${hesc(o.a.at)}</span></span><button type="button" class="btn sm" onclick="pgAsgDone('${pid}',${o.i})">Mark done</button></div>`).join('')}</div>`);
+    seedRoundAssessments(pid);
+    const plan=v.querySelector('#pgRp .pg-rp-b');if(!plan||plan.querySelector('.pg-asg'))return;
+    const L=mineAsg(pid),section=document.createElement('div');section.className='pg-asg';
+    section.innerHTML=`<div class="pg-asg-h">Received assessments</div><div class="pg-asg-sub">Assigned to you by the treating psychiatrist.</div>${L.length?L.map(o=>`<div class="pg-asg-r"><span><b>${hesc(o.a.name)}</b><span class="tiny muted">Assigned by ${hesc(o.a.by||'Treating psychiatrist')}${o.a.at?' · '+hesc(o.a.at):''}</span>${o.a.demoKey?'<span class="pg-asg-demo">Demo assignment</span>':''}</span>${o.a.status==='Done'?'<span class="pg-asg-done">✓ Done</span>':`<button type="button" class="btn sm" onclick="pgAsgDone('${pid}',${o.i})">Mark done</button>`}</div>`).join(''):'<div class="small muted">No assessments received yet.</div>'}`;
+    plan.appendChild(section);
   };
 
   /* detailed history: put the section numbers in the toolbar row */
@@ -287,7 +301,7 @@
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
-    if(me()){try{const v=$('view');if(v){tidy(v);colourKey(v);histNav(v);startBtn(v);scribeBtn(v);asgRounds(v);ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
+    if(me()){try{const v=$('view');if(v){v.querySelector('#asgCard')?.remove();tidy(v);colourKey(v);histNav(v);startBtn(v);scribeBtn(v);asgRounds(v);ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
     return out;
   };
 })();

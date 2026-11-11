@@ -6,8 +6,8 @@
       the card 62 wrote is now actually on the page, for the patient being seen.
    2. "We don't need to show this current medicine chart, we can remove it ... they can see that in vitals and
       medicines" [16:15-16:47] — the Medicine card is gone from the psychologist's Rounds only.
-   The pieces this uses (pgRpTxt, pgRpAdd, pgRpDel, the .pg-rp styles) come from block 62, and pgMpLists and pgMpModal
-   from block 57. Gated by S.role==='psychologist'. */
+   The pieces this uses (pgRpAdd, pgRpDel and the .pg-rp styles) come from block 62, and pgMpLists from block 57.
+   Gated by S.role==='psychologist'. */
 (function(){
   const me=()=>S.role==='psychologist';
   const tpl=h=>{const t=document.createElement('template');t.innerHTML=h;return t;};
@@ -25,14 +25,10 @@
   const pick=(pid,k,list,ph)=>`<select class="input" aria-label="${hesc(ph)}" onchange="pgRpAdd('${pid}','${k}',this)"><option value="">${hesc(ph)}</option>${list.filter(x=>!(plan(pid)[k]||[]).includes(x)).map(x=>`<option>${hesc(x)}</option>`).join('')}</select>`;
 
   const card=pid=>{
-    const m=(psyPx(pid).mgmtPsych)||{};
-    const mp=[m.therapyPlan||m.therapies,m.goals&&('Goals: '+m.goals)].filter(Boolean).join('\n');
     const L=lists();
     return `<section class="card pg-rp" id="pgRp">
       <div class="pg-rp-b"><h4>Planned assessments</h4><div class="pg-rp-sub">From the assessments the psychiatrist allocates in the doctor portal.</div>${pick(pid,'assess',L.MODS,'Choose an assessment…')}${chips(pid,'assess')}</div>
-      <div class="pg-rp-b"><h4>Planned behavioural activations</h4><div class="pg-rp-sub">Activities planned with the patient.</div>${pick(pid,'acts',L.ACTS,'Choose an activity…')}${chips(pid,'acts')}</div>
-      <div class="pg-rp-b"><h4>Management plan</h4><div class="pg-rp-sub">Read only. Your plan for this stay.</div><div class="pg-rp-ro">${mp?hesc(mp):'Not written yet.'}</div>
-        <div class="row" style="margin-top:10px;gap:8px"><button class="btn sm" onclick="pgMpModal('${pid}')">${m.signed?'View management plan':'Open management plan'}</button></div></div></section>`;
+      <div class="pg-rp-b"><h4>Planned behavioural activations</h4><div class="pg-rp-sub">Activities planned with the patient.</div>${pick(pid,'acts',L.ACTS,'Choose an activity…')}${chips(pid,'acts')}</div></section>`;
   };
 
   const __vr=vRounds;

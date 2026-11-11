@@ -4,7 +4,7 @@
    - Patient overview: medicines list is tighter, prescribed by / start / duration sit in the empty space on the right (quiet, not bold),
      "Ward adherence" is written once, refused and held doses show as "Hold: 2 times"; the buttons in the summary boxes sit beside the text.
    - Team chips: "Dr. Name" for the psychiatrist, name only for the psychologist, no role words.
-   - Past admissions: the first page lists every kind of document in folders (case history, capacity assessment, management plans,
+   - Past admissions: the first page lists document types in folders (case history, capacity assessment, management plans,
      re-assessments, round notes, daily notes by psychiatrist and by psychologist, therapy and family). Open a folder to see its entries, one line each.
    - Admission tab: blue steps instead of green; no "No known drug allergies" card (allergies are in the detailed history); Admission documents only
      under step 2; Admission forms as a table (form, status, View form / Upload signed copy / Collect e-signature); empty treatment chart hidden in the
@@ -167,23 +167,82 @@
     return (a.notes||[]).map(n=>{
       const [dd,mm]=String(n[0]).split(' '),parts=String(n[1]).split(' · ');
       const by0=parts.length>1?parts[parts.length-1]:'',type=parts.length>1?parts.slice(0,-1).join(' · '):parts[0];
-      const by=by0||a.psy,role=/Dr\./.test(by)?'Psychiatrist':'Psychologist';
+      const by=by0||a.psy,role=/Dr\./.test(by)?'Psychiatrist':/nurse|sister/i.test(by)?'Nursing':/front desk|coordinator|administrator/i.test(by)?'Hospital staff':'Psychologist';
       return {d:dd,my:(mm||'')+' '+yr,type,by,role,text:n[2],sum:n[2]};
     });
   }
-  const FOLDERS=[['hist','Detailed case history'],['cap','Capacity assessment'],['plan','Management plans'],['rea','Weekly re-assessments'],['round','Round notes'],
-    ['dnp','Daily notes · psychiatrist'],['dns','Daily notes · psychologist'],['fam','Therapy and family sessions'],['other','Other notes']];
+  const FOLDERS=[
+    ['identity','Identity proof'],['admissionConsent','Admission consent form'],['application','Application form'],['highRisk','High risk informed consent'],['formCE','Form C and Form E'],
+    ['cap','Capacity assessment'],['rea','Weekly re-assessments'],['admissionNotes','Admission notes'],['hist','Detailed case history'],['plan','Management plans'],
+    ['dnp','Daily notes · psychiatrist'],['dns','Daily notes · psychologist'],['fam','Therapy and family sessions'],['familyConsult','Family consultation'],
+    ['scales','Psycho-diagnostic scales'],['round','Round notes'],['outing','Outing notes'],['dischargeConsent','Discharge consent'],['dischargeSummary','Discharge summary'],
+    ['prescription','Prescription'],['medicineCharts','Medicine charts'],['investigations','Investigation reports'],['nursingAdmission','Nursing admission assessment'],
+    ['nursingAssessment','Daily nursing assessment'],['nursingNotes','Nursing daily notes'],['medReconciliation','Medicine reconciliation form'],
+    ['nutrition','Nutritional assessment'],['whatsapp','WhatsApp chats'],['dischargeChecklist','Discharge checklist'],['other','Other notes']
+  ];
   const catOf=i=>{
-    const t=i.type;
+    const t=String(i.type||'');
+    if(/identity|id proof|aadhaar|passport|voter id/i.test(t))return 'identity';
+    if(/admission.*consent|consent.*admission/i.test(t))return 'admissionConsent';
+    if(/application form/i.test(t))return 'application';
+    if(/high.?risk.*consent/i.test(t))return 'highRisk';
+    if(/form\s*c|form\s*e|statutory/i.test(t))return 'formCE';
     if(/histor/i.test(t))return 'hist';
     if(/capacity/i.test(t))return 'cap';
-    if(/plan/i.test(t))return 'plan';
     if(/re-?assess/i.test(t))return 'rea';
+    if(/admission note/i.test(t))return 'admissionNotes';
+    if(/plan/i.test(t))return 'plan';
+    if(/family consultation/i.test(t))return 'familyConsult';
+    if(/psycho.?diagnostic|diagnostic scale/i.test(t))return 'scales';
+    if(/outing/i.test(t))return 'outing';
+    if(/discharge.*consent/i.test(t))return 'dischargeConsent';
+    if(/discharge.*summary/i.test(t))return 'dischargeSummary';
+    if(/discharge.*checklist/i.test(t))return 'dischargeChecklist';
+    if(/prescription/i.test(t))return 'prescription';
+    if(/medicine.*chart|medication.*chart/i.test(t))return 'medicineCharts';
+    if(/investigation|lab report/i.test(t))return 'investigations';
+    if(/nursing admission/i.test(t))return 'nursingAdmission';
+    if(/daily nursing assessment|nursing daily assessment/i.test(t))return 'nursingAssessment';
+    if(/nursing.*note/i.test(t))return 'nursingNotes';
+    if(/medicine reconciliation/i.test(t))return 'medReconciliation';
+    if(/nutrition|nutritional|diet assessment/i.test(t))return 'nutrition';
+    if(/whatsapp|chat/i.test(t))return 'whatsapp';
     if(/daily/i.test(t))return i.role==='Psychiatrist'?'dnp':'dns';
     if(/round/i.test(t))return 'round';
     if(/family|therapy|session/i.test(t))return 'fam';
     return 'other';
   };
+  function seedPastDocumentSamples(a){
+    if(S.pid!=='neel'||!a||a.n!==1)return;
+    const samples=[
+      ['4 Feb','Identity proof','Demo record · identity document checked at admission; identifying numbers redacted.','identity','Meena Arora, front desk'],
+      ['4 Feb','Admission consent form','Demo record · admission consent reviewed and signed by the nominated representative.','admissionConsent','Meena Arora, front desk'],
+      ['4 Feb','Application form','Demo record · admission application completed; personal contact details redacted.','application','Meena Arora, front desk'],
+      ['4 Feb','High risk informed consent','Demo record · risks, observation plan, and family questions documented.','highRisk','Dr. Aanya Sharma'],
+      ['4 Feb','Form E · admission with high support needs','Demo record · Form E completed for admission with family support.','formCE','Dr. Aanya Sharma'],
+      ['4 Feb','Admission notes','Demo record · admitted for reduced sleep, elevated mood, and impulsive spending; baseline examination completed.','admissionNotes','Dr. Aanya Sharma'],
+      ['12 Feb','Family consultation','Demo record · sister joined a care-planning call; early warning signs and support needs discussed.','familyConsult','Priya Nair'],
+      ['15 Feb','Psycho-diagnostic scales','Demo record · PHQ-9 and GAD-7 completed; scores reviewed in the clinical session.','scales','Priya Nair'],
+      ['20 Feb','Outing notes','Demo record · accompanied courtyard outing completed; returned to the ward without incident.','outing','Sister Rekha, nurse'],
+      ['6 Mar','Discharge consent','Demo record · discharge plan and follow-up arrangements explained to the patient and family.','dischargeConsent','Dr. Aanya Sharma'],
+      ['6 Mar','Discharge summary','Demo record · settled with improved sleep and partial insight; follow-up arranged after 7 days.','dischargeSummary','Dr. Aanya Sharma'],
+      ['5 Feb','Prescription','Demo record · lithium and olanzapine prescription reviewed; see medicine chart for the recorded schedule.','prescription','Dr. Aanya Sharma'],
+      ['5 Feb','Medicine charts','Demo record · scheduled doses and administration checks recorded for the admission.','medicineCharts','Sister Rekha, nurse'],
+      ['5 Feb','Investigation reports','Demo record · CBC, liver and renal function, thyroid profile, ECG, and serum lithium results filed.','investigations','Dr. Aanya Sharma'],
+      ['4 Feb','Nursing admission assessment','Demo record · admission observations, belongings, immediate support needs, and ward orientation recorded.','nursingAdmission','Sister Rekha, nurse'],
+      ['5 Feb','Daily nursing assessment','Demo record · sleep, meals, activity, and engagement reviewed during the shift.','nursingAssessment','Sister Rekha, nurse'],
+      ['5 Feb','Nursing daily notes','Demo record · settled after evening routine; accepted prescribed medicines and slept 6 hours.','nursingNotes','Sister Rekha, nurse'],
+      ['5 Feb','Medicine reconciliation form','Demo record · medicines on admission reconciled against the treatment chart.','medReconciliation','Dr. Aanya Sharma'],
+      ['5 Feb','Nutritional assessment','Demo record · appetite and dietary preferences reviewed; regular meals encouraged.','nutrition','Sister Rekha, nurse'],
+      ['1 Mar','WhatsApp chats','Demo record · family update sent with consent; response recorded in the communication log.','whatsapp','Pooja Malhotra, family coordinator'],
+      ['6 Mar','Discharge checklist','Demo record · medicines, family handover, follow-up, and discharge documents checked.','dischargeChecklist','Dr. Aanya Sharma']
+    ];
+    const items=pastItems(a),present=new Set(items.map(catOf));
+    samples.forEach(([d,type,text,category,by])=>{
+      if(present.has(category))return;
+      a.notes.push([d,type+' · '+by,text]);present.add(category);
+    });
+  }
   const FOLD='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
   /* 9 Nov (TL, 6 Nov recording): a past admission's Detailed case history and Capacity assessment open as the FULL read-only document
      (all headings and subheadings, the same as the current admission), not a one-line summary. The prototype holds one full sample
@@ -200,6 +259,7 @@
   pPast=function(){
     if(!psy())return __pp.apply(this,arguments);
     return S.pastAdm.map((a,ai)=>{
+      seedPastDocumentSamples(a);
       const items=pastItems(a);
       const folders=FOLDERS.map(([k,name])=>{
         const L=items.filter(i=>catOf(i)===k);

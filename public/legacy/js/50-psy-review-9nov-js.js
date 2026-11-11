@@ -188,7 +188,6 @@
   pPast=function(){
     const h=__pp.apply(this,arguments);if(!psy()||typeof h!=='string')return h;
     const t=document.createElement('template');t.innerHTML=h;const R=t.content;
-    R.querySelectorAll('details.pf.empty').forEach(e=>e.remove());
     const RENAME={'Discharge summary':'View discharge summary','Stay file':'View full file','PDF':'Print full file'};
     R.querySelectorAll('.hd button.btn.sm').forEach(b=>{const m=RENAME[b.textContent.trim()];if(m){b.textContent=m;b.classList.add('pri');}});
     R.querySelectorAll('details.pf').forEach(f=>{

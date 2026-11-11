@@ -268,6 +268,40 @@ button.mc{cursor:pointer}
 .esum{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .eact{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 @media (max-width:1100px){.erow{grid-template-columns:1fr}.efields{grid-template-columns:1fr}.eact{flex-direction:row;align-items:center}}
+/* Psychiatrist all-patient notes: give the save action enough room, keep the form fluid, and scale the controls for ward use. */
+body.psy-views:not(.psg) #view .eod{width:100%;min-width:0}
+body.psy-views:not(.psg) #view .eodhd{align-items:center;padding:16px 22px;gap:16px}
+body.psy-views:not(.psg) #view .eprog{flex:0 1 300px;min-width:min(240px,100%)}
+body.psy-views:not(.psg) #view .estrip{gap:8px;padding:12px 20px 0}
+body.psy-views:not(.psg) #view .espill{min-height:34px}
+body.psy-views:not(.psg) #view .estage{padding:16px 20px 20px}
+body.psy-views:not(.psg) #view .ecard.erow{grid-template-columns:minmax(160px,190px) minmax(0,1fr) minmax(160px,170px);gap:20px;padding:20px 22px!important}
+body.psy-views:not(.psg) #view .ecard .epat,
+body.psy-views:not(.psg) #view .ecard .eact{position:static}
+body.psy-views:not(.psg) #view .ecard .eact{align-items:stretch;min-width:0}
+body.psy-views:not(.psg) #view .ecard .eact .btn{min-height:40px;padding:0 14px;white-space:nowrap}
+body.psy-views:not(.psg) #view .ecard .eqc{padding:16px 18px}
+body.psy-views:not(.psg) #view .ecard .eqc{gap:14px;background:#fcfdff}
+body.psy-views:not(.psg) #view .ecard .eqc .dng2{font-size:13px;letter-spacing:.025em;margin-bottom:2px;color:#174ea6}
+body.psy-views:not(.psg) #view .ecard .ef .lbl{font-size:13px;color:#344054}
+body.psy-views:not(.psg) #view .ecard .eqc .eseg{gap:7px}
+body.psy-views:not(.psg) #view .ecard .eqc .eseg button{min-height:36px;padding:6px 13px;font-size:13px}
+body.psy-views:not(.psg) #view .ecard .eqc .input{font-size:14px;min-height:48px}
+body.psy-views:not(.psg) #view .ecard .epat>div>div:first-child{font-size:15px!important}
+@media(max-width:1100px){
+  body.psy-views:not(.psg) #view .ecard.erow{grid-template-columns:minmax(0,1fr);gap:14px}
+  body.psy-views:not(.psg) #view .ecard .eact{justify-content:flex-end}
+  body.psy-views:not(.psg) #view .ecard .eact .btn{width:auto}
+}
+@media(max-width:700px){
+  body.psy-views:not(.psg) #view .eodhd{align-items:stretch;padding:14px 16px}
+  body.psy-views:not(.psg) #view .eprog{flex:1 1 100%;min-width:0}
+  body.psy-views:not(.psg) #view .estrip{padding:10px 14px 0}
+  body.psy-views:not(.psg) #view .estage{padding:12px 14px 16px}
+  body.psy-views:not(.psg) #view .ecard.erow{padding:16px!important}
+  body.psy-views:not(.psg) #view .ecard .eqc{padding:14px}
+  body.psy-views:not(.psg) #view .ecard .eact .btn{width:100%}
+}
 .crumb{font-size:14px;color:var(--muted)}.crumb a{color:var(--muted)}.crumb strong{color:var(--ink)}
 .dph{display:grid;grid-template-columns:auto minmax(0,1fr) 230px;gap:22px;padding:22px 24px;border-radius:20px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
 .dpbelow{grid-column:1/-1}

@@ -816,7 +816,7 @@ function vPatient(sub){
     <section class="ws-mid">
       ${compactHeader()}
       <div class="subtabs" role="tablist">${stayTabs().map(([k,l])=>`<button class="subtab ${sub===k?'on':''}" role="tab" aria-selected="${sub===k}" onclick="go('#/patient/neel/${k}')">${l} ${sub===k?'':lateDot(k)}</button>`).join('')}</div>
-      ${sub==='overview'?'':eventsBar()}
+      ${sub==='overview'||sub==='past'?'':eventsBar()}
       ${body}
     </section>
   </div>`;

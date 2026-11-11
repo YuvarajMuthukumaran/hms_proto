@@ -3,7 +3,6 @@
    1. Therapy plan: one free-text box (therapies, assessment plans and anything new that came up in this round)
    2. Planned assessments: a drop-down (the assessments the psychiatrist allocates in the doctor portal); each pick is listed below
    3. Planned behavioural activations: a drop-down (take a walk, plan an outing, ...); each pick is listed below
-   4. Management plan: read only, the psychologist's plan for the stay, with a button to open it
    Also: Dictate (voice to text, words only, no recording) next to the Therapy brief in the daily note.
    Gated by S.role==='psychologist'. */
 (function(){
@@ -23,7 +22,6 @@
   .pg-rp-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
   .pg-rp-chip{display:inline-flex;align-items:center;gap:6px;background:#eff8ff;border:1px solid #84caff;color:#175cd3;border-radius:99px;padding:4px 6px 4px 12px;font-size:13.5px;font-weight:600}
   .pg-rp-chip button{border:0;background:#d1e0ff;color:#175cd3;width:20px;height:20px;border-radius:50%;line-height:1;cursor:pointer;font-weight:700}
-  .pg-rp-ro{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;white-space:pre-wrap}
   /* Today > Due today: one line per item, the dot carries the colour of its type */
   .pg-dl{display:flex;flex-direction:column;gap:12px;padding:2px 0}
   .pg-di{display:flex;align-items:flex-start;gap:12px}
@@ -46,13 +44,10 @@
   const chips=(pid,k)=>{const a=rp(pid)[k];return a.length?`<div class="pg-rp-chips">${a.map((x,i)=>`<span class="pg-rp-chip">${hesc(x)}<button type="button" aria-label="Remove ${hesc(x)}" onclick="pgRpDel('${pid}','${k}',${i})">×</button></span>`).join('')}</div>`:'';};
   const pick=(pid,k,list,ph)=>`<select class="input" aria-label="${hesc(ph)}" onchange="pgRpAdd('${pid}','${k}',this)"><option value="">${hesc(ph)}</option>${list.filter(x=>!rp(pid)[k].includes(x)).map(x=>`<option>${hesc(x)}</option>`).join('')}</select>`;
   const card=pid=>{
-    const m=(psyPx(pid).mgmtPsych)||{},plan=[m.therapyPlan||m.therapies,m.goals&&('Goals: '+m.goals)].filter(Boolean).join('\n');
     return `<section class="card pg-rp" id="pgRp"><div class="pg-rp-b"><h4>Therapy plan</h4><div class="pg-rp-sub">Free text: therapies, assessment plans and anything new that came up in this round.</div>
       <textarea class="input" rows="4" placeholder="Write the therapy plan" oninput="pgRpTxt('${pid}',this.value)">${hesc(rp(pid).therapyPlan)}</textarea></div>
       <div class="pg-rp-b"><h4>Planned assessments</h4><div class="pg-rp-sub">From the assessments the psychiatrist allocates in the doctor portal.</div>${pick(pid,'assess',L().MODS,'Choose an assessment…')}${chips(pid,'assess')}</div>
-      <div class="pg-rp-b"><h4>Planned behavioural activations</h4><div class="pg-rp-sub">Activities planned with the patient.</div>${pick(pid,'acts',L().ACTS,'Choose an activity…')}${chips(pid,'acts')}</div>
-      <div class="pg-rp-b"><h4>Management plan</h4><div class="pg-rp-sub">Read only. Your plan for this stay.</div><div class="pg-rp-ro">${plan?hesc(plan):'Not written yet.'}</div>
-        <div class="row" style="margin-top:10px;gap:8px"><button class="btn sm" onclick="pgMpModal('${pid}')">${m.signed?'View management plan':'Open management plan'}</button></div></div></section>`;
+      <div class="pg-rp-b"><h4>Planned behavioural activations</h4><div class="pg-rp-sub">Activities planned with the patient.</div>${pick(pid,'acts',L().ACTS,'Choose an activity…')}${chips(pid,'acts')}</div></section>`;
   };
   /* Rounds: Monitoring, Investigations, Risks and instructions and Referral are not shown to the psychologist (team, 10 Nov).
      Nothing is added in their place. */
