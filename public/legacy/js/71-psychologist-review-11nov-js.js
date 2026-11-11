@@ -30,6 +30,31 @@
   body.psg .hrow11.hrow11 .hnav button{width:auto!important;display:inline-flex!important;align-items:center;justify-content:center!important;gap:5px;padding:4px 7px!important;border-radius:99px;position:relative;white-space:nowrap}
   body.psg .hrow11.hrow11 .hnav button>span:not(.hn){display:none!important}
   body.psg .hrow11.hrow11 .hnav button:hover:after,body.psg .hrow11.hrow11 .hnav button:focus-visible:after{content:attr(data-t)!important;display:block!important;position:absolute;left:auto;right:0;top:calc(100% + 10px);transform:none;background:#101828;color:#fff;font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:9px;white-space:nowrap;z-index:60;pointer-events:none;box-shadow:0 8px 20px rgba(16,24,40,.22)}
+  /* Rounds: the planning card (assessments, activations, management plan). Same content, calmer layout: two columns, a small icon on each heading,
+     violet chips like the rest of the psychologist's Rounds, and the vitals strip wraps instead of overlapping on narrower screens */
+  body.pgr .pg-rp{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0}
+  body.pgr .pg-rp .pg-rp-b{padding:20px 24px!important;border-top:1px solid var(--line)}
+  body.pgr .pg-rp .pg-rp-b:nth-of-type(1){border-right:1px solid var(--line)}
+  body.pgr .pg-rp .pg-rp-b:nth-of-type(3){grid-column:1/-1}
+  body.pgr .pg-rp h4{display:flex;align-items:center;gap:10px;margin:0 0 4px;font-size:15px;font-weight:700}
+  body.pgr .pg-rp h4::before{content:"";flex:0 0 30px;width:30px;height:30px;border-radius:10px;background:#f4f0ff center/16px no-repeat}
+  body.pgr .pg-rp .pg-rp-b:nth-of-type(1) h4::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236941c6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='6' y='4' width='12' height='17' rx='2'/%3E%3Cpath d='M9 4V3h6v1M9 13l2 2 4-4'/%3E%3C/svg%3E")}
+  body.pgr .pg-rp .pg-rp-b:nth-of-type(2) h4::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236941c6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 12h-4l-3 9L9 3l-3 9H2'/%3E%3C/svg%3E")}
+  body.pgr .pg-rp .pg-rp-b:nth-of-type(3) h4::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236941c6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 3v5h5M9 13h6M9 17h4'/%3E%3C/svg%3E")}
+  body.pgr .pg-rp .pg-rp-sub{margin:0 0 14px 40px;font-size:12.5px}
+  body.pgr .pg-rp select.input{min-height:44px;border-radius:12px;background-color:#fff}
+  body.pgr .pg-rp select.input:focus{outline:none;border-color:#7f56d9;box-shadow:0 0 0 4px rgba(127,86,217,.14)}
+  body.pgr .pg-rp-chip{background:#f4f0ff;border-color:#d9ccfa;color:#5925dc}
+  body.pgr .pg-rp-chip button{background:#e9defc;color:#5925dc}
+  body.pgr .pg-rp-chip button:hover{background:#d9ccfa}
+  body.pgr .pg-rp-ro{background:#fbfaff;border:1px solid #e4dcf8;border-left:3px solid #7f56d9;border-radius:12px;padding:14px 16px;line-height:1.55}
+  body.pgr .pg-asg{margin-top:14px;padding-top:12px;border-top:1px dashed #e4dcf8}
+  body.pgr .pg-asg-h{font-size:12px;font-weight:700;color:#6941c6;margin-bottom:6px}
+  body.pgr .pg-asg-r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0}
+  body.pgr .pg-asg-r b{display:block;font-size:13.5px}
+  body.pgr .pr-vit{flex-wrap:wrap}
+  body.pgr .pr-vit .pr-vi{flex:1 1 96px;min-width:96px}
+  @media (max-width:900px){body.pgr .pg-rp{grid-template-columns:1fr}body.pgr .pg-rp .pg-rp-b:nth-of-type(1){border-right:0}}
   /* daily notes table */
   .dn11{padding:0 16px 16px}
   .dn11 table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:720px}
@@ -214,6 +239,22 @@
     });
   };
 
+  /* Rounds: Start AI scribe gets the recording-button design; assessments the psychiatrist assigned are listed under Planned assessments */
+  const scribeBtn=v=>{
+    v.querySelectorAll('button[onclick="listenRound()"]').forEach(b=>{
+      if(b.querySelector('.rc-ic')||!/^\s*Start AI scribe\s*$/.test(b.textContent))return;
+      b.classList.remove('pri');b.classList.add('th10-rec');
+      b.innerHTML=`<span class="rc-ic" aria-hidden="true">${MIC}<span class="rc-bars"><i></i><i></i><i></i><i></i></span></span><span>Start AI scribe</span>`;
+    });
+  };
+  const asgRounds=v=>{
+    const box=v.querySelector('#pgRp .pg-rp-b');if(!box||box.querySelector('.pg-asg'))return;
+    let pid=null;try{const R=S.rounds,w=(WARDS||{})[R.ward]||[];const p=w[R.idx[R.ward]];pid=p&&p.id;}catch(e){}
+    if(!pid)return;
+    const L=mineAsg(pid);if(!L.length)return;
+    box.insertAdjacentHTML('beforeend',`<div class="pg-asg"><div class="pg-asg-h">Assigned by the psychiatrist</div>${L.map(o=>`<div class="pg-asg-r"><span><b>${hesc(o.a.name)}</b><span class="tiny muted">${hesc(o.a.by)}, ${hesc(o.a.at)}</span></span><button type="button" class="btn sm" onclick="pgAsgDone('${pid}',${o.i})">Mark done</button></div>`).join('')}</div>`);
+  };
+
   /* detailed history: put the section numbers in the toolbar row */
   const histNav=v=>{
     const seg=v.querySelector('.hist-seg'),nav=v.querySelector('.hwrap .hnav');
@@ -225,7 +266,7 @@
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
-    if(me()){try{const v=$('view');if(v){histNav(v);startBtn(v);ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
+    if(me()){try{const v=$('view');if(v){histNav(v);startBtn(v);scribeBtn(v);asgRounds(v);ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
     return out;
   };
 })();

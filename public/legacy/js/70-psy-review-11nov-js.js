@@ -342,7 +342,8 @@
   const __rm70=roundMon;
   roundMon=function(){
     const h=__rm70.apply(this,arguments);
-    if(!psy()||typeof h!=='string')return h;
+    /* the psychologist's Rounds is drawn through this code too; the psychologist does not assign assessments */
+    if(!psy()||document.body.classList.contains('psg')||typeof h!=='string')return h;
     try{return h+assessCard();}catch(e){return h;}
   };
 
