@@ -44,6 +44,29 @@
   .vm10 td .ini{display:inline-block;margin-left:6px;font-size:10.5px;font-weight:700;color:#175cd3;background:#eff4ff;border:1px solid #c9dcfb;border-radius:99px;padding:0 6px}
   .vm10 .ml{display:flex;justify-content:space-between;gap:10px;font-size:12px}.vm10 .ml span{color:#667085}
   .vm10 .none{color:#98a2b3}
+  .vm10 .ini{cursor:help;transition:background-color .12s,border-color .12s}
+  .vm10 .ini:hover,.vm10 .ini:focus-visible{background:#dbe8ff;border-color:#8db5f5;outline:none}
+  .vm10 .ini:focus-visible{box-shadow:0 0 0 3px rgba(23,92,211,.25)}
+  /* who recorded it: hover card */
+  #iniCard{position:fixed;z-index:2000;display:none;width:248px;padding:14px 16px 12px;background:#fff;border:1px solid #dfe5ee;border-radius:14px;box-shadow:0 14px 34px rgba(16,24,40,.16),0 2px 6px rgba(16,24,40,.06);pointer-events:none;opacity:0;transform:translateY(4px) scale(.98);transform-origin:var(--ax,50%) 0;transition:opacity .13s ease,transform .16s cubic-bezier(.2,.8,.3,1);font-size:13px;color:#101828}
+  #iniCard[data-pos=above]{transform:translateY(-4px) scale(.98);transform-origin:var(--ax,50%) 100%}
+  #iniCard.show{opacity:1;transform:none}
+  #iniCard .ic-ar{position:absolute;left:calc(var(--ax,50%) - 6px);width:12px;height:12px;background:#fff;border:1px solid #dfe5ee;transform:rotate(45deg)}
+  #iniCard[data-pos=below] .ic-ar{top:-7px;border-right:0;border-bottom:0}
+  #iniCard[data-pos=above] .ic-ar{bottom:-7px;border-left:0;border-top:0}
+  #iniCard .ic-top{display:flex;align-items:center;gap:11px}
+  #iniCard .ic-av{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;font-weight:700;font-size:13px;flex:0 0 38px}
+  #iniCard .ic-n{font-weight:700;font-size:14.5px;line-height:1.25}
+  #iniCard .ic-r{color:#667085;font-size:12.5px;margin-top:1px}
+  #iniCard .ic-rec{margin-top:12px;padding:10px 12px;background:#f8fafc;border-radius:10px}
+  #iniCard .ic-p{color:#667085;font-size:12px}
+  #iniCard .ic-v{font-weight:700;font-size:20px;line-height:1.2;font-variant-numeric:tabular-nums;margin-top:2px}
+  #iniCard .ic-v span{font-size:12px;font-weight:500;color:#667085;margin-left:4px}
+  #iniCard .ic-v.out{color:#b42318}
+  #iniCard .ic-w{font-size:12.5px;color:#344054;margin-top:2px}
+  #iniCard .ic-flag{margin-top:8px;font-size:12px;font-weight:600;color:#b42318}
+  #iniCard .ic-ft{margin-top:10px;font-size:12px;color:#667085}
+  @media (prefers-reduced-motion:reduce){#iniCard{transition:none}}
   /* Treatment Management Plan: order log, done and not done */
   .tl10{border:1px solid var(--line,#e4e7ec);border-radius:12px;padding:12px 14px;margin-top:10px;background:#fff}
   .tl10.done{border-color:#abefc6;background:#f6fef9}.tl10.none{background:#fcfcfd}
@@ -59,7 +82,21 @@
   .tl10-s .t{font-weight:600}.tl10-s li.n .t{color:#475467;font-weight:500}.tl10-s .who{margin-left:auto;font-size:11.5px;color:#667085;text-align:right}
   /* Therapy Plans: Record and Add sit together */
   .th10-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .th10-rec{display:inline-flex;align-items:center;gap:6px}
+  .th10-rec{display:inline-flex;align-items:center;gap:8px;padding-left:6px!important;border-color:#d0d5dd;transition:border-color .16s,background-color .16s,transform .1s}
+  .th10-rec .rc-ic{position:relative;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#f2f4f7;color:#475467;transition:background-color .18s,color .18s}
+  .th10-rec .rc-ic svg{grid-area:1/1;transition:opacity .15s,transform .2s}
+  .th10-rec .rc-bars{grid-area:1/1;display:flex;align-items:center;gap:2px;height:12px;opacity:0;transition:opacity .15s}
+  .th10-rec .rc-bars i{display:block;width:2px;height:12px;border-radius:2px;background:currentColor;transform:scaleY(.35)}
+  .th10-rec:hover,.th10-rec:focus-visible{border-color:#fda29b;background:#fffbfa}
+  .th10-rec:hover .rc-ic,.th10-rec:focus-visible .rc-ic{background:#fee4e2;color:#d92d20}
+  .th10-rec:hover .rc-ic svg,.th10-rec:focus-visible .rc-ic svg{opacity:0;transform:scale(.7)}
+  .th10-rec:hover .rc-bars,.th10-rec:focus-visible .rc-bars{opacity:1}
+  .th10-rec:hover .rc-bars i,.th10-rec:focus-visible .rc-bars i{animation:rcw 1s ease-in-out infinite}
+  .th10-rec .rc-bars i:nth-child(2){animation-delay:.15s!important}.th10-rec .rc-bars i:nth-child(3){animation-delay:.3s!important}.th10-rec .rc-bars i:nth-child(4){animation-delay:.45s!important}
+  .th10-rec:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(217,45,32,.22)}
+  .th10-rec:active{transform:scale(.98)}
+  @keyframes rcw{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+  @media (prefers-reduced-motion:reduce){.th10-rec .rc-bars i{animation:none!important;transform:scaleY(.7)!important}.th10-rec,.th10-rec .rc-ic,.th10-rec .rc-ic svg,.th10-rec .rc-bars{transition:none}}
   /* Patient Experience: icons */
   .pxs-hd{display:flex;align-items:center;gap:10px}.pxs-hd h4{margin:0;flex:1}
   .px10-ic{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;flex:0 0 34px}
@@ -153,16 +190,16 @@
     const slots=SLOT_SET.filter(s=>slotP.some(p=>p.heads.includes(s)));
     if(!slots.length)slots.push('9 am');
     const cell=(p,d,slot)=>{const r=p.rows.find(x=>x.d===d);if(!r)return null;const ix=p.heads.indexOf(slot);return ix>=0?r.cells[ix]:null;};
-    const val=(p,x)=>{if(!x||!x.v||x.v==='—')return '<span class="none">—</span>';const o=outOfRange(p.title,x.v);return `<span class="v${o?' out':''}">${hesc(x.v)}</span>${x.i?`<span class="ini" title="Recorded by">${hesc(x.i)}</span>`:''}`;};
+    const val=(p,x,d,s)=>{if(!x||!x.v||x.v==='—')return '<span class="none">—</span>';const o=outOfRange(p.title,x.v);return `<span class="v${o?' out':''}">${hesc(x.v)}</span>${x.i?`<span class="ini" tabindex="0" data-who="${hesc(x.i)}" data-p="${hesc(p.title)}" data-u="${hesc(p.unit||'')}" data-v="${hesc(x.v)}" data-d="${hesc(d||'')}" data-s="${hesc(s||'')}" data-o="${o?1:0}" aria-label="Recorded by ${hesc(x.i)}. Press to see who.">${hesc(x.i)}</span>`:''}`;};
     const th=p=>`<th>${hesc(p.title)}${p.unit?`<small>${hesc(p.unit)}</small>`:''}</th>`;
     const head=`<tr><th>Date</th><th>Time</th>${slotP.map(th).join('')}${dailyP.map(th).join('')}${mealP.map(th).join('')}</tr>`;
     const bodyRows=dates.map(d=>slots.map((s,si)=>{
       let tr=`<tr class="${si===0?'first':''}">`;
       if(si===0)tr+=`<td class="d" rowspan="${slots.length}">${hesc(d)}</td>`;
       tr+=`<td class="t">${hesc(s)}</td>`;
-      slotP.forEach(p=>{const x=cell(p,d,s);const o=x&&outOfRange(p.title,x.v);tr+=`<td${o?' class="outc"':''}>${val(p,x)}</td>`;});
+      slotP.forEach(p=>{const x=cell(p,d,s);const o=x&&outOfRange(p.title,x.v);tr+=`<td${o?' class="outc"':''}>${val(p,x,d,s)}</td>`;});
       if(si===0){
-        dailyP.forEach(p=>{const x=cell(p,d,'9 am');const o=x&&outOfRange(p.title,x.v);tr+=`<td rowspan="${slots.length}"${o?' class="outc"':''}>${val(p,x)}</td>`;});
+        dailyP.forEach(p=>{const x=cell(p,d,'9 am');const o=x&&outOfRange(p.title,x.v);tr+=`<td rowspan="${slots.length}"${o?' class="outc"':''}>${val(p,x,d,'9 am')}</td>`;});
         mealP.forEach(p=>{const r=p.rows.find(x=>x.d===d);tr+=`<td rowspan="${slots.length}">${r?p.heads.map((h,i)=>{const x=r.cells[i]||{v:''};const o=outOfRange(p.title,x.v);return `<div class="ml"><span>${hesc(h)}</span><b class="v${o?' out':''}">${hesc(x.v||'—')}</b></div>`;}).join(''):'<span class="none">—</span>'}</td>`;});
       }
       return tr+'</tr>';
@@ -191,6 +228,36 @@
       return t.innerHTML;
     }catch(e){return h;}
   };
+
+  /* ---------- 5b. Who recorded it: a card on the nurse initials (hover, keyboard focus, or tap) ---------- */
+  const STAFF={SR:['Sister Rekha','Staff nurse','Night duty'],PN:['Sister Prema Nair','Staff nurse','Day duty'],AK:['Sister Anita K.','Staff nurse','Day duty'],MJ:['Brother Joseph M.','Staff nurse','Day duty']}; /* demo names */
+  const TINT=[['#eaf1ff','#175cd3'],['#f4f0ff','#6941c6'],['#e8f7fb','#0e7090'],['#fef6e7','#b54708']];
+  let card=null,cur=null;
+  const ensureCard=()=>{if(card)return card;card=document.createElement('div');card.id='iniCard';card.setAttribute('role','tooltip');document.body.appendChild(card);return card;};
+  function showIni(el){
+    if(!el||!el.dataset||!el.dataset.who)return;
+    const k=el.dataset.who,s=STAFF[k]||['Nurse '+k,'Ward nurse',''],ti=(k.charCodeAt(0)+k.charCodeAt(1))%TINT.length;
+    const tbl=el.closest('table'),n=tbl?tbl.querySelectorAll('.ini[data-who="'+k+'"]').length:0;
+    const unit=el.dataset.u?' '+el.dataset.u:'';
+    const c=ensureCard();cur=el;
+    c.innerHTML=`<div class="ic-top"><span class="ic-av" style="background:${TINT[ti][0]};color:${TINT[ti][1]}">${hesc(k)}</span><div class="ic-id"><div class="ic-n">${hesc(s[0])}</div><div class="ic-r">${hesc(s[1])}${s[2]?', '+hesc(s[2]):''}</div></div></div>
+      <div class="ic-rec"><div class="ic-p">Recorded ${hesc(el.dataset.p)}</div><div class="ic-v${el.dataset.o==='1'?' out':''}">${hesc(el.dataset.v)}<span>${hesc(unit)}</span></div><div class="ic-w">${hesc(el.dataset.d)}${el.dataset.s?' at '+hesc(el.dataset.s):''}</div>${el.dataset.o==='1'?'<div class="ic-flag">Outside the usual range</div>':''}</div>
+      <div class="ic-ft">${n} reading${n===1?'':'s'} by ${hesc(s[0].split(' ').slice(0,2).join(' '))} in this table</div><i class="ic-ar"></i>`;
+    c.classList.remove('show');c.style.left='0px';c.style.top='0px';c.style.visibility='hidden';c.style.display='block';
+    const r=el.getBoundingClientRect(),w=c.offsetWidth,h=c.offsetHeight,vw=document.documentElement.clientWidth,vh=window.innerHeight;
+    let left=Math.max(10,Math.min(r.left+r.width/2-w/2,vw-w-10)),below=r.bottom+12+h<=vh||r.top-12-h<0,top=below?r.bottom+10:r.top-10-h;
+    c.dataset.pos=below?'below':'above';c.style.setProperty('--ax',Math.max(14,Math.min(w-14,r.left+r.width/2-left))+'px');
+    c.style.left=left+'px';c.style.top=top+'px';c.style.visibility='';
+    requestAnimationFrame(()=>c.classList.add('show'));
+  }
+  function hideIni(){if(card){card.classList.remove('show');card.style.display='none';}cur=null;}
+  document.addEventListener('mouseover',e=>{const t=e.target.closest&&e.target.closest('.vm10 .ini');if(t)showIni(t);});
+  document.addEventListener('mouseout',e=>{const t=e.target.closest&&e.target.closest('.vm10 .ini');if(t&&!(e.relatedTarget&&t.contains(e.relatedTarget)))hideIni();});
+  document.addEventListener('focusin',e=>{const t=e.target.closest&&e.target.closest('.vm10 .ini');if(t)showIni(t);});
+  document.addEventListener('focusout',e=>{if(e.target.closest&&e.target.closest('.vm10 .ini'))hideIni();});
+  document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('.vm10 .ini');if(t){if(cur===t)hideIni();else showIni(t);}else if(card&&!card.contains(e.target))hideIni();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')hideIni();});
+  window.addEventListener('scroll',hideIni,true);
 
   /* ---------- 6. Management Plan: filled once at admission, so it opens read only ---------- */
   const MP=[['dx','Diagnosis'],['goals','Goals of treatment'],['meds','Medicines and why'],['therapy','Therapies planned'],['risk','Risk management'],['mon','Monitoring'],['stay','Expected length of stay'],['dc','Plan for discharge'],['rev','Review date']];
@@ -280,7 +347,7 @@
       const m=(b.getAttribute('onclick')||'').match(/psyThAdd\('(\w+)'\)/);
       if(m&&!b.parentElement.querySelector('.th10-rec')){
         const w=document.createElement('div');w.className='th10-act';b.parentNode.insertBefore(w,b);
-        w.insertAdjacentHTML('beforeend',`<button type="button" class="btn sm th10-rec" onclick="psyThRecord('${m[1]}')" aria-label="Record with the AI scribe">${MIC} Record with AI scribe</button>`);
+        w.insertAdjacentHTML('beforeend',`<button type="button" class="btn sm th10-rec" onclick="psyThRecord('${m[1]}')" aria-label="Record with the AI scribe"><span class="rc-ic" aria-hidden="true">${MIC}<span class="rc-bars"><i></i><i></i><i></i><i></i></span></span><span>Record with AI scribe</span></button>`);
         w.appendChild(b);
       }
     });
