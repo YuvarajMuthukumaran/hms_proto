@@ -37,7 +37,7 @@
   body.pgr .pg-rp .pg-rp-b:nth-of-type(1){border-right:1px solid var(--line)}
   body.pgr .pg-rp .pg-rp-b:nth-of-type(3){grid-column:1/-1}
   body.pgr .pg-rp h4{display:flex;align-items:center;gap:10px;margin:0 0 4px;font-size:15px;font-weight:700}
-  body.pgr .pg-rp h4::before{content:"";flex:0 0 30px;width:30px;height:30px;border-radius:10px;background:#f4f0ff center/16px no-repeat}
+  body.pgr .pg-rp h4::before{content:none!important}body.pgr .pg-rp .pg-rp-sub{display:none}
   body.pgr .pg-rp .pg-rp-b:nth-of-type(1) h4::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236941c6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='6' y='4' width='12' height='17' rx='2'/%3E%3Cpath d='M9 4V3h6v1M9 13l2 2 4-4'/%3E%3C/svg%3E")}
   body.pgr .pg-rp .pg-rp-b:nth-of-type(2) h4::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236941c6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 12h-4l-3 9L9 3l-3 9H2'/%3E%3C/svg%3E")}
   body.pgr .pg-rp .pg-rp-b:nth-of-type(3) h4::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236941c6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 3v5h5M9 13h6M9 17h4'/%3E%3C/svg%3E")}
@@ -218,9 +218,14 @@
     <span><i class="blue"></i>Assigned by the doctor <em>· assessments to do</em></span>
     <span><i class="amber"></i>Due or late <em>· overdue notes, reviews, results to check</em></span>
     <span><i class="ok"></i>Action taken</span></div>`;
+  const tidy=v=>{
+    v.querySelectorAll("#pgRp .pg-rp-b").forEach(x=>{const h4=x.querySelector("h4");if(h4&&/^Management plan/.test(h4.textContent.trim()))x.remove();});
+    v.querySelectorAll("h3,h4,.lbl,b,span").forEach(e=>{if(e.children.length===0&&e.textContent.trim()==="Round note")e.textContent="Therapy note";});
+    v.querySelectorAll(".subtab").forEach(t=>{const tn=[...t.childNodes].reverse().find(n=>n.nodeType===3&&/Vitals and medicines/.test(n.nodeValue));if(tn)tn.nodeValue=tn.nodeValue.replace("Vitals and medicines","Treatment Plan");});
+  };
   const colourKey=v=>{
     const pd=v.querySelector('.pd');if(!pd||pd.querySelector('.pdk'))return;
-    const bar=pd.querySelector('.pd-bar');if(bar)bar.insertAdjacentHTML('afterend',KEY);
+    const bar=pd.querySelector('.pd-bar');pd.insertAdjacentHTML('beforeend',KEY);
   };
 
   /* ---------- 5. Nikita, 11 Nov: the patient tabs belong on the inpatient page, not on Today ---------- */
@@ -284,7 +289,7 @@
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
-    if(me()){try{const v=$('view');if(v){colourKey(v);histNav(v);startBtn(v);scribeBtn(v);asgRounds(v);ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
+    if(me()){try{const v=$('view');if(v){tidy(v);colourKey(v);histNav(v);startBtn(v);scribeBtn(v);asgRounds(v);ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
     return out;
   };
 })();

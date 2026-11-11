@@ -10,12 +10,14 @@
 
   const css=document.createElement('style');css.id='psy-review-11nov-css';
   css.textContent=`
-  .pdk{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin:0 0 12px;padding:9px 14px;background:#f8fafc;border:1px solid var(--line,#e4e7ec);border-radius:12px;font-size:12.5px;color:#344054}
+  .pd>.pdk{margin:14px 0 0}.pdk{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin:0 0 12px;padding:9px 14px;background:#f8fafc;border:1px solid var(--line,#e4e7ec);border-radius:12px;font-size:12.5px;color:#344054}
   .pdk b{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#667085;margin-right:2px}
   .pdk span{display:inline-flex;align-items:center;gap:7px}
   .pdk i{display:inline-block;width:9px;height:9px;border-radius:50%;flex:0 0 9px}
   .pdk i.red{background:#e5484d}.pdk i.blue{background:#3b82f6}.pdk i.amber{background:#f5a524}.pdk i.ok{background:#12b76a}
   .pdk em{font-style:normal;color:#667085}
+  .pxs-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important}
+  @media(max-width:900px){.pxs-grid{grid-template-columns:1fr!important}}
   /* View full file */
   .pfv-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px;position:sticky;top:0;background:#fff;z-index:2;padding-bottom:8px}
   .pfv-q{flex:0 1 220px;min-height:34px;padding:4px 12px}
@@ -165,7 +167,7 @@
     const pd=v.querySelector('.pd');
     if(pd&&!pd.querySelector('.pdk')){
       const bar=pd.querySelector('.pd-bar');
-      if(bar)bar.insertAdjacentHTML('afterend',KEY);
+      pd.insertAdjacentHTML('beforeend',KEY);
     }
     /* Completed actions: show the alert type the row had, not the word Done */
     v.querySelectorAll('.pd-completed .pd-t tbody tr').forEach(tr=>{
@@ -507,8 +509,9 @@
         }
       }else if(S.role==='psychologist'){
         /* the psychologist's Patient Experience page gets the same icons as the psychiatrist's */
-        const v=$('view');if(v)pxIcons(v);
+        const v=$('view');if(v){pxIcons(v);if(!v.querySelector('.pg-start'))therapyBtns(v);}
       }
+      if(String(location.hash||'').indexOf('#/handover')===0&&psy()){try{const me1=signer(),sent=new Set();((S.psyHO&&S.psyHO.list)||[]).forEach(h=>{if(h.status==='sent'&&h.from===me1)(h.pids||[]).forEach(p=>sent.add(p));});sent.forEach(p=>{const c=document.getElementById('hvCard-'+p);if(c)c.remove();});}catch(e){}}
     }catch(e){}
     return out;
   };
