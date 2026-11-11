@@ -131,6 +131,7 @@ const icon = {
 function renderSide(route){
   const m = me();
   const sec = route[0];
+  const patientExperienceLead=window.__TULASI__&&window.__TULASI__.role==='patient-experience-lead';
   const inIpd = ['myday','inpatients','rounds','patient','notes','nursing','handover','floor','ward','duty','escalation','timeline','permissions','clinical-docs','admissions'].includes(sec);
   const sub = (h,label,key)=>`<button class="sub ${sec===key?'on':''}" onclick="go('${h}')">${label}</button>`;
   const nav = (h,ic,label,on,extra)=>`<button class="nav ${on?'on':''}" onclick="go('${h}')" title="${label}" aria-label="${label}">${ic}<span class="tx">${label}</span>${extra||''}</button>`;
@@ -140,7 +141,7 @@ function renderSide(route){
     ${nav('#/existing/Dashboard',icon.dash,'Dashboard',false)}
     ${nav('#/existing/All Patients',icon.users,'All Patients',false)}
     ${nav('#/myday',icon.bed,'Inpatients',inIpd,'<span class="newtag">NEW</span>')}
-    ${inIpd?sub('#/myday','Inpatient dashboard','myday')+(isWard()?'':sub('#/rounds','Rounds','rounds'))+(((isPsy()&&!isLead())||isPsych())?sub('#/notes','Daily notes','notes'):'')+(S.role!=='nurse'&&S.role!=='psychologist'?sub('#/nursing','Nursing chart','nursing'):'')+(S.role==='rmo'?sub('#/handover','Handover','handover'):'')+sub('#/inpatients',isLead()?'Floor inpatients':isWard()?'Ward inpatients':'My inpatients','inpatients')+sub('#/admissions','New admission','admissions')+(['lead','psychiatrist','psychologist'].includes(S.role)?sub('#/clinical-docs','Clinical documentation','clinical-docs'):'')+V3.subs(sec):''}
+    ${inIpd?sub('#/myday',patientExperienceLead?'Today':'Inpatient dashboard','myday')+(isWard()?'':sub('#/rounds','Rounds','rounds'))+(((isPsy()&&!isLead())||isPsych())?sub('#/notes','Daily notes','notes'):'')+(S.role!=='nurse'&&S.role!=='psychologist'?sub('#/nursing','Nursing chart','nursing'):'')+(S.role==='rmo'?sub('#/handover','Handover','handover'):'')+sub('#/inpatients',patientExperienceLead?'Stays':isLead()?'Floor inpatients':isWard()?'Ward inpatients':'My inpatients','inpatients')+sub('#/admissions','New admission','admissions')+(['lead','psychiatrist','psychologist'].includes(S.role)?sub('#/clinical-docs','Clinical documentation','clinical-docs'):'')+V3.subs(sec):''}
     ${S.role==='rmo'?'':nav('#/existing/My Calendar',icon.cal,'My Calendar',false)}
     ${S.role==='rmo'?'':nav('#/existing/Schedule',icon.clock,'Schedule',false)}
     ${nav('#/existing/Messages',icon.msg,'Messages',false)}
