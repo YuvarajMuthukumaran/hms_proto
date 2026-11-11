@@ -491,4 +491,116 @@
     if(psyOrPg())patchModal(i||0);
     return r;
   };
+
+  /* ---------- 14. Add treatment modality: the team's list of eleven (Anu, 11 Nov) ----------
+     Long acting injections opens three choices (Risperidone, Paliperidone, Olanzapine). Each one opens the same "Plan for" window as before
+     (tick the consent, the tests and the team tasks to create). The consent and task wording is a starter the team will confirm. */
+  const LAI=['Risperidone','Paliperidone','Olanzapine'];
+  const MODS14=[
+    ['Clozapine','Consent, CBC and monitoring'],
+    ['Long acting injections','Risperidone, Paliperidone or Olanzapine'],
+    ['Injection consent','For emergencies and when oral medicines are refused'],
+    ['ECT','Consent, fitness and monitoring'],
+    ['Ketamine therapy','Consent and monitoring'],
+    ['Ketamine assisted psychotherapy','Consent, monitoring and therapy sessions'],
+    ['dTMS','Consent, screening and sessions'],
+    ['Biofeedback','Referral and sessions'],
+    ['Cognitive retraining','Baseline assessment and sessions'],
+    ['Diazepam consent','Consent and monitoring'],
+    ['Naltrexone consent','Consent, liver tests and opioid-free check']];
+  const laiPlan=d=>({consent:'Long acting injection consent · '+d,tests:d==='Paliperidone'?[['RFT','This week'],['Lipid profile','This week']]:[['LFT','This week'],['Lipid profile','This week']],
+    tasks:['Check the oral '+d.toLowerCase()+' was tolerated before the first injection','Set the date of the next injection'].concat(d==='Olanzapine'?['Watch the patient for 3 hours after each injection (post-injection sedation or delirium)']:[])});
+  const PLANS14={
+    'Clozapine':{consent:'Clozapine consent (patient and relative)',tests:[['CBC','Today']],tasks:['Weekly blood count (ANC) for the first 18 weeks','Baseline ECG and weight']},
+    'Injection consent':{consent:'Injection consent: in case of emergency and when oral medicines are refused (patient and relative)',tests:[],tasks:['Record every injection given because oral medicines were refused or in an emergency, with the reason']},
+    'ECT':{consent:'ECT consent (patient and relative)',tests:[['ECG','Today'],['CBC','Today'],['RFT','Today']],tasks:['Pre-ECT work-up: anaesthetist review','Nil by mouth from midnight before the session']},
+    'Ketamine therapy':{consent:'Ketamine treatment consent',tests:[['ECG','Today']],tasks:['Blood pressure and pulse before and after each session','Nothing to eat or drink before each session, as the anaesthetist advises']},
+    'Ketamine assisted psychotherapy':{consent:'Ketamine assisted psychotherapy consent',tests:[['ECG','Today']],tasks:['Book the psychologist for the preparation, dosing and integration sessions','Blood pressure and pulse before and after each session']},
+    'dTMS':{consent:'dTMS consent',tests:[],tasks:['Screen for contraindications (metal implants, seizure history)','Schedule the sessions']},
+    'Biofeedback':{consent:'',tests:[],tasks:['Refer to the psychologist for biofeedback','Schedule the sessions']},
+    'Cognitive retraining':{consent:'',tests:[],tasks:['Baseline cognitive assessment by the psychologist','Schedule the retraining sessions']},
+    'Diazepam consent':{consent:'Diazepam consent (patient and relative)',tests:[],tasks:['Record the reason, dose and how long diazepam will be given','Watch for sedation and slow breathing after each dose']},
+    'Naltrexone consent':{consent:'Naltrexone consent (patient and relative)',tests:[['LFT','Today'],['Urine drug screen','Today']],tasks:['Confirm the patient is opioid-free before the first dose']}};
+  LAI.forEach(d=>{PLANS14['Long acting injection · '+d]=laiPlan(d);});
+  let PLAN14='';
+  const __pm14=window.prModalityOpen;
+  window.prModalityOpen=function(){
+    if(!psy())return __pm14?__pm14.apply(this,arguments):undefined;
+    openModal('<div class="mh"><h3>Add treatment modality</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div><div class="mb"><div class="small muted" style="margin-bottom:10px">Pick one. You then choose which linked tasks to create.</div><div class="pr-mod">'
+      +MODS14.map(m=>'<button onclick="'+(m[0]==='Long acting injections'?'prModalityLai()':"closeModal();psyPlanOpen('"+m[0]+"')")+'"><span>'+hesc(m[0])+'</span><span class="tiny muted" style="font-weight:400">'+hesc(m[1])+'</span></button>').join('')+'</div></div>');
+  };
+  window.prModalityLai=function(){
+    openModal('<div class="mh"><h3>Long acting injections</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div><div class="mb"><div class="small muted" style="margin-bottom:10px">Which injection?</div><div class="pr-mod">'
+      +LAI.map(d=>'<button onclick="closeModal();psyPlanOpen(\'Long acting injection · '+d+'\')"><span>'+d+'</span><span class="tiny muted" style="font-weight:400">Consent and schedule</span></button>').join('')
+      +'</div></div><div class="mf"><button class="btn" onclick="prModalityOpen()">‹ Back</button></div>');
+  };
+  const __po14=window.psyPlanOpen,__pc14=window.psyPlanCreate;
+  window.psyPlanOpen=function(kind){
+    const P=PLANS14[kind];if(!psy()||!P)return __po14?__po14.apply(this,arguments):undefined;
+    PLAN14=kind;
+    openModal(`<div class="mh"><h3>Plan for ${hesc(kind)}</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
+      <div class="mb"><div class="small muted">Tick what to create. These are starter tasks; the team will define the full algorithm for each plan later.</div>
+        ${P.consent?`<label class="rx-m" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="pl_c" checked><span><b>Take consent</b> · ${hesc(P.consent)}<div class="tiny muted">A request goes to the front desk to take the family's signature.</div></span></label>`:''}
+        ${P.tests.length?`<div class="lbl" style="margin-top:8px">Blood tests and investigations</div>${P.tests.map((t,i)=>`<label class="row small" style="gap:8px;margin:4px 0"><input type="checkbox" id="pl_t${i}" checked>${hesc(t[0])} <span class="muted">· ${hesc(t[1])}</span></label>`).join('')}`:''}
+        <div class="lbl" style="margin-top:8px">Tasks for the team</div>
+        ${P.tasks.map((t,i)=>`<label class="row small" style="gap:8px;margin:4px 0"><input type="checkbox" id="pl_k${i}" checked>${hesc(t)}</label>`).join('')}</div>
+      <div class="mf"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri big" onclick="psyPlanCreate()">Create tasks</button></div>`);
+  };
+  window.psyPlanCreate=function(){
+    const P=PLANS14[PLAN14];if(!psy()||!P)return __pc14?__pc14.apply(this,arguments):undefined;
+    const R=S.rounds,w=whoAt();let n=0;R.inv=R.inv||[];R.adv=R.adv||[];
+    const c=$('pl_c');if(P.consent&&c&&c.checked){S.consents.push({name:P.consent,who:'Family',st:'Requested from front desk by '+w.by+' · '+w.at+' · plan for '+PLAN14,c:'c-amber'});n++;}
+    P.tests.forEach((t,i)=>{const b=$('pl_t'+i);if(b&&b.checked&&!R.inv.some(y=>y[0]===t[0])){R.inv.push([t[0],t[1]]);n++;}});
+    P.tasks.forEach((t,i)=>{const b=$('pl_k'+i);if(b&&b.checked){R.adv.push({to:'Nursing staff',ty:'Other',text:PLAN14+': '+t,until:'Until the plan is done',inform:'No one extra',by:signer()});n++;}});
+    const x=psyPx(S.pid);x.plans=x.plans||[];x.plans.unshift({kind:PLAN14,by:signer(),at:atNow()});
+    closeModal();render();toast('Plan for '+PLAN14+': '+n+' task'+(n===1?'':'s')+' created. Tests and team tasks go out when you save the round.');
+  };
+
+  /* ---------- 13. Handover details pop-up: Differential diagnosis and Medical or surgical comorbidity come from the record ----------
+     Order: what the handover page already holds, then the detailed history, then what the record says (the diagnosis; medicines, abnormal results and allergies). */
+  const DDX_BY_DX=[[/bipolar/i,'Schizoaffective disorder; substance-induced mood disorder; borderline personality disorder'],[/schizo/i,'Schizoaffective disorder; substance-induced psychosis; delusional disorder'],
+    [/psychotic/i,'Substance-induced psychosis; mood disorder with psychotic features; organic cause'],[/depress/i,'Bipolar affective disorder, depressive episode; adjustment disorder; thyroid or vitamin deficiency'],
+    [/obsess|ocd/i,'Obsessive-compulsive personality disorder; psychotic disorder with obsessions; autism spectrum condition'],[/alcohol/i,'Withdrawal from another substance; delirium of another cause; hepatic encephalopathy'],
+    [/opioid/i,'Polysubstance use; opioid-induced mood disorder'],[/cannabis/i,'Cannabis-induced psychosis; primary psychotic disorder'],[/anorexia/i,'Bulimia nervosa; avoidant restrictive food intake disorder; depressive disorder with weight loss']];
+  const MED_COM=[[/metformin|glimepiride|insulin/i,'Diabetes'],[/thyroxine/i,'Hypothyroidism'],[/amlodipine|telmisartan|atenolol|losartan/i,'Hypertension'],[/atorvastatin|rosuvastatin/i,'Raised cholesterol'],[/pantoprazole|omeprazole/i,'Acid reflux']];
+  const hxRow=re=>{try{if(typeof HREAD!=='undefined'){const r=HREAD.find(a=>re.test(String(a[0])));if(r)return Array.isArray(r[1])?r[1].join('; '):String(r[1]||'');}}catch(e){}return '';};
+  const hoNote=pid=>{try{return ((S.psyHO&&S.psyHO.ui&&S.psyHO.ui.notes)||{})[pid]||{};}catch(e){return {};}};
+  function recordDdx(pid){
+    const dx=(()=>{try{const c=ptCtxOf(pid),p=ptFind(pid);return (c&&c.dx)||(p&&p.dx)||'';}catch(e){return '';}})();
+    const n=hoNote(pid).ddx,same=String(n||'').trim().toLowerCase()===String(dx).trim().toLowerCase(); /* the handover page copies the diagnosis here; that is not a differential */
+    if(String(n||'').trim()&&!same)return {text:String(n),src:'record'};
+    if(pid==='neel'){const v=hxRow(/differential diagnos|diagnostic formulation/i);if(v)return {text:v,src:'record'};}
+    const hit=DDX_BY_DX.find(x=>x[0].test(dx));
+    return hit?{text:hit[1],src:'suggested'}:{text:'',src:''};
+  }
+  function recordComorb(pid){
+    const n=hoNote(pid).comorb;if(String(n||'').trim())return {text:String(n),src:'record'};
+    if(pid==='neel'){const v=hxRow(/^Past history|past medical or surgical/i);if(v)return {text:v,src:'record'};}
+    const out=[];
+    try{
+      const c=ptCtxOf(pid)||{};
+      (c.meds||[]).forEach(m=>{const hit=MED_COM.find(x=>x[0].test(String(m.name)));if(hit&&!out.some(o=>o.startsWith(hit[1])))out.push(hit[1]+' (on '+String(m.name).replace(/\s*·.*$/,'')+')');});
+    }catch(e){}
+    try{
+      const s=typeof v3==='function'?v3():null;
+      ((s&&s.labs)||[]).filter(l=>l.pid===pid&&V3.labFlag(l)!=='ok').forEach(l=>out.push(l.test+' '+(l.val>l.hi?'high':'low')+' ('+l.val+')'));
+    }catch(e){}
+    try{const al=psyPx(pid).allergy;if(al&&al.list&&al.list.length)out.push('Drug allergy: '+al.list.map(i=>i.drug).join(', '));}catch(e){}
+    return {text:out.length?out.join('\n'):'No medical or surgical comorbidity recorded',src:'record'};
+  }
+  const __hd=window.psyHvDetail;
+  if(typeof __hd==='function')window.psyHvDetail=function(pid){
+    const r=__hd.apply(this,arguments);
+    try{
+      const u=S.psyHO&&S.psyHO.ui;if(!u||!u.det||!u.det[pid])return r;
+      const d=u.det[pid];
+      [['ddx',recordDdx(pid)],['comorb',recordComorb(pid)]].forEach(([k,rec])=>{
+        const ta=$('hvD-'+k);if(!ta||!rec.text)return;
+        if(!String(d[k]||'').trim()){d[k]=rec.text;ta.value=rec.text;}
+        const lbl=ta.parentElement&&ta.parentElement.querySelector('.lbl');
+        if(lbl&&!lbl.querySelector('.hn-tag')&&String(d[k]||'')===rec.text)lbl.insertAdjacentHTML('beforeend',' <span class="hn-tag rec">'+(rec.src==='suggested'?'Suggested from the diagnosis. Check it.':'From the record')+'</span>');
+      });
+    }catch(e){}
+    return r;
+  };
 })();
