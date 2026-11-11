@@ -248,6 +248,13 @@
       b.innerHTML=`<span class="rc-ic" aria-hidden="true">${MIC}<span class="rc-bars"><i></i><i></i><i></i><i></i></span></span><span>Start session</span>`;
       b.setAttribute('aria-label','Start session and record with the AI scribe');
     });
+    /* Start session sits right next to Add (the header spread them apart) */
+    v.querySelectorAll('button.pg-start').forEach(b=>{
+      const add=b.nextElementSibling;
+      if(!add||b.parentElement.classList.contains('th10-act')||!/psyThAdd\(/.test(add.getAttribute('onclick')||''))return;
+      b.style.marginRight='0';
+      const w=document.createElement('div');w.className='th10-act';b.parentNode.insertBefore(w,b);w.appendChild(b);w.appendChild(add);
+    });
   };
 
   /* Rounds: Start AI scribe gets the recording-button design; assessments the psychiatrist assigned are listed under Planned assessments */
