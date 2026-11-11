@@ -16,8 +16,8 @@
   .pdk i{display:inline-block;width:9px;height:9px;border-radius:50%;flex:0 0 9px}
   .pdk i.red{background:#e5484d}.pdk i.blue{background:#3b82f6}.pdk i.amber{background:#f5a524}.pdk i.ok{background:#12b76a}
   .pdk em{font-style:normal;color:#667085}
-  .pxs-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important}
-  @media(max-width:900px){.pxs-grid{grid-template-columns:1fr!important}}
+  #psyPrefsPage .pxs-grid,.prefs-read .pxs-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important}
+  @media(max-width:900px){#psyPrefsPage .pxs-grid,.prefs-read .pxs-grid{grid-template-columns:1fr!important}}
   /* View full file */
   .pfv-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px;position:sticky;top:0;background:#fff;z-index:2;padding-bottom:8px}
   .pfv-q{flex:0 1 220px;min-height:34px;padding:4px 12px}
