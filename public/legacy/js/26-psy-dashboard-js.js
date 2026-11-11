@@ -238,11 +238,11 @@
     return `<div class="pd">
       <div class="pd-bar"><input class="input" id="dtQ" style="width:280px;min-height:40px;margin:0" placeholder="Type a name" oninput="dtFilter()" aria-label="Search patients">
         <div class="row" style="gap:8px"><button class="btn" onclick="go('#/admissions')">New admission</button><button class="btn pri" onclick="go('#/rounds')">Start rounds</button></div></div>
-      ${openRows.length?`<div style="overflow-x:auto"><table class="pd-t" style="min-width:900px"><colgroup><col style="width:122px"><col style="width:190px"><col style="width:31%"><col><col style="width:216px"></colgroup>
+      ${openRows.length?`<div style="overflow-x:auto"><table class="pd-t" style="min-width:900px"><colgroup><col style="width:122px"><col style="width:190px"><col style="width:36%"><col><col style="width:216px"></colgroup>
         <thead><tr><th>Type</th><th>Patient</th><th>Event</th><th>Action taken by others</th><th></th></tr></thead>
         <tbody id="dtBody">${openRows.map(r=>r.html).join('')}<tr id="dtNone" style="display:none"><td colspan="5" class="pd-empty">No patient matches</td></tr></tbody></table></div>`
       :`<section class="card"><div class="pd-empty">Nothing needs you right now. You can start your rounds when you are ready.</div></section>`}
-      ${doneRows.length?`<section class="pd-completed"><div class="lbl" style="margin:10px 0 6px">Completed actions</div><div style="overflow-x:auto"><table class="pd-t" style="min-width:900px"><colgroup><col style="width:122px"><col style="width:190px"><col style="width:31%"><col><col style="width:216px"></colgroup>
+      ${doneRows.length?`<section class="pd-completed"><div class="lbl" style="margin:10px 0 6px">Completed actions</div><div style="overflow-x:auto"><table class="pd-t" style="min-width:900px"><colgroup><col style="width:122px"><col style="width:190px"><col style="width:36%"><col><col style="width:216px"></colgroup>
         <thead><tr><th>Type</th><th>Patient</th><th>Event</th><th>Action taken</th><th></th></tr></thead><tbody>${doneRows.map(r=>r.doneHtml).join('')}</tbody></table></div></section>`:''}
     </div>`;
   }
