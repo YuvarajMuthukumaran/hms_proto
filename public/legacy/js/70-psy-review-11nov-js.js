@@ -18,6 +18,28 @@
   .pdk em{font-style:normal;color:#667085}
   #psyPrefsPage .pxs-grid,.prefs-read .pxs-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important}
   @media(max-width:900px){#psyPrefsPage .pxs-grid,.prefs-read .pxs-grid{grid-template-columns:1fr!important}}
+  /* Daily notes (psychiatrist, all patients): calmer sheet, one tile per question group, softer pill answers, a clear save panel */
+  body.psy-views:not(.psg) #view .eod{background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible}
+  body.psy-views:not(.psg) #view .eodhd{background:#fff;border:1px solid #e3eaf5;border-radius:18px;margin-bottom:12px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  body.psy-views:not(.psg) #view .eprog strong{font-size:18px;font-weight:800;letter-spacing:-.01em}
+  body.psy-views:not(.psg) #view .eprog .ebar{height:9px!important;margin-top:8px;background:#e8eef8!important;border-radius:99px;overflow:hidden}
+  body.psy-views:not(.psg) #view .eprog .ebar i{display:block;height:100%;background:linear-gradient(90deg,#2f7df0,#175cd3)!important;border-radius:99px}
+  body.psy-views:not(.psg) #view .estrip{padding:0 0 12px!important}
+  body.psy-views:not(.psg) #view .espill{background:#fff;border:1px solid #dbe4f2;border-radius:12px;padding:7px 14px;font-weight:600;color:#344054;transition:border-color .15s,box-shadow .15s}
+  body.psy-views:not(.psg) #view .espill:hover{border-color:#9ec0f7}
+  body.psy-views:not(.psg) #view .espill.on{background:linear-gradient(180deg,#2f7df0,#175cd3);border-color:#175cd3;color:#fff;box-shadow:0 4px 12px rgba(23,92,211,.28)}
+  body.psy-views:not(.psg) #view .estage{padding:0!important}
+  body.psy-views:not(.psg) #view .ecard.erow{background:#fff;border:1px solid #e3eaf5!important;border-radius:20px!important;box-shadow:0 8px 28px rgba(16,24,40,.06)!important}
+  body.psy-views:not(.psg) #view .ecard .epat .avatar{width:48px;height:48px;font-size:15px}
+  body.psy-views:not(.psg) #view .ecard .eqc{background:#f7f9fd!important;border:1px solid #e6ecf6;border-radius:14px;box-shadow:none}
+  body.psy-views:not(.psg) #view .ecard .eqc .dng2{display:flex;align-items:center;gap:8px;text-transform:none!important;letter-spacing:0;font-size:13.5px;font-weight:800;color:#0f3a8a}
+  body.psy-views:not(.psg) #view .ecard .eqc .dng2::before{content:"";width:4px;height:15px;border-radius:3px;background:#2f7df0}
+  body.psy-views:not(.psg) #view .ecard .ef .lbl{font-weight:700;color:#344054}
+  body.psy-views:not(.psg) #view .ecard .ef button{border-radius:99px;border:1px solid #d5dded;background:#fff;padding:6px 13px;font-size:13px;font-weight:550;color:#344054;transition:border-color .14s,background-color .14s,transform .1s}
+  body.psy-views:not(.psg) #view .ecard .ef button:hover{border-color:#6fa2ee;background:#f4f8ff}
+  body.psy-views:not(.psg) #view .ecard .ef button:active{transform:scale(.97)}
+  body.psy-views:not(.psg) #view .ecard .eact{background:#fff;border:1px solid #e6ecf6;border-radius:14px;padding:12px;gap:8px}
+  body.psy-views:not(.psg) #view .ecard .eact .btn.pri{background:linear-gradient(180deg,#2f7df0,#175cd3);border-color:#175cd3;box-shadow:0 4px 12px rgba(23,92,211,.25)}
   /* View full file */
   .pfv-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px;position:sticky;top:0;background:#fff;z-index:2;padding-bottom:8px}
   .pfv-q{flex:0 1 220px;min-height:34px;padding:4px 12px}
@@ -504,6 +526,8 @@
         const v=$('view');
         if(v){
           famCallCard(v);histNav(v);
+          /* Daily notes: "Priya Nair · psychologist" is just the name */
+          v.querySelectorAll('.eod *').forEach(e=>{if(e.children.length===0&&/^Today from .* · psychologist$/.test(e.textContent.trim()))e.textContent=e.textContent.replace(/ · psychologist$/,'');});
           /* Daily notes filters: the same animated segmented controls as the psychologist's */
           if(window.pgUpgradeFilters)v.querySelectorAll('.psy-dn-filter-row').forEach(window.pgUpgradeFilters);
           dashFix(v);medButtons(v);if(S.admSec==='formc')formCTable(v);
