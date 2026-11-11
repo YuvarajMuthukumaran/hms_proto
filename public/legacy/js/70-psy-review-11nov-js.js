@@ -404,11 +404,14 @@
       apply:v=>{psyThAdd(k);Object.keys(v).forEach(id=>{const el=$('th9_'+id);if(el)el.value=Array.isArray(v[id])?v[id].join(', '):v[id];});},cancel:()=>{}});
   };
   function therapyBtns(v){
+    /* every Therapy Plans tab has Record with AI scribe and Add, in both logins */
+    const tabs=v.querySelector('.th9-tabs');
+    if(tabs&&!v.querySelector('button[onclick^="psyThAdd("]')){const hd=tabs.closest('section')&&tabs.closest('section').querySelector('.hd');if(hd)hd.insertAdjacentHTML('beforeend',`<button type="button" class="btn pri sm" onclick="psyThAdd('${S.thTab||'ind'}')"><span class="bico">+</span> Add</button>`);}
     v.querySelectorAll('button[onclick^="psyThAdd("]').forEach(b=>{
       const t=b.textContent.replace(/\s+/g,' ').trim();
       if(b.querySelector('svg')&&/^\+\s*/.test(t)){const tn=[...b.childNodes].reverse().find(n=>n.nodeType===3&&/\S/.test(n.nodeValue));if(tn)tn.nodeValue=' '+tn.nodeValue.replace(/^\s*\+\s*/,'');}
       const m=(b.getAttribute('onclick')||'').match(/psyThAdd\('(\w+)'\)/);
-      if(m&&!b.parentElement.querySelector('.th10-rec')){
+      if(m&&b.parentElement.classList.contains('th10-act')&&!b.parentElement.querySelector('.th10-rec')){b.insertAdjacentHTML('beforebegin',`<button type="button" class="btn sm th10-rec" onclick="psyThRecord('${m[1]}')" aria-label="Record with the AI scribe"><span class="rc-ic" aria-hidden="true">${MIC}<span class="rc-bars"><i></i><i></i><i></i><i></i></span></span><span>Record with AI scribe</span></button>`);}else if(m&&!b.parentElement.querySelector('.th10-rec')){
         const w=document.createElement('div');w.className='th10-act';b.parentNode.insertBefore(w,b);
         w.insertAdjacentHTML('beforeend',`<button type="button" class="btn sm th10-rec" onclick="psyThRecord('${m[1]}')" aria-label="Record with the AI scribe"><span class="rc-ic" aria-hidden="true">${MIC}<span class="rc-bars"><i></i><i></i><i></i><i></i></span></span><span>Record with AI scribe</span></button>`);
         w.appendChild(b);
@@ -509,7 +512,7 @@
         }
       }else if(S.role==='psychologist'){
         /* the psychologist's Patient Experience page gets the same icons as the psychiatrist's */
-        const v=$('view');if(v){pxIcons(v);if(!v.querySelector('.pg-start'))therapyBtns(v);}
+        const v=$('view');if(v){pxIcons(v);therapyBtns(v);}
       }
       if(String(location.hash||'').indexOf('#/handover')===0&&psy()){try{const me1=signer(),sent=new Set();((S.psyHO&&S.psyHO.list)||[]).forEach(h=>{if(h.status==='sent'&&h.from===me1)(h.pids||[]).forEach(p=>sent.add(p));});sent.forEach(p=>{const c=document.getElementById('hvCard-'+p);if(c)c.remove();});}catch(e){}}
     }catch(e){}

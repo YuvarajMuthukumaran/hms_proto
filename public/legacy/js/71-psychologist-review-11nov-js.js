@@ -255,10 +255,8 @@
     });
     /* Start session sits right next to Add (the header spread them apart) */
     v.querySelectorAll('button.pg-start').forEach(b=>{
-      const add=b.nextElementSibling;
-      if(!add||b.parentElement.classList.contains('th10-act')||!/psyThAdd\(/.test(add.getAttribute('onclick')||''))return;
-      b.style.marginRight='0';
-      const w=document.createElement('div');w.className='th10-act';b.parentNode.insertBefore(w,b);w.appendChild(b);w.appendChild(add);
+      const w=v.querySelector('.th10-act');b.style.marginRight='0';
+      if(w&&!w.contains(b))w.insertBefore(b,w.firstChild);
     });
   };
 
