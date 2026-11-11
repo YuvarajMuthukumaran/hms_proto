@@ -249,7 +249,7 @@
   let pad=null;
   window.psyEsignOpen=function(fid){
     const f=FORMS.find(a=>a[1]===fid);if(!f)return;
-    V3.modal('Collect e-signature','Read the form with the family, then they sign in the box. Trial only: the legal team is checking this.',
+    V3.modal('Collect e-signature','Read the form with the family, then they sign in the box.',
       `<div class="small" style="font-weight:600;margin-bottom:8px">${hesc(f[0])}</div>
        <label class="field"><span class="lbl">Name of the person signing</span><input class="input" id="esN" placeholder="e.g. Ananya Bose (sister, nominated representative)"></label>
        <div class="lbl" style="margin:10px 0 6px">Signature</div><canvas class="ct-pad" id="esC" width="520" height="150"></canvas>
@@ -269,7 +269,7 @@
     const n=(($('esN')||{}).value||'').trim();
     if(!n||!pad||!pad.drawn){const e=$('esE');if(e)e.style.display='block';return;}
     const x=px();x.consent=x.consent||{};x.consent[fid]={st:'esign',at:when()+', '+new Date().toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}),by:n,sig:pad.c.toDataURL('image/png')};
-    closeModal();render();toast('E-signature saved (trial, pending legal check)');
+    closeModal();render();toast('E-signature saved');
   };
 
   function allergyBox(){
