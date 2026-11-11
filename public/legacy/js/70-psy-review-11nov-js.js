@@ -113,6 +113,8 @@
       <div class="pad small muted">E-signature is a trial: the legal team is still checking that it is valid.</div>`;
   }
 
+  window.psyFormCTable=formCTable; /* the psychologist's Admission step 5 uses the same table (called from the psychologist block) */
+
   /* ---------- 5. Vitals and monitoring: one table ---------- */
   const SLOT_SET=['9 am','1 pm','5 pm','9 pm'];
   const num=s=>{const m=String(s).match(/-?\d+(\.\d+)?/);return m?parseFloat(m[0]):NaN;};
@@ -328,6 +330,32 @@
     });
   }
 
+  /* ---------- 12. Daily notes filters like the psychologist's: no Today or Yesterday; Last 7 days and Last 1 month ---------- */
+  const __pd70=pDaily;
+  pDaily=function(){
+    if(!psy())return __pd70.apply(this,arguments);
+    let h;window.__pgIn=true; /* switches on the "Last 1 month" filter of the shared note list */
+    try{h=__pd70.apply(this,arguments);}finally{window.__pgIn=false;}
+    if(typeof h!=='string')return h;
+    const t=document.createElement('template');t.innerHTML=h;const R=t.content;
+    R.querySelectorAll('button.tog').forEach(b=>{if(/^(Today|Yesterday)$/.test(b.textContent.trim()))b.remove();});
+    const wk=[...R.querySelectorAll('button.tog')].find(b=>/^Last 7 days$/.test(b.textContent.trim()));
+    if(wk&&!R.querySelector('[data-pg-month]'))wk.insertAdjacentHTML('afterend',`<button class="tog ${S.dnWhen==='month'?'on':''}" data-pg-month="1" onclick="psyDnWhen('month')">Last 1 month</button>`);
+    return t.innerHTML;
+  };
+
+  /* ---------- 11. "Family call due now" looks the same on every patient tab (the tinted card with the phone icon) ---------- */
+  function famCallCard(v){
+    const c=v.querySelector('#famCallDue');if(!c||/\bfc9\b/.test(c.className))return;
+    const g=c.querySelector('.li .grow');if(!g)return;
+    const ti=g.children[0]?g.children[0].textContent:'',su=g.children[1]?g.children[1].textContent:'';
+    const btns=[...c.querySelectorAll('.li button')].map(b=>b.outerHTML).join('');
+    const ph='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>';
+    const n=document.createElement('section');n.id='famCallDue';n.className='fc9';
+    n.innerHTML=`<div class="fc9-ic">${ph}</div><div class="fc9-b"><div class="fc9-k"><i style="animation-delay:-${Date.now()%1600}ms"></i>Family call due now</div><div class="fc9-t">${hesc(ti)}</div><div class="fc9-s">${hesc(su)}</div></div><div class="fc9-a">${btns}</div>`;
+    c.replaceWith(n);
+  }
+
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
@@ -335,6 +363,7 @@
       if(psy()){
         const v=$('view');
         if(v){
+          famCallCard(v);
           dashFix(v);medButtons(v);if(S.admSec==='formc')formCTable(v);
           therapyBtns(v);pxIcons(v);
           v.querySelectorAll('.psy-tx-panel').forEach(p=>{if(/^Treatment Management Plan/.test(((p.querySelector('h3')||{}).textContent||'').trim()))tmpLog(p);});

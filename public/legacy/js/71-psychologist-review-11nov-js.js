@@ -160,7 +160,7 @@
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
-    if(me()){try{const v=$('view');if(v){therapyTable(v);dnTable(v);}}catch(e){}}
+    if(me()){try{const v=$('view');if(v){therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
     return out;
   };
 })();
