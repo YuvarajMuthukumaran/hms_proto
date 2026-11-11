@@ -113,6 +113,26 @@
   `;
   document.head.appendChild(css);
 
+  /* ---------- 0. Type size of the live doctor portal (about 75% of the prototype's), psychiatrist and psychologist logins only ----------
+     Everything on the page scales together (text, spacing, icons). Rules that are tied to the window height are divided by the scale so the
+     sidebar and the pages still fill the window. Floor lead, RMO and nurse are not touched (this checks the login, not the shared workspace). */
+  {
+    const roleNow=(window.__TULASI__||{}).role;
+    if(roleNow==='psychiatrist'||roleNow==='psychologist'){
+      document.body.classList.add('px75');
+      const z=document.createElement('style');z.id='px75-css';
+      z.textContent=`
+      body.px75{zoom:.75}
+      body.px75 .app{min-height:calc(100vh/.75)}
+      body.px75 .side{height:calc(100vh/.75)}
+      body.px75 .modal{max-height:calc(90vh/.75)}
+      body.px75 .ws-left,body.px75 .ws-right{max-height:calc(100vh/.75 - 136px)}
+      body.px75 .rqueue{max-height:calc(100vh/.75 - 112px)}
+      body.px75 .pr-queue{max-height:calc(100vh/.75 - 104px)}`;
+      document.head.appendChild(z);
+    }
+  }
+
   /* ---------- 1. colour key and the type of a completed row ---------- */
   const KEY=`<div class="pdk" role="note" aria-label="What the coloured dots mean"><b>Key</b>
     <span><i class="red"></i>Alert <em>· needs you now</em></span>
