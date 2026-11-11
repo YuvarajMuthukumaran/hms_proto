@@ -30,7 +30,7 @@
   body.psy-views:not(.psg) .hrow11{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;width:100%}
   body.psy-views:not(.psg) .hrow11 .hist-seg{align-self:center!important;flex:0 1 auto}
   body.psy-views:not(.psg) .hwrap{grid-template-columns:minmax(0,1fr)!important;column-gap:0!important}
-  body.psy-views:not(.psg) .hrow11 .hnav{position:relative;display:flex!important;flex-direction:row!important;align-items:center;gap:4px;width:auto!important;min-width:0!important;max-width:100%;padding:5px 8px!important;background:#fff;border:1px solid var(--line,#e4e7ec);border-radius:99px;overflow:visible!important;box-shadow:0 1px 2px rgba(16,24,40,.04);margin-left:auto}
+  body.psy-views:not(.psg) .hrow11 .hnav{position:relative;top:auto!important;display:flex!important;flex-direction:row!important;align-items:center;gap:4px;width:auto!important;min-width:0!important;max-width:100%;padding:5px 8px!important;background:#fff;border:1px solid var(--line,#e4e7ec);border-radius:99px;overflow:visible!important;box-shadow:0 1px 2px rgba(16,24,40,.04);margin-left:auto}
   body.psy-views:not(.psg) .hrow11 .hnav button{width:auto!important;display:inline-flex!important;align-items:center;justify-content:center!important;gap:5px;padding:4px 7px!important;border-radius:99px;position:relative;white-space:nowrap}
   body.psy-views:not(.psg) .hrow11 .hnav button>span:not(.hn){display:none!important}
   body.psy-views:not(.psg) .hrow11 .hnav button:hover:after,body.psy-views:not(.psg) .hrow11 .hnav button:focus-visible:after{content:attr(data-t)!important;display:block!important;position:absolute;left:auto;right:0;top:calc(100% + 10px);transform:none;background:#101828;color:#fff;font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:9px;white-space:nowrap;z-index:60;pointer-events:none;box-shadow:0 8px 20px rgba(16,24,40,.22)}
@@ -457,6 +457,8 @@
         const v=$('view');
         if(v){
           famCallCard(v);histNav(v);
+          /* Daily notes filters: the same animated segmented controls as the psychologist's */
+          if(window.pgUpgradeFilters)v.querySelectorAll('.psy-dn-filter-row').forEach(window.pgUpgradeFilters);
           dashFix(v);medButtons(v);if(S.admSec==='formc')formCTable(v);
           therapyBtns(v);pxIcons(v);
           v.querySelectorAll('.psy-tx-panel').forEach(p=>{if(/^Treatment Management Plan/.test(((p.querySelector('h3')||{}).textContent||'').trim()))tmpLog(p);});

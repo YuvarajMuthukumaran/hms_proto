@@ -106,6 +106,7 @@
       seg(wrap,keys[gi++]||'f1',null);
     });
   };
+  window.pgUpgradeFilters=upgradeFilters; /* the psychiatrist's Daily notes filters use the same segmented controls (called from the psychiatrist block) */
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
