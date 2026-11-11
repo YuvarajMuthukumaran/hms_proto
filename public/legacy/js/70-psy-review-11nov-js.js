@@ -16,6 +16,12 @@
   .pdk i{display:inline-block;width:9px;height:9px;border-radius:50%;flex:0 0 9px}
   .pdk i.red{background:#e5484d}.pdk i.blue{background:#3b82f6}.pdk i.amber{background:#f5a524}.pdk i.ok{background:#12b76a}
   .pdk em{font-style:normal;color:#667085}
+  /* View full file */
+  .pfv-f{margin:0 0 18px}.pfv-f h4{margin:0 0 8px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px solid var(--line-2,#eaecf0)}
+  .pfv-n{font-size:11px;font-weight:700;color:#175cd3;background:#eff4ff;border-radius:99px;padding:1px 8px}
+  .pfv-e{border:1px solid var(--line-2,#eaecf0);border-radius:10px;margin:0 0 8px;overflow:hidden}
+  .pfv-h{background:#f8fafc;padding:7px 12px;font-size:12.5px;font-weight:600;color:#344054}
+  .pfv-b{padding:10px 12px;font-size:13px;line-height:1.5}
   /* Admission step 4 (detailed history): two columns, tighter gaps, every question numbered Q1, Q2 ... (psychiatrist only) */
   body.psy-views:not(.psg) .hwrap .hgrid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px 28px!important;counter-reset:hq}
   body.psy-views:not(.psg) .hwrap .hgrid>.hf{counter-increment:hq;min-width:0}
@@ -509,10 +515,45 @@
     if(psyOrPg())patchModal(i||0);
     return r;
   };
+  /* View full file: every folder of that admission with every document opened out (case history, capacity assessments, management plans,
+     re-assessments, round notes, daily notes, therapy sessions), read only, with Print for the whole file */
+  function stayDocs(i){
+    const t=document.createElement('template');t.innerHTML=pPast();
+    const card=[...t.content.children].filter(e=>e.matches&&e.matches('section.card'))[i];
+    const out=[];if(!card)return out;
+    card.querySelectorAll('details.pf').forEach(f=>{
+      if(f.closest('.pf-body')||(f.parentElement&&f.parentElement.closest('details.pf')))return; /* only the folders, not sections inside a document */
+      const name=((f.querySelector(':scope>summary>span')||{}).textContent||'').trim();
+      const items=[];
+      f.querySelectorAll('details.pf-e').forEach(e=>{
+        const g=c=>((e.querySelector('summary .'+c)||{}).textContent||'').trim();
+        items.push({head:[g('pf-d'),g('pf-t'),g('pf-b')].filter(Boolean).join(' · '),html:(e.querySelector('.pf-body')||{}).innerHTML||''});
+      });
+      f.querySelectorAll('.pf-row').forEach(r=>{
+        const m=(r.querySelector('button[onclick^="psyPfView("]')||{getAttribute:()=>''}).getAttribute('onclick').match(/psyPfView\((\d+)\)/);
+        const d=m&&window.__pfD&&window.__pfD[+m[1]];
+        const g=c=>((r.querySelector('.'+c)||{}).textContent||'').trim();
+        items.push({head:[g('pf-d'),g('pf-t'),g('pf-b')].filter(Boolean).join(' · '),html:d?d.html:''});
+      });
+      if(items.length)out.push({name,items});
+    });
+    return out;
+  }
   pastFile=function(i){
-    const r=__pf.apply(this,arguments);
-    if(psyOrPg())patchModal(i||0);
-    return r;
+    if(!psyOrPg())return __pf.apply(this,arguments);
+    i=i||0;const a=S.pastAdm[i];if(!a)return;
+    const F=stayDocs(i),n=F.reduce((s,f)=>s+f.items.length,0);
+    const body=F.length?F.map(f=>`<section class="pfv-f"><h4>${hesc(f.name)} <span class="pfv-n">${f.items.length}</span></h4>${f.items.map(e=>`<div class="pfv-e"><div class="pfv-h">${hesc(e.head)}</div><div class="pfv-b">${e.html||'<span class="muted">No document</span>'}</div></div>`).join('')}</section>`).join(''):'<div class="muted small">No documents were filed for this stay.</div>';
+    window.__pfFull=window.__pfFull||{};window.__pfFull[i]={title:'Stay file · Admission '+a.n+' · '+a.dates,html:F.map(f=>`<h2>${hesc(f.name)} (${f.items.length})</h2>${f.items.map(e=>`<div class="n"><div class="m"><b>${hesc(e.head)}</b></div>${e.html}</div>`).join('')}`).join('')};
+    openModal(`<div class="mh"><h3>Stay file · Admission ${hesc(String(a.n))} · ${hesc(a.dates)}</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
+      <div class="mb" style="max-height:68vh;overflow:auto"><div class="small muted" style="margin-bottom:10px">${F.length} folders · ${n} documents · read only. Closed at discharge: nothing can be edited or deleted.</div>${body}</div>
+      <div class="mf"><span class="tiny muted" style="margin-right:auto">View only. You can print this file, but it is not saved on your computer.</span><button class="btn" onclick="closeModal()">Close</button><button class="btn pri" onclick="psyStayPrint(${i})">Print</button></div>`);
+    $('modal').style.width='min(980px,96vw)';
+  };
+  window.psyStayPrint=function(i){
+    const d=(window.__pfFull||{})[i];if(!d||typeof psyPdf!=='function')return;
+    let p=null;try{p=ptFind(S.pid)||allPts().find(x=>x.id===S.pid);}catch(e){}
+    psyPdf(d.title,d.html,p);
   };
 
   /* ---------- 14. Add treatment modality: the team's list of eleven (Anu, 11 Nov) ----------
