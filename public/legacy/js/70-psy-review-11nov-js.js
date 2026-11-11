@@ -17,11 +17,27 @@
   .pdk i.red{background:#e5484d}.pdk i.blue{background:#3b82f6}.pdk i.amber{background:#f5a524}.pdk i.ok{background:#12b76a}
   .pdk em{font-style:normal;color:#667085}
   /* View full file */
-  .pfv-f{margin:0 0 18px}.pfv-f h4{margin:0 0 8px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px solid var(--line-2,#eaecf0)}
-  .pfv-n{font-size:11px;font-weight:700;color:#175cd3;background:#eff4ff;border-radius:99px;padding:1px 8px}
-  .pfv-e{border:1px solid var(--line-2,#eaecf0);border-radius:10px;margin:0 0 8px;overflow:hidden}
-  .pfv-h{background:#f8fafc;padding:7px 12px;font-size:12.5px;font-weight:600;color:#344054}
-  .pfv-b{padding:10px 12px;font-size:13px;line-height:1.5}
+  .pfv-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px;position:sticky;top:0;background:#fff;z-index:2;padding-bottom:8px}
+  .pfv-q{flex:0 1 220px;min-height:34px;padding:4px 12px}
+  .pfv-f{border:1px solid var(--line,#e4e7ec);border-radius:14px;margin:0 0 10px;background:#fff;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+  .pfv-f:hover{border-color:#cfdffb}.pfv-f[open]{border-color:#9ec0f7;box-shadow:0 2px 10px rgba(23,92,211,.08)}
+  .pfv-f>summary,.pfv-e>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px}
+  .pfv-f>summary::-webkit-details-marker,.pfv-e>summary::-webkit-details-marker{display:none}
+  .pfv-f>summary{padding:12px 14px}
+  .pfv-ic{flex:0 0 36px;width:36px;height:36px;padding:8px;box-sizing:border-box;border-radius:10px;background:#fff6e0;color:#b54708}
+  .pfv-f[open]>summary .pfv-ic{background:#eaf1ff;color:#175cd3}
+  .pfv-nm{flex:1;min-width:0;font-size:14px;font-weight:700;display:flex;flex-direction:column;gap:1px}
+  .pfv-sub{font-size:12px;font-weight:500;color:#667085}
+  .pfv-n{font-size:11.5px;font-weight:700;color:#175cd3;background:#eff4ff;border-radius:99px;padding:1px 9px}
+  .pfv-ch{flex:0 0 16px;color:#98a2b3;transition:transform .18s ease}
+  details[open]>summary>.pfv-ch{transform:rotate(90deg);color:#175cd3}
+  .pfv-list{border-top:1px solid var(--line-2,#eaecf0);background:#fafbfd;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+  .pfv-e{border:1px solid var(--line-2,#eaecf0);border-radius:10px;background:#fff;overflow:hidden}
+  .pfv-e>summary{padding:9px 12px;font-size:13px}
+  .pfv-e>summary:hover{background:#f8fafc}
+  .pfv-d{flex:0 0 96px;font-weight:700;color:#344054;white-space:nowrap}.pfv-t{flex:1;min-width:0;font-weight:600}.pfv-by{color:#667085;font-size:12px;white-space:nowrap}
+  .pfv-b{padding:12px 14px;font-size:13px;line-height:1.55;border-top:1px solid var(--line-2,#eaecf0)}
+  @media (prefers-reduced-motion:reduce){.pfv-ch,.pfv-f{transition:none}}
   /* Admission step 4 (detailed history): two columns, tighter gaps, every question numbered Q1, Q2 ... (psychiatrist only) */
   body.psy-views:not(.psg) .hwrap .hgrid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px 28px!important;counter-reset:hq}
   body.psy-views:not(.psg) .hwrap .hgrid>.hf{counter-increment:hq;min-width:0}
@@ -527,13 +543,13 @@
       const items=[];
       f.querySelectorAll('details.pf-e').forEach(e=>{
         const g=c=>((e.querySelector('summary .'+c)||{}).textContent||'').trim();
-        items.push({head:[g('pf-d'),g('pf-t'),g('pf-b')].filter(Boolean).join(' · '),html:(e.querySelector('.pf-body')||{}).innerHTML||''});
+        items.push({d:g('pf-d'),t:g('pf-t'),b:g('pf-b'),head:[g('pf-d'),g('pf-t'),g('pf-b')].filter(Boolean).join(' · '),html:(e.querySelector('.pf-body')||{}).innerHTML||''});
       });
       f.querySelectorAll('.pf-row').forEach(r=>{
         const m=(r.querySelector('button[onclick^="psyPfView("]')||{getAttribute:()=>''}).getAttribute('onclick').match(/psyPfView\((\d+)\)/);
         const d=m&&window.__pfD&&window.__pfD[+m[1]];
         const g=c=>((r.querySelector('.'+c)||{}).textContent||'').trim();
-        items.push({head:[g('pf-d'),g('pf-t'),g('pf-b')].filter(Boolean).join(' · '),html:d?d.html:''});
+        items.push({d:g('pf-d'),t:g('pf-t'),b:g('pf-b'),head:[g('pf-d'),g('pf-t'),g('pf-b')].filter(Boolean).join(' · '),html:d?d.html:''});
       });
       if(items.length)out.push({name,items});
     });
@@ -543,12 +559,17 @@
     if(!psyOrPg())return __pf.apply(this,arguments);
     i=i||0;const a=S.pastAdm[i];if(!a)return;
     const F=stayDocs(i),n=F.reduce((s,f)=>s+f.items.length,0);
-    const body=F.length?F.map(f=>`<section class="pfv-f"><h4>${hesc(f.name)} <span class="pfv-n">${f.items.length}</span></h4>${f.items.map(e=>`<div class="pfv-e"><div class="pfv-h">${hesc(e.head)}</div><div class="pfv-b">${e.html||'<span class="muted">No document</span>'}</div></div>`).join('')}</section>`).join(''):'<div class="muted small">No documents were filed for this stay.</div>';
+    const body=F.length?F.map(f=>`<details class="pfv-f"><summary><svg class="pfv-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="pfv-nm">${hesc(f.name)}<span class="pfv-sub">${f.items.length} document${f.items.length===1?'':'s'}${f.items.length>1&&f.items[0].d&&f.items[f.items.length-1].d&&f.items[0].d!==f.items[f.items.length-1].d?' · '+hesc(f.items[f.items.length-1].d)+' to '+hesc(f.items[0].d):f.items[0].d?' · '+hesc(f.items[0].d):''}</span></span><span class="pfv-n">${f.items.length}</span><svg class="pfv-ch" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary><div class="pfv-list">${f.items.map(e=>`<details class="pfv-e"><summary><span class="pfv-d">${hesc(e.d||'')}</span><span class="pfv-t">${hesc(e.t||e.head)}</span><span class="pfv-by">${hesc(e.b||'')}</span><svg class="pfv-ch" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary><div class="pfv-b">${e.html||'<span class="muted">No document</span>'}</div></details>`).join('')}</div></details>`).join(''):'<div class="muted small">No documents were filed for this stay.</div>';
     window.__pfFull=window.__pfFull||{};window.__pfFull[i]={title:'Stay file · Admission '+a.n+' · '+a.dates,html:F.map(f=>`<h2>${hesc(f.name)} (${f.items.length})</h2>${f.items.map(e=>`<div class="n"><div class="m"><b>${hesc(e.head)}</b></div>${e.html}</div>`).join('')}`).join('')};
     openModal(`<div class="mh"><h3>Stay file · Admission ${hesc(String(a.n))} · ${hesc(a.dates)}</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
-      <div class="mb" style="max-height:68vh;overflow:auto"><div class="small muted" style="margin-bottom:10px">${F.length} folders · ${n} documents · read only. Closed at discharge: nothing can be edited or deleted.</div>${body}</div>
+      <div class="mb" style="max-height:68vh;overflow:auto"><div class="pfv-bar"><div class="small muted" style="flex:1 1 220px">${F.length} folders · ${n} documents · read only. Open a folder, then a document.</div><input class="input pfv-q" type="search" placeholder="Search this file" aria-label="Search this file" oninput="pfvFilter(this.value)"><button class="btn sm" onclick="pfvAll(true)">Expand all</button><button class="btn sm" onclick="pfvAll(false)">Collapse all</button></div><div id="pfvBody">${body}</div></div>
       <div class="mf"><span class="tiny muted" style="margin-right:auto">View only. You can print this file, but it is not saved on your computer.</span><button class="btn" onclick="closeModal()">Close</button><button class="btn pri" onclick="psyStayPrint(${i})">Print</button></div>`);
     $('modal').style.width='min(980px,96vw)';
+  };
+  window.pfvAll=function(on){document.querySelectorAll('#pfvBody details').forEach(d=>{if(d.style.display!=='none')d.open=!!on;});};
+  window.pfvFilter=function(q){
+    q=String(q||'').toLowerCase().trim();
+    document.querySelectorAll('#pfvBody .pfv-f').forEach(f=>{let hit=0;f.querySelectorAll('.pfv-e').forEach(e=>{const m=!q||e.textContent.toLowerCase().indexOf(q)>=0;e.style.display=m?'':'none';if(m)hit++;});f.style.display=hit?'':'none';if(q)f.open=hit>0;});
   };
   window.psyStayPrint=function(i){
     const d=(window.__pfFull||{})[i];if(!d||typeof psyPdf!=='function')return;
