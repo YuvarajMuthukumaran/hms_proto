@@ -3,7 +3,9 @@
 (function(){
   const requested=window.__TULASI__&&window.__TULASI__.role;
 
-  if(requested==='floor-lead-psychiatrist'){
+  /* 12 Nov 2026 (Nikita): the Floor Lead Psychiatrist now uses the psychiatrist's own Today and views as the base, so this older basic dashboard is switched off.
+     Lead-only extras are added by role checks in the later blocks (floor lead cards, escalations). */
+  if(false&&requested==='floor-lead-psychiatrist'){
     ROLE.psychiatrist.myday=function(){
       const pts=allPts(),newPts=pts.filter(p=>p.day<=1),highRisk=pts.filter(p=>p.risk),alerts=V3.openAlerts(a=>!a.ack);
       const actions=`<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn pri" onclick="go('#/admissions')">New admission</button><button class="btn" onclick="go('#/inpatients')">All patients</button></div>`;

@@ -2109,7 +2109,7 @@ const me = () => {
   const current=ROLES[S.role] || __me0(), requested=window.__TULASI__&&window.__TULASI__.role;
   if(requested==='rmo')return {...current,name:'Dr. Sameer Khan',short:'Dr. Sameer',ini:'SK',title:'RMO on duty'};
   if(requested==='floor-lead-psychiatrist')return {...current,name:'Dr. Nandini Rao',short:'Dr. Nandini',ini:'NR',title:'Floor Lead Psychiatrist'};
-  if(requested==='floor-lead-psychologist')return {...current,name:'Priya Nair',short:'Priya',ini:'PN',title:'Floor Lead Psychologist'};
+  if(requested==='floor-lead-psychologist')return {...current,name:'Surabhi Sengar',short:'Surabhi',ini:'SS',title:'Floor Lead Psychologist'};
   if(requested==='patient-experience-lead')return {...current,name:'Patient Experience Lead',short:'Patient Experience',title:'Patient Experience Lead'};
   return current;
 };

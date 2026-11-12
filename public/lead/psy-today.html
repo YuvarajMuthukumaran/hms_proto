@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tulasi HMS: Floor Lead Psychologist Today (final prototype)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0F172A;--bg:#F6FBFF;--line:#E3EAF2;--blue:#1E6CDB;--blue-t:#E8F0FD;--muted:#5B6475;--lbl:#90A1B9;--red:#B42318;--red-t:#FEF3F2;--red-l:#FECDCA;--amb:#B54708;--amb-t:#FFFAEB;--amb-l:#FEDF89;--grn:#067647;--grn-t:#ECFDF3;--grn-l:#ABEFC6;--vio:#5B3FB5;--vio-t:#F3EFFE}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);font-size:13.5px}
+button{font:inherit;cursor:pointer}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+aside{background:#fff;border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px;margin:0 6px 22px}
+.logo i{width:30px;height:30px;border-radius:9px;background:var(--blue-t);display:grid;place-items:center;font-style:normal;color:var(--blue)}
+.mlbl{font-size:10.5px;font-weight:700;color:var(--lbl);letter-spacing:.06em;margin:6px 8px 8px}
+.nav button{display:flex;width:100%;align-items:center;gap:10px;border:0;background:none;padding:9px 10px;border-radius:10px;color:var(--muted);font-weight:600;text-align:left}
+.nav button.on{background:var(--blue-t);color:var(--blue);outline:1.5px solid var(--blue)}
+.nav .grp{background:var(--blue);color:#fff}
+.sub{margin:4px 0 10px 8px;padding:4px;border:1px solid var(--line);border-radius:12px}
+.who{position:absolute;bottom:16px;left:14px;right:14px;border:1px dashed var(--line);border-radius:12px;padding:10px;font-size:12px;color:var(--muted)}
+.who b{color:var(--ink);display:block}
+header{height:62px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:5}
+header h1{font-size:20px;margin:0;font-weight:800}
+.av{width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
+main{padding:20px 26px 60px;max-width:1320px}
+.hello{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+.hello h2{margin:0;font-size:20px;font-weight:800}.hello p{margin:4px 0 0;color:var(--muted)}
+.seg{display:inline-flex;background:#F0F4F9;border:1px solid #E0E8F2;border-radius:12px;padding:3px}
+.seg button{border:0;background:none;padding:7px 14px;border-radius:9px;font-weight:600;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(15,23,42,.08)}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:14px}
+.card h3{margin:0;font-size:15px;font-weight:800}.card .sub2{color:var(--muted);font-size:12.5px;margin:3px 0 12px}
+.row{display:flex;align-items:center;gap:10px}.sp{justify-content:space-between}
+.btn{height:34px;padding:0 13px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:600;font-size:12.5px}
+.btn.p{background:var(--blue);border-color:var(--blue);color:#fff}.btn.sm{height:30px;padding:0 10px;font-size:12px}
+.chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:99px;font-size:11.5px;font-weight:600;background:#F2F4F7;color:var(--muted);border:1px solid transparent;white-space:nowrap}
+.chip.red{background:var(--red-t);color:var(--red);border-color:var(--red-l)}.chip.amb{background:var(--amb-t);color:var(--amb);border-color:var(--amb-l)}
+.chip.grn{background:var(--grn-t);color:var(--grn);border-color:var(--grn-l)}.chip.blue{background:var(--blue-t);color:var(--blue)}.chip.vio{background:var(--vio-t);color:var(--vio)}
+/* team strip */
+.team{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.tm{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff;text-align:left;transition:.15s}
+.tm:hover{border-color:#9ec0f7}.tm.on{outline:2px solid var(--blue);border-color:var(--blue)}
+.tm .nm{font-weight:700;display:flex;align-items:center;gap:8px}.tm .st{font-size:12px;color:var(--muted);margin:3px 0 10px}
+.tm .nums{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.tm .nums div{background:#F8FAFC;border-radius:8px;padding:6px 4px;text-align:center}
+.tm .nums b{display:block;font-size:15px}.tm .nums span{font-size:10px;color:var(--lbl);font-weight:700;text-transform:uppercase}
+.tm.leave{background:#FCFCFD}.tm.leave .nm{color:var(--muted)}
+.nums b.r{color:var(--red)}.nums b.a{color:var(--amb)}
+/* kpi */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 12px;text-align:left}
+.kpi .l{font-size:10.5px;font-weight:700;color:var(--lbl);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:22px;font-weight:800;margin-top:4px}.kpi .s{font-size:11.5px;color:var(--muted)}
+.kpi.red .v{color:var(--red)}.kpi.amb .v{color:var(--amb)}
+/* decisions */
+.dq{display:flex;flex-direction:column}
+.di{display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center;padding:12px 0;border-top:1px solid #EEF2F6}
+.di:first-child{border-top:0}
+.di .t{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.di .t.red{color:var(--red)}.di .t.amb{color:var(--amb)}.di .t.blue{color:var(--blue)}.di .t.vio{color:var(--vio)}
+.di .w b{font-weight:700}.di .w div{color:var(--muted);font-size:12.5px;margin-top:2px}
+.di.done{opacity:.5}.di.done .act{display:none}
+.donechip{display:none}.di.done .donechip{display:inline-flex}
+/* table */
+table{width:100%;border-collapse:collapse}
+th{font-size:10.5px;font-weight:700;color:var(--lbl);text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid #EEF2F6;vertical-align:top}
+tr.hide{display:none}
+.pn b{display:block}.pn span{font-size:12px;color:var(--muted)}
+.pill{display:flex;gap:6px;flex-wrap:wrap}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.fchip{height:30px;padding:0 12px;border-radius:99px;border:1px solid var(--line);background:#fff;font-weight:600;font-size:12px;color:var(--muted)}
+.fchip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.two{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(15,23,42,.35);display:none;align-items:center;justify-content:center;z-index:20}
+.ov.on{display:flex}
+.md{background:#fff;border-radius:18px;width:520px;max-width:92vw;padding:20px 22px}
+.md h4{margin:0 0 4px;font-size:16px}.md p{margin:0 0 14px;color:var(--muted)}
+.opt{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
+.opt.on{border-color:var(--blue);background:var(--blue-t)}
+.opt small{color:var(--muted);display:block}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;display:none;z-index:30}
+.legend{font-size:11.5px;color:var(--muted);margin-top:8px}
+.note{background:var(--amb-t);border:1px solid var(--amb-l);color:#7A2E0E;border-radius:12px;padding:10px 12px;font-size:12.5px;margin-bottom:14px}
+.hidden{display:none}
+.bar{height:6px;border-radius:99px;background:#EEF2F6;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--grn)}
+</style>
+<style>
+.gs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.g{border:1px solid var(--line);border-radius:14px;padding:12px}
+.g .tt{font-weight:700}.g .mt{font-size:12px;color:var(--muted);margin:3px 0 8px}
+.prog{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.prog .bar{flex:1;margin:0}
+.dots{display:inline-flex;gap:3px}.dots i{width:8px;height:8px;border-radius:50%;background:#E4E7EC;display:inline-block}.dots i.on{background:var(--grn)}
+.plan{background:#F8FAFC;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:12.5px}
+.plan b{display:block;margin-bottom:4px}
+.tmc{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font-weight:600;font-size:12.5px;display:inline-flex;align-items:center;gap:6px}
+.tmc span{color:var(--muted);font-weight:500;font-size:12px}.tmc.on{border-color:var(--blue);background:var(--blue-t);color:var(--blue)}.tmc.off{color:var(--muted)}
+#teamRow+span{display:block}
+.wk td,.wk th{text-align:center;padding:7px 4px}.wk td:first-child,.wk th:first-child{text-align:left}.c{display:inline-block;min-width:26px;padding:2px 6px;border-radius:6px;font-size:11.5px;font-weight:700}.c.D{background:var(--grn-t);color:var(--grn)}.c.O{background:var(--blue-t);color:var(--blue)}.c.L{background:var(--amb-t);color:var(--amb)}.c.S{background:var(--red-t);color:var(--red)}.c.W{background:#F2F4F7;color:#98A2B3}
+#secActions,#secFloor,#secMine{min-height:680px}
+#secSeg{position:sticky;top:70px;z-index:4}
+</style><style id="embed-css">html.embed aside,html.embed header{display:none!important}html.embed .app{display:block!important;min-height:0!important}html.embed main{padding:6px 4px 40px!important}html.embed body{background:transparent}</style>
+<script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');</script>
+</head>
+<body><div class="app">
+<aside>
+  <div class="logo"><i>T</i>Tulasi Healthcare</div>
+  <div class="mlbl">MAIN MENU</div>
+  <div class="nav">
+    <button>Dashboard</button><button>All Patients</button>
+    <button class="grp">Inpatients</button>
+    <div class="sub"><button class="on" id="nToday" onclick="nav('today')">Today</button><button>Floor patients</button><button>Groups</button><button>Daily notes</button><button>Handover</button><button id="nTeam" onclick="toast('Team and leave is a separate screen (next card)')">Team and leave</button></div>
+    <button>Calendar and caseload</button><button>Messages</button><button>Setting</button>
+  </div>
+  <div class="who"><b>Surabhi Sengar</b>Floor lead psychologist · Floor 2, Gurgaon</div>
+</aside>
+<div>
+<header><h1>Today</h1><div class="row"><span class="chip">Floor 2 · Gurgaon</span><div class="av">SS</div><b>Surabhi Sengar</b></div></header>
+<main>
+  <div class="hello">
+    <div><h2>Good afternoon, Surabhi</h2><p>Thursday 12 November · 17 patients on Floor 2 · <span id="decCount">9</span> things need you</p></div>
+    
+  </div>
+
+  <div id="floorView">
+  <div class="kpis">
+    <button class="kpi" data-f="all"><div class="l">On the floor</div><div class="v">17</div><div class="s">1 without a psychologist</div></button>
+    <button class="kpi red" data-f="risk"><div class="l">Risk not acted on</div><div class="v">1</div><div class="s">over 1 h since risk check</div></button>
+    <button class="kpi amb" data-f="nosess"><div class="l">No session 3+ days</div><div class="v">3</div><div class="s">against the plan</div></button>
+    <button class="kpi amb" data-f="signoff"><div class="l">To review and sign</div><div class="v" id="kSign">5</div><div class="s">oldest 3 days</div></button>
+    <button class="kpi amb" data-f="rom"><div class="l">No score in 14 days</div><div class="v">4</div><div class="s">PHQ-9, GAD-7, Y-BOCS</div></button>
+    <button class="kpi red" data-f="fam"><div class="l">Families waiting</div><div class="v" id="kFam">4</div><div class="s">3 calls overdue · 1 concern open</div></button>
+  </div>
+  <div class="card" id="secActions">
+      <div class="row sp"><div><h3>Needs you</h3><div class="sub2">Across all floor patients and their families. Sessions, notes and assessments stay with each psychologist.</div></div><span class="chip" id="decChip">9 open</span></div>
+      <div class="dq">
+        <div class="di" data-k="risk"><div class="t red">Risk not acted on</div><div class="w"><b>Ritu Malhotra · risk check yes in Kiran Mehra's session, 1:40 pm · 1 h 10 m ago</b><div>Short C-SSRS: ideation with method, no plan. Psychiatrist alerted but observation level not changed yet. Reaches you because no one acted within 1 hour.</div></div><div class="act row"><button class="btn sm" onclick="done(this,'Kiran Mehra asked to follow up with Dr. Rao now')">Ask Kiran</button><button class="btn p sm" onclick="done(this,'Dr. Nandini Rao called; observation set to every 15 min')">Call psychiatrist</button></div><span class="chip grn donechip">Done</span></div>
+        <div class="di" data-k="famc"><div class="t red">Family concern</div><div class="w"><b>Karan Malhotra · mother (Sunita) · raised 11:20 am · 1 h 40 m left on the 6 h clock</b><div>"Nobody has told us anything this week." Treating psychologist Kiran Mehra has not picked it up.</div></div><div class="act row"><button class="btn sm" onclick="done(this,'Kiran Mehra asked to call Sunita Malhotra before 1 pm',['kFam'])">Ask Kiran</button><button class="btn p sm" onclick="done(this,'You called Sunita Malhotra; logged on Karan\'s family tab',['kFam'])">I will call</button></div><span class="chip grn donechip">Done</span></div>
+        <div class="di" data-k="famcalls"><div class="t amb">Family calls</div><div class="w"><b>3 required calls overdue across the floor</b><div>Sameer Das day 3 to 4 call (Kiran Mehra) · Neel Bose weekly update (Priya Nair) · Tarun Roy day 3 to 4 call (Kiran Mehra).</div></div><div class="act row"><button class="btn sm" onclick="sec('Floor');setF('fam')">See them</button><button class="btn p sm" onclick="done(this,'Reminders sent to Kiran Mehra and Priya Nair',['kFam','kFam','kFam'])">Remind psychologists</button></div><span class="chip grn donechip">Done</span></div>
+        <div class="di" data-k="assign"><div class="t blue">No psychologist</div><div class="w"><b>Rohit Kapoor · Suite 201 · admitted today</b><div>Generalised anxiety, poor sleep. Psychologist intake call is due in 24 h.</div></div><div class="act"><button class="btn p sm" onclick="openAssign('Rohit Kapoor')">Assign</button></div><span class="chip grn donechip">Done</span></div>
+        <div class="di" data-k="signoff"><div class="t amb">To review and sign</div><div class="w"><b>5 waiting · 3 therapy plans, 2 notes to co-sign · oldest 3 days</b><div>Plans from Priya Nair and Kiran Mehra; session notes from Ankit Verma (assistant psychologist) need your co-sign.</div></div><div class="act"><button class="btn p sm" onclick="openPlan()">Open review queue</button></div><span class="chip grn donechip">Done</span></div>
+        <div class="di" data-k="restr"><div class="t red">After restraint</div><div class="w"><b>Tarun Roy · restrained today 1:05 to 2:00 pm</b><div>Psychology input needed: debrief with the patient and a behaviour support plan for the ward within 72 h (reduce repeat restraint).</div></div><div class="act"><button class="btn p sm" onclick="done(this,'Debrief and behaviour support plan assigned to Kiran Mehra, due Sun 2 pm')">Assign debrief</button></div><span class="chip grn donechip">Done</span></div>
+        <div class="di" data-k="rom"><div class="t blue">Outcome scores</div><div class="w"><b>4 patients have no score in 14 days</b><div>Karan Malhotra (PHQ-9), Neel Bose (GAD-7), Sameer Das (Y-BOCS, due every 2 weeks), Arjun Mehta (PHQ-9).</div></div><div class="act"><button class="btn p sm" onclick="done(this,'Scores added to each psychologist\'s Today')">Send to psychologists</button></div><span class="chip grn donechip">Done</span></div>
+        <div class="di" data-k="group"><div class="t vio">Group cover</div><div class="w"><b>Relapse prevention group · today 4:00 pm · 6 patients</b><div>Priya Nair is in a family session until 4:30 pm. No facilitator.</div></div><div class="act row"><button class="btn sm" onclick="done(this,'Group moved to 4:45 pm; ward told')">Move to 4:45</button><button class="btn p sm" onclick="done(this,'You are facilitating the 4:00 pm group')">I will take it</button></div><span class="chip grn donechip">Done</span></div>
+        <div class="di" data-k="leave"><div class="t blue">Leave cover</div><div class="w"><b>Priya Nair · leave 14 to 16 Nov</b><div>6 patients, 1 group (Anxiety and stress, Sat), 2 family sessions need cover.</div></div><div class="act"><button class="btn p sm" onclick="openCover()">Choose cover</button></div><span class="chip grn donechip">Done</span></div>
+      </div>
+    </div>
+  
+  <div class="seg" id="secSeg" style="margin-bottom:14px"><button class="on" data-s="Actions">Actions <span class="chip" id="segA" style="margin-left:4px">9</span></button><button data-s="Floor">Floor caseload <span class="chip" style="margin-left:4px">17</span></button><button data-s="Mine">My caseload <span class="chip" style="margin-left:4px">3</span></button></div>
+  <div class="card hidden" id="secMine"><h3>My caseload · 3</h3><div class="sub2">Patients you treat yourself. Sessions, notes and family calls work the same as on every psychologist Today.</div>
+    <table><thead><tr><th>Patient</th><th>Therapy</th><th>Next session</th><th>Due</th><th></th></tr></thead><tbody>
+    <tr><td class="pn"><b>Meera Iyer</b><span>44/F · R 310 A · Day 9</span></td><td>CBT</td><td>Today 3:00 pm</td><td><span class="chip">Session note</span></td><td><button class="btn sm" onclick="openPt(this.closest('tr').querySelector('b').textContent)">Open</button></td></tr>
+    <tr><td class="pn"><b>Kavya Menon</b><span>28/F · R 313 · Day 11</span></td><td>CBT-E</td><td>Fri 11:00 am</td><td><span class="chip amb">Family call week 2</span></td><td><button class="btn sm" onclick="openPt(this.closest('tr').querySelector('b').textContent)">Open</button></td></tr>
+    <tr><td class="pn"><b>Aman Gill</b><span>52/M · R 120 · Day 6</span></td><td>MI</td><td>Today 5:00 pm</td><td><span class="chip">Homework check</span></td><td><button class="btn sm" onclick="openPt(this.closest('tr').querySelector('b').textContent)">Open</button></td></tr>
+    </tbody></table></div>
+  
+  <div class="card hidden" id="secFloor">
+    <div class="row sp"><div><h3 id="listTitle">Floor 2 caseload</h3><div class="sub2">Sorted by who needs attention first. Click a row to open Therapy Plans.</div></div><select class="btn" onchange="pick(this.value||null)"><option value="">All psychologists</option><option value="Priya">Priya Nair</option><option value="Kiran">Kiran Mehra</option><option value="Ankit">Ankit Verma</option><option value="Surabhi">You</option></select></div>
+    <div class="filters">
+      <button class="fchip on" data-f="all">All 17</button><button class="fchip" data-f="risk">Risk 2</button><button class="fchip" data-f="nosess">No session 3+ days 3</button><button class="fchip" data-f="signoff">To review 3</button><button class="fchip" data-f="rom">No score 14 d 4</button><button class="fchip" data-f="notes">Note unsigned 2</button><button class="fchip" data-f="fam">Family waiting 4</button><button class="fchip" data-f="dc">Discharge this week 3</button>
+    </div>
+    <table><thead><tr><th>Patient</th><th>Psychologist</th><th>Last session</th><th>Family</th><th>Needs attention</th></tr></thead><tbody id="tb"></tbody></table>
+  </div>
+  </div>
+
+
+</main></div></div>
+<div class="ov" id="ov"><div class="md" id="md"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const P=[
+ {n:'Ritu Malhotra',fm:'Husband · yesterday',d:'29/F · R 312 B · Day 5',doc:'Kiran',th:'CBT',g:[2,3,7],last:'Today',fam:2,fl:['red|Risk check yes today'],f:['risk']},
+ {n:'Neel Bose',fm:'Sister · 6 days|Weekly update overdue',d:'23/M · R 213 A · Day 6',doc:'Priya',th:'Supportive, psychoeducation',g:[2,2,8],last:'3 days ago',fam:1,fl:['amb|Plan to sign off','amb|Note 26 h unsigned','amb|No session 3 days'],f:['fam','rom','signoff','notes','nosess','risk']},
+ {n:'Sameer Das',fm:'Mother · 5 days|Day 3 to 4 call overdue',d:'16/M · R 213 A · Day 7 · minor',doc:'Kiran',th:'ERP for OCD',g:[3,5,8],last:'Yesterday',fam:3,fl:['amb|Plan to sign off (3 d)','amb|Note 30 h unsigned','blue|Under 18'],f:['fam','rom','signoff','notes']},
+ {n:'Varun Rao',fm:'Wife · today',d:'41/M · R 211 · Day 4',doc:'Priya',th:'MI, relapse prevention',g:[3,4,8],last:'Today',fam:2,fl:['amb|Plan to sign off'],f:['signoff']},
+ {n:'Dev Kumar',fm:'Brother · 2 days',d:'31/M · R 215 A · Day 15',doc:'Priya',th:'Relapse prevention',g:[3,6,8],last:'Yesterday',fam:4,fl:['amb|Discharge 15 Nov','amb|Relapse plan not reviewed'],f:['dc']},
+ {n:'Rohit Kapoor',fm:'Wife · 24 h call due',d:'38/M · Suite 201 · Day 0',doc:'',th:'Not started',g:null,last:'None',fam:0,fl:['blue|No psychologist'],f:['new']},
+ {n:'Karan Malhotra',fm:'Mother · concern open|Concern 1 h 40 m left',d:'26/M · R 212 A · Day 26',doc:'Kiran',th:'CBT for psychosis',g:[2,4,7],last:'4 days ago',fam:5,fl:['amb|No session 4 days','amb|No PHQ-9 in 14 d'],f:['fam','rom','nosess']},
+ {n:'Arjun Mehta',fm:'Wife · 3 days',d:'34/M · R 210 · Day 12',doc:'Priya',th:'CBT, behavioural activation',g:[2,5,8],last:'Yesterday',fam:3,fl:[],f:['rom',]},
+ {n:'Tarun Roy',fm:'Father · 4 days|Day 3 to 4 call overdue',d:'19/M · R 216 · Day 3',doc:'Kiran',th:'Supportive',g:[1,1,6],last:'3 days ago',fam:0,fl:['red|Restrained today: debrief due','amb|No session 3 days'],f:['fam','nosess']},
+ {n:'Sana Qureshi',fm:'Mother · yesterday',d:'27/F · R 311 · Day 3',doc:'Priya',th:'Supportive',g:[2,2,7],last:'Yesterday',fam:1,fl:['blue|Transfer requested'],f:[]},
+ {n:'Rahul Sethi',fm:'Father · today',d:'45/M · R 123 B · Day 22',doc:'Kiran',th:'MI, relapse prevention',g:[3,7,8],last:'Today',fam:8,fl:['grn|Ready for discharge today'],f:['dc']},
+ {n:'Yash Arora',fm:'Mother · 2 days',d:'24/M · R 121 A · Day 9',doc:'Kiran',th:'MI',g:[2,5,8],last:'Yesterday',fam:6,fl:['amb|Discharge 16 Nov'],f:['dc']},
+ {n:'Meera Iyer',fm:'Father · yesterday',d:'44/F · R 310 A · Day 9',doc:'Surabhi',th:'CBT',g:[2,5,8],last:'Yesterday',fam:4,fl:[],f:[]},
+ {n:'Kavya Menon',fm:'Husband · 3 days',d:'28/F · R 313 · Day 11',doc:'Surabhi',th:'CBT-E',g:[2,4,8],last:'2 days ago',fam:3,fl:[],f:[]},
+ {n:'Aman Gill',fm:'Son · yesterday',d:'52/M · R 120 · Day 6',doc:'Surabhi',th:'MI',g:[2,3,7],last:'Yesterday',fam:2,fl:[],f:[]},
+ {n:'Nikhil Jain',fm:'Wife · today',d:'34/M · R 122 · Day 2',doc:'Kiran',th:'Not started (medically unwell)',g:null,last:'None',fam:0,fl:['red|Delirium risk: hold sessions'],f:['new']},
+ {n:'Pooja Bhatt',fm:'Sister · admission day',d:'33/F · R 314 A · Day 1',doc:'Priya',th:'Intake booked',g:null,last:'None',fam:0,fl:[],f:['new']}
+];
+const DOC={Priya:'Priya Nair',Kiran:'Kiran Mehra',Ishita:'Ishita Kapoor',Ankit:'Ankit Verma',Surabhi:'You'};
+let F='all',D=null;
+const PAR=(function(){try{return window.parent&&window.parent!==window&&window.parent.S?window.parent:null;}catch(e){return null;}})();
+const pidOf=name=>{try{const L=PAR.allPts();const x=L.find(p=>p.name===name);return x?x.id:null;}catch(e){return null;}};
+function openPt(name,tab){const id=pidOf(name);if(PAR&&id){PAR.go('#/patient/'+id+'/'+(tab||'therapy'));}else toast('Opens '+name);}
+(function(){try{const A=(PAR.S.lp&&PAR.S.lp.assign)||{};P.forEach(p=>{const id=pidOf(p.n);if(id&&A[id]){p.doc=A[id];}});}catch(e){}})();
+const chip=s=>{const [c,t]=s.split('|');return `<span class="chip ${c}">${t}</span>`};
+const dots=n=>`<span class="dots">${[...Array(8)].map((_,i)=>`<i class="${i<n?'on':''}"></i>`).join('')}</span> <span style="font-size:12px;color:var(--muted)">${n}/8</span>`;
+const goals=g=>g?`<span style="font-size:12.5px">${g[0]} → <b>${g[1]}</b> → ${g[2]}</span>`:'<span style="color:var(--lbl)">Not set</span>';
+function render(){
+ const vis=p=>(F==='all'||p.f.includes(F))&&(!D||p.doc===D);
+ document.getElementById('tb').innerHTML=P.map(p=>`<tr class="${vis(p)?'':'hide'}" style="cursor:pointer" onclick="openPt('${p.n}')"><td class="pn"><b>${p.n}</b><span>${p.d} · ${p.th}</span></td><td>${p.doc?DOC[p.doc]:'<span class="chip blue">Not assigned</span>'}</td><td style="${/days|None/.test(p.last)?'color:var(--amb);font-weight:600':''}">${p.last}</td><td>${(()=>{const [a,b]=p.fm.split('|');return `<div style="font-size:12.5px">${a}</div>`+(b?`<span class="chip ${/Concern/.test(b)?'red':'amb'}" style="margin-top:4px">${b}</span>`:'')+`<div style="margin-top:4px">${dots(p.fam)}</div>`})()}</td><td><div class="pill">${p.fl.map(chip).join('')||'<span style="color:var(--lbl)">Nothing</span>'}</div></td></tr>`).join('');
+ const n=P.filter(vis).length;document.getElementById('listTitle').textContent=(D?(D==='Surabhi'?'Your caseload':DOC[D]+'’s caseload'):'Floor 2 caseload')+' · '+n;
+}
+function setF(f){F=f;document.querySelectorAll('.fchip').forEach(b=>b.classList.toggle('on',b.dataset.f===f));render();}
+document.querySelectorAll('.fchip').forEach(b=>b.onclick=()=>setF(b.dataset.f));
+
+function pick(d){D=d;render();}
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.style.display='block';clearTimeout(window._t);window._t=setTimeout(()=>e.style.display='none',2400);}
+function recount(){const n=document.querySelectorAll('#floorView .di:not(.done)').length;document.getElementById('decCount').textContent=n;document.getElementById('decChip').textContent=n?n+' open':'All done';document.getElementById('segA').textContent=n;}
+function done(btn,msg,dec){const di=btn.closest('.di');di.classList.add('done');(dec||[]).forEach(id=>{const e=document.getElementById(id);e.textContent=Math.max(0,+e.textContent-1)});if(di.dataset.k==='group'&&document.getElementById('grpLine')){document.getElementById('grpLine').innerHTML='Groups today: Anxiety 11:30 done · Relapse prevention '+(msg.includes('4:45')?'4:45 Priya Nair':'4:00 you')+' · Mindfulness 5:30 you';}toast(msg);recount();}
+function nudge(b){b.textContent='Nudged';b.disabled=true;toast('Both psychologists nudged; you see them again at 9 am if still unsigned');}
+function modal(h){document.getElementById('md').innerHTML=h;document.getElementById('ov').classList.add('on');}
+function close_(){document.getElementById('ov').classList.remove('on');}
+document.getElementById('ov').onclick=e=>{if(e.target.id==='ov')close_();};
+function sel(el,v){document.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));el.classList.add('on');window._as=v;}
+function openAssign(name){
+ modal(`<h4>Assign a psychologist · ${name}</h4><p>Caseload and sessions today, with leave shown.</p>
+ <div class="opt" onclick="sel(this,'Kiran')"><div><b>Kiran Mehra</b><small>7 patients · 2 of 4 sessions done today</small></div></div>
+ <div class="opt" onclick="sel(this,'Priya')"><div><b>Priya Nair</b><small>6 patients · on leave 14 to 16 Nov</small></div><span class="chip amb">Leave soon</span></div>
+ <div class="opt" onclick="sel(this,'Surabhi')"><div><b>You</b><small>3 patients · floor lead</small></div><span class="chip grn">Lightest load</span></div>
+ <div style="font-size:12.5px;color:var(--muted);margin:8px 0 0">The intake call (within 24 h) and the first session go on their Today.</div>
+ <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn" onclick="close_()">Cancel</button><button class="btn p" onclick="assign('${name}')">Assign</button></div>`);
+}
+function assign(name){const d=window._as||'Kiran';const p=P.find(x=>x.n===name);p.doc=d;try{const id=pidOf(name);if(PAR&&id){PAR.S.lp=PAR.S.lp||{};PAR.S.lp.assign=PAR.S.lp.assign||{};PAR.S.lp.assign[id]=d;}}catch(e){}p.th='Intake booked';p.fl=['amb|Intake call due 24 h'];close_();document.querySelector('.di[data-k=assign]').classList.add('done');recount();render();toast(name+' assigned to '+DOC[d]+'. Intake call added to their Today.');}
+let left=5;
+function openPlan(){
+ const L=[['plan','Sameer Das · therapy plan','Kiran Mehra · 3 days','ERP for OCD. Goals: checking from 3 h to under 1 h a day; touch door handles without washing; back to college classes. Plan: 8-step ladder, Y-BOCS every 2 weeks, family session on accommodation.'],
+ ['plan','Neel Bose · therapy plan','Priya Nair · 2 days','Supportive and psychoeducation. Goals: sleep 6 h; one group activity a day; talk about worries. Plan: relapse signs with sister, 2 family sessions before discharge.'],
+ ['plan','Varun Rao · therapy plan','Priya Nair · 1 day','MI and relapse prevention. Goals: no drinking on 2 home leaves; 3 triggers with a plan each; AA weekly after discharge.'],
+ ['note','Aman Gill · session note','Ankit Verma (assistant) · today','MI session 40 min. Risk check: all no. Ambivalence about stopping; decisional balance done. Homework: drinking diary.'],
+ ['note','Kavya Menon · group note line','Ankit Verma (assistant) · today','Mindfulness group. Attended, quiet, left 10 min early.']];
+ modal(`<h4>Review queue · ${left} waiting</h4><p>Sign it, or send it back with what to fix (the author sees "Updates needed" on their Today). Signed plans count towards the hospital quality measure.</p>
+ <div style="max-height:52vh;overflow:auto">${L.map((x,i)=>`<div class="plan" id="pl${i}"><div class="row sp"><b>${x[1]}</b><span class="chip ${x[0]==='plan'?'vio':'blue'}">${x[0]==='plan'?'Plan sign-off':'Co-sign'}</span></div><div style="font-size:12px;color:var(--muted);margin-bottom:4px">${x[2]}</div><div>${x[3]}</div><div class="row" style="justify-content:flex-end;margin-top:8px;gap:6px"><button class="btn sm" onclick="sendBack(${i})">Updates needed</button><button class="btn p sm" onclick="signPlan(${i})">Sign</button></div></div>`).join('')}</div>
+ <div class="row sp" style="margin-top:10px"><button class="btn" onclick="close_()">Close</button><button class="btn p" onclick="[0,1,2,3,4].forEach(i=>{const r=document.querySelector('#pl'+i+' .row:last-child');if(r&&r.querySelector('button'))signPlan(i)})">Sign all remaining</button></div>`);
+}
+function signPlan(i){const e=document.getElementById('pl'+i);e.querySelector('.row:last-child').innerHTML='<span class="chip grn">Signed by Surabhi Sengar, Psychologist Lead · 12 Nov</span>';after();}
+function sendBack(i){const e=document.getElementById('pl'+i);e.querySelector('.row:last-child').innerHTML='<span class="chip amb">Sent back: updates needed</span>';after();}
+function after(){left--;document.getElementById('kSign').textContent=Math.max(0,left);if(left<=0){document.querySelector('.di[data-k=signoff]').classList.add('done');recount();toast('Review queue cleared');}}
+function openCover(){
+ modal(`<h4>Leave cover · Priya Nair, 14 to 16 Nov</h4><p>Choose who covers. They get a handover request with the session plan for each patient.</p>
+ <div class="opt on" onclick="sel(this,'Kiran')"><div><b>Kiran Mehra</b><small>7 patients</small></div></div>
+ <div class="opt" onclick="sel(this,'Surabhi')"><div><b>You</b><small>3 patients · floor lead</small></div><span class="chip grn">Lightest load</span></div>
+ <div style="font-size:12.5px;color:var(--muted);margin:6px 0 4px">Goes with the handover:</div>
+ <div class="pill"><span class="chip">6 patients</span><span class="chip vio">Anxiety and stress group · Sat</span><span class="chip">Family sessions · Varun Rao, Dev Kumar</span><span class="chip amb">Dev Kumar discharge 15 Nov</span></div>
+ <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" onclick="close_()">Cancel</button><button class="btn p" onclick="close_();done(document.querySelector('.di[data-k=leave] .btn'),'Handover request sent')">Send handover request</button></div>`);
+}
+
+function sec(x){const y=window.scrollY;['Actions','Floor','Mine'].forEach(k=>document.getElementById('sec'+k).classList.toggle('hidden',k!==x));document.querySelectorAll('#secSeg button').forEach(b=>b.classList.toggle('on',b.dataset.s===x));window.scrollTo(0,y);}
+document.querySelectorAll('#secSeg button').forEach(b=>b.onclick=()=>sec(b.dataset.s));
+document.querySelectorAll('.kpi[data-f]').forEach(b=>b.onclick=()=>{sec('Floor');setF(b.dataset.f);});
+
+render();
+const WK=[['Priya Nair','DDDDDLL'],['Kiran Mehra','DDWDDDD'],['Ankit Verma','DDDDDWW'],['Ishita Kapoor','OODSOWW'],['You','DDDDDDW']];
+function drawWk(){document.getElementById('wk').innerHTML=WK.map(r=>`<tr><td><b style="font-size:12.5px">${r[0]}</b></td>${[...r[1]].map(c=>`<td><span class="c ${c}">${c}</span></td>`).join('')}</tr>`).join('');}
+function nav(v){document.getElementById('floorView').classList.toggle('hidden',v!=='today');(document.getElementById('teamView')||{classList:{toggle(){}}}).classList.toggle('hidden',v!=='team');document.querySelector('.hello').classList.toggle('hidden',v!=='today');document.getElementById('nToday').classList.toggle('on',v==='today');document.getElementById('nTeam').classList.toggle('on',v==='team');document.querySelector('header h1').textContent=v==='team'?'Team and leave':'Today';window.scrollTo(0,0);}
+function openSup(){modal(`<h4>Book supervision</h4><p>Every 2 weeks for psychologists, weekly for assistants.</p>
+ <div class="opt on"><div><b>Kiran Mehra</b><small>Overdue · last 27 Oct</small></div><span class="chip amb">Overdue</span></div>
+ <div class="opt"><div><b>Priya Nair</b><small>Due 18 Nov · on leave 14 to 16 Nov</small></div></div>
+ <div class="opt"><div><b>Ankit Verma</b><small>Weekly · Mon 17 Nov</small></div></div>
+ <div class="row" style="gap:8px;margin-top:6px"><span class="chip blue">Fri 13 Nov · 12:00 pm</span><span class="chip">Fri 13 Nov · 5:00 pm</span><span class="chip">Mon 17 Nov · 2:00 pm</span></div>
+ <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" onclick="close_()">Cancel</button><button class="btn p" onclick="close_();document.getElementById('kiranSup').className='chip grn';document.getElementById('kiranSup').textContent='Booked · Fri 13 Nov, 12 pm';document.getElementById('kSup').textContent='0';toast('Supervision booked with Kiran Mehra, Fri 12 pm')">Book</button></div>`);}
+function openLeave(){modal(`<h4>Add leave</h4><p>Until greytHR is connected, leave added here shows on the week view and flags patients who need cover.</p>
+ <div class="opt on"><div><b>Kiran Mehra</b></div></div><div class="opt"><div><b>Ankit Verma</b></div></div>
+ <div class="row" style="gap:8px;margin-top:6px"><span class="chip blue">Planned</span><span class="chip">Sick</span><span class="chip">Comp off</span><span class="chip">Sat 14 Nov</span></div>
+ <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" onclick="close_()">Cancel</button><button class="btn p" onclick="close_();WK[1][1]='DDWDDLD';drawWk();toast('Leave added: Kiran Mehra, Sat 14 Nov. 7 patients flagged for cover.')">Add</button></div>`);}
+
+function openFormul(){modal(`<h4>Team formulation · Wed 18 Nov, 2:00 pm</h4><p>Pick a patient the ward team is finding hard. Suggested from this week's events.</p>
+ <div class="opt on" onclick="sel(this,'Tarun Roy')"><div><b>Tarun Roy</b><small>Restrained today; 2 aggression events this week</small></div><span class="chip red">Suggested</span></div>
+ <div class="opt" onclick="sel(this,'Kavya Menon')"><div><b>Kavya Menon</b><small>Refused meals 3 times; staff unsure how to respond</small></div></div>
+ <div class="opt" onclick="sel(this,'Karan Malhotra')"><div><b>Karan Malhotra</b><small>Family concern open; day 26 of Section 89</small></div></div>
+ <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" onclick="close_()">Cancel</button><button class="btn p" onclick="const c=window._as||'Tarun Roy';close_();document.getElementById('tfCase').textContent=c;const ch=document.getElementById('tfChip');ch.className='chip grn';ch.textContent='Invite sent to ward team';toast('Team formulation on '+c+' booked; ward team and Dr. Rao invited')">Book and invite ward</button></div>`);}
+
+</script></body></html>

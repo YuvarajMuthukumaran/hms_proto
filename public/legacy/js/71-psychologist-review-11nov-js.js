@@ -237,7 +237,10 @@
     <span><i class="amber"></i>Due or late <em>· overdue notes, reviews, results to check</em></span>
     <span><i class="ok"></i>Action taken</span></div>`;
   const tidy=v=>{
-    v.querySelectorAll("h3,h4,.lbl,b,span").forEach(e=>{if(e.children.length===0&&e.textContent.trim()==="Round note")e.textContent="Therapy note";});
+    v.querySelectorAll("h3,h4,.lbl,b,span").forEach(e=>{if(e.children.length===0&&e.textContent.trim()==="Round note"){
+      /* a round note written by a psychiatrist stays "Round note" (Trello 133, item 8): only the psychologist's own notes are Therapy notes */
+      const row=e.closest(".nitem,.li,tr");if(row&&/Dr\.\s[^·]*·\s*Psychiatrist/.test(row.textContent))return;
+      e.textContent="Therapy note";}});
     v.querySelectorAll(".subtab").forEach(t=>{const tn=[...t.childNodes].reverse().find(n=>n.nodeType===3&&/Vitals and medicines/.test(n.nodeValue));if(tn)tn.nodeValue=tn.nodeValue.replace("Vitals and medicines","Treatment Plan");});
   };
   const colourKey=v=>{
