@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tulasi · Patient Experience · Reports</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F6FBFF;font-family:Inter,system-ui,sans-serif;color:#0F172A;font-size:14.5px}
+button{font-family:inherit;cursor:pointer}
+main{padding:14px 16px 48px;display:flex;flex-direction:column;gap:14px}
+.btn{height:36px;display:inline-flex;align-items:center;gap:8px;padding:0 13px;border-radius:10px;border:1px solid #D6DEE8;background:#fff;color:#0F172A;font-size:13.5px;font-weight:600}.btn.sm{height:30px;padding:0 10px;font-size:12.5px}.btn:disabled{opacity:.55;cursor:default}
+.hello{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}.hello h2{margin:0;font-size:21px}.muted{color:#667085}.small{font-size:12.5px}
+.seg{display:inline-flex;border:1px solid #D6DEE8;border-radius:10px;overflow:hidden;background:#fff}.seg button{border:0;background:#fff;padding:8px 16px;font-size:13.5px;font-weight:600;color:#475467}.seg button.on{background:#1E6CDB;color:#fff}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{background:#fff;border:1px solid #E3EAF2;border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.tile .l{font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:#667085;font-weight:600}.tile b{font-size:26px;letter-spacing:-.02em}
+.up{color:#067647;font-weight:600;font-size:12.5px}.dn{color:#B54708;font-weight:600;font-size:12.5px}.eq{color:#667085;font-size:12.5px}
+.card{background:#fff;border:1px solid #E3EAF2;border-radius:14px;overflow:hidden}.hd{padding:14px 18px;border-bottom:1px solid #E3EAF2;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}.hd h3{margin:0;font-size:16px}
+.step{display:grid;grid-template-columns:minmax(200px,1.1fr) 3fr 60px;gap:14px;align-items:center;padding:10px 18px;border-bottom:1px solid #EEF2F6}.step:last-child{border-bottom:0}
+.track{position:relative;height:10px;background:#EEF2F6;border-radius:99px}.track i{position:absolute;left:0;top:0;bottom:0;border-radius:99px}.track em{position:absolute;top:-4px;bottom:-4px;width:2px;background:#0F172A;opacity:.55}
+.g{background:#12B76A}.a{background:#F5A524}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.th{padding:12px 18px;border-bottom:1px solid #EEF2F6}.th:last-child{border-bottom:0}.th .n{font-weight:700;color:#1E5BB8;float:right}
+.cp{padding:12px 18px;border-bottom:1px solid #EEF2F6;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.cp:last-child{border-bottom:0}
+.tag{font-size:11px;font-weight:700;border-radius:99px;padding:2px 9px;background:#ECFDF3;color:#067647}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;border-radius:10px;padding:10px 16px;font-size:13.5px;z-index:80}
+@media(max-width:900px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.cols{grid-template-columns:1fr}.step{grid-template-columns:1fr 60px}.step .track{grid-column:1/-1;order:3}}
+html.embed body{background:transparent}
+</style>
+</head>
+<body>
+<main id="root"></main>
+<script>
+/* Only the patient experience team's own work. Doctor and psychologist tables, NPS detail and doctor-owned steps
+   belong to a separate management view for Niki and Chandraji. Demo numbers; training numbers come from the Staff training page. */
+const PER={
+ week:{label:'This week',dates:'9 to 15 Nov 2026',vs:'vs last week',
+  tiles:{calls:[7,12,5,12],closed:[9,11,8,11],fb:[5,7,4,7,'NPS +58','NPS +51'],},
+  steps:[['Family met at admission',100,100],['Rights explained to patient and rep',86,80],['Met the patient on day 1 or 2',75,70],['Preferences taken',92,90],['Random calls 1 and 2',58,50],['Discharge meeting and feedback',80,75]],
+  themes:[['Family updates too general',4,'Psychologist team lead reminded. Nurse session on 8 pm updates planned.'],['Meals served cold',3,'Kitchen supervisor changed the tray order. Checked on the next round.'],['Doctor has not called',2,'Treating psychiatrists reminded. Day 3 to 4 calls now on their Today list.']]},
+ month:{label:'Last month',dates:'1 to 31 Oct 2026',vs:'vs the month before',
+  tiles:{calls:[26,40,22,40],closed:[34,41,30,40],fb:[19,26,17,25,'NPS +54','NPS +49']},
+  steps:[['Family met at admission',97,95],['Rights explained to patient and rep',82,78],['Met the patient on day 1 or 2',71,66],['Preferences taken',90,88],['Random calls 1 and 2',55,48],['Discharge meeting and feedback',78,76]],
+  themes:[['Family updates too general',11,'Weekly update draft added for psychologists.'],['Meals served cold',8,'Kitchen supervisor reviewing the tray order.'],['Room too noisy at night',6,'Night nurses briefed. Housekeeping checks the corridor.']]}};
+const COMPL=[{id:'c1',who:'Sister Rekha',team:'Nurses',words:'She sat with my daughter on the first night. We felt safe leaving her.',by:'S. Iyer, father'},
+ {id:'c2',who:'Dr. Ichpreet Singh',team:'Psychiatrist',words:'He called back the same day and explained the plan.',by:'Kiran Rao, brother'},
+ {id:'c3',who:'Geeta Devi',team:'Housekeeping',words:'Returned the laundry and said sorry. Thank you.',by:'Vikas Sethi, father'},
+ {id:'c4',who:'Priya Nair',team:'Psychologist',words:'The daily updates are very helpful.',by:'Sunita Malhotra, mother'}];
+let S={per:'week',told:{}};try{S.told=JSON.parse(localStorage.getItem('px_told')||'{}');}catch(e){}
+let TR={upToDate:9,total:12,sessions:1,attended:4,passed:3};try{const t=JSON.parse(localStorage.getItem('px_training_sum'));if(t&&t.total)TR=t;}catch(e){}
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const chg=(a,b,unit)=>{const d=a-b;return d===0?'<span class="eq">Same as before</span>':`<span class="${d>0?'up':'dn'}">${d>0?'▲':'▼'} ${Math.abs(d)}${unit||''} ${PER[S.per].vs}</span>`;};
+function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),3000);}
+function csv(){const P=PER[S.per],T=P.tiles;const rows=[['Patient Experience report',P.label,P.dates],[],['Measure','Done','Of','Previous period'],['Random calls done',T.calls[0],T.calls[1],T.calls[2]+' of '+T.calls[3]],['Concerns closed in 6 h',T.closed[0],T.closed[1],T.closed[2]+' of '+T.closed[3]],['Discharge feedback taken',T.fb[0],T.fb[1],T.fb[2]+' of '+T.fb[3]],['Staff training up to date (people)',TR.upToDate,TR.total,''],[],['Step','On time %','Previous %','Target % (90)'],...P.steps.map(s=>[s[0],s[1],s[2],90]),[],['What families keep raising','Count','What is being done'],...P.themes.map(t=>[t[0],t[1],t[2]]),[],['Compliments','Team','Told']].concat(COMPL.map(c=>[c.who,c.team,S.told[c.id]?'Yes':'No']));
+  const text=rows.map(r=>r.map(x=>'"'+String(x==null?'':x).replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+text],{type:'text/csv'}));a.download='patient-experience-report-'+S.per+'.csv';document.body.appendChild(a);a.click();a.remove();toast('Downloaded for ops review (opens in Excel)');}
+function render(){const P=PER[S.per],T=P.tiles;
+ const tile=(l,v,of,sub)=>`<div class="tile"><span class="l">${l}</span><b>${v}${of!=null?' <span class="muted" style="font-size:15px;font-weight:600">of '+of+'</span>':''}</b>${sub}</div>`;
+ document.getElementById('root').innerHTML=`
+ <div class="hello"><div><h2>Reports</h2><div class="muted">${P.label}, ${P.dates}. Your own work only. Nothing here is typed in.</div></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><div class="seg"><button class="${S.per==='week'?'on':''}" data-per="week">This week</button><button class="${S.per==='month'?'on':''}" data-per="month">Last month</button></div><button class="btn" data-dl="1">Download for ops review</button></div></div>
+ <div class="tiles">
+  ${tile('Random calls done',T.calls[0],T.calls[1],chg(Math.round(T.calls[0]/T.calls[1]*100),Math.round(T.calls[2]/T.calls[3]*100),'%'))}
+  ${tile('Concerns closed in 6 h',T.closed[0],T.closed[1],chg(Math.round(T.closed[0]/T.closed[1]*100),Math.round(T.closed[2]/T.closed[3]*100),'%'))}
+  ${tile('Discharge feedback taken',T.fb[0],T.fb[1],'<span class="small muted">'+T.fb[4]+'</span> '+chg(Math.round(T.fb[0]/T.fb[1]*100),Math.round(T.fb[2]/T.fb[3]*100),'%'))}
+  ${tile('Staff training up to date',TR.upToDate,TR.total,'<span class="small muted">people · from the Staff training page</span>')}
+ </div>
+ <section class="card"><div class="hd"><h3>Your steps on time</h3><span class="muted small">Only the steps you own. Ticked from the HMS logs. The line is the 90% target.</span></div>
+  ${P.steps.map(s=>`<div class="step"><span>${esc(s[0])}</span><div class="track"><i class="${s[1]>=90?'g':'a'}" style="width:${s[1]}%"></i><em style="left:90%"></em></div><b>${s[1]}%</b></div>`).join('')}</section>
+ <div class="cols">
+  <section class="card"><div class="hd"><h3>What families keep raising</h3><span class="muted small">Top 3, from grievances and random call answers</span></div>
+   ${P.themes.map(t=>`<div class="th"><span class="n">${t[1]}</span><b>${esc(t[0])}</b><div class="muted small" style="margin-top:3px">Being done: ${esc(t[2])}</div></div>`).join('')}</section>
+  <section class="card"><div class="hd"><h3>Compliments to pass on</h3><span class="muted small">Logged with "it's praise"</span></div>
+   ${COMPL.map(c=>`<div class="cp"><div><b>${esc(c.who)}</b> <span class="muted small">${esc(c.team)}</span><div style="margin:3px 0">${esc(c.words)}</div><div class="muted small">${esc(c.by)}</div></div>${S.told[c.id]?'<span class="tag">Told</span>':`<button class="btn sm" data-told="${c.id}">Mark as told</button>`}</div>`).join('')}</section>
+ </div>`;}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-per],[data-told],[data-dl]');if(!t)return;
+ if(t.dataset.per)S.per=t.dataset.per;else if(t.dataset.told){S.told[t.dataset.told]=1;try{localStorage.setItem('px_told',JSON.stringify(S.told));}catch(e){}toast('Marked as told');}else if(t.dataset.dl){csv();return;}render();});
+if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');
+render();
+</script>
+</body>
+</html>

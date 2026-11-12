@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tulasi · Patient Experience · Staff training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F6FBFF;font-family:Inter,system-ui,sans-serif;color:#0F172A;font-size:14.5px}
+button{font-family:inherit;cursor:pointer}
+main{padding:14px 16px 48px;display:flex;flex-direction:column;gap:14px}
+.btn{height:36px;display:inline-flex;align-items:center;gap:8px;padding:0 13px;border-radius:10px;border:1px solid #D6DEE8;background:#fff;color:#0F172A;font-size:13.5px;font-weight:600}
+.btn.pri{background:#1E6CDB;border-color:#1E6CDB;color:#fff}.btn.sm{height:30px;padding:0 10px;font-size:12.5px}.btn:disabled{opacity:.5;cursor:default}
+.hello{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}.hello h2{margin:0;font-size:21px}.muted{color:#667085}.small{font-size:12.5px}
+.alert{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:12px;padding:11px 14px;border:1px solid}
+.alert.blue{background:#F2F7FF;border-color:#D5E4FB}.alert.amber{background:#FFFAEB;border-color:#FEDF89}
+.alert b{font-weight:650}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.seg{display:inline-flex;border:1px solid #D6DEE8;border-radius:10px;overflow:hidden;background:#fff}.seg button{border:0;background:#fff;padding:8px 16px;font-size:13.5px;font-weight:600;color:#475467}.seg button.on{background:#1E6CDB;color:#fff}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{border:1px solid #D6DEE8;background:#fff;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:600;color:#344054}.chip.on{background:#E8F1FE;border-color:#1E6CDB;color:#1E5BB8}
+select{height:36px;border:1px solid #D6DEE8;border-radius:10px;padding:0 10px;font:inherit;font-size:13.5px;background:#fff}
+.card{background:#fff;border:1px solid #E3EAF2;border-radius:14px;overflow:hidden}
+table{width:100%;border-collapse:collapse}th{font-size:11.5px;letter-spacing:.04em;color:#667085;text-align:left;padding:10px 14px;border-bottom:1px solid #E3EAF2;font-weight:600;text-transform:uppercase}
+td{padding:11px 14px;border-bottom:1px solid #EEF2F6;vertical-align:middle}tr:last-child td{border-bottom:0}
+.nm{font-weight:650;background:none;border:0;padding:0;font-size:14px;color:#0F172A;text-align:left}.nm:hover{color:#1E5BB8}
+.tag{font-size:11px;font-weight:700;border-radius:99px;padding:1px 8px;background:#E8F1FE;color:#1E5BB8;margin-left:6px}
+.bars{display:flex;gap:3px;margin-bottom:4px}.bars i{width:18px;height:6px;border-radius:3px;background:#E4E7EC}.bars i.d{background:#12B76A}.bars i.u{background:#3B82F6}.bars i.l{background:#F5A524}
+.late{color:#B54708;font-weight:600}.ok{color:#067647;font-weight:600}
+.ov{position:fixed;inset:0;background:rgba(16,24,40,.45);z-index:50;display:flex;justify-content:flex-end}
+.dr{width:min(460px,100%);height:100%;background:#fff;padding:20px;overflow:auto;display:flex;flex-direction:column;gap:12px;box-shadow:-20px 0 60px rgba(0,0,0,.2)}
+.dr h3{margin:0;font-size:19px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:12.5px;font-weight:600;color:#475467}
+input[type=text],input[type=date],input[type=time]{height:36px;border:1px solid #D6DEE8;border-radius:10px;padding:0 10px;font:inherit}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #EEF2F6}
+.st{font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 10px}.st.d{background:#ECFDF3;color:#067647}.st.u{background:#EFF6FF;color:#1D4ED8}.st.l{background:#FFFAEB;color:#B54708}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;border-radius:10px;padding:10px 16px;font-size:13.5px;z-index:80}
+html.embed body{background:transparent}
+</style>
+</head>
+<body>
+<main id="root"></main>
+<script>
+const TODAY=new Date('2026-11-12T09:00:00');
+const KEY='px_training_v1';
+const MODS=[
+ {id:'rights',name:'Patient rights and dignity',team:'All',days:7,core:1},{id:'listen',name:'Listening and tone',team:'All',days:30,core:1},{id:'concern',name:'Handling a concern',team:'All',days:30,core:1},
+ {id:'n1',name:'Talking with families',team:'Nurses',days:30},{id:'n2',name:'Following patient preferences',team:'Nurses',days:30},{id:'n3',name:'Calming and safe handling',team:'Nurses',days:30,yearly:1},
+ {id:'c1',name:'Enquiry and admission calls',team:'Call centre',days:7},{id:'c2',name:'Crisis calls (caller at risk goes to the duty doctor)',team:'Call centre',days:30,yearly:1},{id:'c3',name:'Privacy on the phone',team:'Call centre',days:30},
+ {id:'f1',name:'Welcoming a family at admission',team:'Front desk',days:7},{id:'f2',name:'Visitors and privacy',team:'Front desk',days:30},{id:'f3',name:'Upset visitors and DAMA requests',team:'Front desk',days:30},
+ {id:'w1',name:'Respect on the floor',team:'Ward staff',days:30}];
+const TEAMS=['Nurses','Call centre','Front desk','Ward staff'];
+const PEOPLE=[
+ {id:'p1',name:'Sister Rekha',role:'Nursing in-charge',team:'Nurses',where:'Floor 2, day',joined:'2023-04-03',concerns:1},
+ {id:'p2',name:'Anita Joseph',role:'Staff nurse',team:'Nurses',where:'Floor 2, night',joined:'2025-06-12',concerns:2},
+ {id:'p3',name:'Mohit Verma',role:'Staff nurse',team:'Nurses',where:'Floor 3, day',joined:'2026-11-02',concerns:0},
+ {id:'p4',name:'Sunil Yadav',role:'Attendant',team:'Ward staff',where:'Floor 2, night',joined:'2025-01-20',concerns:2},
+ {id:'p5',name:'Geeta Devi',role:'Housekeeping',team:'Ward staff',where:'Floors 2 and 3',joined:'2024-09-09',concerns:1},
+ {id:'p6',name:'Ravi Kumar',role:'Attendant',team:'Ward staff',where:'Floor 3, day',joined:'2026-10-28',concerns:0},
+ {id:'p7',name:'Khalid Ansari',role:'Call centre executive',team:'Call centre',where:'Gurgaon',joined:'2025-03-17',concerns:0},
+ {id:'p8',name:'Pooja Rani',role:'Call centre executive',team:'Call centre',where:'Gurgaon',joined:'2026-11-03',concerns:0},
+ {id:'p9',name:'Meena Arora',role:'Front desk',team:'Front desk',where:'Reception, day',joined:'2024-02-05',concerns:1},
+ {id:'p10',name:'Barkha Singh',role:'Front desk',team:'Front desk',where:'Reception, evening',joined:'2025-08-25',concerns:1},
+ {id:'p11',name:'Deepak Nair',role:'Staff nurse',team:'Nurses',where:'Floor 1, night',joined:'2024-11-11',concerns:0},
+ {id:'p12',name:'Lata Kumari',role:'Housekeeping',team:'Ward staff',where:'Floor 1',joined:'2026-11-04',concerns:0}];
+const DONE0={p1:['rights','listen','concern','n1','n2','n3'],p2:['rights','listen','n1'],p3:['listen'],p4:['rights'],p5:['rights','listen','concern','w1'],p6:[],p7:['rights','listen','concern','c1','c2','c3'],p8:['c1'],p9:['rights','listen','concern','f1','f2'],p10:['rights','listen','concern','f1','f2'],p11:['rights','listen','concern','n1','n2','n3'],p12:[]};
+const SESS0=[{id:'s1',when:'2026-11-12T15:00',mod:'rights',place:'Training room',invited:['p3','p6','p8','p12'],came:null},{id:'s2',when:'2026-11-05T11:00',mod:'listen',place:'Floor 2 lounge',invited:['p1','p2','p4','p5'],came:{p1:'P',p2:'P',p4:'R',p5:'P'}}];
+let S;try{S=JSON.parse(localStorage.getItem(KEY));}catch(e){}
+if(!S||!S.done){S={done:JSON.parse(JSON.stringify(DONE0)),sess:SESS0,view:'people',team:'All',flt:'all',open:null,plan:null,att:null,n:3};}
+S.view='people';S.team='All';S.flt='all';S.open=null;S.plan=null;S.att=null;
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({done:S.done,sess:S.sess,n:S.n}));const ok=PEOPLE.filter(p=>stats(p).l===0).length;const att=S.sess.filter(x=>x.came);localStorage.setItem('px_training_sum',JSON.stringify({upToDate:ok,total:PEOPLE.length,sessions:att.length,attended:att.reduce((a,x)=>a+Object.keys(x.came).length,0),passed:att.reduce((a,x)=>a+Object.values(x.came).filter(v=>v==='P').length,0)}));}catch(e){}};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const D=s=>new Date(s.length<=10?s+'T00:00:00':s);
+const mods=p=>MODS.filter(m=>m.team==='All'||m.team===p.team);
+const dueDate=(p,m)=>new Date(D(p.joined).getTime()+m.days*86400000);
+const status=(p,m)=>S.done[p.id].includes(m.id)?'d':(dueDate(p,m)<TODAY?'l':'u');
+const isNew=p=>(TODAY-D(p.joined))/86400000<=30;
+const stats=p=>{const ms=mods(p),d=ms.filter(m=>status(p,m)==='d').length,l=ms.filter(m=>status(p,m)==='l').length;return{ms,d,l,n:ms.length};};
+const nextDue=p=>{const ms=mods(p).filter(m=>status(p,m)!=='d').sort((a,b)=>dueDate(p,a)-dueDate(p,b))[0];return ms?{m:ms,at:dueDate(p,ms),late:dueDate(p,ms)<TODAY}:null;};
+const fmt=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+const modName=id=>MODS.find(m=>m.id===id).name;
+function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),3200);}
+function alerts(){const out=[];
+  S.sess.filter(s=>!s.came&&D(s.when).toDateString()===TODAY.toDateString()).forEach(s=>out.push(`<div class="alert blue"><span><b>Session today at ${D(s.when).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}).toLowerCase()}:</b> ${esc(modName(s.mod))}, ${s.invited.length} invited</span><button class="btn sm pri" data-att="${s.id}">Take attendance</button></div>`));
+  const late=PEOPLE.filter(p=>(TODAY-D(p.joined))/86400000>7&&!S.done[p.id].includes('rights')&&isNew(p));
+  if(late.length)out.push(`<div class="alert amber"><span><b>${late.length} new joiner${late.length>1?'s':''} past 7 days without Patient rights and dignity:</b> ${late.map(p=>esc(p.name)).join(', ')}</span><button class="btn sm" data-planmod="rights" data-people="${late.map(p=>p.id).join(',')}">Plan induction</button></div>`);
+  out.push(`<div class="alert amber"><span><b>G-0137</b> cost estimate not shared before discharge, linked to the front desk. Refresher: Welcoming a family at admission.</span><button class="btn sm" data-planmod="f1" data-people="p9,p10">Plan a session</button></div>`);
+  out.push(`<div class="alert amber"><span><b>G-0145</b> safety concern on Floor 2 at night. Refresher: Calming and safe handling, for the night nurses and the attendant.</span><button class="btn sm" data-planmod="n3" data-people="p2,p4">Plan a session</button></div>`);
+  return out.join('');}
+function people(){let L=PEOPLE.filter(p=>S.team==='All'||p.team===S.team);
+  if(S.flt==='late')L=L.filter(p=>stats(p).l>0);if(S.flt==='new')L=L.filter(isNew);if(S.flt==='concern')L=L.filter(p=>p.concerns>0);
+  return `<div class="card"><table><thead><tr><th>Name</th><th>Team and where</th><th>Modules</th><th>Next due</th><th>Concerns in 90 days</th><th></th></tr></thead><tbody>${L.map(p=>{const s=stats(p),nx=nextDue(p);
+    return `<tr><td><button class="nm" data-open="${p.id}">${esc(p.name)}</button>${isNew(p)?'<span class="tag">NEW</span>':''}<div class="muted small">${esc(p.role)} · joined ${fmt(D(p.joined))}</div></td><td>${esc(p.team)}<div class="muted small">${esc(p.where)}</div></td>
+    <td><div class="bars">${s.ms.map(m=>`<i class="${status(p,m)}"></i>`).join('')}</div><span class="small ${s.l?'late':'muted'}">${s.d} of ${s.n} done${s.l?' · '+s.l+' late':''}</span></td>
+    <td>${nx?`<span class="${nx.late?'late':''}">${esc(nx.m.name)}</span><div class="muted small">${nx.late?'Late, was due ':'Due '}${fmt(nx.at)}</div>`:'<span class="ok">Up to date</span>'}</td>
+    <td>${p.concerns?p.concerns:'<span class="muted">0</span>'}</td><td><button class="btn sm" data-addp="${p.id}">Add to a session</button></td></tr>`}).join('')}</tbody></table></div>
+    <div class="muted small">Linked concerns are shown to plan training, not as a mark against the person. Clinical training (BLS, infection control, fire) stays with the nursing head.</div>`;}
+function sessions(){const L=S.sess.filter(s=>S.team==='All'||MODS.find(m=>m.id===s.mod).team===S.team||MODS.find(m=>m.id===s.mod).team==='All').sort((a,b)=>D(b.when)-D(a.when));
+  return `<div class="card"><table><thead><tr><th>When</th><th>Module</th><th>For</th><th>People</th><th>Quick check</th><th></th></tr></thead><tbody>${L.map(s=>{const m=MODS.find(x=>x.id===s.mod),c=s.came,came=c?Object.keys(c).length:0,pass=c?Object.values(c).filter(v=>v==='P').length:0;
+    return `<tr><td>${D(s.when).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}<div class="muted small">${D(s.when).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}).toLowerCase()}</div></td><td>${esc(m.name)}</td><td>${esc(m.team==='All'?'Everyone':m.team)}<div class="muted small">${esc(s.place)}</div></td>
+    <td>${c?came+' of '+s.invited.length+' came':s.invited.length+' invited'}</td><td>${c?pass+' passed'+(came-pass?', '+(came-pass)+' repeat':''):'<span class="muted">After the session</span>'}</td><td>${c?'<span class="ok small">Done</span>':`<button class="btn sm pri" data-att="${s.id}">Take attendance</button>`}</td></tr>`}).join('')}</tbody></table></div>`;}
+function drawer(){
+  if(S.open){const p=PEOPLE.find(x=>x.id===S.open);return `<div class="ov" data-close="1"><div class="dr"><div style="display:flex;justify-content:space-between"><h3>${esc(p.name)}</h3><button class="btn sm" data-close="1">Close</button></div><div class="muted small">${esc(p.role)} · ${esc(p.team)} · ${esc(p.where)} · joined ${fmt(D(p.joined))}</div>
+    ${mods(p).map(m=>{const s=status(p,m);return `<div class="row"><span>${esc(m.name)}<div class="muted small">${m.yearly?'Every year. ':''}Due ${m.days} days after joining</div></span><span class="st ${s}">${s==='d'?'Done':s==='l'?'Late, '+fmt(dueDate(p,m)):'Due '+fmt(dueDate(p,m))}</span></div>`}).join('')}
+    <button class="btn pri" data-addp="${p.id}">Add to a session</button></div></div>`;}
+  if(S.plan){const P=S.plan;const m=MODS.find(x=>x.id===P.mod);const need=PEOPLE.filter(p=>mods(p).some(x=>x.id===P.mod)&&!S.done[p.id].includes(P.mod));
+    const groups=['All',...TEAMS].map(t=>`<optgroup label="${t==='All'?'Core, for everyone':t}">${MODS.filter(x=>x.team===t).map(x=>`<option value="${x.id}" ${x.id===P.mod?'selected':''}>${esc(x.name)}</option>`).join('')}</optgroup>`).join('');
+    return `<div class="ov"><div class="dr"><div style="display:flex;justify-content:space-between"><h3>Plan a session</h3><button class="btn sm" data-close="1">Close</button></div>
+    <div class="field"><label>Module</label><select id="pm">${groups}</select></div>
+    <div style="display:flex;gap:8px"><div class="field" style="flex:1"><label>Date</label><input type="date" id="pd" value="${P.date}"></div><div class="field" style="flex:1"><label>Time</label><input type="time" id="pt" value="${P.time}"></div></div>
+    <div class="field"><label>Where</label><input type="text" id="pw" value="${esc(P.place)}"></div>
+    <div class="field"><label>People who still need it (pre-ticked)</label>${need.map(p=>`<label class="row"><span>${esc(p.name)} <span class="muted small">${esc(p.team)}</span></span><input type="checkbox" data-pp="${p.id}" ${P.ppl.includes(p.id)?'checked':''}></label>`).join('')||'<div class="muted small">Everyone has done this module.</div>'}</div>
+    <div class="muted small">Invited people get it in their portal and on WhatsApp. Slides and the 5-question check are stored with the module. (Demo: nothing is sent.)</div>
+    <button class="btn pri" data-planok="1">Plan the session</button></div></div>`;}
+  if(S.att){const s=S.sess.find(x=>x.id===S.att);return `<div class="ov"><div class="dr"><div style="display:flex;justify-content:space-between"><h3>Take attendance</h3><button class="btn sm" data-close="1">Close</button></div><div class="muted small">${esc(modName(s.mod))} · ${D(s.when).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</div>
+    ${s.invited.map(id=>{const p=PEOPLE.find(x=>x.id===id),v=(S.attTmp||{})[id]||'';return `<div class="row"><span>${esc(p.name)}</span><span style="display:flex;gap:6px"><button class="chip ${v===''?'':''}" style="display:none"></button><button class="chip ${v==='P'?'on':''}" data-att2="${id}|P">Passed</button><button class="chip ${v==='R'?'on':''}" data-att2="${id}|R">Repeat</button><button class="chip ${v==='A'?'on':''}" data-att2="${id}|A">Did not come</button></span></div>`}).join('')}
+    <div class="muted small">Passed updates the person's record. Repeat goes into the next session. Counts go to Reports for NABH training records.</div><button class="btn pri" data-attok="1">Save attendance</button></div></div>`;}
+  return '';}
+function render(){const need=PEOPLE.length;document.getElementById('root').innerHTML=`
+ <div class="hello"><div><h2>Staff training</h2><div class="muted">Nurses, call centre, front desk and ward staff. Staff list comes from HR. Demo data.</div></div><button class="btn pri" data-planmod="rights" data-people="">Plan a session</button></div>
+ ${alerts()}
+ <div class="bar"><div class="seg"><button class="${S.view==='people'?'on':''}" data-v="people">People</button><button class="${S.view==='sessions'?'on':''}" data-v="sessions">Sessions</button></div>
+  <div class="chips">${['All','Nurses','Call centre','Front desk','Ward staff'].map(t=>`<button class="chip ${S.team===t?'on':''}" data-team="${t}">${t==='All'?'All teams':t}</button>`).join('')}</div>
+  ${S.view==='people'?`<select id="flt"><option value="all" ${S.flt==='all'?'selected':''}>Everyone</option><option value="late" ${S.flt==='late'?'selected':''}>Training late</option><option value="new" ${S.flt==='new'?'selected':''}>New joiners</option><option value="concern" ${S.flt==='concern'?'selected':''}>Linked to a concern</option></select>`:''}</div>
+ ${S.view==='people'?people():sessions()}${drawer()}`;}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-v],[data-team],[data-open],[data-close],[data-addp],[data-planmod],[data-planok],[data-att],[data-att2],[data-attok]');if(!t)return;const d=t.dataset;
+  if(d.close){if(e.target.classList.contains('ov')||t.tagName==='BUTTON'){S.open=S.plan=S.att=null;render();}return;}
+  if(d.v){S.view=d.v;}else if(d.team){S.team=d.team;}else if(d.open){S.open=d.open;}
+  else if(d.addp){const p=PEOPLE.find(x=>x.id===d.addp),m=mods(p).find(x=>!S.done[p.id].includes(x.id))||mods(p)[0];S.open=null;S.plan={mod:m.id,date:'2026-11-16',time:'11:00',place:'Training room',ppl:[p.id]};}
+  else if(d.planmod!==undefined){const ppl=(d.people||'').split(',').filter(Boolean);S.plan={mod:d.planmod,date:'2026-11-16',time:'11:00',place:'Training room',ppl:ppl.length?ppl:PEOPLE.filter(p=>mods(p).some(x=>x.id===d.planmod)&&!S.done[p.id].includes(d.planmod)).map(p=>p.id)};}
+  else if(d.planok){const P=S.plan,m=($('pm')||{}).value||P.mod;const ppl=[...document.querySelectorAll('[data-pp]')].filter(c=>c.checked).map(c=>c.dataset.pp);
+    if(!ppl.length){toast('Tick at least one person');return;}const ns={id:'s'+(++S.n),when:($('pd').value||P.date)+'T'+($('pt').value||P.time),mod:m,place:$('pw').value||'Training room',invited:ppl,came:null};
+    /* people who asked to repeat last time are already in ppl */S.sess.push(ns);S.plan=null;S.view='sessions';save();toast(ppl.length+' invited. They get it in their portal and on WhatsApp.');}
+  else if(d.att){S.att=d.att;S.attTmp={};}
+  else if(d.att2){const [id,v]=d.att2.split('|');S.attTmp[id]=v;}
+  else if(d.attok){const s=S.sess.find(x=>x.id===S.att),came={};s.invited.forEach(id=>{const v=S.attTmp[id];if(v&&v!=='A')came[id]=v;});
+    if(!Object.keys(came).length){toast('Mark who came first');return;}
+    Object.entries(came).forEach(([id,v])=>{if(v==='P'&&!S.done[id].includes(s.mod))S.done[id].push(s.mod);});
+    s.came=came;const rep=Object.keys(came).filter(id=>came[id]==='R');
+    if(rep.length){const nx=S.sess.find(x=>!x.came&&x.mod===s.mod);if(nx){rep.forEach(id=>{if(!nx.invited.includes(id))nx.invited.push(id);});}else{S.sess.push({id:'s'+(++S.n),when:'2026-11-19T11:00',mod:s.mod,place:s.place,invited:rep,came:null});}}
+    S.att=null;save();toast('Attendance saved. '+Object.values(came).filter(v=>v==='P').length+' passed'+(rep.length?', '+rep.length+' added to the next session':'')+'.');}
+  render();});
+document.addEventListener('change',e=>{if(e.target.id==='flt'){S.flt=e.target.value;render();}else if(e.target.id==='pm'){S.plan.mod=e.target.value;S.plan.ppl=PEOPLE.filter(p=>mods(p).some(x=>x.id===S.plan.mod)&&!S.done[p.id].includes(S.plan.mod)).map(p=>p.id);S.plan.date=$('pd').value;S.plan.time=$('pt').value;S.plan.place=$('pw').value;render();}});
+function $(i){return document.getElementById(i);}
+if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');
+render();save();
+</script>
+</body>
+</html>
