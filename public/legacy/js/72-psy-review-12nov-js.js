@@ -448,4 +448,20 @@
   }
   const __rStrip=render;
   render=function(){const r=__rStrip.apply(this,arguments);if(psy()){try{stripPaint();}catch(e){}}return r;};
+
+  /* ---------- 7. Family call card: pressing "Call via HMS" no longer removes the card. It goes away only when the outcome is saved. ---------- */
+  window.psyCallDone=function(pid,key){
+    toast('Calling through CallerDesk… connected. Call logged: 4 min, recording saved.');
+    setTimeout(()=>openModal(`<div class="mh"><h3>How did the call go?</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
+      <div class="mb"><div class="callout grey">Logged automatically: today, 4 min 12 s, recording saved. Pick the outcome; that's all.</div>
+      <label class="field"><span class="lbl">Outcome</span><select class="input" id="callOutcome"><option>Spoke to family, update given</option><option>No answer, retry later</option><option>Family has a concern, raise grievance</option></select></label>
+      <label class="field"><span class="lbl">Note (optional)</span><input class="input" placeholder="Anything the team should know"></label>
+      <div class="tiny muted">The call stays on the page until you save the outcome. If nobody answered, choose "No answer, retry later" and it stays.</div></div>
+      <div class="mf"><button class="btn" onclick="closeModal()">Not now</button><button class="btn pri" onclick="psyCallSave('${pid}','${key}')">Save</button></div>`),900);
+  };
+  window.psyCallSave=function(pid,key){
+    const o=(($('callOutcome')||{}).value||'');
+    if(!/^No answer/.test(o))ptRun(pid,()=>{S.calls=S.calls||{};S.calls[key]='done';return '';});
+    closeModal();render();toast(/^No answer/.test(o)?'Saved. The call stays on the page for a retry':'Call marked done');
+  };
 })();
