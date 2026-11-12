@@ -20,7 +20,7 @@
     ['cc','Chief complaints (chronological, with duration)','area'],
     ['reason','Reason for admission','area'],
     ['expect','Expectation from treatment','area'],
-    ['psychopath','Current psychopathology','area'],
+    ['psychopath','Current psychopathology (you fill this: symptoms and mental state)','area'],
     ['interv','Ongoing psychological interventions with the patient, with outcome','area'],
     ['family','Ongoing family interventions','area'],
     ['consider','Any specific consideration related to calls, meetings, legal aspects, insurance or privileges','area'],
@@ -47,7 +47,7 @@
       cc:hr(/^Chief complaints/i),
       reason:pid==='neel'?'Manic symptoms, overspending, irritability for 3 weeks':((p.dx||c.dx)?'Admitted with '+String(p.dx||c.dx).toLowerCase()+' (Section '+(c.section||p.sec)+')':''),
       expect:'',
-      psychopath:L([mine?mine.sum:'','Risk of harm: '+lvl+(tags?' ('+tags+')':'')+'.']),
+      psychopath:'', /* 12 Nov QA: the doctor writes this, it is not pre-filled */
       interv:rows.map(fmtRow).join('\n'),
       family:L([fam.join('\n'),call]),
       consider:L(['Section '+(c.section||p.sec)+'.',id.nr?'Nominated representative: '+id.nr+(id.rel?' ('+String(id.rel).toLowerCase()+')':'')+'.':'',(typeof VIP!=='undefined'&&VIP[pid])?VIP[pid]+'.':'']),

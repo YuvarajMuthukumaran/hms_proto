@@ -42,12 +42,15 @@
   const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   const lab=s=>{const d=new Date(s+'T12:00:00');return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});};
 
+  /* drug classes: an allergy to a class stops every member (12 Nov, QA: NSAID allergy did not stop ibuprofen) */
+  const CLASSES={nsaid:NSAID,'anti-inflammatory':NSAID,penicillin:['penicillin','amoxicillin','ampicillin','amoxyclav','co-amoxiclav','augmentin','piperacillin','cloxacillin','flucloxacillin'],sulfa:['sulfamethoxazole','cotrimoxazole','co-trimoxazole','sulfasalazine','sulphamethoxazole'],sulpha:['sulfamethoxazole','cotrimoxazole','co-trimoxazole','sulfasalazine'],
+    cephalosporin:['cefixime','ceftriaxone','cefuroxime','cefpodoxime','cephalexin','cefotaxime','cefazolin'],benzodiazepine:BZD,macrolide:['azithromycin','clarithromycin','erythromycin'],quinolone:['ciprofloxacin','levofloxacin','ofloxacin','moxifloxacin'],opioid:['morphine','tramadol','codeine','fentanyl','buprenorphine','methadone','pethidine'],statin:['atorvastatin','rosuvastatin','simvastatin'],antipsychotic:ANTIPSY,ssri:SSRI};
   /* ---- checks ---- */
   function allergyState(name){
     const al=px().allergy;
     if(!al)return {block:'unrecorded'};
     const b=base(name);
-    const hit=(al.list||[]).find(a=>{const x=String(a.drug||'').toLowerCase();return x&&b&&(b.includes(x)||x.includes(b));});
+    const hit=(al.list||[]).find(a=>{const x=String(a.drug||'').toLowerCase();if(!x||!b)return false;if(b.includes(x)||x.includes(b))return true;return Object.keys(CLASSES).some(k=>x.includes(k)&&CLASSES[k].some(m=>b.startsWith(m)));});
     return hit?{block:'match',drug:hit.drug,rx:hit.rx}:{block:''};
   }
   function currentMeds(){

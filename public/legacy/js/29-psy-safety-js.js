@@ -157,6 +157,7 @@
           <div class="row" style="justify-content:space-between;margin-top:8px"><span class="tiny muted">At admission, daily for high-risk patients, and at each re-assessment. The result sets Risk of harm in the header.</span><button class="btn sm pri" onclick="psySuiSave('${pid}')">Save screen</button></div></div>
       </div></section>`;
   }
+  window.psyScoresCard=scoresCard;
   const __pv=pVitals;
   pVitals=function(){const h=__pv.apply(this,arguments);return psy()?scoresCard(S.pid)+h:h;};
 

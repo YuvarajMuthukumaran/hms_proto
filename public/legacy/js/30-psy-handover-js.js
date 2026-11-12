@@ -55,7 +55,7 @@
     ['dx','Provisional diagnosis','line'],
     ['ddx','Differential diagnosis','line'],
     ['comorb','Medical / surgical comorbidity','area'],
-    ['psychopath','Current psychopathology','area'],
+    ['psychopath','Current psychopathology (you fill this: symptoms and mental state)','area'],
     ['monitor','Ongoing regular monitoring, medical or surgical intervention planned','area'],
     ['past','Past treatment (trials and response)','area'],
     ['allergy','Any drug allergy or side effects in the past','area'],
@@ -82,7 +82,7 @@
     return {p,f:{
       dx:p.dx||c.dx||'',ddx:'',
       comorb:hr(/^Past history/i),
-      psychopath:L([round?round.sum:'','Risk of harm: '+lvl+(tags?' ('+tags+')':'')+'.']),
+      psychopath:'', /* 12 Nov QA: the doctor writes this, it is not pre-filled */
       monitor:L(mon.concat(refs,labs?[labs+' lab result'+(labs>1?'s':'')+' to review']:[])),
       past,
       allergy:al?((al.list&&al.list.length)?al.list.map(i=>i.drug+(i.rx?' ('+i.rx+')':'')).join(', '):'No known drug allergies'):'Not recorded yet',
@@ -396,7 +396,7 @@
   const prevR=ROLE.psychiatrist.render;
   ROLE.psychiatrist.render=function(base){
     const r=(location.hash||'').slice(2).split('/');
-    if(r[0]==='handover'){renderSide(r);$('app').classList.remove('compact');$('title').textContent='Handover';$('view').innerHTML=page();window.scrollTo(0,0);return;}
+    if(r[0]==='handover'){renderSide(r);$('app').classList.remove('compact');$('title').textContent='Handover';$('view').innerHTML=(window.psyHandoverPage?window.psyHandoverPage():page());window.scrollTo(0,0);return;}
     window.__hvAnim=null;
     return prevR?prevR(base):base();
   };

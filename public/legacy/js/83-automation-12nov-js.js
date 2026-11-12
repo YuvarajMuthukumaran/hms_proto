@@ -30,15 +30,21 @@
     {id:'d2',pid:'neel',title:'Daily note',role:'psychiatrist',at:t-52*3600000,signed:null},
     {id:'d3',pid:'varun',title:'Session note',role:'psychologist',at:t-26*3600000,signed:null},
     {id:'d4',pid:'sameer',title:'Session note',role:'psychologist',at:t-5*3600000,signed:null}];}return a.drafts;};
-  const dueDates=()=>{const a=au(),out=[];myPts().forEach(p=>{const d=+p.day||0;
-    [['hist','Detailed history',3],['plan','Management plan',7]].forEach(k=>{if(a.hist[p.id+k[0]]||d>7)return;const left=k[2]-d;out.push({pid:p.id,key:k[0],label:k[1],left,name:p.name});});});return out;};
+  /* done only when the form is signed (Nikita, 12 Nov): never from a button on Today */
+  const formSigned=(pid,key)=>pid==='neel'?(key==='hist'?S.historyStatus==='signed':!!(S.plansSigned&&S.plansSigned.psy&&S.plansSigned.psych)):!!(psyPx(pid)['signed_'+key]);
+  /* one overdue calculation everywhere: Neel's header says 1 day late, so the same number is used here */
+  const lateDays=(pid,key,d,due)=>pid==='neel'&&key==='hist'?1:Math.max(1,d-due);
+  const dueDates=()=>{const out=[];myPts().forEach(p=>{const d=+p.day||0;
+    [['hist','Detailed history',3,'admission'],['plan','Management plan',7,'therapy']].forEach(k=>{if(formSigned(p.id,k[0])||d>7)return;const left=d>k[2]?-lateDays(p.id,k[0],d,k[2]):k[2]-d;out.push({pid:p.id,key:k[0],label:k[1],left,name:p.name,tab:k[3]});});});return out;};
   function nudgeLevel(){const h=hr();return h>=21?3:h>=18?2:h>=16?1:0;}
   function nnTasks(){const out=[],k=kind();if(!k)return out;
     seedDrafts().filter(d=>d.role===k&&!d.signed).forEach(d=>{const h=hrs(nowMs()-d.at);if(h>=24)out.push({id:'nn_dr_'+d.id,late:true,title:d.title+' unsigned · '+pt(d.pid).name,meta:'Draft is '+h+' h old'+(h>=48?'. Sent to the floor lead':''),due:'Overdue',go:'#/patient/'+d.pid+'/daily'});});
     if(nudgeLevel())myPts().filter(p=>(+p.day||0)>=1&&!noted(p.id)).forEach(p=>out.push({id:'nn_dn_'+p.id,late:nudgeLevel()>=2,title:'Daily note · '+p.name,meta:nudgeLevel()>=3?'Not written by 9 pm. Floor lead told':nudgeLevel()>=2?'Second reminder, 6 pm':'Reminder, 4 pm',due:'Today',go:'#/notes'}));
-    dueDates().filter(x=>x.left<=1).forEach(x=>out.push({id:'nn_dd_'+x.pid+x.key,late:x.left<0,title:x.label+' · '+x.name,meta:x.left<0?'Overdue by '+(-x.left)+(x.left<-1?' days':' day'):x.left===0?'Due today':'Due tomorrow (24 h reminder)',due:x.left<0?'Overdue':'Soon',go:'#/patient/'+x.pid+(x.key==='plan'?'/therapy':'/admission')}));
+    dueDates().filter(x=>x.left<=1).forEach(x=>out.push({id:'nn_dd_'+x.pid+x.key,late:x.left<0,title:x.label+' · '+x.name,meta:x.left<0?'Overdue by '+(-x.left)+(x.left<-1?' days':' day'):x.left===0?'Due today':'Due tomorrow (24 h reminder)',due:x.left<0?'Overdue':'Soon',go:'#/patient/'+x.pid+'/'+x.tab}));
     return out;}
-  function nnEscalate(){const k=kind();if(!k)return;
+  function crTasks(){const out=[];crDue().forEach(p=>out.push({id:'cr_'+p.id,late:crDays(p.id)>=5,title:'Consultant review · '+p.name,meta:crDays(p.id)+' days since the last review'+(crDays(p.id)>=5?'. Sent to the floor lead':''),due:crDays(p.id)>=5?'Overdue':'Nudge',go:'#/patient/'+p.id+'/overview'}));
+    riskDue().forEach(p=>out.push({id:'rk_'+p.id,late:false,title:'Risk not yet discussed with family · '+p.name,meta:'High risk patient: log the family risk discussion',due:'Due',go:'#/patient/'+p.id+'/overview'}));return out;}
+  function nnEscalate(){const k=kind();if(!k)return;crEscalate();
     seedDrafts().forEach(d=>{if(!d.signed&&hrs(nowMs()-d.at)>=48)alertOnce('dr'+d.id,d.pid,'Unsigned note for 48 hours · '+pt(d.pid).name,d.title+' by '+(d.role==='psychiatrist'?'the psychiatrist':'the psychologist')+' is still unsigned.','Floor lead');});
     if(nudgeLevel()>=3)PTS.filter(p=>(+p.day||0)>=1&&!noted(p.id)).forEach(p=>alertOnce('dn'+p.id+new Date().toDateString(),p.id,'Daily note not written by 9 pm · '+p.name,'Sent to the floor lead.','Floor lead'));}
   window.nnSign=function(id){const d=seedDrafts().find(x=>x.id===id);if(!d)return;
@@ -53,12 +59,32 @@
 
   function notesCard(){const k=kind();if(!k)return '';
     const ds=seedDrafts().filter(d=>d.role===k),lvl=nudgeLevel(),owed=myPts().filter(p=>(+p.day||0)>=1&&!noted(p.id)),dd=dueDates();
-    const H=[[null,'Now'],[16,'4 pm'],[18,'6 pm'],[21,'9 pm']].map(x=>`<button class="au-t ${au().hr===x[0]?'on':''}" onclick="auHr(${x[0]})">${x[1]}</button>`).join('');
+    const demo=/[?&]demo=1/.test(location.search),H=demo?[[null,'Now'],[16,'4 pm'],[18,'6 pm'],[21,'9 pm']].map(x=>`<button class="au-t ${au().hr===x[0]?'on':''}" onclick="auHr(${x[0]})">${x[1]}</button>`).join(''):'';
     const nudge=lvl===0?`<div class="small muted">No nudge yet. Daily notes are nudged at 4 pm and 6 pm, and at 9 pm they go to the floor lead.</div>`:owed.length?owed.map(p=>row(`<b>${hesc(p.name)}</b> · daily note not written`,chipx(lvl>=3?'Floor lead told':lvl>=2?'Second reminder':'Reminder 4 pm',lvl>=3?'bad':lvl>=2?'warn':'')+`<button class="btn sm" onclick="openNotesFor('${p.id}')">Write</button>`)).join(''):`<div class="small" style="color:#067647">Every daily note is written. No nudge.</div>`;
     const drafts=ds.length?ds.map(d=>{const h=hrs(nowMs()-d.at);return row(`<b>${hesc(pt(d.pid).name)}</b> · ${hesc(d.title)} <span class="tiny muted">${d.signed?'signed '+hesc(d.signed.at)+' · locked':'draft '+h+' h old'}</span>${(d.add||[]).map(a=>`<div class="tiny muted">Addendum by ${hesc(a.by)}, ${hesc(a.at)}: ${hesc(a.t)}</div>`).join('')}`,d.signed?`<button class="btn sm" onclick="nnAddendum('${d.id}')">Add addendum</button>`:chipx(h>=48?'Sent to floor lead':h>=24?'Overdue':'Draft',h>=48?'bad':h>=24?'warn':'')+`<button class="btn sm pri" onclick="nnSign('${d.id}')">Sign</button>`);}).join(''):'<div class="small muted">No drafts.</div>';
-    const later=dd.filter(x=>x.left>1).length,dues=dd.filter(x=>x.left<=1).length?dd.filter(x=>x.left<=1).map(x=>row(`<b>${hesc(x.name)}</b> · ${hesc(x.label)} <span class="tiny muted">${x.key==='hist'?'72 h after admission':'day 7'}</span>`,chipx(x.left<0?'Overdue '+(-x.left)+' d':x.left===0?'Due today':x.left===1?'Due tomorrow':'In '+x.left+' days',x.left<0?'bad':x.left<=1?'warn':'')+`<button class="btn sm" onclick="nnDone('${x.pid}','${x.key}')">Mark done</button>`)).join('')+(later?`<div class="tiny muted" style="padding-top:6px">${later} more later, reminded 24 hours before</div>`:''):'<div class="small muted">Nothing due in the next day.'+(later?' '+later+' later, reminded 24 hours before.':'')+'</div>';
-    return `<section class="card" id="nnCard"><div class="hd"><div><h3>Notes and due dates</h3><div class="small muted" style="margin-top:4px">Only notes you still owe are nudged. One note counts once, wherever it was written.</div></div><div class="au-ts"><span class="tiny muted">Demo time</span>${H}</div></div>
+    const later=dd.filter(x=>x.left>1).length,dues=dd.filter(x=>x.left<=1).length?dd.filter(x=>x.left<=1).map(x=>row(`<b>${hesc(x.name)}</b> · ${hesc(x.label)} <span class="tiny muted">${x.key==='hist'?'72 h after admission':'day 7'}</span>`,chipx(x.left<0?'Overdue '+(-x.left)+' d':x.left===0?'Due today':x.left===1?'Due tomorrow':'In '+x.left+' days',x.left<0?'bad':x.left<=1?'warn':'')+`<button class="btn sm" onclick="go('#/patient/${x.pid}/${x.tab}')">Open</button>`)).join('')+(later?`<div class="tiny muted" style="padding-top:6px">${later} more later, reminded 24 hours before</div>`:''):'<div class="small muted">Nothing due in the next day.'+(later?' '+later+' later, reminded 24 hours before.':'')+'</div>';
+    return `<section class="card" id="nnCard"><div class="hd"><div><h3>Notes and due dates</h3><div class="small muted" style="margin-top:4px">Only notes you still owe are nudged. One note counts once, wherever it was written.</div></div>${H?`<div class="au-ts"><span class="tiny muted">Demo time</span>${H}</div>`:''}</div>
       <div class="pad au-grid"><div><div class="lbl">Daily notes</div>${nudge}</div><div><div class="lbl">Unsigned drafts</div>${drafts}</div><div class="au-wide"><div class="lbl">History and plan due dates (set at admission)</div>${dues}</div></div></section>`;}
+
+  /* SOP 3: consultant review at least twice a week; nudge at 4 days, floor lead at 5 days; 5 field template; high risk: risk discussed with family */
+  const CR_FIELDS=[['status','Current clinical status'],['effects','Side effects or complications'],['invest','Investigations needed'],['plan','Change in management plan'],['advice','Any other advice']];
+  const CR_SEED={arjun:1,varun:4,kabir:2,sameer:5,neel:1,dev:3,tarun:6,rohit:0};
+  const crDays=pid=>{const a=au();a.cr=a.cr||{};const c=a.cr[pid];if(c&&c.at)return Math.floor((nowMs()-c.at)/86400000);return CR_SEED[pid]!==undefined?CR_SEED[pid]+Math.floor((au().skip||0)/24):9;};
+  const needRisk=pid=>!!pt(pid).risk&&!((au().rf||{})[pid]);
+  const crDue=()=>kind()==='psychiatrist'?PTS.filter(p=>(+p.day||0)>=1&&crDays(p.id)>=4):[];
+  const riskDue=()=>kind()==='psychiatrist'?PTS.filter(p=>needRisk(p.id)):[];
+  window.crOpen=function(pid){const p=pt(pid),hi=!!p.risk;
+    V3.modal('Consultant review · '+hesc(p.name),'All five fields must be filled for the review to count. A field can say "none".',
+      CR_FIELDS.map(f=>`<label class="field"><span class="lbl">${f[1]}</span><textarea class="input" id="cr_${f[0]}" rows="2"></textarea></label>`).join('')+
+      `<label class="field"><span class="lbl">Discharge planning: any update? <span class="tiny muted">(one line, can be "not yet")</span></span><input class="input" id="cr_dc"></label>`+
+      (hi?`<div class="lbl" style="margin-top:6px">High risk: risk discussed with family</div><label class="row" style="gap:8px"><input type="checkbox" id="cr_rk" ${((au().rf||{})[pid])?'checked disabled':''}> <span>Risk discussed with family</span></label><label class="field"><span class="lbl">Spoke to</span><input class="input" id="cr_who" placeholder="Name and relation"></label>`:''),
+      `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="crSave('${pid}')">Save review</button>`);};
+  window.crSave=function(pid){const v=k=>(($('cr_'+k)||{}).value||'').trim(),miss=CR_FIELDS.filter(f=>!v(f[0])).map(f=>f[1]);if(!v('dc'))miss.push('Discharge planning');
+    if(miss.length){toast('Fill in: '+miss.join(', ')+'. Write "none" if there is nothing.');return;}
+    const a=au();a.cr=a.cr||{};a.cr[pid]={at:nowMs(),by:signer(),f:CR_FIELDS.reduce((o,f)=>(o[f[0]]=v(f[0]),o),{dc:v('dc')})};
+    if(($('cr_rk')||{}).checked&&!($('cr_rk')||{}).disabled){if(!v('who')){toast('Say who you spoke to');return;}a.rf=a.rf||{};a.rf[pid]={at:atNow(),who:v('who'),by:signer()};}
+    closeModal();render();toast('Consultant review saved for '+pt(pid).name);};
+  function crEscalate(){if(kind()!=='psychiatrist')return;PTS.forEach(p=>{if((+p.day||0)>=1&&crDays(p.id)>=5)alertOnce('cr'+p.id,p.id,'No consultant review for '+crDays(p.id)+' days · '+p.name,'Sent to the floor lead (SOP 3: review at least twice a week).','Floor lead');});}
 
   /* ======================= 114 family updates automation ======================= */
   const FAM_SEED={varun:{c24:false},sameer:{c34:false}};
@@ -98,6 +124,8 @@
   /* ======================= 115 discharge automation ======================= */
   const dcs=pid=>{const a=au();return a.dc[pid]||(a.dc[pid]={man:{},med:{},fu:false,rel:null});};
   const medsOf=pid=>{try{return (ptCtxOf(pid).meds||[]);}catch(e){return [];}};
+  /* the medicine decisions live in the Discharge medicines check card (one place); this card only counts them */
+  const medRows=pid=>{const r=psyPx(pid).recon||{adm:[],dis:{}};const names=[...new Set([...medsOf(pid).map(m=>m.name),...(r.adm||[]).filter(m=>m.dec!=='Stop').map(m=>m.name)])];return names.map(n=>({name:n,v:((r.dis||{})[n]||{}).d||''}));};
   const medStable=pid=>medsOf(pid).every(m=>{const t=Date.parse(String(m.at||'').replace(',',''));return !t||Date.now()-t>72*3600000;});
   const mhcaOk=pid=>{const p=pt(pid);return String(p.sec)!=='89'||!!((psyPx(pid).mhca||{}).decision)||dcs(pid).man.mhca;};
   const riskOk=pid=>!(V3.openAlerts?V3.openAlerts(a=>a.pid===pid&&!a.ack):[]).length;
@@ -108,7 +136,7 @@
     {k:'mhca',t:'MHCA status resolved',ok:mhcaOk(pid),man:String(pt(pid).sec)==='89'&&!(psyPx(pid).mhca||{}).decision},
     {k:'risk',t:'Risk check clear (no open alert)',ok:riskOk(pid)},
     {k:'fu',t:'Follow-ups booked',ok:!!d.fu}];};
-  const dcMeds=pid=>{const d=dcs(pid);return medsOf(pid).map((m,i)=>({i,m,v:d.med[i]||''}));};
+  const dcMeds=pid=>medRows(pid).map(x=>({m:{name:x.name,freq:'',time:''},v:x.v}));
   const required=pid=>{const miss=[],d=dcs(pid);
     if(dcMeds(pid).some(x=>!x.v))miss.push('Mark every medicine continue, stop or changed ('+dcMeds(pid).filter(x=>!x.v).length+' left)');
     if(!mhcaOk(pid))miss.push('MHCA status not resolved');
@@ -133,7 +161,7 @@
   window.dcSummary=function(pid){S.dischargeDrafted=true;S.draftBy=signer();S.dsText=summaryText(pid);render();toast('Summary filled from the stay. Read it and correct it before signing.');};
   function dcCard(pid){const k=kind();if(!k)return '';const it=items(pid),n=it.filter(i=>i.ok).length,pct=Math.round(n/it.length*100),miss=required(pid),d=dcs(pid),meds=dcMeds(pid),fu=fuDates();
     const sc=it.map(i=>row(`${i.ok?'✓':'○'} ${hesc(i.t)}`,i.ok?chipx('Done','ok'):i.man?`<button class="btn sm" onclick="dcMan('${pid}','${i.k}')">Mark as reached</button>`:i.k==='fu'?`<button class="btn sm" onclick="dcFu('${pid}')">Book now</button>`:i.k==='risk'?`<button class="btn sm" onclick="go('#/myday')">Review alerts</button>`:chipx('Missing','warn'))).join('');
-    const md=meds.length?meds.map(x=>row(`<b>${hesc(x.m.name)}</b> <span class="tiny muted">${hesc(x.m.freq)} · ${hesc(x.m.time||'')}</span>`,['Continue','Stop','Changed'].map(v=>`<button class="au-t ${x.v===v?'on':''}" onclick="dcMed('${pid}',${x.i},'${v}')">${v}</button>`).join(''))).join(''):'<div class="small muted">No medicines listed.</div>';
+    const md=`<div class="small">${meds.filter(x=>x.v).length} of ${meds.length} medicines decided</div><div class="tiny muted" style="margin-top:4px">Decide Continue, Stop or Changed in the Discharge medicines check below. It is decided in one place only.</div>`;
     return `<section class="card" id="dcAuto"><div class="hd"><div><h3>Discharge readiness ${chipx(pct+'%',pct>=100?'ok':pct>=60?'warn':'bad')}</h3><div class="small muted" style="margin-top:4px">Updates on its own as items are completed. ${miss.length?'Still needed to sign: '+miss.length:'Everything required is done.'}</div></div><div class="row" style="gap:6px"><span class="au-ch">Pre-filled</span><button class="btn sm" onclick="dcSummary('${pid}')">Fill summary from the stay</button></div></div>
       <div class="au-bar"><i style="width:${pct}%"></i></div>
       <div class="pad au-grid"><div><div class="lbl">Readiness</div>${sc}</div><div><div class="lbl">Discharge medicines</div>${md}</div>
@@ -195,11 +223,21 @@
     else{famState(pid).draft={en:v('familyEn'),hi:v('familyHi'),by:signer(),at:atNow()};toast('Family update kept. Approve it from Family contact.');}
     render();};
 
+  /* one slim strip of counts. Tapping a count opens that list; each task lives in one place only (Nikita, Today card). */
+  function stripHtml(){const k=kind(),uns=seedDrafts().filter(d=>d.role===k&&!d.signed).length,hp=dueDates().filter(x=>x.left<=1).length,fam=famRows().length,rev=crDue().length+riskDue().length;
+    const b=(n,l,w)=>`<button class="au-sb ${n?'has':''}" onclick="auOpen('${w}')"><b>${n}</b> ${l}</button>`;
+    return `<span class="au-sl">Today</span>${b(uns,'unsigned','n')}${b(hp,'history or plan due','n')}${b(fam,'family calls','f')}${k==='psychiatrist'?b(rev,'reviews and risk talks','r'):''}`;}
+  window.auOpen=function(w){const k=kind();
+    if(w==='r'){const L=crDue().map(p=>row(`<b>${hesc(p.name)}</b> · consultant review <span class="tiny muted">${crDays(p.id)} days since the last</span>`,chipx(crDays(p.id)>=5?'Floor lead told':'Nudge',crDays(p.id)>=5?'bad':'warn')+`<button class="btn sm pri" onclick="closeModal();crOpen('${p.id}')">Review</button>`)).join('')+riskDue().map(p=>row(`<b>${hesc(p.name)}</b> · risk not yet discussed with family`,`<button class="btn sm" onclick="closeModal();crOpen('${p.id}')">Log it</button>`)).join('');
+      V3.modal('Consultant reviews and family risk talks','At least two reviews a week. 4 days without one is a nudge, 5 days goes to the floor lead.',L||'<div class="small muted">Nothing due.</div>','<button class="btn" onclick="closeModal()">Close</button>');return;}
+    V3.modal(w==='n'?'Notes and due dates':'Family contact','',w==='n'?notesCard():famCard(),'<button class="btn" onclick="closeModal()">Close</button>');};
   /* ======================= render hook ======================= */
   const css=document.createElement('style');css.id='au-12nov-css';
   css.textContent=`.au-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 28px}.au-wide{grid-column:1/-1}.au-grid .lbl{margin-bottom:6px}
   .au-ch{display:inline-block;font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 10px;background:#eef2f7;color:#475467;border:1px solid transparent;white-space:nowrap}.au-ch.ok{background:#ecfdf3;color:#067647;border-color:#abefc6}.au-ch.warn{background:#fffaeb;color:#b54708;border-color:#fedf89}.au-ch.bad{background:#fef3f2;color:#b42318;border-color:#fecdca}.au-ch.typed{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
   .au-ts{display:flex!important;flex-direction:row!important;align-items:center;gap:6px;flex-wrap:wrap;width:auto!important;flex:none}.au-ts .au-t{width:auto!important;flex:none;min-height:0!important;height:auto!important}.au-t{border:1px solid #d6dee8;background:#fff;border-radius:99px;padding:5px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}.au-t.on{background:#1e6cdb;border-color:#1e6cdb;color:#fff}
+  .au-strip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:6px 2px}.au-sl{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#667085;margin-right:4px}.au-sb{border:1px solid #d6dee8;background:#fff;border-radius:99px;padding:5px 13px;font:inherit;font-size:13px;cursor:pointer}.au-sb b{font-weight:800}.au-sb.has{background:#fffaeb;border-color:#fedf89;color:#b54708}
+  #view .hv-rc:not(.k-open) .hv-rc-wrap,#view .hv-rc:not(.k-open) .hv-rc-heads{display:none}
   .au-bar{height:6px;background:#eef2f7;margin:0 20px;border-radius:99px;overflow:hidden}.au-bar i{display:block;height:100%;background:#1f9d57;border-radius:99px;transition:width .3s}
   #view mark{background:#fde7e5;color:#b42318;padding:0 3px;border-radius:3px}
   @media(max-width:760px){.au-grid{grid-template-columns:1fr}}`;
@@ -207,18 +245,25 @@
 
   const __tasks=tasks;
   tasks=function(){const r=__tasks.apply(this,arguments);if(!Array.isArray(r)||kind()!=='psychiatrist')return r;const have=new Set(r.map(t=>t.id));
-    nnTasks().concat(famTasks()).filter(t=>!have.has(t.id)).forEach(t=>r.push(Object.assign({},t,{lead:false})));return r;};
+    nnTasks().concat(famTasks(),crTasks()).filter(t=>!have.has(t.id)).forEach(t=>r.push(Object.assign({},t,{lead:false})));return r;};
 
   function paint(){const v=$('view');if(!v||!kind())return;const rt=route();
-    if(/^#\/myday/.test(location.hash||'')&&!v.querySelector('#nnCard')){
-      const sec=document.createElement('div');sec.id='auToday';sec.style.cssText='display:flex;flex-direction:column;gap:14px;margin-bottom:14px';sec.innerHTML=notesCard()+famCard();
-      const urgent=nnTasks().some(t=>t.late)||famRows().some(r=>r.late),host=v;urgent&&host.firstElementChild?host.insertBefore(sec,host.firstElementChild):host.appendChild(sec);}
-    if(rt&&rt.tab==='discharge'&&!v.querySelector('#dcAuto')){const h=document.createElement('div');h.innerHTML=dcCard(rt.pid);const first=v.querySelector('section.card');if(h.firstElementChild)(first?first.parentNode.insertBefore(h.firstElementChild,first.nextSibling):v.appendChild(h.firstElementChild));gateButton(rt.pid);
+    if(/^#\/myday/.test(location.hash||'')&&!v.querySelector('#auStrip')){
+      const sec=document.createElement('div');sec.id='auStrip';sec.className='au-strip';sec.innerHTML=stripHtml();
+      v.insertBefore(sec,v.firstElementChild);}
+    if(rt&&rt.tab==='discharge'&&!v.querySelector('#dcAuto')){const h=document.createElement('div');h.innerHTML=dcCard(rt.pid);const tabs=v.querySelector('.subtabs'),el=h.firstElementChild;if(el&&tabs)tabs.parentNode.insertBefore(el,tabs.nextSibling);gateButton(rt.pid);
       if(S.dsText&&!v.querySelector('#dsAi')){const t=document.createElement('section');t.id='dsAi';t.className='card pad';t.innerHTML=`<div class="lbl">Summary draft ${chipx('Pre-filled from the stay','')}</div><pre style="white-space:pre-wrap;font:inherit;margin:6px 0 0">${hesc(S.dsText)}</pre>`;const c=v.querySelector('#dcAuto');if(c)c.parentNode.insertBefore(t,c.nextSibling);}}
     else if(rt&&rt.tab==='discharge')gateButton(rt.pid);
+    if(rt&&rt.tab!=='discharge'){const x=v.querySelector('#dcAuto');if(x)x.remove();const y=v.querySelector('#dsAi');if(y)y.remove();}
     if(rt&&/^(daily|therapy|discharge)$/.test(rt.tab)&&!v.querySelector('#auScribeBtn')){const b=document.createElement('button');b.id='auScribeBtn';b.className='btn';b.textContent='Drafts from one recording';b.style.cssText='margin:0 0 10px;width:auto;align-self:flex-start;display:inline-flex';b.onclick=()=>auScribe(rt.pid);const first=v.querySelector('section.card');first?first.parentNode.insertBefore(b,first):v.appendChild(b);}
     const sc=rt&&psyPx(rt.pid).scLine;if(sc&&!v.querySelector('#auLine')&&/^(overview|daily)$/.test(rt.tab)){const d=document.createElement('div');d.id='auLine';d.className='small';d.style.cssText='margin:0 0 10px;padding:8px 12px;border-left:3px solid #1e6cdb;background:#f5f9ff;border-radius:6px';d.textContent='Latest session line: '+sc.t+' ('+sc.by+', '+sc.at+')';const first=v.querySelector('section.card');first&&first.parentNode.insertBefore(d,first);}}
+  function openNotDone(){const v=$('view');if(!v||!kind())return;
+    v.querySelectorAll('tr').forEach(tr=>{const t=tr.innerText||'';if(!/Detailed history|Management plan/.test(t))return;
+      const who=tr.querySelector('[onclick*="#/patient/"]'),m=who&&(who.getAttribute('onclick')||'').match(/#\/patient\/([^/']+)/);if(!m)return;
+      [...tr.querySelectorAll('button')].forEach(b=>{if(/^Mark done$/.test(b.textContent.trim())){b.textContent='Open';b.removeAttribute('onclick');b.onclick=()=>go('#/patient/'+m[1]+'/'+(/Management plan/.test(t)?'therapy':'admission'));}});});}
+  function oneLineHandover(){const v=$('view');if(!v)return;const b=v.querySelector('.hv-rc');if(!b||b.dataset.one)return;b.dataset.one='1';
+    const hd=b.querySelector('.hv-rc-hd');if(hd){const btn=document.createElement('button');btn.className='btn sm';btn.textContent='View';btn.onclick=()=>b.classList.toggle('k-open');hd.appendChild(btn);}}
   const __r=render;
-  render=function(){const r=__r.apply(this,arguments);try{nnEscalate();famEscalate();paint();}catch(e){}return r;};
+  render=function(){const r=__r.apply(this,arguments);try{nnEscalate();famEscalate();paint();openNotDone();oneLineHandover();}catch(e){}return r;};
   window.auPaint=paint;
 })();

@@ -14,10 +14,13 @@
     'Fall':{tags:['Falls risk'],tasks:[['Nurse: vitals and injury check','Nurse',15],['RMO review','RMO',60],['Fall precautions on the nurse board','Nurse',10]]},
     'Self-harm attempt':{alert:['Psychiatrist','Floor lead'],tasks:[['Raise the observation level (suggested: every 15 minutes)','Psychiatrist',30],['Room safety check','Nurse',30],['Open the incident report','Floor lead',240],['Inform the nominated representative','Treating team',1440]]},
     'Aggression or violence':{alert:['Psychiatrist'],tasks:[['Offer the restraint workflow if needed','Psychiatrist',15],['Staff injury check','Floor lead',60],['Open the incident report','Floor lead',240]]},
-    'Absconding attempt':{tags:['Absconding risk'],alert:['Floor lead','Security'],tasks:[['Inform the nominated representative','Treating team',60],['If out of the building: police and MHCA intimation','Floor lead',120]]},
+    'Absconding attempt':{tags:['Absconding risk'],alert:['Floor lead','Security'],tasks:[['Inform the nominated representative','Treating team',60],['Police intimation: patient admission details and address, signed by the consultant or senior doctor','Treating consultant',120,'cd'],['MHCA intimation','Floor lead',120]]},
     'Seizure':{tasks:[['RMO paged','RMO',5],['Vitals every 15 minutes','Nurse',15],['Transfer-out checklist if needed','RMO',60]]},
     'Medical emergency or transfer out':{tasks:[['RMO paged','RMO',5],['Vitals every 15 minutes','Nurse',15],['Transfer-out checklist if needed','RMO',60]]},
-    'Adverse drug reaction':{tasks:[['Medicine flagged on the chart','Nurse',15],['Update the allergy list','Psychiatrist',60],['Psychiatrist reviews the order','Psychiatrist',120]]},
+    'Adverse drug reaction':{adr:true,tasks:[['Medicine flagged on the chart','Nurse',15],['Update the allergy list','Psychiatrist',60],['Psychiatrist reviews the order','Psychiatrist',120],['ADR report form (SOP 24)','The person who logged it',1440],['Treating consultant reviews the form and forwards it to the MOM (medicines) committee','Treating consultant',2880]]},
+    'Medication error':{adr:true,tasks:[['Patient checked and treated if needed','Nurse',15],['Treating psychiatrist told','Nurse',30],['Medication error report form (SOP 24)','The person who logged it',1440],['Treating consultant reviews the form and forwards it to the MOM (medicines) committee','Treating consultant',2880]]},
+    'Near miss':{adr:true,tasks:[['Near miss report form (SOP 24)','The person who logged it',1440],['Treating consultant reviews the form and forwards it to the MOM (medicines) committee','Treating consultant',2880]]},
+    'Complaint or dissatisfaction':{tasks:[['Write what happened and what was done on the spot','First responder',60],['Review and close with a reason','Floor lead',1440]]},
     'Consent or form pending from family':{tasks:[['Take the consent or form from the family','Front desk',1440]]},
     'History or paperwork incomplete':{tasks:[['Finish the history and paperwork','Treating team',1440]]},
     'Admission out of hours, workup pending':{tasks:[['Admission workup','RMO',480],['History and Form E','Treating team',1440]]},
@@ -105,7 +108,8 @@
     const sec=document.createElement('section');sec.className='card';sec.id='mhcaCard';
     sec.innerHTML=`<div class="hd"><div><h3>Legal status (MHCA)</h3><div class="small muted" style="margin-top:4px">${hesc(SEC_TXT[L.sec]||'Section '+L.sec)} · day ${L.day}${L.left!==null?' of 30 · '+L.left+' days left':''}</div></div></div>
       <div class="pad mh-grid"><div><div class="lbl">Advance directive</div>${adTxt}</div><div><div class="lbl">Capacity review${L.every?' (every '+L.every+' days)':''}</div>${cap}</div>${dec?`<div><div class="lbl">Day ${R.mhca.prompt89Day} choice</div>${dec}</div>`:''}<div><div class="lbl">Notices to the nominated representative</div>${nr}</div>${tk?`<div class="mh-wide"><div class="lbl">MHRB and notice tasks</div>${tk}</div>`:''}</div>`;
-    const first=v.querySelector('section.card');first?first.parentNode.insertBefore(sec,first):v.appendChild(sec);
+    const tabs=v.querySelector('.subtabs'),first=v.querySelector('section.card');/* inside Stay summary, under the tab row (QA 12 Nov) */
+    tabs?tabs.parentNode.insertBefore(sec,tabs.nextSibling):first?first.parentNode.insertBefore(sec,first):v.appendChild(sec);
   }
   /* days left in the header chip */
   function headerChip(){
@@ -120,7 +124,8 @@
     const rule=R.events[e.type]||null;
     e.fu={at:now(),pid,tasks:[],tags:[]};
     if(!rule)return;
-    (rule.tasks||[]).forEach((t,i)=>e.fu.tasks.push({id:'f'+e.id+i,text:t[0],owner:t[1],due:now()+t[2]*60000,done:null,esc:false}));
+    (rule.tasks||[]).forEach((t,i)=>e.fu.tasks.push({id:'f'+e.id+i,text:t[0],owner:t[1]==='The person who logged it'?(e.by||signer()):t[1],due:now()+t[2]*60000,done:null,esc:false,cd:t[3]==='cd'}));
+    if(e.type==='Complaint or dissatisfaction'&&!e.cAsk){e.cAsk=1;setTimeout(()=>complaintAsk(e,pid),120);}
     (rule.tags||[]).forEach(tag=>{const x=px(pid);x.riskTags=x.riskTags||[];if(!x.riskTags.includes(tag)){x.riskTags.push(tag);e.fu.tags.push(tag);}});
     (rule.alert||[]).forEach(to=>alertTo(pid,e.type+' · '+pt(pid).name,'Logged by '+e.by+'. Alert to: '+to+'. Follow-up checklist started.','Event'));
     EVFU.push({pid,e,type:e.type});
@@ -137,6 +142,20 @@
     if(!Array.isArray(S.events))return;
     S.events.forEach(e=>{if(typeof e.id==='number'&&e.id>1.7e12&&!e.fu)startFu(e,evPid||S.pid||'neel');});
   }
+  /* complaint or dissatisfaction: auto-escalate to the medical superintendent for these reasons (SOP 17) */
+  const COMPL=['About a doctor','Abuse','Confidentiality','Injury on campus','Request to change doctor','Media or legal threat'];
+  function complaintAsk(e,pid){
+    const prior=EVFU.filter(x=>x.pid===pid&&x.type==='Complaint or dissatisfaction'&&x.e!==e).length>0;
+    V3.modal('Complaint or dissatisfaction · '+hesc(pt(pid).name),'First responder: tick what applies. Some reasons go straight to the medical superintendent.',
+      `<div class="pd-det" style="gap:6px">${COMPL.map((c,i)=>`<label class="row" style="gap:8px"><input type="checkbox" class="cmpk" data-i="${i}"> <span>${c}</span></label>`).join('')}<label class="row" style="gap:8px"><input type="checkbox" class="cmpk" data-i="rep" ${prior?'checked':''}> <span>Repeat complaint ${prior?'(there is an earlier one for this patient)':''}</span></label></div>`,
+      `<button class="btn pri" onclick="complaintSave(${e.id},'${pid}')">Save</button>`);
+  }
+  window.complaintSave=function(eid,pid){
+    const picked=[...document.querySelectorAll('.cmpk:checked')].map(c=>c.dataset.i==='rep'?'Repeat complaint':COMPL[+c.dataset.i]);
+    const ent=EVFU.find(x=>x.e.id===eid);closeModal();if(!ent)return;
+    if(picked.length){ent.e.fu.tasks.push({id:'fesc'+eid,text:'Escalated: '+picked.join(', ')+'. Review and close with a reason',owner:'Medical superintendent or senior staff',due:now()+240*60000,done:null,esc:false});
+      alertTo(pid,'Complaint escalated · '+pt(pid).name,picked.join(', ')+'. Sent to the medical superintendent.','Medical superintendent');}
+    render();toast(picked.length?'Escalated to the medical superintendent':'Saved. The floor lead reviews and closes it.');};
   window.evTaskDone=function(eid,tid){
     for(const ent of EVFU){if(ent.e.id!==eid)continue;const t=ent.e.fu.tasks.find(x=>x.id===tid);if(t){t.done={by:signer(),at:atNow()};render();return;}}
   };
@@ -146,7 +165,7 @@
     (S.events||[]).forEach((e,i)=>{
       if(!e.fu||!e.fu.tasks.length||!lis[i])return;
       const open=e.fu.tasks.filter(t=>!t.done).length;
-      const h=`<div class="evfu"><div class="tiny" style="font-weight:700">Follow-ups · ${e.fu.tasks.length-open} of ${e.fu.tasks.length} done${e.fu.tags.length?' · tag added: '+hesc(e.fu.tags.join(', ')):''}</div>${e.fu.tasks.map(t=>`<div class="row small" style="gap:8px;justify-content:space-between;${t.done?'opacity:.6':''}"><span>${t.done?'✓ ':''}${hesc(t.text)} <span class="tiny muted">· ${hesc(t.owner)} · ${t.done?'done '+hesc(t.done.at):(t.due<now()?'<b style="color:#b42318">overdue '+dur(now()-t.due)+'</b>':'due in '+dur(t.due-now()))}</span></span>${t.done?'':`<button class="btn sm" onclick="evTaskDone(${e.id},'${t.id}')">Done</button>`}</div>`).join('')}</div>`;
+      const h=`<div class="evfu"><div class="tiny" style="font-weight:700">Follow-ups · ${e.fu.tasks.length-open} of ${e.fu.tasks.length} done${e.fu.tags.length?' · tag added: '+hesc(e.fu.tags.join(', ')):''}</div>${e.fu.tasks.map(t=>`<div class="row small" style="gap:8px;justify-content:space-between;${t.done?'opacity:.6':''}"><span>${t.done?'✓ ':''}${hesc(t.text)} <span class="tiny muted">· ${hesc(t.owner)} · ${t.done?'done '+hesc(t.done.at):(t.due<now()?'<b style="color:#b42318">overdue '+dur(now()-t.due)+'</b>':(t.cd?'<b style="color:#b54708">2 hour countdown: '+dur(t.due-now())+' left</b>':'due in '+dur(t.due-now())))}</span></span>${t.done?'':`<button class="btn sm" onclick="evTaskDone(${e.id},'${t.id}')">Done</button>`}</div>`).join('')}</div>`;
       const g=lis[i].querySelector('.grow');if(g)g.insertAdjacentHTML('beforeend',h);
     });
   }
@@ -159,14 +178,17 @@
     });
   }
   /* floor lead: open follow-ups and overdue MHCA items */
+  const adrThisMonth=()=>EVFU.filter(x=>R.events[x.type]&&R.events[x.type].adr&&new Date(x.e.id).getMonth()===new Date().getMonth());
   function leadCard(){
     const v=$('view');if(!v||!(floor())||v.querySelector('#leadRules')||!/^#\/myday/.test(location.hash||''))return;
     const open=EVFU.filter(x=>x.e.fu.tasks.some(t=>!t.done));
     const mh2=mhcaTasks().filter(t=>t.late);
-    if(!open.length&&!mh2.length)return;
+    const adr=adrThisMonth();
+    if(!open.length&&!mh2.length&&!adr.length)return;
     const sec=document.createElement('section');sec.className='card';sec.id='leadRules';
     sec.innerHTML=`<div class="hd"><div><h3>Open follow-ups and overdue MHCA items</h3><div class="small muted" style="margin-top:4px">From logged events and the MHCA clock. Overdue ones go red.</div></div></div><div class="pad" style="display:flex;flex-direction:column;gap:8px">
       ${open.map(x=>{const t=x.e.fu.tasks.filter(y=>!y.done);const od=t.filter(y=>y.due<now()).length;return `<div class="row small" style="justify-content:space-between;gap:10px"><span><b>${hesc(x.type)}</b> · ${hesc(pt(x.pid).name)} · ${t.length} to do${od?` <b style="color:#b42318">· ${od} overdue</b>`:''}</span><button class="btn sm" onclick="go('#/patient/${x.pid}/overview')">Open</button></div>`;}).join('')}
+      ${adr.length?`<div class="row small" style="gap:10px"><span><b>ADR and medication error list, this month</b> · ${adr.length} (${adr.map(x=>hesc(x.type)+' · '+hesc(pt(x.pid).name)).join('; ')})</span></div>`:''}
       ${mh2.map(t=>`<div class="row small" style="justify-content:space-between;gap:10px"><span><b style="color:#b42318">MHCA</b> · ${hesc(t.title)} <span class="tiny muted">· ${hesc(t.due)}</span></span><button class="btn sm" onclick="go('${t.go}')">Open</button></div>`).join('')}</div>`;
     const first=v.querySelector('section.card');first?first.parentNode.insertBefore(sec,first):v.appendChild(sec);
   }

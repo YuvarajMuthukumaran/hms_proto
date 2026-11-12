@@ -110,7 +110,7 @@
   window.tpSeg=v=>{st().seg=v;render();};
   window.tpSub=v=>{st().sub=v;render();};
   function build(){
-    const v=$('view');if(!v||!pgy()||!/^#\/patient\/[^/]+\/therapy/.test(location.hash||''))return;
+    const v=$('view');if(!v||!(pgy()||doc())||!/^#\/patient\/[^/]+\/therapy/.test(location.hash||''))return;
     const card=[...v.querySelectorAll('section.card')].find(c=>/^Therapy Plans/.test(((c.querySelector('h3')||{}).textContent||'').trim()));
     if(!card||card.dataset.tp)return;card.dataset.tp='1';
     const pid=S.pid,s=st();
@@ -127,7 +127,25 @@
     const add=[...card.querySelectorAll('.hd button')].find(b=>/^Add$/.test(b.textContent.trim()||'')||/psyThAdd/.test(b.getAttribute('onclick')||''));
     if(add){const L={ind:['New session note',"snOpen(S.pid,'ind')"],grp:['Log attendance',"tpAttend(S.pid)"],fam:['Start family session',"snOpen(S.pid,'fam')"]}[s.seg];add.textContent=L[0];add.setAttribute('onclick',L[1]);}
     const sl=v.querySelector('#snList');if(sl)sl.remove();
+    /* one main button per tab; the psychiatrist reads Individual and Group, and has full access to Family */
+    const hd=card.querySelector('.hd');
+    if(hd){[...hd.querySelectorAll('button')].forEach(b=>{if(b!==add)b.remove();});
+      if(doc()&&s.seg!=='fam'&&add)add.remove();
+      const sub={ind:'One-to-one sessions between the therapist and the patient',grp:'Group sessions: who came, and the latest line from each',fam:'Family sessions, topics covered, required contact and calls'}[s.seg];
+      const sm=hd.querySelector('.small,.muted');if(sm)sm.textContent=sub+(doc()&&s.seg!=='fam'?' · read only for the psychiatrist':'');}
+    /* plan sign-off by the Psychologist Lead (quality indicator): "Signed off by ... on ..." or "Awaiting sign-off", nudge after 48 hours */
+    const x=px(pid),sg=x.tpSign,lead=/floor-lead-psychologist/.test(String((window.__TULASI__||{}).role||''));
+    if(!x.tpPlanAt)x.tpPlanAt=Date.now()-3*86400000*(pid==='neel'?0:1);
+    const hrsWait=Math.floor((Date.now()+((S.au||{}).skip||0)*3600000-x.tpPlanAt)/3600000);
+    const so=document.createElement('div');so.className='tp-so '+(sg?'ok':'wait');
+    so.innerHTML=sg?`<span>Signed off by <b>${esc(sg.by)}</b>, Psychologist Lead, on ${esc(sg.at)}</span>`:`<span><b>Awaiting sign-off</b> by the Psychologist Lead${hrsWait>=48?' · waiting '+hrsWait+' hours, the lead has been nudged':''}</span>${lead?`<button class="btn sm pri" onclick="tpSignOff('${pid}')">Sign off the plan</button>`:''}`;
+    nb.insertBefore(so,nb.firstChild);
+    if(!sg&&hrsWait>=48){x.tpNudged=x.tpNudged||0;if(!x.tpNudged){x.tpNudged=1;try{V3.alert({pid,sev:'amber',title:'Therapy plan awaiting sign-off for '+hrsWait+' hours · '+pat(pid).name,detail:'Psychologist Lead to sign off.',src:'Quality',by:'System'});}catch(e){}}}
   }
+  window.tpSignOff=function(pid){
+    pinSign('Sign off the therapy plan · '+pat(pid).name,[['Signing as',signer()],['Role','Psychologist Lead']],()=>{px(pid).tpSign={by:signer(),at:atNow()};render();toast('Plan signed off. It counts in the quality indicator.');});};
+  /* goals change materially: the plan goes back to Awaiting sign-off */
+  window.tpPlanChanged=function(pid){const x=px(pid);if(x.tpSign){x.tpSign=null;x.tpPlanAt=Date.now();x.tpNudged=0;}};
 
   /* ---------------- nurse: homework tonight ---------------- */
   function nurseBoard(){
@@ -172,6 +190,7 @@
   .tp-fam{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}@media(max-width:900px){.tp-fam{grid-template-columns:1fr}}
   .tp-top{display:grid;grid-template-columns:24px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #eef2f8;font-size:13.5px}.tp-top em{font-style:normal;font-size:12px;color:#667085}.tp-top.on em{color:#067647}
   .tp-tick{width:22px;height:22px;border-radius:50%;border:1.5px solid #cfd8e4;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}.tp-top.on .tp-tick{background:#1f9d57;border-color:#1f9d57}
+  .tp-so{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border-radius:10px;font-size:13.5px}.tp-so.ok{background:#ecfdf3;color:#067647}.tp-so.wait{background:#fffaeb;color:#b54708;border:1px solid #fedf89}
   .pr-tp{margin-top:8px;padding:10px 12px;border:1px solid #e1e9f4;border-radius:12px;background:#fafcff;font-size:13px}.tp-mini{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0}.tp-mini span{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:#475467;min-width:110px}.tp-mini i{display:block;height:5px;border-radius:99px;background:#1e6cdb}`;
   document.head.appendChild(css);
 

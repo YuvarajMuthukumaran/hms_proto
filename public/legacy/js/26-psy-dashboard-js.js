@@ -232,7 +232,7 @@
   function dash(){
     $('title').textContent='Inpatients';
     const T=tasks().filter(t=>!S.done[t.id]&&t.taskType!=='alert'&&t.taskType!=='countersign');
-    const rows=PTS.map(p=>build(p,T)).filter(r=>r.act.length).sort((a,b)=>a.rank-b.rank),openRows=rows.filter(r=>!r.allTaken),doneRows=rows.filter(r=>r.allTaken);
+    const rows=(window.rmoAllPts?rmoAllPts():PTS).map(p=>build(p,T)).filter(r=>r.act.length).sort((a,b)=>a.rank-b.rank),openRows=rows.filter(r=>!r.allTaken),doneRows=rows.filter(r=>r.allTaken);
     S.dtF='all';
     setTimeout(dtFilter,0);
     return `<div class="pd">

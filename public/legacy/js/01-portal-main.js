@@ -749,9 +749,9 @@ function spark(vals,max,label,unit,color){
       ${vals.map((v,i)=>`<text x="${X(i)}" y="${h+12}" text-anchor="middle" font-size="10" fill="#5b6475">D${i+1}</text>`).join('')}
     </svg></div>`;
 }
-const EVGROUPS=[['Medical or safety',['Fall','Seizure','Self-harm attempt','Aggression or violence','Absconding attempt','Choking','Adverse drug reaction','Fever or infection','Medical emergency or transfer out']],
+const EVGROUPS=[['Medical or safety',['Fall','Seizure','Self-harm attempt','Aggression or violence','Absconding attempt','Choking','Adverse drug reaction','Medication error','Near miss','Fever or infection','Medical emergency or transfer out']],
   ['Admission and paperwork',['Admission out of hours, workup pending','History or paperwork incomplete','Consent or form pending from family','Handover to the next team']],
-  ['Ward and family',['Behaviour on the ward','Family or visitor issue','Belongings or property','Refused food or medicines','Other']]];
+  ['Ward and family',['Behaviour on the ward','Family or visitor issue','Complaint or dissatisfaction','Belongings or property','Refused food or medicines','Other']]];
 const EVTYPES=EVGROUPS.flatMap(g=>g[1]);
 const EVMED=EVGROUPS[0][1];
 const evChip=e=>!EVMED.includes(e.type)?chip(e.type,'c-blue'):chip(e.type+(e.sev?' · '+e.sev:''),['Seizure','Self-harm attempt','Medical emergency or transfer out','Choking'].includes(e.type)||e.sev==='Major'?'c-red':'c-amber');
@@ -999,7 +999,7 @@ function famUpdate(){
 function saveDaily(){S.dn=S.dn||{};if(!S.dn.line)S.dn.line=(document.getElementById('dnLine')||{}).value||'';S.dailySaved=true;S.dailyAt=atNow();S.done.daily=true;render();toast('Note saved. Family update drafted.');}
 function scribeDaily(){const b=$('scrD');b.innerHTML='<span class="rec"><i></i>Listening…</span>';b.disabled=true;setTimeout(()=>{S.dn=JSON.parse(JSON.stringify(TEMPLATES['Good progress']));S.dn.line='Slept through the night for the first time; joined group therapy and spoke once.';render();toast('Filled from your dictation. Check and save.');},1600);}
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='s'&&location.hash.endsWith('/daily')){e.preventDefault();if(isPsych())psySave('dn','neel');else saveDaily();}});
-const DRUGS = ['Quetiapine 25 mg','Quetiapine 50 mg','Quetiapine 100 mg','Olanzapine 5 mg','Olanzapine 15 mg','Risperidone 2 mg','Aripiprazole 10 mg','Clozapine 25 mg','Sodium valproate 500 mg','Lithium carbonate 300 mg','Lorazepam 2 mg','Clonazepam 0.5 mg','Sertraline 50 mg','Escitalopram 10 mg','Propranolol 20 mg','Trihexyphenidyl 2 mg'];
+const DRUGS = ['Quetiapine 25 mg','Quetiapine 50 mg','Quetiapine 100 mg','Olanzapine 5 mg','Olanzapine 15 mg','Risperidone 2 mg','Aripiprazole 10 mg','Clozapine 25 mg','Sodium valproate 500 mg','Lithium carbonate 300 mg','Lorazepam 2 mg','Clonazepam 0.5 mg','Sertraline 50 mg','Escitalopram 10 mg','Propranolol 20 mg','Trihexyphenidyl 2 mg','Ibuprofen 400 mg','Diclofenac 50 mg','Naproxen 250 mg','Paracetamol 500 mg','Pantoprazole 40 mg','Ondansetron 4 mg','Amoxicillin 500 mg','Azithromycin 500 mg','Metformin 500 mg'];
 const FREQ = ['1-0-1','0-0-1','1-0-0','1-1-1','SOS'];
 function rxSugg(v){
   const m=$('rxm'); if(!v){m.style.display='none';return;}
