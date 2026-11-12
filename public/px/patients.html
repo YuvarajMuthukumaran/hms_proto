@@ -287,9 +287,9 @@ function rec(){
   const p=P.find(x=>x.id===S.pid)||P[0]; const idx=P.indexOf(p); const a=AV[idx%4];
   const prev=P[(idx-1+P.length)%P.length], next=P[(idx+1)%P.length];
   const due=[...p.st].map((c,i)=>[c,i]).filter(([c,i])=>(c==='l'||c==='t')&&!S.done[p.id+i]);
-  const TABS=[['summary','Stay summary'],['family','Family calls and updates'],['prefs','Preferences'],['griev','Grievances'],['dis','Discharge and feedback'],['past','Past admissions']];
+  const TABS=[['summary','Stay summary'],['family','Family calls and updates'],['prefs','Preferences'],['griev','Grievances'],['rounds','Rounds'],['dis','Discharge and feedback'],['past','Past admissions']];
   let body='';
-  if(S.rtab==='summary') body=summary(p); else if(S.rtab==='family') body=family(p); else if(S.rtab==='prefs') body=prefs(p); else if(S.rtab==='griev') body=griev(p); else if(S.rtab==='dis') body=dis(p); else body=`<div style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:18px">${p.tags.includes('Readmission')?`<b>Admission 1 · 2 to 19 Jul 2026</b><div style="font-size:13px;color:#667085;margin-top:4px">Dr. Ichpreet Singh · Kiran Mehra · feedback NPS 8 · 1 grievance (laundry)</div><button class="mini" style="margin-top:10px">Open</button>`:'<span style="color:#667085">No earlier stays at Tulasi.</span>'}</div>`;
+  if(S.rtab==='summary') body=summary(p); else if(S.rtab==='family') body=family(p); else if(S.rtab==='prefs') body=prefs(p); else if(S.rtab==='griev') body=griev(p); else if(S.rtab==='rounds') body=roundsTab(p); else if(S.rtab==='dis') body=dis(p); else body=`<div style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:18px">${p.tags.includes('Readmission')?`<b>Admission 1 · 2 to 19 Jul 2026</b><div style="font-size:13px;color:#667085;margin-top:4px">Dr. Ichpreet Singh · Kiran Mehra · feedback NPS 8 · 1 grievance (laundry)</div><button class="mini" style="margin-top:10px">Open</button>`:'<span style="color:#667085">No earlier stays at Tulasi.</span>'}</div>`;
   return shell(`<main>
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#667085"><span>Patient ${idx+1} of ${P.length}</span><div style="display:flex;gap:8px"><button class="mini" data-open="${prev.id}" style="color:#344054">‹ ${esc(prev.name)}</button><button class="mini" data-open="${next.id}" style="color:#344054">${esc(next.name)} ›</button></div></div>
     <section style="background:#fff;border:1px solid #E3EAF2;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px">
@@ -366,6 +366,20 @@ function prefs(p){
   ${blk('Communication with family','Patient experience · Billing',[['Language for updates','Hindi'],['Clinical updates go to',esc(p.rep)+' only'],['Billing contact',esc(p.rep)],['Do not share with','Employer, if they call']])}
   ${blk('Other requests','Admin · Ward',[['Religious or cultural needs','Fasts on Tuesdays'],['Routine','Wakes early; likes the newspaper in the morning']])}
   </div><div style="font-size:12px;color:#667085;margin-top:10px">First filled by Dr. Sameer Khan (RMO) with Kanika · last updated by ${esc(p.dr)}</div>`;
+}
+
+/* Rounds tab: what the Rounds page logged for this patient, read only (same browser, localStorage px_rounds_v1) */
+function roundsTab(p){
+  let R=null;try{R=JSON.parse(localStorage.getItem('px_rounds_v1')||'null');}catch(e){}
+  const hm=t=>{const d=new Date(t);return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+', '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
+  const log=((R&&R.log)||[]).filter(l=>l.patient===p.name);
+  const ent=((R&&R.ent)||[]).filter(e=>e.patient===p.name);
+  const kind={grievance:'Grievance',note:'Note to nursing',request:'Request',log:'Round note'};
+  return `<div style="font-size:13px;color:#475467;margin-bottom:10px">Read only. What was said to ${esc(p.name)} on the daily round and what was sent on. It is written by the Rounds page, nothing to fill in here.</div>
+  <section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;overflow:hidden"><div style="padding:12px 16px;border-bottom:1px solid #EEF2F6;font-weight:600">Sent from a round</div>
+  ${ent.length?ent.map(e=>`<div style="padding:10px 16px;border-top:1px solid #EEF2F6;font-size:14px;display:flex;flex-direction:column;gap:2px"><b>${esc(e.id)} · ${esc(kind[e.kind]||e.kind)}${e.safety?' · <span style="color:#B42318">Safety</span>':''}</b><span>${esc(e.title)}</span><span style="font-size:12px;color:#667085">To ${esc(e.owner||'')} · ${hm(e.t0)} · source Rounds</span></div>`).join(''):'<div style="padding:14px 16px;color:#667085;font-size:14px">Nothing sent yet from a round.</div>'}</section>
+  <section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;overflow:hidden;margin-top:12px"><div style="padding:12px 16px;border-bottom:1px solid #EEF2F6;font-weight:600">Round log</div>
+  ${log.length?log.slice(0,25).map(l=>`<div style="padding:8px 16px;border-top:1px solid #EEF2F6;font-size:14px">${hm(l.t)} · Room ${esc(l.room)} · ${esc(l.text)}</div>`).join(''):'<div style="padding:14px 16px;color:#667085;font-size:14px">No round entries yet for this patient.</div>'}</section>`;
 }
 function griev(p){
   const G={nb:[['G-0145','Brother says a night attendant pushed Neel','Safety','red','Escalated to Chandraji · incident report not added yet','Open'],['G-0140','Room too noisy at night','Room and housekeeping','','Sister Rekha · 4 h 10 m left','Open']],rk:[['G-0146','Wife wants to take him home today (DAMA risk)','Family concern','amber','Dr. Aanya Sharma to speak within 30 min','Open']],rs:[['G-0137','Bill estimate not shared before discharge','Billing and insurance','amber','Billing desk · 5 h left','Open']],mi:[['G-0138','Asked for visiting hours and what to bring','Other','','You · due 6 pm','Open']]}[p.id]||[];

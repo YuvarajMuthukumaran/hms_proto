@@ -64,6 +64,7 @@ td{padding:14px 16px;background:#fff;border-bottom:1px solid #E3EAF2;vertical-al
 .eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;color:#1D4ED8}
 @media(max-width:900px){.side{display:none}}
 </style>
+<script src="cal-core.js"></script>
 <style id="embed-css">html.embed .side,html.embed .rev,html.embed .top{display:none!important}html.embed body{background:transparent}html.embed .app{min-height:0}html.embed main{padding-top:6px}</style>
 <script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');</script>
 <script>if(/[?&]embed=1/.test(location.search)){var __rm=function(){document.querySelectorAll('button').forEach(function(b){if(/^\s*\+?\s*(Log a grievance|Log a family call|Log grievance)\s*$/.test(b.textContent)&&!b.dataset.keep)b.remove();});};new MutationObserver(__rm).observe(document.documentElement,{childList:true,subtree:true});document.addEventListener('DOMContentLoaded',__rm);}</script>
@@ -387,6 +388,40 @@ window.onCallSaved = r => {
   const acted={...state.acted}; if(p.row) acted[p.row]=txt;
   setState({done, acted, newG: state.newG + (r.grievance?1:0)});
 };
+/* TDX-CAL: who is on today, cover needed, and what the Rounds sent (reads the Calendar and Rounds pages' data, same browser) */
+(function(){
+  const __t=today;
+  const hh=t=>{const d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
+  function strips(){
+    let h='';
+    try{
+      const C=window.PXCal;if(C){
+        C.reload();const t=C.todayISO();const on=C.onToday(t);
+        const w=on.filter(x=>x.code==='M'||x.code==='E').map(x=>esc(x.name)+' <span style="color:#667085">('+(x.code==='M'?'morning':'evening')+', '+esc(x.floor)+')</span>').join(' · ');
+        const lv=on.filter(x=>x.code==='L').map(x=>esc(x.name)+' ('+esc(x.leave.type.toLowerCase())+(x.leave.cover?', cover '+esc(C.nameOf(x.leave.cover)):'')+')');
+        const off=on.filter(x=>x.code==='O').map(x=>esc(x.name));
+        h+='<div style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:10px 16px;font-size:14px;display:flex;flex-direction:column;gap:3px"><div><b>Who is on today</b> <span style="color:#667085">· '+esc(C.label(t))+'</span></div><div>'+(w||'No one is on shift.')+'</div>'+(lv.length?'<div style="color:#93370D"><b>On leave:</b> '+lv.join(', ')+'</div>':'')+(off.length?'<div style="color:#667085">Off: '+off.join(', ')+'</div>':'')+'</div>';
+        const cl=C.clashes(t,C.addDays(t,7)).slice(0,3);
+        cl.forEach(c=>{const cv=c.cover.map(C.nameOf);h+='<div style="background:#FEF3F2;border:1px solid #FDA29B;border-radius:12px;padding:10px 16px;font-size:14px"><b style="color:#B42318">'+esc(C.summary(c))+'.</b> '+(cv.length?esc(cv[0])+' is on shift. Open the Calendar and give them these.':'No one else is on shift then.')+'</div>';});
+      }
+    }catch(e){}
+    try{
+      const R=JSON.parse(localStorage.getItem('px_rounds_v1')||'null');
+      if(R){
+        const saf=(R.saf||[]).filter(a=>!a.ack);const reqs=(R.ent||[]).filter(e=>e.kind==='request'&&!e.cl);const notes=(R.ent||[]).filter(e=>e.kind==='note');const gr=(R.ent||[]).filter(e=>e.kind==='grievance');const iss=(R.iss||[]).filter(i=>i.st==='open');
+        if(saf.length)h+='<div style="background:#FEF3F2;border:1px solid #FDA29B;border-radius:12px;padding:10px 16px;font-size:14px"><b style="color:#B42318">'+saf.length+' safety concern'+(saf.length>1?'s':'')+' from Rounds, not taken yet.</b> '+saf.map(a=>esc((a.patient||'Room '+a.room)+': '+a.what)).join(' · ')+'</div>';
+        if(reqs.length||notes.length||gr.length||iss.length)h+='<div style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:10px 16px;font-size:14px;display:flex;flex-direction:column;gap:3px"><div><b>From Rounds</b> <span style="color:#667085">· what was sent on the walk today</span></div>'
+          +(gr.length?'<div>'+gr.length+' grievance'+(gr.length>1?'s':'')+' logged with source Rounds: '+gr.slice(0,3).map(g=>esc(g.id+' '+g.patient)).join(', ')+'</div>':'')
+          +(reqs.length?'<div>'+reqs.length+' request'+(reqs.length>1?'s':'')+' for you: '+reqs.slice(0,4).map(r=>esc(r.patient+' · '+r.title)).join(' · ')+'</div>':'')
+          +(notes.length?'<div>'+notes.length+' note'+(notes.length>1?'s':'')+' sent to the nursing in-charge (sleep).</div>':'')
+          +(iss.length?'<div>'+iss.length+' room issue'+(iss.length>1?'s':'')+' open with the fixing teams: '+iss.slice(0,3).map(i=>esc('Room '+i.room+' '+i.what)).join(', ')+'</div>':'')+'</div>';
+      }
+    }catch(e){}
+    return h;}
+  today=function(){const out=__t.apply(this,arguments);return out.replace('<div class="chips">',strips()+'<div class="chips">');};
+  window.addEventListener('storage',()=>{try{render();}catch(e){}});
+})();
+
 render();
 </script>
 </body>

@@ -1,0 +1,193 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tulasi · Patient Experience · Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F6FBFF;font-family:Inter,system-ui,sans-serif;color:#0F172A;font-size:15px}
+button,select,input,textarea{font-family:inherit}
+button{cursor:pointer}
+.wrap{padding:16px 18px 56px;display:flex;flex-direction:column;gap:14px}
+h2{margin:0;font-size:22px;font-weight:600}
+.muted{color:#667085}.small{font-size:13px}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:flex-start}
+.btn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:10px;border:1px solid #D6DEE8;background:#fff;color:#0F172A;font-size:14px;font-weight:600}
+.btn.pri{background:#1E6CDB;border-color:#1E6CDB;color:#fff}
+.btn.sm{height:32px;padding:0 10px;font-size:13px}
+.btn.on{background:#E8F1FE;border-color:#1E6CDB;color:#1E5BB8}
+.inp,select{min-height:40px;border:1px solid #D6DEE8;border-radius:10px;padding:0 12px;font-size:14px;background:#fff;max-width:100%}
+textarea.inp{padding:8px 12px;width:100%;min-height:64px}
+.seg{display:inline-flex;border:1px solid #D6DEE8;border-radius:10px;overflow:hidden;background:#fff}
+.seg button{border:0;background:#fff;height:38px;padding:0 16px;font-size:14px;font-weight:600;color:#344054}
+.seg button.on{background:#E8F1FE;color:#1E5BB8}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.card{background:#fff;border:1px solid #E3EAF2;border-radius:14px;overflow:hidden}
+.card h3{margin:0;padding:12px 16px;font-size:15px;border-bottom:1px solid #EEF2F7;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:760px}
+th{font-size:12px;letter-spacing:.04em;color:#475467;text-align:left;padding:10px 12px;background:#F8FAFC;border-bottom:1px solid #E3EAF2;white-space:nowrap}
+th.today{background:#E8F1FE;color:#1E5BB8}
+td{padding:8px 10px;border-bottom:1px solid #EEF2F7;vertical-align:top}
+tr:last-child td{border-bottom:0}
+.who{display:flex;flex-direction:column;gap:2px;min-width:150px}
+.cell{width:100%;text-align:left;border-radius:10px;border:1px solid #E3EAF2;padding:8px 10px;background:#fff;display:flex;flex-direction:column;gap:2px;min-height:58px;font-size:13px}
+.cell b{font-size:13px}
+.cM{background:#ECFDF3;border-color:#ABEFC6;color:#067647}
+.cE{background:#EFF6FF;border-color:#B2CCFF;color:#1849A9}
+.cO{background:#F2F4F7;border-color:#E4E7EC;color:#667085}
+.cL{background:#FFF4D6;border-color:#F79009;color:#93370D}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;padding:10px}
+.dcol{border:1px solid #E3EAF2;border-radius:12px;background:#fff;display:flex;flex-direction:column;min-height:120px}
+.dcol.today{border-color:#1E6CDB}
+.dh{padding:8px 10px;font-size:12px;font-weight:700;letter-spacing:.04em;color:#475467;background:#F8FAFC;border-radius:12px 12px 0 0;border-bottom:1px solid #EEF2F7}
+.dcol.today .dh{background:#E8F1FE;color:#1E5BB8}
+.dl{padding:8px;display:flex;flex-direction:column;gap:6px}
+.ev{text-align:left;border:1px solid #E3EAF2;border-left:4px solid #98A2B3;border-radius:10px;background:#fff;padding:6px 8px;display:flex;flex-direction:column;gap:1px;font-size:12.5px;width:100%}
+.ev b{font-size:13px}
+.t-Family{border-left-color:#1E6CDB}.t-Ward{border-left-color:#12B76A}.t-Staff{border-left-color:#7A5AF8}.t-MHRB{border-left-color:#F79009}.t-VIP{border-left-color:#E5484D}.t-Other{border-left-color:#98A2B3}
+.ev.clash{background:#FEF3F2;border-color:#FDA29B}
+.ev.done{opacity:.6}.ev.cancelled{opacity:.5;text-decoration:line-through}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;background:#F2F4F7;color:#475467}
+.tag.red{background:#FEF3F2;color:#B42318}.tag.amb{background:#FFF4D6;color:#93370D}.tag.grn{background:#ECFDF3;color:#067647}
+.alert{background:#FFF4D6;border:1px solid #F79009;border-radius:12px;padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.alert.red{background:#FEF3F2;border-color:#FDA29B}
+.mg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:10px}
+.mh{font-size:12px;font-weight:700;color:#475467;text-align:center;padding:4px}
+.md{min-height:92px;border:1px solid #E3EAF2;border-radius:10px;background:#fff;text-align:left;padding:6px;display:flex;flex-direction:column;gap:3px;font-size:11.5px}
+.md.out{background:#F8FAFC;color:#98A2B3}
+.md.today{border-color:#1E6CDB;box-shadow:0 0 0 1px #1E6CDB}
+.md b{font-size:13px}
+.bar1{border-radius:6px;padding:1px 6px;background:#EFF6FF;color:#1849A9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar1.clash{background:#FEF3F2;color:#B42318}
+.scrim{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:50;display:flex;justify-content:flex-end}
+.drawer{width:520px;max-width:100%;height:100%;overflow:auto;background:#fff;display:flex;flex-direction:column}
+.drawer .hd{padding:14px 20px;border-bottom:1px solid #E3EAF2;display:flex;justify-content:space-between;align-items:center}
+.drawer .bd{padding:16px 20px;display:flex;flex-direction:column;gap:12px;flex:1}
+.drawer .ft{padding:14px 20px;border-top:1px solid #E3EAF2;display:flex;justify-content:flex-end;gap:8px}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+label.f select,label.f input{font-weight:400}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:#101828;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:90;max-width:90%}
+html.embed body{background:transparent}
+.key{display:flex;flex-wrap:wrap;gap:10px 18px;font-size:13px;color:#475467;align-items:center}
+.key i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+@media(max-width:1023px){.days{grid-template-columns:repeat(2,minmax(0,1fr))}.drawer{width:100%}}
+@media(max-width:700px){.wrap{padding:12px 10px 56px}.days{grid-template-columns:1fr}.md{min-height:70px}.seg button{padding:0 12px}}
+</style>
+<script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');</script>
+</head><body>
+<div id="root"></div><div id="dr"></div>
+<script src="cal-core.js"></script>
+<script>
+const C=window.PXCal;
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const TCLS={'Family meeting':'Family','Ward visit or floor round':'Ward','Staff training':'Staff','MHRB or external visit':'MHRB','VIP visit':'VIP','Other':'Other'};
+const V={view:'week',date:C.todayISO(),who:'',type:'',floor:'',open:null};
+function monday(s){const d=C.parse(s);const k=(d.getDay()+6)%7;return C.addDays(s,-k);}
+function range(){
+  if(V.view==='day')return [V.date,V.date];
+  if(V.view==='week'){const m=monday(V.date);return [m,C.addDays(m,6)];}
+  const d=C.parse(V.date);const f=C.iso(new Date(d.getFullYear(),d.getMonth(),1));const l=C.iso(new Date(d.getFullYear(),d.getMonth()+1,0));return [monday(f),C.addDays(monday(l),6)];}
+function events(from,to){return C.allEvents(from,to).filter(e=>(!V.who||e.owner===V.who)&&(!V.type||e.type===V.type)&&(!V.floor||e.floor===V.floor||(e.floor==='Whole hospital'&&V.floor!=='')));}
+function members(){return C.TEAM.filter(t=>!V.who||t.id===V.who).filter(t=>!V.floor||V.floor==='Whole hospital'||t.floor===V.floor||V.floor==='Floor 1'&&t.id==='pr'||V.floor==='Floor 3'&&t.id==='pr');}
+function evHtml(e){
+  const c=C.eventClash(e);
+  return `<button class="ev t-${TCLS[e.type]||'Other'} ${c?'clash':''} ${e.status==='done'?'done':''} ${e.status==='cancelled'?'cancelled':''}" data-ev="${esc(e.id)}"><b>${esc(e.time)} · ${esc(e.type==='Family meeting'?'Family meeting':e.type)}</b>${e.patient?`<span>${esc(e.patient)}${e.room?' · '+esc(e.room):''}</span>`:`<span>${esc(e.floor||'')}</span>`}<span class="muted">${esc(C.nameOf(e.owner))}${e.status!=='planned'?' · '+e.status:''}</span>${c?`<span style="color:#B42318;font-weight:600">${esc(c.why)}</span>`:''}</button>`;}
+function alerts(){
+  const t=C.todayISO();const cl=C.clashes(t,C.addDays(t,14));
+  if(!cl.length)return `<div class="alert" style="background:#ECFDF3;border-color:#ABEFC6"><span><b>No one needs cover in the next two weeks.</b> Every meeting and grievance has an owner who is on.</span></div>`;
+  return cl.map((c,i)=>{const cv=c.cover.map(C.nameOf);return `<div class="alert red"><span><b>${esc(C.summary(c))}.</b> ${cv.length?esc(cv[0])+(cv.length>1?' (or '+esc(cv.slice(1).join(', '))+')':'')+' is on shift.':'No one else is on shift at that time.'}<span class="muted small"> ${c.events.map(e=>esc(e.patient||e.type)).concat(c.grv.map(g=>esc(g.id))).join(', ')}</span></span>${cv.length?`<button class="btn sm pri" data-cover="${i}">Give all to ${esc(cv[0])}</button>`:''}</div>`;}).join('');}
+function roster(from,n){
+  const days=[];for(let i=0;i<n;i++)days.push(C.addDays(from,i));
+  const t=C.todayISO();
+  return `<div class="card"><h3><span>Team roster</span><span class="muted small" style="font-weight:400">Tap a day to change a shift or add leave. Demo roster until greytHR is linked.</span></h3><div class="scroll"><table><thead><tr><th>TEAM MEMBER</th>${days.map(d=>`<th class="${d===t?'today':''}">${C.label(d).toUpperCase()}</th>`).join('')}</tr></thead><tbody>${members().map(m=>`<tr><td><div class="who"><b>${esc(m.name)}</b><span class="muted small">${esc(m.role)} · ${esc(m.floor)}</span></div></td>${days.map(d=>{const s=C.shift(m.id,d);
+    if(s.code==='L')return `<td><button class="cell cL" data-cell="${m.id}|${d}"><b>${esc(s.leave.type)}</b><span>Cover: ${esc(C.nameOf(s.leave.cover)||'not set')}</span></button></td>`;
+    const sh=C.SHIFTS[s.code];return `<td><button class="cell c${s.code}" data-cell="${m.id}|${d}"><b>${sh.n}</b><span>${sh.t||'&nbsp;'}</span>${s.code!=='O'?`<span>${esc(m.floor)}</span>`:''}</button></td>`;}).join('')}</tr>`).join('')}</tbody></table></div></div>`;}
+function weekEvents(from){
+  const t=C.todayISO();const ev=events(from,C.addDays(from,6));
+  return `<div class="card"><h3><span>Events and visits</span><span class="muted small" style="font-weight:400">${ev.length} this week</span></h3><div class="days">${[0,1,2,3,4,5,6].map(i=>{const d=C.addDays(from,i);const l=ev.filter(e=>e.date===d);return `<div class="dcol ${d===t?'today':''}"><div class="dh">${C.label(d).toUpperCase()}</div><div class="dl">${l.length?l.map(evHtml).join(''):'<span class="muted small">Nothing booked</span>'}</div></div>`;}).join('')}</div></div>`;}
+function dayView(){
+  const d=V.date;const ev=events(d,d);
+  return roster(d,1)+`<div class="card"><h3><span>Events and visits · ${C.label(d)}</span><span class="muted small" style="font-weight:400">${ev.length} planned</span></h3><div class="dl" style="padding:12px">${ev.length?ev.map(evHtml).join(''):'<span class="muted small">Nothing booked.</span>'}</div></div>`;}
+function monthView(){
+  const [from,to]=range();const t=C.todayISO();const cur=C.parse(V.date).getMonth();const ev=events(from,to);const clD={};C.clashes(from,to).forEach(c=>{clD[c.date]=1;});
+  const days=[];for(let d=from;d<=to;d=C.addDays(d,1))days.push(d);
+  return `<div class="card"><h3><span>${C.MN[cur]} ${C.parse(V.date).getFullYear()}</span><span class="muted small" style="font-weight:400">Tap a day to open it. Red = someone needs cover.</span></h3><div class="mg">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(x=>`<div class="mh">${x}</div>`).join('')}${days.map(d=>{const l=ev.filter(e=>e.date===d);const off=C.TEAM.filter(m=>C.shift(m.id,d).code==='L').map(m=>m.name);
+    return `<button class="md ${C.parse(d).getMonth()!==cur?'out':''} ${d===t?'today':''}" data-day="${d}"><b>${C.parse(d).getDate()}${clD[d]?' <span style="color:#B42318">●</span>':''}</b>${off.length?`<span class="tag amb">${esc(off.join(', '))} on leave</span>`:''}${l.slice(0,2).map(e=>`<span class="bar1 ${C.eventClash(e)?'clash':''}">${esc(e.time)} ${esc(e.patient||e.type)}</span>`).join('')}${l.length>2?`<span class="muted">+${l.length-2} more</span>`:''}</button>`;}).join('')}</div></div>`;}
+function title(){
+  const [f,t]=range();
+  if(V.view==='day')return C.label(V.date)+' '+C.parse(V.date).getFullYear();
+  if(V.view==='week')return C.label(f)+' to '+C.label(t);
+  return C.MN[C.parse(V.date).getMonth()]+' '+C.parse(V.date).getFullYear();}
+function render(){
+  const [from]=range();
+  const nav=`<div class="bar"><div class="seg">${['day','week','month'].map(v=>`<button data-v="${v}" class="${V.view===v?'on':''}">${v[0].toUpperCase()+v.slice(1)}</button>`).join('')}</div><button class="btn" data-nav="-1" aria-label="Earlier">‹</button><button class="btn" data-nav="0">Today</button><button class="btn" data-nav="1" aria-label="Later">›</button><b style="font-size:16px">${esc(title())}</b></div>`;
+  const filt=`<div class="bar"><label class="small muted">Team member <select data-f="who"><option value="">Everyone</option>${C.TEAM.map(t=>`<option value="${t.id}" ${V.who===t.id?'selected':''}>${esc(t.name)}</option>`).join('')}</select></label><label class="small muted">Event type <select data-f="type"><option value="">All types</option>${C.TYPES.map(t=>`<option ${V.type===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label><label class="small muted">Ward or floor <select data-f="floor"><option value="">All</option>${C.FLOORS.map(t=>`<option ${V.floor===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label></div>`;
+  const body=V.view==='day'?dayView():V.view==='week'?roster(from,7)+weekEvents(from):monthView();
+  document.getElementById('root').innerHTML=`<div class="wrap"><div class="head"><div><h2>Calendar</h2><div class="muted small">Who is working, who is on leave, and every meeting and visit, in one place. Family meetings come from each patient's stay, so nobody types them twice.</div></div><div class="bar"><button class="btn" data-add="leave">Add leave</button><button class="btn pri" data-add="event">+ Add event</button></div></div>${alerts()}${nav}${filt}${body}
+   <div class="key"><span><i style="background:#1E6CDB"></i>Family meeting</span><span><i style="background:#12B76A"></i>Ward visit or round</span><span><i style="background:#7A5AF8"></i>Staff training</span><span><i style="background:#F79009"></i>MHRB or external</span><span><i style="background:#E5484D"></i>VIP visit</span><span><i style="background:#FEF3F2;border:1px solid #FDA29B"></i>Owner on leave, off or outside shift</span></div></div>`;
+  drawer();}
+function toast(m){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t);}t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',3600);}
+const opts=(arr,cur,blank)=>(blank?`<option value="">${blank}</option>`:'')+arr.map(a=>`<option value="${esc(a[0])}" ${a[0]===cur?'selected':''}>${esc(a[1])}</option>`).join('');
+const people=()=>C.TEAM.map(t=>[t.id,t.name]);
+function shellDr(title,body,foot){return `<div class="scrim" data-close="bg"><div class="drawer" role="dialog" aria-label="${esc(title)}"><div class="hd"><b style="font-size:18px">${esc(title)}</b><button data-close="x" aria-label="Close" style="border:0;background:transparent;font-size:22px;color:#667085">×</button></div><div class="bd">${body}</div><div class="ft">${foot}</div></div></div>`;}
+function clashBox(e){const c=C.eventClash(Object.assign({status:'planned'},e));if(!c)return '<div class="small" style="color:#067647">'+esc(C.nameOf(e.owner))+' is on shift for this time.</div>';
+  const cv=C.coverFor(e).map(C.nameOf);return `<div class="alert red small"><span><b>${esc(c.why)}.</b> ${cv.length?esc(cv.join(' or '))+' is on at that time. Pick them as the owner.':'No one else is on shift at that time. Pick another day or time.'}</span></div>`;}
+function drawer(){
+  const el=document.getElementById('dr');const o=V.open;if(!o){el.innerHTML='';return;}
+  if(o.kind==='event'){
+    const e=o.e;const clash=clashBox(e);
+    el.innerHTML=shellDr('Add event',`<label class="f">Type<select data-ef="type">${C.TYPES.map(t=>`<option ${e.type===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label>
+     <div style="display:flex;gap:10px;flex-wrap:wrap"><label class="f" style="flex:1">Date<input class="inp" type="date" data-ef="date" value="${e.date}"></label><label class="f" style="flex:1">Time<input class="inp" type="time" data-ef="time" value="${e.time}"></label></div>
+     <label class="f">Owner<select data-ef="owner">${opts(people(),e.owner)}</select></label><div id="clashBox">${clash}</div>
+     <label class="f">Patient (optional)<select data-ef="patient">${opts(C.STAYS.map(s=>[s.p,s.p+' · '+s.room]),e.patient,'No patient')}</select></label>
+     <label class="f">Ward or floor<select data-ef="floor">${C.FLOORS.map(t=>`<option ${e.floor===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label>
+     <label class="f">Note<textarea class="inp" data-ef="note" placeholder="What is it about?">${esc(e.note)}</textarea></label>`,`<button class="btn" data-close="x">Cancel</button><button class="btn pri" data-saveev="1">Add to the calendar</button>`);return;}
+  if(o.kind==='leave'){
+    const l=o.l;
+    el.innerHTML=shellDr('Add leave',`<label class="f">Who<select data-lf="who">${opts(people(),l.who)}</select></label>
+     <div style="display:flex;gap:10px;flex-wrap:wrap"><label class="f" style="flex:1">From<input class="inp" type="date" data-lf="from" value="${l.from}"></label><label class="f" style="flex:1">To<input class="inp" type="date" data-lf="to" value="${l.to}"></label></div>
+     <label class="f">Type<select data-lf="type">${['Planned leave','Sick leave','Comp off'].map(t=>`<option ${l.type===t?'selected':''}>${t}</option>`).join('')}</select></label>
+     <label class="f">Who covers<select data-lf="cover">${opts(people().filter(p=>p[0]!==l.who),l.cover,'Not decided yet')}</select></label>
+     <div class="small muted">Leave is entered here until greytHR is linked. Anything this person owns on those days shows up as "needs cover" here and on Today.</div>`,`<button class="btn" data-close="x">Cancel</button><button class="btn pri" data-saveleave="1">Save leave</button>`);return;}
+  if(o.kind==='cell'){
+    const [id,d]=o.cell.split('|');const s=C.shift(id,d);
+    el.innerHTML=shellDr(C.nameOf(id)+' · '+C.label(d),`${s.code==='L'?`<div class="alert"><span><b>${esc(s.leave.type)}</b> · cover: ${esc(C.nameOf(s.leave.cover)||'not set')}</span><button class="btn sm" data-rmleave="${esc(s.leave.id)}">Remove this leave</button></div>`:`<div class="small muted">Change this day's shift, or add leave for it.</div><div class="bar">${['M','E','O'].map(c=>`<button class="btn ${s.code===c?'on':''}" data-setshift="${id}|${d}|${c}">${C.SHIFTS[c].n} ${C.SHIFTS[c].t?'· '+C.SHIFTS[c].t:''}</button>`).join('')}</div><button class="btn" data-leaveday="${id}|${d}">Mark as leave for this day</button>`}
+     <div class="small"><b>On this day</b></div>${events(d,d).filter(e=>e.owner===id).map(evHtml).join('')||'<span class="muted small">Nothing owned by '+esc(C.nameOf(id))+'.</span>'}`,`<button class="btn" data-close="x">Close</button>`);return;}
+  if(o.kind==='ev'){
+    const e=C.allEvents().find(x=>x.id===o.id);if(!e){el.innerHTML='';return;}const c=C.eventClash(e);
+    el.innerHTML=shellDr(e.type,`<div><b style="font-size:16px">${esc(e.patient||e.type)}</b><div class="muted small">${C.label(e.date)} · ${esc(e.time)} · ${esc(e.floor||'')}${e.room?' · Room '+esc(e.room):''}</div></div>
+     ${e.note?`<div>${esc(e.note)}</div>`:''}${e.auto?`<span class="tag">Made from: ${esc(e.auto)}</span>`:''}
+     ${c?clashBox(e):''}
+     <label class="f">Owner<select data-evowner="${esc(e.id)}">${opts(people(),e.owner)}</select></label>
+     <div class="small"><b>Status</b></div><div class="bar">${['planned','done','cancelled'].map(s=>`<button class="btn ${e.status===s?'on':''}" data-evst="${esc(e.id)}|${s}">${s[0].toUpperCase()+s.slice(1)}</button>`).join('')}</div>`,`<button class="btn" data-close="x">Close</button>`);return;}
+}
+function newEvent(){const t=V.date;return {type:'Family meeting',date:t,time:'11:00',owner:'ka',patient:'',floor:'Floor 2',note:''};}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-v],[data-nav],[data-add],[data-ev],[data-cell],[data-day],[data-close],[data-cover],[data-saveev],[data-saveleave],[data-rmleave],[data-setshift],[data-leaveday],[data-evst]');if(!t)return;const d=t.dataset;
+  if(d.close){if(d.close==='bg'&&e.target!==t)return;V.open=null;return render();}
+  if(d.v){V.view=d.v;return render();}
+  if(d.nav!==undefined){const n=+d.nav;if(n===0)V.date=C.todayISO();else if(V.view==='month'){const x=C.parse(V.date);V.date=C.iso(new Date(x.getFullYear(),x.getMonth()+n,1));}else V.date=C.addDays(V.date,n*(V.view==='week'?7:1));return render();}
+  if(d.add==='event'){V.open={kind:'event',e:newEvent()};return render();}
+  if(d.add==='leave'){V.open={kind:'leave',l:{who:'ka',from:V.date,to:V.date,type:'Planned leave',cover:'pr'}};return render();}
+  if(d.ev){V.open={kind:'ev',id:d.ev};return render();}
+  if(d.cell){V.open={kind:'cell',cell:d.cell};return render();}
+  if(d.day){V.date=d.day;V.view='day';return render();}
+  if(d.cover!==undefined){const t0=C.todayISO();const c=C.clashes(t0,C.addDays(t0,14))[+d.cover];if(!c)return;const to=c.cover[0];c.events.forEach(ev=>C.setOwner(ev.id,to));toast(c.events.length+' meeting'+(c.events.length===1?'':'s')+' given to '+C.nameOf(to)+'.'+(c.grv.length?' '+c.grv.length+' grievance owner changes go to the Grievances page when it is linked.':''));
+    /* grievance owners are shown here as a demo list; they move with the cover so the flag clears */
+    c.grv.forEach(g=>{const x=C.GRV.find(y=>y.id===g.id);if(x)x.who=to;});return render();}
+  if(d.saveev){const ev=V.open.e;if(!ev.date||!ev.time){toast('Pick a date and a time.');return;}const s=C.STAYS.find(x=>x.p===ev.patient);if(s&&!ev.floor)ev.floor=s.floor;const c=C.eventClash(Object.assign({status:'planned'},ev));C.addEvent(Object.assign({},ev,s?{room:s.room}:{}));V.open=null;V.date=ev.date;render();toast('Added to the calendar.'+(c?' '+c.why+', so it shows as needing cover.':''));return;}
+  if(d.saveleave){const l=V.open.l;if(!l.from||!l.to||l.to<l.from){toast('Check the dates.');return;}C.addLeave(Object.assign({},l));V.open=null;render();const n=C.clashes(l.from,l.to).filter(c=>c.who===l.who);toast('Leave saved.'+(n.length?' '+C.summary(n[0])+'.':' Nothing of theirs needs cover.'));return;}
+  if(d.rmleave){C.removeLeave(d.rmleave);V.open=null;return render();}
+  if(d.setshift){const [id,dd,c]=d.setshift.split('|');C.setShift(id,dd,c);V.open=null;return render();}
+  if(d.leaveday){const [id,dd]=d.leaveday.split('|');V.open={kind:'leave',l:{who:id,from:dd,to:dd,type:'Planned leave',cover:C.TEAM.find(x=>x.id!==id).id}};return render();}
+  if(d.evst){const [id,s]=d.evst.split('|');C.setStatus(id,s);return render();}
+});
+document.addEventListener('change',e=>{const t=e.target,d=t.dataset;
+  if(d.f){V[d.f]=t.value;return render();}
+  if(d.ef&&V.open&&V.open.kind==='event'){V.open.e[d.ef]=t.value;if(d.ef==='patient'){const s=C.STAYS.find(x=>x.p===t.value);if(s){V.open.e.floor=s.floor;V.open.e.owner=s.who;}}
+    if(d.ef==='patient'||d.ef==='floor'){return render();}const b=document.getElementById('clashBox');if(b)b.innerHTML=clashBox(V.open.e);return;}
+  if(d.lf&&V.open&&V.open.kind==='leave'){V.open.l[d.lf]=t.value;if(d.lf==='who'){return render();}return;}
+  if(d.evowner){C.setOwner(d.evowner,t.value);return render();}
+});
+document.addEventListener('input',e=>{const t=e.target,d=t.dataset;if(d.ef&&V.open&&V.open.kind==='event'&&(d.ef==='note')){V.open.e.note=t.value;}});
+window.PXCalChanged=()=>{if(!document.getElementById('dr').innerHTML)render();};
+render();
+</script></body></html>

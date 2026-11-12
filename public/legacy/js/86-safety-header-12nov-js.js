@@ -34,7 +34,7 @@
   #safeBar .sh-c.amber{background:#fffaeb;color:#b54708;border-color:#fedf89}#safeBar .sh-c.red{background:#fef3f2;color:#b42318;border-color:#fecdca}
   #safeBar .sh-s{font-weight:500;color:#667085;font-size:11.5px}#safeBar .sh-nr{cursor:pointer;background:#fff;border-color:#d6dee8}#safeBar .sh-b{height:34px}
   #view .dph .sf{display:none}
-  .lk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 14px 10px;font-size:12.5px;color:#667085}.lk-a{flex-basis:100%;border-left:3px solid #1e6cdb;background:#f5f9ff;padding:6px 10px;border-radius:6px;color:#344054}
+  .lk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 14px 10px;font-size:12.5px;color:#667085}.lk-late{font-weight:700;color:#93370D;background:#FFF4D6;border-radius:999px;padding:2px 10px}.lk-a{flex-basis:100%;border-left:3px solid #1e6cdb;background:#f5f9ff;padding:6px 10px;border-radius:6px;color:#344054}
   .sh-n2{display:inline-block;min-width:26px;text-align:center;font-weight:800;border-radius:8px;padding:2px 6px;background:#f2f4f7}.sh-n2.amber{background:#fffaeb;color:#b54708}.sh-n2.red{background:#fef3f2;color:#b42318}`;
   document.head.appendChild(css);
   function paint(){
@@ -81,12 +81,17 @@
   window.lkAdd=function(pid,key){
     V3.modal('Add an addendum','The signed note stays as it was. Your addendum is added under it with your name, the date and the time.',`<textarea class="input" id="lkT" rows="4" placeholder="Addendum"></textarea>`,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="lkSave('${pid}','${key}')">Add addendum</button>`);};
   window.lkSave=function(pid,key){const t=(($('lkT')||{}).value||'').trim();if(!t){toast('Write the addendum first');return;}const x=psyPx(pid);x.addenda=x.addenda||{};(x.addenda[key]=x.addenda[key]||[]).push({t,by:signer(),at:atNow()});closeModal();render();toast('Addendum added by '+signer());};
+  /* addenda are kept against the note itself (not its position in the list), so a new note never moves an addendum onto another note */
+  let lastItems=[];const __nl=noteList;noteList=function(id,items){lastItems=items||[];return __nl.apply(this,arguments);};
+  const hash=x=>{let h=0;for(let i=0;i<x.length;i++)h=(h*31+x.charCodeAt(i))|0;return (h>>>0).toString(36);};
+  window.lkKeyOf=n=>'dn-'+hash([n.type,n.d,n.my,n.by,(n.sum||'').slice(0,60)].join('|'));
   function lockPaint(v,pid){
     if(!/^#\/patient\/[^/]+\/daily/.test(location.hash||''))return;
-    v.querySelectorAll('.nitem').forEach((it,i)=>{if(it.querySelector('.lk'))return;
+    const its=[...v.querySelectorAll('.nitem')],same=its.length===lastItems.length;
+    its.forEach((it,i)=>{if(it.querySelector('.lk'))return;
       [...it.querySelectorAll('button')].forEach(b=>{if(/^(Edit|Delete|Change)/i.test(b.textContent.trim()))b.remove();});
-      const key='dn-'+i,ad=(psyPx(pid).addenda||{})[key]||[],f=document.createElement('div');f.className='lk';
-      f.innerHTML=`<span class="lk-t">Signed and locked. Only an addendum can be added.</span><button class="btn sm" onclick="lkAdd('${pid}','${key}')">Add addendum</button>${ad.map(a=>`<div class="lk-a"><b>Addendum</b> by ${esc(a.by)}, ${esc(a.at)}<div>${esc(a.t)}</div></div>`).join('')}`;it.appendChild(f);});
+      const n=same?lastItems[i]:null,key=n?lkKeyOf(n):'dn-'+i,ad=(psyPx(pid).addenda||{})[key]||[],f=document.createElement('div');f.className='lk';
+      f.innerHTML=`<span class="lk-t">Signed and locked. Only an addendum can be added.</span><button class="btn sm" onclick="lkAdd('${pid}','${key}')">Add addendum</button>${n&&n.late?`<span class="lk-late">Late entry: written ${esc(n.signed||'')} for ${esc((n.d||'')+' '+(n.my||''))}</span>`:''}${ad.map(a=>`<div class="lk-a"><b>Addendum</b> by ${esc(a.by)}, ${esc(a.at)}<div>${esc(a.t)}</div></div>`).join('')}`;it.appendChild(f);});
   }
   const __r=render;
   render=function(){const r=__r.apply(this,arguments);try{paint();const v=$('view'),pid=pidNow();if(v&&pid&&kind()==='psychiatrist')scoresPaint(v,pid);if(v&&pid&&kind())lockPaint(v,pid);}catch(e){}return r;};

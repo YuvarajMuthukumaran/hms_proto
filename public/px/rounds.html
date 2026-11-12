@@ -1,0 +1,502 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tulasi · Patient Experience · Rounds (proposed)</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>
+*{box-sizing:border-box}
+body{margin:0;background:#F6FBFF;font-family:Inter,system-ui,sans-serif;color:#0F172A;font-size:15px}
+a{color:#1E5BB8;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+.app{display:flex;min-height:100vh}
+.side{width:264px;flex-shrink:0;background:#fff;border-right:1px solid #E3EAF2;padding:18px 14px;display:flex;flex-direction:column;gap:2px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px;font-weight:700;font-size:16px}
+.brand i{width:34px;height:34px;border-radius:999px;background:#E8F1FE;display:flex;align-items:center;justify-content:center;color:#1E6CDB}
+.mm{font-size:12px;font-weight:600;letter-spacing:.05em;color:#667085;padding:0 10px 8px;border-bottom:1px solid #EEF2F6;margin-bottom:6px}
+.nv{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:#1F2937;font-weight:600}
+.grp{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#1E6CDB;color:#fff;font-weight:500;margin-top:4px}
+.sub{border:1px solid #E3EAF2;border-radius:14px;padding:6px;margin:6px 0;display:flex;flex-direction:column;gap:2px}
+.sub a{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-radius:12px;color:#344054;font-weight:500}
+.sub a.on{background:#E8F1FE;border:1.5px solid #1E6CDB;color:#1E5BB8;font-weight:600}
+.bd{font-size:12px;font-weight:600;background:#FFF4D6;color:#93370D;border-radius:999px;padding:1px 8px}
+.me{display:flex;align-items:center;gap:10px;border:1px solid #E3EAF2;border-radius:12px;padding:10px;margin-top:auto}
+.av{border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.col{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:#fff;border-bottom:1px solid #E3EAF2}
+.top h1{margin:0;font-size:23px;font-weight:600}
+main{padding:14px 16px 48px;display:flex;flex-direction:column;gap:14px}
+.bar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
+.inp{width:280px;min-height:40px;border:1px solid #D6DEE8;border-radius:10px;padding:0 12px;font:inherit;font-size:14px}
+.btn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:10px;border:1px solid #D6DEE8;background:#fff;color:#0F172A;font-size:14px;font-weight:600}
+.btn.pri{background:#1E6CDB;border-color:#1E6CDB;color:#fff}
+.brief{background:#F2F7FF;border:1px solid #D5E4FB;border-radius:14px;padding:14px 16px}
+.brief ul{margin:8px 0 0 38px;padding-left:16px;font-size:14px;line-height:1.5;color:#1F2937}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:999px;background:#fff;border:1px solid #E3EAF2;color:#344054;font-size:13px;font-weight:600}
+.tw{overflow-x:auto}
+table{width:100%;min-width:1080px;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:0 16px 6px;font-size:11px;font-weight:700;letter-spacing:.05em;color:#5B6475}
+td{padding:14px 16px;background:#fff;border-bottom:1px solid #E3EAF2;vertical-align:top}
+.tag{font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;background:#F2F4F7;border:1px solid #E4E7EC;color:#475467}
+.dot{width:8px;height:8px;border-radius:99px;display:inline-block;flex-shrink:0;margin-top:7px}
+.mini{height:28px;padding:0 10px;border-radius:8px;border:1px solid #D6DEE8;background:#fff;color:#1E5BB8;font-size:12px;font-weight:600}
+.take{height:38px;padding:0 12px;border-radius:10px;border:1px solid #D6DEE8;background:#fff;font-size:13px;font-weight:600;white-space:nowrap}
+.eye{width:38px;height:38px;border:0;border-radius:10px;background:transparent;color:#475467;display:flex;align-items:center;justify-content:center}
+.menu{position:absolute;top:44px;right:0;z-index:5;width:260px;background:#fff;border:1px solid #E3EAF2;border-radius:12px;box-shadow:0 10px 24px rgba(15,23,42,.12);padding:6px;display:flex;flex-direction:column}
+.menu button{text-align:left;border:0;background:transparent;border-radius:8px;padding:9px 10px}
+.menu button:hover{background:#F2F7FF}
+.key{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;font-size:12px;color:#475467}
+.key span{display:flex;align-items:center;gap:6px}.key .dot{margin:0}
+.rev{position:fixed;right:16px;bottom:16px;z-index:20;display:flex;gap:4px;background:#0F172A;padding:5px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.2)}
+.rev button{border:0;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;background:transparent;color:#CBD5E1}
+.rev button.on{background:#fff;color:#0F172A}
+.doc{max-width:1200px;margin:0 auto;padding:32px 24px 90px}
+.doc h2{margin:6px 0 6px;font-size:26px}
+.doc p{color:#475569;margin:0 0 18px;line-height:1.5}
+.gt{display:grid;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;background:#fff}
+.gt>div{display:grid;border-top:1px solid #E2E8F0;font-size:14px;line-height:1.45}
+.gt>div:first-child{border-top:0;background:#F1F5F9;font-size:12px;font-weight:700;letter-spacing:.05em;color:#334155}
+.gt span{padding:12px 16px}
+.gt .hl{background:#F5F9FF}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;color:#1D4ED8}
+@media(max-width:900px){.side{display:none}}
+
+.fl{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.bnav{display:none}
+.sm{display:none}
+@media (max-width:1100px){.rg{grid-template-columns:repeat(4,1fr)!important}}
+@media (max-width:700px){.side{display:none!important}.top{padding:12px 14px!important}.top h1{font-size:20px}.top .nm,.top .eye{display:none}.lg{display:none}.sm{display:inline}main{padding:12px 12px 90px!important}.rg{grid-template-columns:repeat(2,1fr)!important}.isr{flex-wrap:wrap}.isr span{width:auto!important;text-align:left!important}.bnav{display:flex;position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #E3EAF2;z-index:15;justify-content:space-around;padding:8px 0 12px}.bnav a{font-size:12px;color:#475467;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px}.bnav a.on{color:#1E6CDB}.rev{bottom:76px}#dr [role=dialog]{width:100%!important}.drbtn{height:56px!important}}
+body.phone #root{max-width:390px;margin:0 auto;border-left:1px solid #D0D5DD;border-right:1px solid #D0D5DD;min-height:100vh}
+body.phone #dr>div{left:calc(50% - 195px)!important;right:calc(50% - 195px)!important}
+body.phone #dr [role=dialog]{width:100%!important}
+body.phone{background:#E4E7EC}
+body.phone .side{display:none!important} body.phone .top{padding:12px 14px!important} body.phone .top h1{font-size:20px} body.phone .top .nm,.top .eye{display:none} body.phone .lg{display:none} body.phone .sm{display:inline} body.phone main{padding:12px 12px 90px!important} body.phone .rg{grid-template-columns:repeat(2,1fr)!important} body.phone .isr{flex-wrap:wrap} body.phone .isr span{width:auto!important;text-align:left!important} body.phone .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #E3EAF2;z-index:15;justify-content:space-around;padding:8px 0 12px} body.phone .bnav a{font-size:12px;color:#475467;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px} body.phone .bnav a.on{color:#1E6CDB} body.phone .rev{bottom:76px} body.phone #dr [role=dialog]{width:100%!important} body.phone .drbtn{height:56px!important}
+</style><style id="embed-css">html.embed .side,html.embed .rev,html.embed .top,html.embed .bnav{display:none!important}html.embed body{background:transparent}html.embed .app{min-height:0}html.embed main{padding:10px 4px 40px}html.embed .col{width:100%}</style>
+<script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');</script>
+</head><body><div id="root"></div><div id="cm"></div><div id="dr"></div>
+<div class="rev" role="tablist" aria-label="Review views">
+  <button data-v="app" class="on">Rounds (proposed)</button>
+  <button data-v="phone">Phone view</button>
+  <button data-v="cmp">Live vs proposed</button>
+</div>
+<script>
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const I={heart:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',cog:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>',bell:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>'};
+const ROT=['General room area','Patient bed and bedding','Bathroom area','Patient-specific items','Safety and hygiene','Final checks'];
+const DAY=Math.floor(Date.now()/86400000)%6;
+/* safety checks every day, then today's section from checklist v1 */
+/* Room issues: safety every day + checklist v1 sections + maintenance. [label, owner, safety] */
+const RG=[
+ ['Safety (checked every day)',[['Something a patient could tie or hang from','Chandraji and maintenance',1],['Mirror is not the safe, unbreakable kind','Chandraji and maintenance',1],['Bathroom door cannot be opened from outside','Chandraji and maintenance',1],['Sharp or broken item in the room','Chandraji and nursing in-charge',1],['Window or grill loose','Chandraji and maintenance',1],['Cleaning chemicals or medicines left in the room','Chandraji and nursing in-charge',1]]],
+ ['General room area',[['Furniture dusty or not wiped','Housekeeping supervisor'],['Cobwebs in corners or ceiling','Housekeeping supervisor'],['Floor not mopped or stained','Housekeeping supervisor'],['Walls marked or stained','Housekeeping supervisor'],['Switches or sockets dirty','Housekeeping supervisor'],['AC vents dusty','Maintenance (electrical)']]],
+ ['Patient bed and bedding',[['Bed frame not clean','Housekeeping supervisor'],['Mattress stained, smelly or damaged','Housekeeping supervisor'],['Linen not changed or stained','Housekeeping supervisor']]],
+ ['Bathroom area',[['Toilet bowl, seat or flush not clean','Housekeeping supervisor'],['Leak or flush not working','Maintenance (plumbing)'],['Sink not draining or water pooling','Maintenance (plumbing)'],['Shower or glass partition not clean, mould','Housekeeping supervisor'],['Floor not mopped or window glass stained','Housekeeping supervisor'],['Toilet paper, soap or toiletries not restocked','Housekeeping supervisor']]],
+ ['Patient-specific items',[['Belongings untidy or not stored','Nursing in-charge'],['Shared equipment (commode, walker) not disinfected','Housekeeping supervisor']]],
+ ['Safety and hygiene',[['Bin not emptied','Housekeeping supervisor'],['Medical waste not disposed as per protocol','Housekeeping supervisor'],['Hand sanitiser empty or not working','Housekeeping supervisor'],['Spill not cleaned','Housekeeping supervisor'],['Bad smell in the room','Housekeeping supervisor']]],
+ ['Final checks and repairs',[['Electrical: light, fan, AC or socket','Maintenance (electrical)'],['Plumbing: tap, pipe or drain','Maintenance (plumbing)'],['Civil: wall, door, window or ceiling','Maintenance (civil)'],['TV, set top box or remote','Maintenance'],['Furniture missing or blocking the way','Housekeeping supervisor'],['Something else in the room','Housekeeping supervisor']]]
+];
+const CG=[
+ ['Notice board (NABH display)',[['Patient rights not displayed','You (patient experience)'],['Complaint contact or grievance number not displayed','You (patient experience)'],['Room tariff not displayed','You (patient experience)'],['Notices out of date or torn','You (patient experience)']]],
+ ['Dining area',[['Not clean, food left out','Housekeeping supervisor'],['Tables or chairs damaged','Maintenance (civil)'],['Drinking water not available','Kitchen supervisor'],['Menu for the day not displayed','Kitchen supervisor']]],
+ ['Activity room',[['Not clean','Housekeeping supervisor'],['Games, books or TV missing or broken','You (patient experience)'],['Locked when it should be open','Nursing in-charge']]],
+ ['Nurse station and corridor',[['Fire exit blocked','Chandraji and maintenance',1],['Wet floor without a warning sign','Chandraji and housekeeping',1],['Corridor not clean or cluttered','Housekeeping supervisor'],['Lights not working','Maintenance (electrical)']]]
+];
+const SAFE=RG[0][1];const TODAY=[...RG,...CG].flatMap(g=>g[1]);
+/* Patient concerns: [topic, owner, grievance category, [specific options], safety options] */
+const AB=[
+ ['Food','Kitchen supervisor','Food and dietary',['Food served cold','Not the diet I asked for','Not enough, still hungry','Meal times','Taste or quality','Drinking water']],
+ ['Room','Housekeeping supervisor','Room and housekeeping',['Not clean','Bathroom','Too noisy at night','Too hot or cold, AC','Bed or bedding','Light, fan or TV not working']],
+ ['Sleep','Nursing in-charge','Other',['Cannot sleep','Disturbed by roommate','Lights on at night','Woken too early']],
+ ['Family and calls','Psychology team lead','Family updates',['Wants to call family','Wants a visit','Family not getting updates','Does not want a certain visitor']],
+ ['Treatment','Treating psychiatrist','Doctor communication',['Wants to talk to the doctor','Medicine side effects','Therapy sessions missed','Wants to know when they go home','Wants a second opinion']],
+ ['Staff','Nursing in-charge','Other',['Spoke rudely','Ignored when asked for help','Rough handling or force','Felt unsafe with a staff member'],['Rough handling or force','Felt unsafe with a staff member']],
+ ['Other patients','Nursing in-charge','Other',['Argument with roommate','Wants a room change','Felt threatened by another patient'],['Felt threatened by another patient']],
+ ['Belongings and laundry','Housekeeping supervisor','Laundry',['Item missing','Laundry not returned','Needs things from home','Wants phone or money back']],
+ ['Activities','You','Other',['Nothing to do, bored','Wants outdoor time','Wants yoga, gym or games','Wants TV or newspaper']],
+ ['Leaving or rights','Treating psychiatrist and Chandraji','Rights',['Wants to leave now','Does not know why they are here','Wants to make a formal complaint','Billing question']],
+ ['Something else','You','Other',['Something else']]
+];
+const ABOUT=AB.map(x=>[x[0],x[1]]);
+const mk=(room,pts,st,extra)=>Object.assign({room,pts:pts.map(n=>typeof n==='string'?{n}:n),st},extra||{});
+const FLOORS={
+ 'Floor 2':[mk('201',['Vikram Bhatia'],'done'),mk('202',['Suresh Rao','Ajay Menon'],'done'),mk('203',['Manoj Pillai'],'done'),mk('204',['Harish Gupta','Pradeep Iyer'],'done'),mk('205',[],'done'),mk('206',['Nitin Arora','Anil Kapoor'],'issue'),
+  mk('207',[{n:'Ajay Mehra'}],'todo'),mk('208',[{n:'Kabir Saxena',last:5}],'todo'),mk('209',[],'todo'),mk('210',[{n:'Arjun Mehta',last:4,rec:'Vitals not charted since 8 am'}],'todo'),mk('211',[{n:'Varun Rao'}],'todo'),mk('212',[{n:'Sanjay Nair'}],'todo'),
+  mk('213 A',[{n:'Neel Bose',safety:1},{n:'Sameer Das',rec:'No session logged yesterday'}],'todo'),mk('214',[{n:'Deepak Joshi'}],'todo'),mk('215',[{n:'Tarun Sethi',last:6}],'todo'),mk('216',[],'todo')],
+ 'Floor 1':['101','102','103','104','105','106','107','108','109','110'].map((r,i)=>mk(r,i%4===3?[]:['Patient '+r],'todo')),
+ 'Floor 3':['301','302','303','304','305','306','307','308','309','310','311','312'].map((r,i)=>mk(r,i%5===4?[]:['Patient '+r],'done'))
+};
+Object.keys(FLOORS).forEach(f=>FLOORS[f].push(mk('Common areas',[],f==='Floor 3'?'done':'todo',{common:1})));
+const ISS=[{room:'206',what:'Exhaust fan not working',team:'Maintenance (electrical)',due:'2 h 10 m left',st:'open'}];
+const S={view:'app',fl:'Floor 2',cur:null,r:{},seq:150,showIss:false};
+function set(p){Object.assign(S,p);render();}
+const rooms=()=>FLOORS[S.fl];
+function shell(inner){const sub=(t,b,on)=>`<a href="#" class="${on?'on':''}">${t}${b?` <span class="bd">${b}</span>`:''}</a>`;
+ return `<div class="app"><nav class="side" aria-label="Main menu"><div class="brand"><i>${I.heart}</i>Tulasi Healthcare</div><div class="mm">MAIN MENU</div><a href="#" class="grp">${I.heart}Patient experience</a><div class="sub">${sub('Today')}${sub('Patients')}${sub('Rounds',null,1)}${sub('Grievances')}${sub('Staff training')}${sub('Reports')}</div><a href="#" class="nv">${I.cog}Setting</a>
+ <div class="me"><div class="av" style="width:36px;height:36px;background:#EDE9FE;color:#5B21B6;font-size:13px">PK</div><div style="display:flex;flex-direction:column"><b style="font-size:14px;font-weight:600">Prabh</b><span style="font-size:12px;color:#667085">Patient experience · Gurgaon</span></div></div></nav>
+ <div class="col"><header class="top"><h1>Rounds</h1><div style="display:flex;align-items:center;gap:14px"><button class="btn pri" data-call="pick" style="height:38px">+ <span class="lg">Log a call or concern</span><span class="sm">Log</span></button><button class="eye" aria-label="Notifications">${I.bell}</button><div style="display:flex;align-items:center;gap:8px"><div class="av" style="width:32px;height:32px;background:#1E6CDB;color:#fff;font-size:12px">PK</div><span class="nm" style="font-size:14px;font-weight:500">Patient Experience</span></div></div></header>${inner}</div></div><nav class="bnav" aria-label="Menu">${['Today','Patients','Rounds','Grievances','More'].map(t=>`<a href="#" class="${t==='Rounds'?'on':''}">${t}</a>`).join('')}</nav>`;}
+function box(r){const c={done:['#ECFDF3','#ABEFC6','#067647','Done'],issue:['#FFF4D6','#F79009','#93370D','Issue sent'],todo:['#fff','#E3EAF2','#475467','']}[r.st];
+ const flags=r.pts.flatMap(p=>[p.safety?'Safety concern open':null,p.last>=4?`${p.n.split(' ')[0]}: not spoken to in ${p.last} days`:null,p.rec?`${p.n.split(' ')[0]}: ${p.rec.toLowerCase()}`:null]).filter(Boolean);
+ return `<button data-room="${r.room}" style="text-align:left;background:${c[0]};border:1px solid ${c[1]};border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px;min-height:96px">
+  <div style="display:flex;justify-content:space-between;width:100%"><b style="font-size:16px">${r.room}</b><span style="font-size:12px;font-weight:600;color:${c[2]}">${c[3]}</span></div>
+  <span style="font-size:13px;color:${r.pts.length||r.common?'#1F2937':'#98A2B3'}">${r.common?'Notice board, dining, activity room, nurse station':r.pts.length?r.pts.map(p=>esc(p.n)).join(', '):'Vacant'}</span>
+  ${r.st==='todo'?flags.map(f=>`<span style="font-size:12px;font-weight:600;color:${/Safety/.test(f)?'#B42318':'#B54708'}">${esc(f)}</span>`).join(''):''}</button>`;}
+function main(){const rr=rooms();const done=rr.filter(r=>r.st!=='todo').length;const next=rr.find(r=>r.st==='todo');const open=ISS.filter(i=>i.st==='open');
+ return `<main>
+  <div class="bar"><div class="chips">${Object.keys(FLOORS).map(f=>{const x=FLOORS[f];return `<button class="chip ${S.fl===f?'on':''}" data-fl="${f}">${f} · ${x.filter(r=>r.st!=='todo').length}/${x.length}</button>`}).join('')}</div>
+   ${next?`<button class="btn pri" data-room="${next.room}">${done?'Continue':'Start'} at room ${next.room}</button>`:'<b style="color:#067647">Floor done for today</b>'}</div>
+  <div style="display:flex;align-items:center;gap:14px"><div style="flex:1;height:8px;background:#EEF2F7;border-radius:4px"><div style="width:${Math.round(done*100/rr.length)}%;height:100%;background:#12B76A;border-radius:4px"></div></div><span style="font-size:13px;color:#344054;white-space:nowrap"><b>${done} of ${rr.length}</b> rooms · today's check: <b>${ROT[DAY]}</b></span></div>
+  <div class="rg" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px">${rr.map(box).join('')}</div>
+  ${open.length?`<div style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;overflow:hidden"><button data-iss="1" style="width:100%;border:0;background:#fff;text-align:left;padding:12px 16px;font-size:14px;display:flex;justify-content:space-between"><span><b>${open.length} room issue${open.length>1?'s':''} open</b> <span style="color:#667085">· the team fixing it updates it, nothing to do</span></span><span style="color:#1E6CDB;font-weight:600">${S.showIss?'Hide':'Show'}</span></button>${S.showIss?open.map(i=>`<div class="isr" style="display:flex;gap:6px 16px;padding:10px 16px;border-top:1px solid #EEF2F7;font-size:14px"><b style="width:60px">${i.room==='Common areas'?'Common':i.room}</b><span style="flex:1">${esc(i.what)}</span><span style="width:220px;color:#475467">${esc(i.team)}</span><span style="width:140px;text-align:right;color:${i.safety?'#B42318':'#B54708'};font-weight:600">${esc(i.due)}</span></div>`).join(''):''}</div>`:''}
+  <div class="key"><span style="color:#667085">Walk the rooms in order. Each room is one pop-up: a word with each patient, then the room. Record gaps (vitals, session log) are picked up from the HMS and shown on the room, nothing to tick.</span></div>
+ </main>`;}
+const chip=(k,v,cur,red)=>{const on=cur===v;return `<button data-k="${esc(k)}" data-val="${esc(v)}" style="height:36px;padding:0 14px;border-radius:999px;border:1px solid ${on?(red?'#B42318':'#1E6CDB'):'#D6DEE8'};background:${on?(red?'#FEF3F2':'#E8F1FE'):'#fff'};color:${on?(red?'#B42318':'#1E5BB8'):'#344054'};font-size:14px;font-weight:600">${esc(v)}</button>`;};
+function drawer(){const el=document.getElementById('dr');if(!S.cur){el.innerHTML='';return;}
+ const rr=rooms();const i=rr.findIndex(x=>x.room===S.cur);const r=rr[i];const R=S.r;
+ const pts=r.pts.map(p=>{const a=R['p:'+p.n]||'';const ab=R['a:'+p.n]||'';const bad=a==='Not good'||a==='Wants to tell us something';return `<div style="border:1px solid #E3EAF2;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px">
+   <div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(p.n)}</b>${p.rec?`<span style="font-size:12px;color:#B54708;font-weight:600">${esc(p.rec)} · sent to ${/Vitals/.test(p.rec)?'nursing in-charge':'psychology team lead'}</span>`:''}</div>
+   <span style="font-size:13px;color:#475467">"How are you doing here? Anything you need?"</span>
+   <div style="display:flex;flex-wrap:wrap;gap:6px">${['All good','Not good','Wants to tell us something','Not available'].map(v=>chip('p:'+p.n,v,a)).join('')}</div>
+   ${bad?(()=>{const T=AB.find(x=>x[0]===ab);const sp=R['s:'+p.n]||'';const isSafe=T&&T[4]&&T[4].includes(sp);const owner=!T?'':sp==='Billing question'?'Billing desk':sp==='Wants to make a formal complaint'?'Kanika and Chandraji':T[1];return `<div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:600">What is it about?</span><div style="display:flex;flex-wrap:wrap;gap:6px">${AB.map(x=>chip('a:'+p.n,x[0],ab)).join('')}</div>
+    ${T&&T[0]!=='Something else'?`<span style="font-size:13px;font-weight:600">${esc(T[0])}: what exactly?</span><div style="display:flex;flex-wrap:wrap;gap:6px">${T[3].map(v=>chip('s:'+p.n,v,sp,T[4]&&T[4].includes(v))).join('')}</div>`:''}
+    <textarea class="inp" data-w="${esc(p.n)}" placeholder="In their words" style="width:100%;min-height:56px;padding:8px 12px">${esc(R['w:'+p.n]||'')}</textarea>
+    ${T&&(sp||T[0]==='Something else')?`<div style="font-size:12px;padding:8px 10px;border-radius:10px;background:${isSafe||sp==='Wants to leave now'?'#FEF3F2':'#F8FAFC'};color:${isSafe||sp==='Wants to leave now'?'#B42318':'#475467'}">${isSafe?'Safety grievance: Chandraji and the treating doctor are told now. Stay with the patient or make sure a nurse does.':sp==='Wants to leave now'?'Urgent: treating psychiatrist and Chandraji told now (leaving against advice).':T[0]==='Sleep'?'Sent to the nursing in-charge as a note, not a grievance.':T[0]==='Activities'?'Saved as a request for you. Not a grievance.':'Logged as a grievance to '+esc(owner)+', 6-hour clock. Shows in their record.'}</div>`:''}</div>`})():''}
+   ${a==='Not available'?`<span style="font-size:12px;color:#667085">Asleep, in a session or not up to it. Comes up again next round.</span>`:''}</div>`}).join('');
+ const roomBad=R.room==='bad';
+ 
+ el.innerHTML=`<div data-close="bg" style="position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:40;display:flex;justify-content:flex-end"><div role="dialog" aria-label="Room ${r.room}" style="width:560px;max-width:100%;height:100%;overflow:auto;background:#fff;display:flex;flex-direction:column">
+  <div style="padding:14px 20px;border-bottom:1px solid #E3EAF2;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;font-weight:700;letter-spacing:.05em;color:#1D4ED8">${S.fl.toUpperCase()} · ROOM ${i+1} OF ${rr.length}</div><b style="font-size:20px">${r.common?'Common areas':'Room '+r.room}</b></div><button data-close="x" aria-label="Close" style="border:0;background:transparent;font-size:22px;color:#667085">×</button></div>
+  <div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px;flex:1">
+   ${r.common?'<span style="color:#667085">Once a day per floor. Notice board, dining area, activity room, nurse station and corridor.</span>':r.pts.length?`<b style="font-size:15px">Patients</b>${pts}`:'<span style="color:#667085">Vacant room. Check the room only.</span>'}
+   <b style="font-size:15px">${r.common?'Areas':'Room'}</b>
+   <div style="display:flex;gap:8px"><button class="drbtn" data-room-ok="1" style="flex:1;height:48px;border-radius:12px;border:1px solid ${R.room==='ok'?'#12B76A':'#D6DEE8'};background:${R.room==='ok'?'#ECFDF3':'#fff'};color:${R.room==='ok'?'#067647':'#344054'};font-weight:700;font-size:15px">${r.common?'All fine':'Room is fine'}</button><button class="drbtn" data-room-bad="1" style="flex:1;height:48px;border-radius:12px;border:1px solid ${roomBad?'#F79009':'#D6DEE8'};background:${roomBad?'#FFF4D6':'#fff'};color:${roomBad?'#93370D':'#344054'};font-weight:700;font-size:15px">Something is wrong</button></div>
+   <span style="font-size:12px;color:#667085">${r.common?'"All fine" means the notice board shows patient rights, the complaint contact and the room tariff, and the dining area, activity room, nurse station and corridor are clean, safe and open.':'"Room is fine" means the 3 safety checks (nothing to tie or hang from, safe mirror, door opens from outside) and today\'s '+ROT[DAY].toLowerCase()+' check are OK.'}</span>
+   ${roomBad?`<span style="font-size:12px;color:#667085">${r.common?'Tap everything that is wrong.':'Tap everything that is wrong. Safety and today\'s section are open; tap another section to open it.'}</span>${(r.common?CG:RG).map((g,gi)=>{const open=r.common||gi===0||g[0]===ROT[DAY]||R['g:'+gi];const n=g[1].filter(x=>R['i:'+x[0]]).length;return `<div style="border:1px solid ${gi===0&&!r.common?'#FDA29B':'#E3EAF2'};border-radius:12px;overflow:hidden"><button data-grp="${gi}" style="width:100%;border:0;background:${gi===0&&!r.common?'#FEF3F2':'#F8FAFC'};text-align:left;padding:10px 12px;display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:${gi===0&&!r.common?'#B42318':'#0F172A'}"><span>${esc(g[0])}${g[0]===ROT[DAY]?' · today':''}</span><span style="font-weight:600;color:#667085">${n?n+' picked':''} ${open?'▴':'▾'}</span></button>${open?`<div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px">${g[1].map(x=>{const on=!!R['i:'+x[0]];return `<button data-item="${esc(x[0])}" style="min-height:36px;padding:6px 12px;border-radius:999px;border:1px solid ${on?(x[2]?'#B42318':'#F79009'):(x[2]?'#FDA29B':'#D6DEE8')};background:${on?(x[2]?'#FEF3F2':'#FFF4D6'):'#fff'};color:${x[2]?'#B42318':on?'#93370D':'#344054'};font-size:13px;font-weight:600;text-align:left">${esc(x[0])}</button>`}).join('')}</div>`:''}</div>`}).join('')}<span style="font-size:12px;color:#667085">Each one goes to the team that fixes it, 4 hours. Safety goes to Chandraji now. Add a photo from the camera.</span>`:''}
+  </div>
+  <div style="padding:14px 20px;border-top:1px solid #E3EAF2;display:flex;justify-content:space-between;align-items:center;gap:8px">${i>0?`<button class="btn" data-go="${i-1}">Back</button>`:'<span></span>'}<button class="btn pri" data-savenext="${i}">${i<rr.length-1?'Save, next room':'Save, finish floor'}</button></div>
+ </div></div>`;}
+const CMP=[
+ ['Flow','Tap any room box, check, close, find the next box.','"Start at room 207" walks the floor in order. Each pop-up ends with "Save, next room".'],
+ ['Room checks','9 OK / Issue taps per room.','One tap: "Room is fine" (covers the 3 safety checks and today\'s section of checklist v1). Only if "Something is wrong" does she pick from the full checklist v1, grouped by its 6 sections plus safety and repairs. Safety and today\'s section open first.'],
+ ['Talking to patients','Not in the HMS.','One question: "How are you doing here? Anything you need?" with 4 answers. Only "Not good" or "Wants to tell us something" opens 11 topics (food, room, sleep, family and calls, treatment, staff, other patients, belongings, activities, leaving or rights, something else), then the exact issue. It goes to the right owner; force, feeling unsafe or wanting to leave are told to Chandraji now.'],
+ ['Record checks','Ticked by hand in End of day updates.','Not ticked at all. The HMS sees missing vitals or session logs and shows them on the room box, already sent to the nursing in-charge or psychology team lead.'],
+ ['Who to see first','Not shown.','Room boxes show what matters before she walks in: safety concern open, not spoken to in 4+ days, record gaps.'],
+ ['Issues','Not listed.','One folded line: issues are updated by the team fixing them.'],
+ ['Common areas','Notice board check sat in End of day updates.','One "Common areas" box per floor, once a day: notice board (patient rights, complaint contact, room tariff, as NABH expects), dining area, activity room, nurse station and corridor. Blocked fire exit or wet floor without a sign go to Chandraji now.'],
+ ['Device','Desktop only.','Built for a phone or tablet carried on the round: big buttons, two rooms per row on a phone, four on a tablet, menu at the bottom. Photo of an issue straight from the camera.']
+];
+function cmp(){return `<div class="doc"><div class="eyebrow">ROUNDS</div><h2>Live screen vs what we want</h2><p>Press "Start at room 207" and walk through a few rooms. "Phone view" shows it at phone size; it also fits a tablet.</p><div class="gt"><div style="grid-template-columns:170px 1fr 1.3fr"><span>AREA</span><span>LIVE NOW</span><span>PROPOSED</span></div>${CMP.map(r=>`<div style="grid-template-columns:170px 1fr 1.3fr"><span style="font-weight:600">${r[0]}</span><span style="color:#475569">${esc(r[1])}</span><span class="hl">${esc(r[2])}</span></div>`).join('')}</div></div>`;}
+function render(){document.getElementById('root').innerHTML=S.view==='cmp'?cmp():shell(main());drawer();document.querySelectorAll('.rev button').forEach(b=>{if(b.dataset.v!=='phone')b.classList.toggle('on',b.dataset.v===S.view)});}
+function save(i){const r=rooms()[i];const R=S.r;let g=0,sg=0;
+ const items=Object.keys(R).filter(k=>k.startsWith('i:')&&R[k]).map(k=>k.slice(2));
+ items.forEach(n=>{const x=TODAY.find(y=>y[0]===n);ISS.unshift({room:r.room,what:n,team:x[1],due:x[2]?'Chandraji told now':'4 h 0 m left',st:'open',safety:x[2]});});
+ r.pts.forEach(p=>{const ab=R['a:'+p.n];const sp=R['s:'+p.n];const T=AB.find(x=>x[0]===ab);if(ab&&ab!=='Sleep'&&ab!=='Activities'){g++;if(T&&T[4]&&T[4].includes(sp))sg++;}if(R['p:'+p.n]&&R['p:'+p.n]!=='Not available')p.last=0;});
+ r.st=items.length?'issue':'done';
+ const msg=[`${r.common?'Common areas':'Room '+r.room} saved.`];if(items.length)msg.push(`${items.length} issue${items.length>1?'s':''} sent.`);if(g)msg.push(`${g} grievance${g>1?'s':''} logged${sg?' (1 safety, Chandraji told)':''}.`);toast(msg.join(' '));S.seq+=g;}
+document.addEventListener('click',e=>{const t=e.target.closest('button,a,[data-close]');if(!t||t.closest('#cm'))return;if(t.tagName==='A'&&t.getAttribute('href')==='#')e.preventDefault();const d=t.dataset;
+ if(d.close){if(d.close==='bg'&&e.target!==t)return;return set({cur:null});}
+ if(d.v==='phone'){document.body.classList.toggle('phone');t.classList.toggle('on');return;}
+ if(d.v){document.body.classList.remove('phone');return set({view:d.v,cur:null});}
+ if(d.call){openCall(null);return;}
+ if(d.fl)return set({fl:d.fl});
+ if(d.iss)return set({showIss:!S.showIss});
+ if(d.room){S.r={};return set({cur:d.room});}
+ if(d.k){if(d.k.startsWith('a:'))delete S.r['s:'+d.k.slice(2)];S.r[d.k]=d.val;return drawer();}
+ if(d.grp!==undefined){S.r['g:'+d.grp]=!S.r['g:'+d.grp];return drawer();}
+ if(d.roomOk!==undefined){S.r.room='ok';Object.keys(S.r).forEach(k=>{if(k.startsWith('i:'))delete S.r[k];});return drawer();}
+ if(d.roomBad!==undefined){S.r.room='bad';return drawer();}
+ if(d.item){S.r['i:'+d.item]=!S.r['i:'+d.item];return drawer();}
+ if(d.go!==undefined){S.r={};S.cur=rooms()[+d.go].room;return render();}
+ if(d.savenext!==undefined){const i=+d.savenext;const r=rooms()[i];if(!S.r.room){toast('Tap "Room is fine" or "Something is wrong" first.');return;}const miss=r.pts.find(p=>!S.r['p:'+p.n]);if(miss){toast('Tap an answer for '+miss.n+' first.');return;}const noTopic=r.pts.find(p=>/Not good|Wants/.test(S.r['p:'+p.n]||'')&&!S.r['a:'+p.n]);if(noTopic){toast('Pick what it is about for '+noTopic.n+'.');return;}if(S.r.room==='bad'&&!Object.keys(S.r).some(k=>k.startsWith('i:')&&S.r[k])){toast('Pick what is wrong in the room.');return;}save(i);S.r={};const nx=rooms().slice(i+1).find(x=>x.st==='todo');return set({cur:nx?nx.room:null});}
+});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset.w)S.r['w:'+t.dataset.w]=t.value;});
+window.CM_PATIENTS=[
+ {id:'sd',name:'Sameer Das',rep:'Mitali Das',rel:'mother',ph:'98790 XXX75',room:'213 A',day:6,dr:'Dr. Aanya Sharma',callN:2},
+ {id:'nb',name:'Neel Bose',rep:'Arun Bose',rel:'brother',ph:'98111 XXX20',room:'213 A',day:3,dr:'Dr. Aanya Sharma',callN:1},
+ {id:'rk',name:'Rohit Kapoor',rep:'Nisha Kapoor',rel:'wife',ph:'98730 XXX12',room:'Suite 201',day:9,dr:'Dr. Aanya Sharma',callN:2},
+ {id:'vr',name:'Varun Rao',rep:'Kiran Rao',rel:'brother',ph:'98100 XXX41',room:'211',day:12,dr:'Dr. Ichpreet Singh',callN:2},
+ {id:'km',name:'Kavya Menon',rep:'Lakshmi Menon',rel:'mother',ph:'98450 XXX08',room:'313',day:2,dr:'Dr. Ichpreet Singh',callN:1}
+];
+
+
+
+window.onCallSaved=r=>{};
+render();
+</script>
+<script>
+/* Random family call pop-up, shared by Today and Patients */
+const CM = { open:false, p:null, outcome:null, ans:{}, action:null, cat:null, safety:false, compl:false, words:'', concern:'', who:null, n:1, gid:147, kind:null, src:null };
+const CM_Q = [
+  ['q1','How do you feel he/she is being looked after?',['Very happy','Happy','Okay','Not happy']],
+  ['q2','Do the 8 pm updates tell you what you want to know?',['Yes, useful','Too general, want more detail','Not every day','Not getting them']],
+  ['q3','Has the doctor spoken to you this week?',['Yes','No','Only the psychologist']],
+  ['q4','Do you understand how treatment is going and when to expect change?',['Yes','Not sure','No change seen, worried']],
+  ['q5','Has the psychologist changed, or were sessions missed (weekends, leave)?',['No','Yes']],
+  ['q6','Anything about food, room, cleanliness or billing?',['Nothing','Food','Room or cleanliness','Billing']],
+  ['q7','Any worry about how staff treat him/her, or anything that happened (fall, injury, force)?',['No concern','Yes, a concern']]
+];
+const CM_OWN = p => ({
+  'Family updates':['Psychology team lead','6 h'],
+  'Doctor communication':[p.dr||'Treating psychiatrist','6 h'],
+  'Treatment progress':[(p.dr||'Treating psychiatrist')+' (family meeting)','6 h'],
+  'Therapist continuity':['Psychology team lead','6 h'],
+  'Billing and insurance':['Billing desk','6 h'],
+  'Food and dietary':['Kitchen supervisor','6 h'],
+  'Room and housekeeping':['Housekeeping supervisor','6 h'],
+  'Rights':['Kanika and Chandraji','6 h'],
+  'Safety':['Chandraji and treating doctor','now'],
+  'Other':['Kanika','6 h']
+});
+function cmSuggest(){
+  const a=CM.ans;
+  if(a.q7==='Yes, a concern') return 'Safety';
+  if(a.q2&&a.q2!=='Yes, useful') return 'Family updates';
+  if(a.q3==='No'||a.q3==='Only the psychologist') return 'Doctor communication';
+  if(a.q4==='No change seen, worried') return 'Treatment progress';
+  if(a.q5==='Yes') return 'Therapist continuity';
+  if(a.q6==='Billing') return 'Billing and insurance';
+  if(a.q6==='Food') return 'Food and dietary';
+  if(a.q6==='Room or cleanliness') return 'Room and housekeeping';
+  if(a.q1==='Not happy') return 'Other';
+  return null;
+}
+
+function openCall(p, n, kind){ Object.assign(CM,{open:true,kind:kind||(p?'call':null),src:null,p:p||null,outcome:null,ans:{},action:null,cat:null,safety:false,compl:false,words:'',concern:'',who:p?p.rep:null,n:n||1}); drawCM(); }
+function cmChip(group,val,cur){ const on=cur===val; return `<button type="button" data-cm="${group}" data-val="${esc(val)}" style="height:32px;padding:0 12px;border-radius:999px;border:1px solid ${on?'#1E6CDB':'#D6DEE8'};background:${on?'#E8F1FE':'#fff'};color:${on?'#1E5BB8':'#344054'};font-size:13px;font-weight:600">${esc(val)}</button>`; }
+function drawCM(){
+  const el=document.getElementById('cm'); if(!el) return;
+  if(!CM.open){ el.innerHTML=''; return; }
+  const p=CM.p; const pats=(window.CM_PATIENTS||[]);
+  const sug=cmSuggest(); if(CM.action===null && sug){ CM.action='yes'; CM.cat=sug; CM.safety=sug==='Safety'; }
+  const own=p?CM_OWN(p):{}; const o=CM.cat?own[CM.cat]:null;
+  const head = p ? `<div><div style="font-size:12px;font-weight:700;letter-spacing:.05em;color:#1D4ED8">${CM.kind==='concern'?'CONCERN':'RANDOM FAMILY CALL '+CM.n+' OF 2'}</div><b style="font-size:18px">${esc(p.name)}</b><div style="font-size:13px;color:#667085">${esc(p.rep)} (${esc(p.rel)}) · ${esc(p.ph||'')} · Day ${p.day} · Room ${esc(p.room)}</div></div>`
+    : `<div><div style="font-size:12px;font-weight:700;letter-spacing:.05em;color:#1D4ED8">LOG A CALL OR CONCERN</div><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;margin-top:6px">Patient<select data-cmpick="1" class="inp" style="width:320px"><option value="">Choose a patient</option>${pats.map(x=>`<option value="${x.id}">${esc(x.name)} · Room ${esc(x.room)}</option>`).join('')}</select></label></div>`;
+  let body='';
+  if(!CM.kind) body += `<div style="display:flex;flex-direction:column;gap:8px"><b style="font-size:14px">What are you logging?</b><div style="display:flex;flex-wrap:wrap;gap:6px">${cmChip('kind','Random family call','')}${cmChip('kind','Someone raised a concern','')}</div><span style="font-size:12px;color:#667085">A concern can come from the family, the patient, a ward meeting, the front desk or at discharge.</span></div>`;
+  if(p && CM.kind==='concern'){
+    const srcs=['Family called in','Patient told me','Ward meeting','Front desk','At discharge'];
+    body += `<div style="display:flex;flex-direction:column;gap:8px"><b style="font-size:14px">How did it come in?</b><div style="display:flex;flex-wrap:wrap;gap:6px">${srcs.map(v=>cmChip('src',v,CM.src)).join('')}</div></div>`;
+    body += `<label style="display:flex;flex-direction:column;gap:6px;font-size:13px">What they said, in their words<textarea class="inp" data-cmf="words" style="width:100%;min-height:72px;padding:8px 12px" placeholder="Write it the way they said it">${esc(CM.words)}</textarea></label>`;
+    body += `<label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" data-cmcompl="1" ${CM.compl?'checked':''}>It's praise, not a complaint. Log it as a compliment.</label>`;
+    if(!CM.compl){ body += `<div style="background:#F8FAFC;border:1px solid #E3EAF2;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px"><label style="display:flex;flex-direction:column;gap:6px;font-size:13px">What is it about<select class="inp" style="width:100%" data-cmcat="1">${Object.keys(own).map(c=>`<option ${c===CM.cat?'selected':''}>${c}</option>`).join('')}</select></label><div style="font-size:13px;display:grid;grid-template-columns:110px 1fr;gap:4px 10px"><span style="color:#667085">Goes to</span><b style="font-weight:600">${o?esc(o[0]):''}</b><span style="color:#667085">Due</span><span>${o?(o[1]==='now'?'Now. Chandraji is called immediately.':'Within '+o[1]+'. Reminder at 3 hours, Chandraji at 6.'):''}</span></div>${CM.cat==='Safety'?'<div style="background:#FEF3F2;border:1px solid #FDA29B;border-radius:10px;padding:8px 10px;font-size:12px;color:#B42318">Safety: Chandraji and the treating doctor are called now. It cannot close without an incident report number.</div>':''}</div>`; }
+  }
+  if(p && CM.kind==='call'){
+    body += `<div style="display:flex;flex-direction:column;gap:8px"><b style="font-size:14px">Did they pick up?</b><div style="display:flex;flex-wrap:wrap;gap:6px">${['Connected','No answer','Asked to call later'].map(v=>cmChip('outcome',v,CM.outcome)).join('')}</div></div>`;
+    if(CM.outcome && CM.outcome!=='Connected') body += `<div style="background:#F8FAFC;border-radius:10px;padding:10px 12px;font-size:13px;color:#475467">Saved as attempt ${CM.outcome==='No answer'?'1 · no answer':'1 · asked to call later'}. It comes back on Today tomorrow at the same time. After 2 missed attempts, the backup contact is suggested.</div>`;
+    if(CM.outcome==='Connected'){
+      body += `<label style="display:flex;flex-direction:column;gap:6px;font-size:13px">Who answered<select class="inp" style="width:100%" data-cmf="who"><option>${esc(p.rep)} (${esc(p.rel)})</option><option>Backup contact</option><option>Other family member</option></select></label>`;
+      body += `<div style="display:flex;flex-direction:column;gap:12px"><b style="font-size:14px">Ask, then tap what they said</b>${CM_Q.map(([k,q,opts])=>`<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:#1F2937">${q}</span><div style="display:flex;flex-wrap:wrap;gap:6px">${opts.map(v=>cmChip(k,v,CM.ans[k])).join('')}</div></div>`).join('')}</div>`;
+      body += `<label style="display:flex;flex-direction:column;gap:6px;font-size:13px">What they said, in their words<textarea class="inp" data-cmf="words" style="width:100%;min-height:64px;padding:8px 12px" placeholder="Write it the way they said it">${esc(CM.words)}</textarea></label>`;
+      body += `<div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid #EEF2F6;padding-top:12px"><b style="font-size:14px">Does anything need action?</b>${sug?`<div style="font-size:12px;color:#B54708">Suggested from their answers: ${esc(sug)}</div>`:''}<div style="display:flex;gap:6px">${cmChip('action','No',CM.action==='no'?'No':'')}${cmChip('action','Yes, log a grievance',CM.action==='yes'?'Yes, log a grievance':'')}</div></div>`;
+      if(CM.action==='yes'){
+        body += `<div style="background:#F8FAFC;border:1px solid #E3EAF2;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px">
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px">Category<select class="inp" style="width:100%" data-cmcat="1">${Object.keys(own).map(c=>`<option ${c===CM.cat?'selected':''}>${c}</option>`).join('')}</select></label>
+          <div style="font-size:13px;display:grid;grid-template-columns:110px 1fr;gap:4px 10px"><span style="color:#667085">Goes to</span><b style="font-weight:600">${o?esc(o[0]):'Choose a category'}</b><span style="color:#667085">Due</span><span>${o?(o[1]==='now'?'Now. Chandraji is told immediately and an incident report number is needed to close.':'Within '+o[1]+'. Reminder at 3 hours.'):''}</span><span style="color:#667085">Logged as</span><span>G-0${CM.gid} · came in as Random call · family's words copied in</span></div>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px">What needs fixing (short)<input class="inp" style="width:100%" data-cmf="concern" value="${esc(CM.concern)}" placeholder="e.g. wants to know what he ate and how he slept"></label>
+          ${CM.cat==='Safety'?'<div style="background:#FEF3F2;border:1px solid #FDA29B;border-radius:10px;padding:8px 10px;font-size:12px;color:#B42318">Safety concern: Chandraji and the treating doctor are called now. The grievance cannot close without an incident report number.</div>':''}
+        </div>`;
+      }
+      if(CM.ans.q1==='Very happy') body += `<label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" data-cmcompl="1" ${CM.compl?'checked':''}>They praised someone. Log it as a compliment so the staff member hears about it.</label>`;
+    }
+  }
+  const canSave = CM.kind==='concern' ? (p && CM.src && (CM.compl || CM.cat)) : p && CM.outcome && (CM.outcome!=='Connected' || (CM.action && (CM.action==='no' || CM.cat)));
+  el.innerHTML = `<div style="position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:40;display:flex;justify-content:flex-end" data-cmclose="bg">
+    <div role="dialog" aria-label="Log a family call" style="width:560px;max-width:100%;height:100%;overflow:auto;background:#fff;box-shadow:-10px 0 30px rgba(15,23,42,.15);display:flex;flex-direction:column">
+      <div style="padding:18px 20px;border-bottom:1px solid #E3EAF2;display:flex;justify-content:space-between;gap:10px;align-items:flex-start">${head}<button type="button" data-cmclose="x" aria-label="Close" style="border:0;background:transparent;font-size:22px;color:#667085">×</button></div>
+      ${p&&CM.kind==='call'?`<div style="padding:12px 20px;border-bottom:1px solid #EEF2F6;display:flex;gap:8px;align-items:center"><button type="button" class="btn pri" style="height:36px">Call via HMS</button><span style="font-size:12px;color:#667085">Rings ${esc(p.rep)} from the hospital line. Time and length are logged on their own.</span></div>`:''}
+      <div style="padding:16px 20px;display:flex;flex-direction:column;gap:16px;flex:1">${body}${CM.kind&&!p?'<span style="color:#667085;font-size:13px">Pick the patient above to start.</span>':''}</div>
+      <div style="padding:14px 20px;border-top:1px solid #E3EAF2;display:flex;justify-content:space-between;gap:8px;align-items:center"><span style="font-size:12px;color:#667085">${CM.kind==='concern'?(CM.compl?'Saved to the patient record and Reports.':'Saved to the patient record and Grievances.'):'Saved to the patient record'+(CM.action==='yes'&&CM.outcome==='Connected'?' and Grievances':'')+'.'}</span><button type="button" data-cmsave="1" class="btn pri" ${canSave?'':'disabled style="opacity:.5;cursor:not-allowed"'}>${CM.kind==='concern'?(CM.compl?'Log compliment':'Log concern'):CM.action==='yes'&&CM.outcome==='Connected'?'Save call and log grievance':'Save call'}</button></div>
+    </div></div>`;
+}
+function toast(msg){ let t=document.getElementById('toast'); if(!t){ t=document.createElement('div'); t.id='toast'; document.body.appendChild(t);} t.style.cssText='position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#0F172A;color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:60;box-shadow:0 8px 20px rgba(0,0,0,.25);max-width:90vw'; t.textContent=msg; clearTimeout(window.__tt); window.__tt=setTimeout(()=>t.remove(),4200); }
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-cm],[data-cmclose],[data-cmsave],[data-cmcompl]'); if(!t) return;
+  if(t.dataset.cmclose){ if(t.dataset.cmclose==='bg' && e.target!==t) return; CM.open=false; drawCM(); return; }
+  if(t.dataset.cmcompl){ CM.compl=t.checked; if(CM.kind==='concern') drawCM(); return; }
+  if(t.dataset.cm){ const g=t.dataset.cm, v=t.dataset.val;
+    if(g==='kind'){ CM.kind = v==='Random family call'?'call':'concern'; if(CM.kind==='concern'&&!CM.cat) CM.cat='Other'; }
+    else if(g==='src') CM.src=v;
+    else if(g==='outcome') CM.outcome=v;
+    else if(g==='action'){ CM.action = v==='No'?'no':'yes'; if(CM.action==='yes'&&!CM.cat) CM.cat=cmSuggest()||'Other'; }
+    else { CM.ans[g]=v; if(CM.action!=='no'){ const s=cmSuggest(); if(s){ CM.action='yes'; CM.cat=s; } } }
+    drawCM(); return; }
+  if(t.dataset.cmsave && !t.disabled && CM.kind==='concern'){
+    const p=CM.p; const own=CM_OWN(p);
+    const g = CM.compl ? null : { id:'G-0'+CM.gid, cat:CM.cat, owner:own[CM.cat][0], due:own[CM.cat][1], text: CM.words?CM.words.slice(0,80):CM.cat, safety:CM.cat==='Safety' };
+    const res={ p, kind:'concern', n:CM.n, outcome:'Concern', src:CM.src, who:CM.who, ans:{}, words:CM.words, grievance:g, compliment:CM.compl };
+    if(g) CM.gid++;
+    CM.open=false; drawCM();
+    if(window.onCallSaved) window.onCallSaved(res);
+    toast(g ? `Concern ${g.id} (${g.cat}) sent to ${g.owner}${g.due==='now'?', Chandraji called now':', due in '+g.due}. Added to ${p.name}'s record.` : `Compliment saved to ${p.name}'s record and Reports.`);
+    return;
+  }
+  if(t.dataset.cmsave && !t.disabled){
+    const p=CM.p; const own=CM_OWN(p); const g = CM.outcome==='Connected'&&CM.action==='yes' ? { id:'G-0'+CM.gid, cat:CM.cat, owner:own[CM.cat][0], due:own[CM.cat][1], text: CM.concern || (CM.words?CM.words.slice(0,80):CM.cat), safety:CM.cat==='Safety' } : null;
+    const res={ p, n:CM.n, outcome:CM.outcome, who:CM.who, ans:{...CM.ans}, words:CM.words, grievance:g, compliment:CM.compl };
+    if(g) CM.gid++;
+    CM.open=false; drawCM();
+    if(window.onCallSaved) window.onCallSaved(res);
+    toast(CM.outcome!=='Connected' ? `Attempt saved for ${p.name}. It will come back on Today tomorrow.` : g ? `Call saved. Grievance ${g.id} (${g.cat}) sent to ${g.owner}${g.due==='now'?', Chandraji told now':', due in '+g.due}.` : `Call saved for ${p.name}. No action needed.`);
+  }
+});
+document.addEventListener('input',e=>{ const t=e.target; if(t.dataset.cmf) CM[t.dataset.cmf]=t.value; });
+document.addEventListener('change',e=>{ const t=e.target;
+  if(t.dataset.cmcat){ CM.cat=t.value; drawCM(); }
+  if(t.dataset.cmpick){ const x=(window.CM_PATIENTS||[]).find(q=>q.id===t.value); if(x){ CM.p=x; CM.who=x.rep; CM.n=x.callN||1; drawCM(); } }
+});
+
+</script>
+<script>
+/* Rounds, working version (13 Nov build). Adds to the team's prototype: it remembers the day, keeps clocks, sends the right things to the right owner,
+   repeats safety alerts every 30 minutes, queues when offline, lets the lists be edited, and shows entries per patient (read only).
+   State is in localStorage 'px_rounds_v1' so the Today and Grievances pages (same origin) can read it. Demo data only; nothing leaves the browser. */
+(function(){
+  const KEY='px_rounds_v1', LKEY='px_rounds_lists_v1';
+  const H=3600000, M=60000;
+  const dayKey=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();};
+  const hhmm=t=>{const d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
+  const left=(t0,lim)=>{const ms=t0+lim-Date.now();if(ms<=0)return 'Overdue '+Math.floor(-ms/H)+' h '+Math.floor((-ms%H)/M)+' m';return Math.floor(ms/H)+' h '+Math.floor((ms%H)/M)+' m left';};
+  let ST=null;
+  function fresh(){return {day:dayKey(),rooms:{},iss:null,ent:[],log:[],queue:[],saf:[]};}
+  function load(){try{ST=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){ST=null;}
+    if(!ST||typeof ST!=='object')ST=fresh();
+    if(ST.day!==dayKey()){/* a new day: room boxes start empty again, open items stay */const keep=ST;ST=fresh();ST.iss=(keep.iss||[]).filter(i=>i.st==='open');ST.ent=keep.ent||[];ST.log=keep.log||[];ST.saf=(keep.saf||[]).filter(a=>!a.ack);}
+    ST.rooms=ST.rooms||{};ST.ent=ST.ent||[];ST.log=ST.log||[];ST.queue=ST.queue||[];ST.saf=ST.saf||[];}
+  function store(){try{localStorage.setItem(KEY,JSON.stringify(ST));}catch(e){}}
+  /* ---- lists that can be edited in Setting ---- */
+  function lists(){return {RG:RG.map(g=>[g[0],g[1].map(x=>x.slice())]),CG:CG.map(g=>[g[0],g[1].map(x=>x.slice())]),AB:AB.map(x=>x.map(y=>Array.isArray(y)?y.slice():y))};}
+  function applyLists(L){
+    if(L.RG){RG.length=0;L.RG.forEach(g=>RG.push(g));}
+    if(L.CG){CG.length=0;L.CG.forEach(g=>CG.push(g));}
+    if(L.AB){AB.length=0;L.AB.forEach(g=>AB.push(g));ABOUT.length=0;AB.forEach(x=>ABOUT.push([x[0],x[1]]));}
+    SAFE.length=0;(RG[0]?RG[0][1]:[]).forEach(x=>SAFE.push(x));
+    TODAY.length=0;[...RG,...CG].forEach(g=>g[1].forEach(x=>TODAY.push(x)));}
+  try{const L=JSON.parse(localStorage.getItem(LKEY)||'null');if(L&&L.RG&&L.CG&&L.AB)applyLists(L);}catch(e){}
+  /* today's rotation: one section a day, six days */
+  try{window.DAY_ROT=Math.floor(Date.now()/86400000)%6;}catch(e){}
+  load();
+  /* seed: the one open issue from the prototype gets a real start time; restore room boxes */
+  if(!ST.iss){ST.iss=[{room:'206',what:'Exhaust fan not working',team:'Maintenance (electrical)',st:'open',t0:Date.now()-110*M,lim:4*H,by:'Prabh',id:'RI-001'}];store();}
+  function sync(){
+    Object.keys(FLOORS).forEach(f=>FLOORS[f].forEach(r=>{const k=f+'|'+r.room;if(ST.rooms[k])r.st=ST.rooms[k];}));
+    ISS.length=0;ST.iss.forEach(i=>ISS.push(i));ISS.forEach(i=>{i.due=i.safety?('Chandraji told '+hhmm(i.t0)):left(i.t0,i.lim||4*H);});}
+  sync();
+  /* ---- entries: grievance / note / request / alert, per patient (read only elsewhere) ---- */
+  function nextId(p){S.seq=(S.seq||150)+1;return p+'-'+String(S.seq).padStart(4,'0');}
+  function addEntry(e){e.t0=Date.now();e.by='Prabh';e.src='Rounds';e.queued=!navigator.onLine;ST.ent.unshift(e);
+    ST.log.unshift({t:e.t0,patient:e.patient,room:e.room,kind:e.kind,text:e.title,src:'Rounds',id:e.id});
+    if(e.safety){ST.saf.unshift({id:e.id,patient:e.patient,room:e.room,what:e.title,t0:e.t0,last:e.t0,n:1,ack:false});}
+    if(e.queued)ST.queue.push(e.id);}
+  const origSave=save;
+  save=function(i){
+    const r=rooms()[i],R=S.r,fl=S.fl;
+    /* work out what this room produced before the prototype resets S.r */
+    const items=Object.keys(R).filter(k=>k.startsWith('i:')&&R[k]).map(k=>k.slice(2));
+    const out=[];
+    r.pts.forEach(p=>{const ans=R['p:'+p.n];if(!ans)return;
+      if(ans==='Not available'){out.push({kind:'log',patient:p.n,room:r.room,title:'Not available this round (asleep, in a session or not up to it). Comes up again next round.'});return;}
+      if(ans==='All good'){out.push({kind:'log',patient:p.n,room:r.room,title:'Spoken to on the round: all good'});return;}
+      const topic=R['a:'+p.n],sp=R['s:'+p.n]||'',words=R['w:'+p.n]||'';const T=AB.find(x=>x[0]===topic);if(!T)return;
+      const safe=!!(T[4]&&T[4].includes(sp)),leaving=sp==='Wants to leave now';
+      const owner=safe?'Chandraji and the treating doctor':sp==='Billing question'?'Billing desk':sp==='Wants to make a formal complaint'?'Kanika and Chandraji':leaving?'Treating psychiatrist and Chandraji':T[1];
+      const title=topic+(sp?': '+sp:'')+(words?' · "'+words+'"':'');
+      if(topic==='Sleep')out.push({kind:'note',id:nextId('N'),patient:p.n,room:r.room,title,owner:'Nursing in-charge',cat:T[2]});
+      else if(topic==='Activities')out.push({kind:'request',id:nextId('Q'),patient:p.n,room:r.room,title,owner:'Patient experience (you)',cat:T[2]});
+      else out.push({kind:'grievance',id:nextId('G'),patient:p.n,room:r.room,title,owner,cat:safe?'Safety':T[2],safety:safe||leaving,lim:safe||leaving?0:6*H,topic,sp});
+    });
+    /* records gaps picked up from the HMS and sent on */
+    r.pts.forEach(p=>{if(p.rec)out.push({kind:'log',patient:p.n,room:r.room,title:p.rec+' · sent to '+(/Vitals/.test(p.rec)?'nursing in-charge':'psychology team lead')});});
+    const nIss=items.length,bad=R.room==='bad';
+    const roomLabel=r.common?'Common areas':'Room '+r.room;
+    const mine=[];
+    items.forEach(n=>{const x=TODAY.find(y=>y[0]===n);if(!x)return;mine.push({id:nextId('RI'),room:r.room,what:n,team:x[1],st:'open',t0:Date.now(),lim:4*H,by:'Prabh',safety:!!x[2],fl});});
+    /* photo name, if one was added */
+    if(R.photo)mine.forEach(m=>m.photo=R.photo);
+    out.forEach(e=>{if(e.kind!=='log')addEntry(Object.assign({floor:fl},e));else{ST.log.unshift({t:Date.now(),patient:e.patient,room:e.room,kind:'log',text:e.title,src:'Rounds'});}});
+    mine.forEach(m=>{ST.iss.unshift(m);ST.log.unshift({t:m.t0,patient:'',room:r.room,kind:'room',text:m.what+' · sent to '+m.team,src:'Rounds',id:m.id});if(m.safety)ST.saf.unshift({id:m.id,patient:'',room:r.room,what:m.what,t0:m.t0,last:m.t0,n:1,ack:false});});
+    ST.log.unshift({t:Date.now(),patient:'',room:r.room,kind:'round',text:roomLabel+(bad?' · '+nIss+' issue'+(nIss>1?'s':'')+' sent':' · fine'),src:'Rounds'});
+    ST.rooms[fl+'|'+r.room]=nIss?'issue':'done';
+    /* count for the toast the way the prototype does it */
+    const g=out.filter(e=>e.kind==='grievance').length,sg=out.filter(e=>e.kind==='grievance'&&e.safety).length,nt=out.filter(e=>e.kind==='note').length,rq=out.filter(e=>e.kind==='request').length;
+    const msg=[roomLabel+' saved.'];if(nIss)msg.push(nIss+' issue'+(nIss>1?'s':'')+' sent.');if(g)msg.push(g+' grievance'+(g>1?'s':'')+' logged'+(sg?' ('+sg+' safety, Chandraji told)':'')+'.');if(nt)msg.push(nt+' note to the nursing in-charge.');if(rq)msg.push(rq+' request on your Today list.');
+    if(!navigator.onLine)msg.push('No signal: kept on this device, sends when you are back online.');
+    r.pts.forEach(p=>{const a=R['p:'+p.n];if(a&&a!=='Not available')p.last=0;});
+    r.st=ST.rooms[fl+'|'+r.room];
+    ST.iss.forEach(i=>{if(!i.due)i.due='';});
+    store();sync();toast(msg.join(' '));
+  };
+  /* ---- render wrapper: clocks, safety banner, flags ---- */
+  const origMain=main;
+  function banners(){
+    const open=ST.saf.filter(a=>!a.ack);
+    let h='';
+    if(open.length){h+=`<div role="alert" style="background:#FEF3F2;border:1px solid #FDA29B;border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;gap:8px"><b style="color:#B42318">${open.length} safety concern${open.length>1?'s':''} open: Chandraji and the treating doctor are told, and told again every 30 minutes until someone takes it.</b>${open.map(a=>`<div style="display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;font-size:14px"><span style="flex:1;min-width:200px"><b>${a.patient?esc(a.patient)+' · ':''}Room ${esc(a.room)}</b>: ${esc(a.what)}</span><span style="color:#B42318;font-weight:600">told ${a.n} time${a.n>1?'s':''}, last ${hhmm(a.last)}</span><button class="btn" data-ack="${esc(a.id)}">Chandraji has taken it</button></div>`).join('')}</div>`;}
+    const q=ST.queue.length;
+    if(q||!navigator.onLine)h+=`<div style="background:#FFF4D6;border:1px solid #F79009;border-radius:12px;padding:10px 16px;font-size:14px;color:#93370D"><b>${navigator.onLine?q+' saved on this device, sending now':'No signal.'}</b> ${navigator.onLine?'':'Keep going: every room is kept on this device and is sent when the signal is back ('+q+' waiting).'}</div>`;
+    return h;}
+  main=function(){
+    ST.iss.forEach(i=>{i.due=i.safety?('Chandraji told '+hhmm(i.t0)):left(i.t0,i.lim||4*H);});
+    let h=origMain();
+    /* put banners above the floor chips and the buttons for lists and patient entries in the bar */
+    h=h.replace('<main>','<main>'+banners());
+    h=h.replace('</main>',`<div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn" data-px="entries">What was logged today</button><button class="btn" data-px="people">Entries by patient</button><button class="btn" data-px="lists">Edit the checklists (Setting)</button></div></main>`);
+    return h;};
+  /* ---- extra pop-ups ---- */
+  function modal(title,body,wide){const el=document.getElementById('cm');el.innerHTML=`<div data-pxclose="1" style="position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto"><div role="dialog" aria-label="${esc(title)}" style="background:#fff;border-radius:16px;width:${wide?'860':'640'}px;max-width:100%;display:flex;flex-direction:column"><div style="padding:14px 20px;border-bottom:1px solid #E3EAF2;display:flex;justify-content:space-between;align-items:center"><b style="font-size:18px">${esc(title)}</b><button data-pxclose="x" aria-label="Close" style="border:0;background:transparent;font-size:22px;color:#667085">×</button></div><div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">${body}</div></div></div>`;}
+  const kindName={grievance:'Grievance',note:'Note to nursing',request:'Request for you',room:'Room issue',round:'Round',log:'Round note'};
+  function entriesHtml(){
+    const a=ST.ent.slice(0,40);
+    if(!a.length&&!ST.iss.length)return '<span style="color:#667085">Nothing logged yet today. Walk a room and save it.</span>';
+    return `<div style="display:flex;flex-direction:column;gap:6px">${a.map(e=>`<div style="border:1px solid #E3EAF2;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(e.id)} · ${esc(kindName[e.kind]||e.kind)}${e.safety?' · <span style="color:#B42318">SAFETY</span>':''}</b><span style="font-size:12px;color:#667085">${hhmm(e.t0)} · source Rounds${e.queued?' · waiting for signal':''}</span></div><span style="font-size:14px">${esc(e.patient)} · Room ${esc(e.room)} · ${esc(e.title)}</span><span style="font-size:13px;color:#475467">To ${esc(e.owner||'')}${e.kind==='grievance'?(e.safety?' · told now':' · clock '+left(e.t0,e.lim||6*H)+(Date.now()-e.t0>=3*H?' · reminder sent to owner':'')+(Date.now()-e.t0>=6*H?' · S Chandra told':'')):''}</span></div>`).join('')}</div>`;}
+  function peopleHtml(){
+    const by={};ST.log.forEach(l=>{if(l.patient){(by[l.patient]=by[l.patient]||[]).push(l);}});
+    const names=Object.keys(by).sort();
+    if(!names.length)return '<span style="color:#667085">No patient entries yet. They appear here once a room is saved, and the same list shows in the patient\'s record (read only).</span>';
+    return `<span style="font-size:13px;color:#667085">Read only. This is what the patient record shows under Rounds.</span>${names.map(n=>`<div style="border:1px solid #E3EAF2;border-radius:12px;padding:10px 12px"><b>${esc(n)}</b>${by[n].slice(0,8).map(l=>`<div style="font-size:13px;color:#344054;padding-top:4px">${hhmm(l.t)} · Room ${esc(l.room)} · ${esc(l.text)}</div>`).join('')}</div>`).join('')}`;}
+  const tx=(id,v,h)=>`<textarea id="${id}" class="inp" spellcheck="false" style="width:100%;min-height:${h}px;padding:8px 12px;font-family:ui-monospace,Consolas,monospace;font-size:12px">${esc(v)}</textarea>`;
+  function listsHtml(){
+    const L=lists();
+    const rg=L.RG.map(g=>'## '+g[0]+'\n'+g[1].map(x=>x[0]+' | '+x[1]+(x[2]?' | safety':'')).join('\n')).join('\n\n');
+    const cg=L.CG.map(g=>'## '+g[0]+'\n'+g[1].map(x=>x[0]+' | '+x[1]+(x[2]?' | safety':'')).join('\n')).join('\n\n');
+    const ab=L.AB.map(x=>x[0]+' | '+x[1]+' | '+x[2]+' | '+x[3].join('; ')+(x[4]?' | safety: '+x[4].join('; '):'')).join('\n');
+    return `<span style="font-size:13px;color:#667085">Anything here can be changed without a developer. One item per line: <b>what | who fixes it</b>, add <b>| safety</b> to send it to Chandraji now. Lines starting with ## are group names. The first room group must stay the safety group.</span>
+     <b>Room issues (checklist v1)</b>${tx('lsRG',rg,200)}<b>Common areas</b>${tx('lsCG',cg,140)}
+     <b>What patients can talk about</b><span style="font-size:12px;color:#667085">Topic | owner | grievance category | options separated by ; | safety: options that count as safety</span>${tx('lsAB',ab,150)}
+     <div style="display:flex;gap:8px;justify-content:space-between"><button class="btn" data-px="listreset">Back to the team's list</button><button class="btn pri" data-px="listsave">Save lists</button></div>`;}
+  function parseGroups(t){const out=[];let g=null;t.split(/\r?\n/).forEach(l=>{l=l.trim();if(!l)return;if(l.startsWith('##')){g=[l.replace(/^#+\s*/,''),[]];out.push(g);return;}if(!g)return;const p=l.split('|').map(x=>x.trim());if(!p[0])return;const it=[p[0],p[1]||'Housekeeping supervisor'];if(/safety/i.test(p[2]||''))it.push(1);g[1].push(it);});return out.filter(g=>g[1].length);}
+  function parseAB(t){return t.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{const p=l.split('|').map(x=>x.trim());const opts=(p[3]||'').split(';').map(x=>x.trim()).filter(Boolean);const row=[p[0],p[1]||'Nursing in-charge',p[2]||'Other',opts.length?opts:[p[0]]];const sf=(p[4]||'').replace(/^safety:\s*/i,'').split(';').map(x=>x.trim()).filter(Boolean);if(sf.length)row.push(sf);return row;});}
+  document.addEventListener('click',e=>{
+    const t=e.target.closest('[data-px],[data-ack],[data-pxclose]');if(!t)return;
+    const d=t.dataset;
+    if(d.pxclose){if(d.pxclose==='1'&&e.target!==t)return;document.getElementById('cm').innerHTML='';return;}
+    if(d.ack){const a=ST.saf.find(x=>x.id===d.ack);if(a){a.ack=true;a.ackAt=Date.now();ST.log.unshift({t:Date.now(),patient:a.patient,room:a.room,kind:'log',text:'Safety concern taken by Chandraji: '+a.what,src:'Rounds'});store();render();toast('Marked as taken. The repeat alerts have stopped.');}return;}
+    if(d.px==='entries')modal('What was logged today',entriesHtml());
+    else if(d.px==='people')modal('Entries by patient',peopleHtml());
+    else if(d.px==='lists')modal('Edit the checklists',listsHtml(),true);
+    else if(d.px==='listsave'){const rg=parseGroups(document.getElementById('lsRG').value),cg=parseGroups(document.getElementById('lsCG').value),ab=parseAB(document.getElementById('lsAB').value);
+      if(!rg.length||!cg.length||!ab.length){toast('Each list needs at least one item.');return;}
+      const L={RG:rg,CG:cg,AB:ab};applyLists(L);try{localStorage.setItem(LKEY,JSON.stringify(L));}catch(x){}document.getElementById('cm').innerHTML='';render();toast('Lists saved. The next room you open uses them.');}
+    else if(d.px==='listreset'){try{localStorage.removeItem(LKEY);}catch(x){}toast('Back to the team\'s list. Reloading.');setTimeout(()=>location.reload(),600);}
+  },true);
+  /* photo: the drawer gets a camera input when something is wrong */
+  const origDrawer=drawer;
+  drawer=function(){origDrawer();try{const dr=document.getElementById('dr');const btn=dr&&dr.querySelector('[data-savenext]');if(!btn||S.r.room!=='bad')return;
+    const wrap=btn.closest('div').previousElementSibling;if(!wrap||dr.querySelector('#rdPhoto'))return;
+    const l=document.createElement('label');l.id='rdPhoto';l.style.cssText='display:flex;flex-direction:column;gap:6px;font-size:13px;padding:0 20px 14px';l.innerHTML='<span style="font-weight:600">Photo of the issue (optional)</span><input type="file" accept="image/*" capture="environment" id="rdFile">'+(S.r.photo?'<span style="color:#067647">Photo added: '+esc(S.r.photo)+'</span>':'');
+    wrap.appendChild(l);dr.querySelector('#rdFile').addEventListener('change',function(){if(this.files&&this.files[0]){S.r.photo=this.files[0].name;toast('Photo added.');}});}catch(x){}};
+  /* ---- clocks and repeats ---- */
+  function tick(){
+    let ch=false;const now=Date.now();
+    ST.saf.forEach(a=>{if(!a.ack&&now-a.last>=30*M){a.n++;a.last=now;ch=true;}});
+    /* a safety grievance repeats the same way until taken */
+    ST.ent.forEach(e=>{if(e.kind==='grievance'&&!e.cl&&!e.safety){if(now-e.t0>=3*H&&!e.r3){e.r3=1;ch=true;}if(now-e.t0>=6*H&&!e.r6){e.r6=1;ch=true;}}});
+    ST.iss.forEach(i=>{if(i.st==='open'&&!i.safety&&now-i.t0>=2*H&&!i.r2){i.r2=1;ch=true;}});
+    if(ch)store();
+    if(!document.getElementById('dr').innerHTML&&!document.getElementById('cm').innerHTML)render();}
+  setInterval(tick,30000);
+  /* two people on the same floor: rooms saved by the other phone show here */
+  window.addEventListener('storage',e=>{if(e.key===KEY){load();sync();if(!S.cur)render();}});
+  /* offline queue */
+  window.addEventListener('offline',()=>{render();});
+  window.addEventListener('online',()=>{if(ST.queue.length){const n=ST.queue.length;ST.queue=[];ST.ent.forEach(e=>{e.queued=false;});store();toast(n+' saved while offline: sent now.');}render();});
+  /* public feed for Today and Patients */
+  window.PXRounds={read:()=>{load();return ST;}};
+  render();
+})();
+
+</script>
+</body></html>
