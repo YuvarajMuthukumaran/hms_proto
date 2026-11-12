@@ -189,7 +189,7 @@ const P=[
 ];
 const DOC={Priya:'Priya Nair',Kiran:'Kiran Mehra',Ishita:'Ishita Kapoor',Ankit:'Ankit Verma',Surabhi:'You'};
 let F='all',D=null;
-const PAR=(function(){try{return window.parent&&window.parent!==window&&window.parent.S?window.parent:null;}catch(e){return null;}})();
+const PAR=(function(){try{return window.parent&&window.parent!==window&&window.parent.LPBridge?window.parent.LPBridge:null;}catch(e){return null;}})();
 const pidOf=name=>{try{const L=PAR.allPts();const x=L.find(p=>p.name===name);return x?x.id:null;}catch(e){return null;}};
 function openPt(name,tab){const id=pidOf(name);if(PAR&&id){PAR.go('#/patient/'+id+'/'+(tab||'therapy'));}else toast('Opens '+name);}
 (function(){try{const A=(PAR.S.lp&&PAR.S.lp.assign)||{};P.forEach(p=>{const id=pidOf(p.n);if(id&&A[id]){p.doc=A[id];}});}catch(e){}})();

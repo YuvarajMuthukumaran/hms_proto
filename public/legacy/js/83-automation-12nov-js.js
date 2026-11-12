@@ -248,7 +248,7 @@
     nnTasks().concat(famTasks(),crTasks()).filter(t=>!have.has(t.id)).forEach(t=>r.push(Object.assign({},t,{lead:false})));return r;};
 
   function paint(){const v=$('view');if(!v||!kind())return;const rt=route();
-    if(/^#\/myday/.test(location.hash||'')&&!v.querySelector('#auStrip')){
+    if(/^#\/myday/.test(location.hash||'')&&!v.querySelector('#auStrip')&&role()!=='floor-lead-psychologist'){
       const sec=document.createElement('div');sec.id='auStrip';sec.className='au-strip';sec.innerHTML=stripHtml();
       v.insertBefore(sec,v.firstElementChild);}
     if(rt&&rt.tab==='discharge'&&!v.querySelector('#dcAuto')){const h=document.createElement('div');h.innerHTML=dcCard(rt.pid);const tabs=v.querySelector('.subtabs'),el=h.firstElementChild;if(el&&tabs)tabs.parentNode.insertBefore(el,tabs.nextSibling);gateButton(rt.pid);

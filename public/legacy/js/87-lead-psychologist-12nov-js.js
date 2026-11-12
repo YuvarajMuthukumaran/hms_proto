@@ -33,6 +33,8 @@
   const loadOf=k=>pts().filter(p=>docKey(p.id)===k).length||TEAM.find(t=>t.k===k).load;
   const mineIds=()=>pts().filter(p=>docKey(p.id)==='Surabhi').map(p=>p.id);
 
+  /* the embedded Today page talks to the portal through this door (same origin) */
+  window.LPBridge={get S(){return S;},go:h=>go(h),allPts:()=>pts()};
   /* ---------------- Assign / Change psychologist (same pop-up everywhere) ---------------- */
   window.lpAssign=function(pid){const p=ptOf(pid);if(!p)return;const cur=docKey(pid);
     V3.modal((cur?'Change psychologist · ':'Assign a psychologist · ')+esc(p.name),'Caseload, sessions today and upcoming leave are shown. The new psychologist gets the plan, notes and family contacts; the old one gets a handover note.',
