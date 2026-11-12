@@ -27,7 +27,7 @@
     'Motivational interviewing':[['stage','Stage of change','chips',['Precontemplation','Contemplation','Preparation','Action','Maintenance']],['imp','Importance 0 to 10',N10],['conf','Confidence 0 to 10',N10],['trig','Triggers','a'],['ct','Change talk heard','a']],
     'Relapse prevention':[['trig','Triggers','a'],['ews','Early warning signs','a'],['cope','Coping plan','a'],['sup','Support contacts','a']],
     'Psychoeducation / supportive':[['topic','Topic','multi',['Illness','Medicines','Sleep','Warning signs','Coping','Stress']],['und','Understood (teach-back)','yn3']],
-    'Family therapy':[['who','Who attended','t'],['purpose','Purpose','multi',['Education','Conflict','Discharge planning']],['conc','Family concerns','a'],['act','Agreed actions','a'],['own','Owner of the actions','t'],['grv','Raise a grievance','check']],
+    'Family therapy':[['who','Who attended','t'],['purpose','Purpose','multi',['Education','Conflict','Discharge planning']],['topics','Topics covered','multi',['What the illness is','How reassurance feeds it','Responding at home','Medicines','Relapse signs','Stigma','Caregiver self-care','Discharge plan']],['und','Understood (teach-back)','yn3'],['conc','Family concerns','a'],['act','Agreed actions','a'],['own','Owner of the actions','t'],['grv','Raise a grievance','check']],
     'Group':[['gt','Group type','chips',['Anxiety and stress group','Relapse prevention group','Social skills group','Yoga and relaxation','Psychoeducation group']],['ros','Attendance','roster'],['gn','Group note','a'],['pp','One line for this patient','t']]
   };
   const DEFMOD={ind:'CBT',grp:'Group',fam:'Family therapy'};
@@ -186,7 +186,7 @@
   }
   function persist(signed){
     const s=sn(PID),r=entry(signed);
-    const note=Object.assign({},D,{id:'n'+Date.now(),status:signed?'signed':'draft',at:todayTxt()+', '+nowTime(),by:signer(),signedBy:signed?signer():'',signedAt:signed?atNow():'',kind:KIND,addenda:[],summaryLine:D.summary});
+    const note=Object.assign({},D,{id:'n'+Date.now(),ts:Date.now(),status:signed?'signed':'draft',at:todayTxt()+', '+nowTime(),by:signer(),signedBy:signed?signer():'',signedAt:signed?atNow():'',kind:KIND,addenda:[],summaryLine:D.summary});
     delete note.touched;delete note.modTouched;
     s.notes.unshift(note);
     if(signed){
