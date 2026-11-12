@@ -5,38 +5,38 @@
    - Rounds: the ward list is one row of chips above the patient, and a swipe left or right moves to the next or previous patient
    Desktop is unchanged (everything is inside the media query). */
 (function(){
-  const doc=()=>S.role==='psychiatrist'||S.role==='psychologist';
+  const doc=()=>true; /* 12 Nov (Nikita): every role is screen adaptive */
   const css=document.createElement('style');css.id='tablet-12nov-css';
   css.textContent=`
   .burger{display:none}
   #navScrim{display:none}
   @media (max-width:1023px){
-    body.psy-views{zoom:1!important}
-    body.psy-views .app,body.psy-views .app.compact{display:block!important;min-height:100vh!important}
-    body.psy-views .side,body.psy-views .app.compact .side{position:fixed!important;left:0;top:0;bottom:0;width:290px!important;flex:none!important;height:100vh!important;z-index:140;transform:translateX(-105%);transition:transform .22s ease;padding:18px 14px!important;overflow-y:auto;background:#fff;box-shadow:none;align-items:stretch!important}
-    body.psy-views.nav-open .side{transform:none;box-shadow:8px 0 30px rgba(16,24,40,.25)}
-    body.psy-views #navScrim{position:fixed;inset:0;z-index:130;background:rgba(16,24,40,.38);opacity:0;pointer-events:none;transition:opacity .2s;display:block}
-    body.psy-views.nav-open #navScrim{opacity:1;pointer-events:auto}
-    body.psy-views .main{width:100%!important;margin:0!important}
-    body.psy-views .top{display:flex;align-items:center;gap:10px}
-    body.psy-views .burger{display:inline-flex;align-items:center;justify-content:center;flex:0 0 46px;width:46px;height:46px;border:1px solid var(--line,#e4e7ec);border-radius:12px;background:#fff;color:#14284b;cursor:pointer}
+    body.resp{zoom:1!important}
+    body.resp .app,body.resp .app.compact{display:block!important;min-height:100vh!important}
+    body.resp .side,body.resp .app.compact .side{position:fixed!important;left:0;top:0;bottom:0;width:290px!important;flex:none!important;height:100vh!important;z-index:140;transform:translateX(-105%);transition:transform .22s ease;padding:18px 14px!important;overflow-y:auto;background:#fff;box-shadow:none;align-items:stretch!important}
+    body.resp.nav-open .side{transform:none;box-shadow:8px 0 30px rgba(16,24,40,.25)}
+    body.resp #navScrim{position:fixed;inset:0;z-index:130;background:rgba(16,24,40,.38);opacity:0;pointer-events:none;transition:opacity .2s;display:block}
+    body.resp.nav-open #navScrim{opacity:1;pointer-events:auto}
+    body.resp .main{width:100%!important;margin:0!important}
+    body.resp .top{display:flex;align-items:center;gap:10px}
+    body.resp .burger{display:inline-flex;align-items:center;justify-content:center;flex:0 0 46px;width:46px;height:46px;border:1px solid var(--line,#e4e7ec);border-radius:12px;background:#fff;color:#14284b;cursor:pointer}
     /* real-size tap targets */
-    body.psy-views #view button,body.psy-views #view .btn,body.psy-views #view .tog,body.psy-views #view .seg button,body.psy-views #view .espill,body.psy-views #view .mini-chips button,body.psy-views #view select,body.psy-views #view .input,body.psy-views #view .lz-chip{min-height:44px}
-    body.psy-views #view .btn.sm,body.psy-views #view .tog,body.psy-views #view .mini-chips button{padding-left:14px;padding-right:14px}
-    body.psy-views #view .mini-chips,body.psy-views #view .radios{gap:8px}
+    body.resp #view button,body.resp #view .btn,body.resp #view .tog,body.resp #view .seg button,body.resp #view .espill,body.resp #view .mini-chips button,body.resp #view select,body.resp #view .input,body.resp #view .lz-chip{min-height:44px}
+    body.resp #view .btn.sm,body.resp #view .tog,body.resp #view .mini-chips button{padding-left:14px;padding-right:14px}
+    body.resp #view .mini-chips,body.resp #view .radios{gap:8px}
     /* Today: no page padding wasted */
-    body.psy-views .content{padding-left:14px!important;padding-right:14px!important}
+    body.resp .content{padding-left:14px!important;padding-right:14px!important}
     /* Rounds: ward list as one row of chips, the patient fills the screen */
-    body.psy-views .pr-grid{grid-template-columns:1fr!important;gap:10px!important}
-    body.psy-views .pr-queue{position:static!important;max-height:none!important;overflow-x:auto!important;overflow-y:hidden!important;display:flex!important;flex-wrap:nowrap;align-items:center;gap:8px;padding:8px 10px!important;scroll-snap-type:x proximity;scrollbar-width:none}
-    body.psy-views .pr-queue::-webkit-scrollbar{display:none}
-    body.psy-views .pr-queue>div:first-child{display:none}
-    body.psy-views .pr-q{flex:0 0 auto;width:auto!important;white-space:nowrap;min-height:46px;border:1px solid var(--line,#e4e7ec)!important;border-radius:99px!important;padding:6px 14px!important;scroll-snap-align:center}
-    body.psy-views .pr-q.on{border-color:#1e6cdb!important}
-    body.psy-views .pr-q .tiny,body.psy-views .pr-q small{display:none}
-    body.psy-views .pr-top{flex-wrap:wrap;gap:8px}
+    body.resp .pr-grid{grid-template-columns:1fr!important;gap:10px!important}
+    body.resp .pr-queue{position:static!important;max-height:none!important;overflow-x:auto!important;overflow-y:hidden!important;display:flex!important;flex-wrap:nowrap;align-items:center;gap:8px;padding:8px 10px!important;scroll-snap-type:x proximity;scrollbar-width:none}
+    body.resp .pr-queue::-webkit-scrollbar{display:none}
+    body.resp .pr-queue>div:first-child{display:none}
+    body.resp .pr-q{flex:0 0 auto;width:auto!important;white-space:nowrap;min-height:46px;border:1px solid var(--line,#e4e7ec)!important;border-radius:99px!important;padding:6px 14px!important;scroll-snap-align:center}
+    body.resp .pr-q.on{border-color:#1e6cdb!important}
+    body.resp .pr-q .tiny,body.resp .pr-q small{display:none}
+    body.resp .pr-top{flex-wrap:wrap;gap:8px}
     /* the handover card is a short strip, so the worklist shows without scrolling */
-    body.psy-views .hv-rc-wrap,body.psy-views .hv-rc-list{max-height:150px!important}
+    body.resp .hv-rc-wrap,body.resp .hv-rc-list{max-height:150px!important}
   }
   `;
   document.head.appendChild(css);

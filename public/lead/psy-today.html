@@ -101,6 +101,10 @@ tr.hide{display:none}
 #secSeg{position:sticky;top:70px;z-index:4}
 </style><style id="embed-css">html.embed aside,html.embed header{display:none!important}html.embed .app{display:block!important;min-height:0!important}html.embed main{padding:6px 4px 40px!important}html.embed body{background:transparent}</style>
 <script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');</script>
+<style id="resp-lp">
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)!important}.di{grid-template-columns:100px 1fr!important}.di .act{grid-column:1/-1;justify-content:flex-start;flex-wrap:wrap}.card{overflow-x:auto}table{min-width:680px}}
+@media(max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)!important}.di{grid-template-columns:1fr!important;gap:6px}.hello{flex-direction:column;align-items:flex-start;gap:6px}.seg{display:flex;width:100%}.seg button{flex:1}.row.sp{flex-wrap:wrap;gap:8px}.md{width:94vw}h2{font-size:19px}.filters{gap:6px}}
+</style>
 </head>
 <body><div class="app">
 <aside>
@@ -207,7 +211,7 @@ document.querySelectorAll('.fchip').forEach(b=>b.onclick=()=>setF(b.dataset.f));
 function pick(d){D=d;render();}
 function toast(t){const e=document.getElementById('toast');e.textContent=t;e.style.display='block';clearTimeout(window._t);window._t=setTimeout(()=>e.style.display='none',2400);}
 function recount(){const n=document.querySelectorAll('#floorView .di:not(.done)').length;document.getElementById('decCount').textContent=n;document.getElementById('decChip').textContent=n?n+' open':'All done';document.getElementById('segA').textContent=n;}
-function done(btn,msg,dec){const di=btn.closest('.di');di.classList.add('done');(dec||[]).forEach(id=>{const e=document.getElementById(id);e.textContent=Math.max(0,+e.textContent-1)});if(di.dataset.k==='group'&&document.getElementById('grpLine')){document.getElementById('grpLine').innerHTML='Groups today: Anxiety 11:30 done · Relapse prevention '+(msg.includes('4:45')?'4:45 Priya Nair':'4:00 you')+' · Mindfulness 5:30 you';}toast(msg);recount();}
+function done(btn,msg,dec){try{const k=btn.closest('.di').dataset.k;if(k==='famc'&&/You called/.test(msg)&&PAR){PAR.S.lp=PAR.S.lp||{};PAR.S.lp.conc=PAR.S.lp.conc||{};PAR.S.lp.conc.kabir=Object.assign(PAR.S.lp.conc.kabir||{at:Date.now()-4*3600000-20*60000,txt:''},{closed:'Surabhi Sengar, today'});}}catch(e){}const di=btn.closest('.di');di.classList.add('done');(dec||[]).forEach(id=>{const e=document.getElementById(id);e.textContent=Math.max(0,+e.textContent-1)});if(di.dataset.k==='group'&&document.getElementById('grpLine')){document.getElementById('grpLine').innerHTML='Groups today: Anxiety 11:30 done · Relapse prevention '+(msg.includes('4:45')?'4:45 Priya Nair':'4:00 you')+' · Mindfulness 5:30 you';}toast(msg);recount();}
 function nudge(b){b.textContent='Nudged';b.disabled=true;toast('Both psychologists nudged; you see them again at 9 am if still unsigned');}
 function modal(h){document.getElementById('md').innerHTML=h;document.getElementById('ov').classList.add('on');}
 function close_(){document.getElementById('ov').classList.remove('on');}
@@ -233,8 +237,10 @@ function openPlan(){
  <div style="max-height:52vh;overflow:auto">${L.map((x,i)=>`<div class="plan" id="pl${i}"><div class="row sp"><b>${x[1]}</b><span class="chip ${x[0]==='plan'?'vio':'blue'}">${x[0]==='plan'?'Plan sign-off':'Co-sign'}</span></div><div style="font-size:12px;color:var(--muted);margin-bottom:4px">${x[2]}</div><div>${x[3]}</div><div class="row" style="justify-content:flex-end;margin-top:8px;gap:6px"><button class="btn sm" onclick="sendBack(${i})">Updates needed</button><button class="btn p sm" onclick="signPlan(${i})">Sign</button></div></div>`).join('')}</div>
  <div class="row sp" style="margin-top:10px"><button class="btn" onclick="close_()">Close</button><button class="btn p" onclick="[0,1,2,3,4].forEach(i=>{const r=document.querySelector('#pl'+i+' .row:last-child');if(r&&r.querySelector('button'))signPlan(i)})">Sign all remaining</button></div>`);
 }
-function signPlan(i){const e=document.getElementById('pl'+i);e.querySelector('.row:last-child').innerHTML='<span class="chip grn">Signed by Surabhi Sengar, Psychologist Lead · 12 Nov</span>';after();}
-function sendBack(i){const e=document.getElementById('pl'+i);e.querySelector('.row:last-child').innerHTML='<span class="chip amb">Sent back: updates needed</span>';after();}
+const PLANPT=['Sameer Das','Neel Bose','Varun Rao'];
+function lpBridgeSign(i,back){try{const n=PLANPT[i];const id=n&&pidOf(n);if(!id||!PAR)return;PAR.S.lp=PAR.S.lp||{};PAR.S.lp.sign=PAR.S.lp.sign||{};PAR.S.lp.back=PAR.S.lp.back||{};if(back){PAR.S.lp.back[id]='Updates needed (from the review queue on Today)';}else{PAR.S.lp.sign[id]={by:'Surabhi Sengar',at:'12 Nov 2026'};PAR.S.lp.back[id]='';}}catch(e){}}
+function signPlan(i){lpBridgeSign(i,false);const e=document.getElementById('pl'+i);e.querySelector('.row:last-child').innerHTML='<span class="chip grn">Signed by Surabhi Sengar, Psychologist Lead · 12 Nov</span>';after();}
+function sendBack(i){lpBridgeSign(i,true);const e=document.getElementById('pl'+i);e.querySelector('.row:last-child').innerHTML='<span class="chip amb">Sent back: updates needed</span>';after();}
 function after(){left--;document.getElementById('kSign').textContent=Math.max(0,left);if(left<=0){document.querySelector('.di[data-k=signoff]').classList.add('done');recount();toast('Review queue cleared');}}
 function openCover(){
  modal(`<h4>Leave cover · Priya Nair, 14 to 16 Nov</h4><p>Choose who covers. They get a handover request with the session plan for each patient.</p>
@@ -250,6 +256,17 @@ document.querySelectorAll('#secSeg button').forEach(b=>b.onclick=()=>sec(b.datas
 document.querySelectorAll('.kpi[data-f]').forEach(b=>b.onclick=()=>{sec('Floor');setF(b.dataset.f);});
 
 render();
+/* live state from the portal (same origin): assignments, lead sign-offs, the open family concern */
+(function(){try{
+  const LS=PAR.S.lp||{};const ids=['Sameer Das','Neel Bose','Varun Rao'];
+  const signedN=ids.filter(function(n){const id=pidOf(n);return id&&LS.sign&&LS.sign[id];}).length;
+  const noDoc=P.filter(function(p){return !p.doc;}).length,fl=document.querySelector('.kpi[data-f=all]');
+  if(fl){fl.querySelector('.v').textContent=PAR.allPts().length;fl.querySelector('.s').textContent=noDoc?noDoc+' without a psychologist':'Every patient has a psychologist';}
+  if(!noDoc){const a=document.querySelector('.di[data-k=assign]');if(a)a.classList.add('done');}
+  if(signedN){left=Math.max(0,left-signedN);document.getElementById('kSign').textContent=left;if(left<=0){document.querySelector('.di[data-k=signoff]').classList.add('done');}}
+  const c=LS.conc&&LS.conc.kabir;if(c&&c.closed){const e=document.querySelector('.di[data-k=famc]');if(e){e.classList.add('done');const k=document.getElementById('kFam');k.textContent=Math.max(0,+k.textContent-1);}}
+  recount();
+}catch(e){}})();
 const WK=[['Priya Nair','DDDDDLL'],['Kiran Mehra','DDWDDDD'],['Ankit Verma','DDDDDWW'],['Ishita Kapoor','OODSOWW'],['You','DDDDDDW']];
 function drawWk(){document.getElementById('wk').innerHTML=WK.map(r=>`<tr><td><b style="font-size:12.5px">${r[0]}</b></td>${[...r[1]].map(c=>`<td><span class="c ${c}">${c}</span></td>`).join('')}</tr>`).join('');}
 function nav(v){document.getElementById('floorView').classList.toggle('hidden',v!=='today');(document.getElementById('teamView')||{classList:{toggle(){}}}).classList.toggle('hidden',v!=='team');document.querySelector('.hello').classList.toggle('hidden',v!=='today');document.getElementById('nToday').classList.toggle('on',v==='today');document.getElementById('nTeam').classList.toggle('on',v==='team');document.querySelector('header h1').textContent=v==='team'?'Team and leave':'Today';window.scrollTo(0,0);}

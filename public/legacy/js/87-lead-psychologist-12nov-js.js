@@ -33,6 +33,8 @@
   const loadOf=k=>pts().filter(p=>docKey(p.id)===k).length||TEAM.find(t=>t.k===k).load;
   const mineIds=()=>pts().filter(p=>docKey(p.id)==='Surabhi').map(p=>p.id);
 
+  /* Daily notes default to the lead's own patients only (the notes page asks PSY_EOD) */
+  window.__lpOwn=function(){return lead()?pts().filter(p=>docKey(p.id)==='Surabhi'):null;};
   /* the embedded Today page talks to the portal through this door (same origin) */
   window.LPBridge={get S(){return S;},go:h=>go(h),allPts:()=>pts()};
   /* ---------------- Assign / Change psychologist (same pop-up everywhere) ---------------- */
@@ -108,22 +110,42 @@
   window.lpNote=function(pid){const cur=L().note[pid];V3.modal('Lead note · '+esc((ptOf(pid)||{}).name),'Guidance for the treating psychologist. It shows on their Today and on the record.',`<textarea class="input" id="lpLn" rows="4">${esc(cur?cur.t:'')}</textarea>`,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="lpNoteSave('${pid}')">Save</button>`);};
   window.lpNoteSave=function(pid){const t=(($('lpLn')||{}).value||'').trim();if(!t){toast('Write the note first');return;}L().note[pid]={t,by:signer(),at:atNow()};closeModal();render();toast('Lead note saved');};
   window.lpCosign=function(pid,i){pinSign('Co-sign the session note',[['Signing as',signer()]],()=>{L().cosign[pid+':'+i]={by:signer(),at:atNow()};render();toast('Co-signed');});};
+  /* demo: a session note written by the assistant psychologist, waiting for the lead's co-sign (Aman Gill, from the prototype's review queue) */
+  function seedAssistant(){
+    const id=idOf('Aman Gill');if(!id)return;const x=psyPx(id);if(x.__asst)return;x.__asst=1;
+    x.sn=x.sn||{ladder:[],notes:[],goals:null,relapse:null,ybocs:'',planned:8,hwLog:{},hwWhy:{},told:{},grp:[]};x.sn.notes=x.sn.notes||[];
+    x.sn.notes.push({id:'nasst1',ts:Date.now()-3*3600000,status:'signed',at:'12 Nov 2026, 10:05 am',by:'Ankit Verma (assistant psychologist)',signedBy:'Ankit Verma (assistant psychologist)',signedAt:'12 Nov 2026, 10:50 am',mod:'Motivational interviewing',mins:'40',risk:{a:'no',b:'no',c:'no'},kind:'ind',addenda:[],summaryLine:'MI session 40 min. Risk check: all no. Ambivalence about stopping; decisional balance done.'});
+  }
   function therapyBits(v,r){
     if(r.tab!=='therapy')return;
+    if(!(psyPx(r.pid).__asst)&&r.pid===idOf('Aman Gill')){seedAssistant();render();return;}
     const hd=[...v.querySelectorAll('section.card .hd')].find(h=>/^Therapy Plans/.test((h.querySelector('h3')||{}).textContent||''));
     if(hd&&!hd.querySelector('#lpLnBtn')){const b=document.createElement('button');b.id='lpLnBtn';b.className='btn sm';b.textContent='Lead note';b.onclick=()=>lpNote(r.pid);hd.appendChild(b);}
     const n=L().note[r.pid];if(n&&!v.querySelector('#lpLnShow')){const d=document.createElement('div');d.id='lpLnShow';d.className='lp-so';d.innerHTML=`<span><b>Lead note</b> · ${esc(n.t)} <span class="tiny muted">· ${esc(n.by)}, ${esc(n.at)}</span></span>`;const card=hd&&hd.closest('section.card');card?card.parentNode.insertBefore(d,card):v.insertBefore(d,v.firstChild);}
     /* sessions written by an assistant psychologist: Co-sign */
     v.querySelectorAll('.tp-body table tbody tr').forEach((tr,i)=>{if(tr.dataset.lpcs)return;if(!/assistant/i.test(tr.textContent))return;tr.dataset.lpcs='1';const cs=L().cosign[r.pid+':'+i];const last=tr.lastElementChild;if(last)last.insertAdjacentHTML('beforeend',cs?`<span class="lp-ch grn">Co-signed by ${esc(cs.by)}</span>`:`<button class="btn sm pri" onclick="lpCosign('${r.pid}',${i})">Co-sign</button>`);});
   }
-  /* Rounds */
+  /* Rounds: the ward order covers the whole floor (all wards in one list), with the psychologist's name under each patient and a Mine only toggle */
+  const WARD_ORDER=()=>Object.keys(WARDS).flatMap(w=>WARDS[w].map((p,j)=>({w,j,p})));
+  window.lpRoundGo=function(pid){try{psyOpenRounds(pid);}catch(e){go('#/rounds');}};
   function roundsBits(v){
     v.querySelectorAll('.pg-asg-demo').forEach(e=>e.remove());
-    const wo=[...v.querySelectorAll('*')].find(e=>e.children.length<3&&/^Ward order$/.test(e.textContent.trim()));if(!wo)return;
-    if(!v.querySelector('#lpMine')){const b=document.createElement('label');b.id='lpMine';b.className='lp-tg';b.innerHTML=`<input type="checkbox" ${L().rmine?'checked':''} onchange="lpSet('rmine',this.checked)"> Mine only`;wo.insertAdjacentElement('afterend',b);}
-    const items=[...v.querySelectorAll('button,div')].filter(e=>e.children.length&&/Room \d+|Suite/.test(e.textContent.slice(0,60))&&e.parentElement&&e.parentElement.contains(wo.parentElement||wo)===false);
-    /* the psychologist's name under each patient in the ward order */
-    v.querySelectorAll('[onclick*="rounds"],.ro-item,.wo-item,.pr-ward button').forEach(b=>{if(b.dataset.lpn)return;const nm=pts().find(p=>b.textContent.includes(p.name));if(!nm)return;b.dataset.lpn='1';const d=docName(nm.id);b.insertAdjacentHTML('beforeend',`<span class="tiny muted" style="display:block">${d?esc(d):'No psychologist'}</span>`);if(L().rmine&&docKey(nm.id)!=='Surabhi')b.style.display='none';});
+    const q=v.querySelector('aside.pr-queue');if(!q||q.dataset.lpf==='1'&&q.dataset.lpm===String(!!L().rmine))return;
+    /* tags (Alert, Overdue, New) of the patients in the current ward, kept as they are */
+    const tag={};q.querySelectorAll('button.pr-q').forEach(b=>{const n=(b.querySelector('span span')||{}).textContent;const t=b.querySelector('.pr-tag');if(n&&t)tag[n.trim()]=t.outerHTML;});
+    const R=S.rounds,curP=(WARDS[R.ward]||[])[Math.min(R.idx[R.ward]||0,(WARDS[R.ward]||[]).length-1)];
+    const rows=WARD_ORDER().filter(x=>!L().rmine||docKey(x.p.id)==='Surabhi');
+    q.querySelectorAll('button.pr-q,.lp-wh').forEach(b=>b.remove());
+    let last='';const frag=document.createDocumentFragment();
+    rows.forEach(x=>{
+      if(x.w!==last){last=x.w;const h=document.createElement('div');h.className='lp-wh tiny muted';h.style.cssText='padding:8px 10px 2px;font-weight:700;letter-spacing:.04em;text-transform:uppercase';h.textContent=x.w;frag.appendChild(h);}
+      const b=document.createElement('button');b.className='pr-q'+(curP&&curP.id===x.p.id?' on':'');b.setAttribute('onclick',"lpRoundGo('"+x.p.id+"')");
+      const d=docName(x.p.id);
+      b.innerHTML='<span class="pr-dot"></span><span style="min-width:0"><span style="display:block;font-weight:600;font-size:13px">'+esc(x.p.name)+'</span><span class="tiny muted">'+esc(x.p.room||'')+'</span><span class="tiny" style="display:block;color:#1e5bb8">'+(d?esc(d):'No psychologist')+'</span></span>'+(tag[x.p.name]||'');
+      frag.appendChild(b);});
+    q.appendChild(frag);q.dataset.lpf='1';q.dataset.lpm=String(!!L().rmine);
+    if(!v.querySelector('#lpMine')){const t=document.createElement('label');t.id='lpMine';t.className='lp-tg';t.innerHTML=`<input type="checkbox" ${L().rmine?'checked':''} onchange="lpSet('rmine',this.checked)"> Mine only`;const first=q.querySelector('.lbl');first&&first.parentElement.insertAdjacentElement('afterend',t);}
+    else{const c=v.querySelector('#lpMine input');if(c)c.checked=!!L().rmine;}
   }
   /* Daily notes: floor counter */
   function notesBits(v){
@@ -139,12 +161,34 @@
     if(!v.querySelector('#lpHoFor')){const b=document.createElement('div');b.id='lpHoFor';b.className='lp-so';b.innerHTML=`<span><b>Hand over for a team member</b> · when someone is on sick leave or cannot be reached</span><select class="lp-sel" onchange="lpHoFor(this.value)"><option value="">Choose the psychologist</option>${TEAM.filter(t=>t.k!=='Surabhi'&&t.k!=='Ankit').map(t=>`<option value="${t.k}" ${L().hoFrom===t.k?'selected':''}>${esc(t.n)} · ${loadOf(t.k)} patients</option>`).join('')}</select>`;v.insertBefore(b,v.firstChild.id==='safeBar'?v.firstChild.nextSibling:v.firstChild);}
   }
   window.lpHoFor=function(k){L().hoFrom=k;if(k)toast('Handing over '+FULL[k]+"'s "+loadOf(k)+' patients. Pick who covers.');render();};
-  /* Calendar: whole team, filter, red flags */
+  /* Calendar and caseload: whole team by default, a filter per psychologist, red flags, and a caseload board with one column per psychologist (drag to rebalance) */
+  const evPatient=b=>{const n=((b.querySelector('b')||{}).textContent||'').replace(/^Family\s*·\s*/,'').trim();return pts().find(p=>p.name===n)||null;};
+  window.lpMovePt=function(pid,k){const p=ptOf(pid);if(!p)return;const old=docKey(pid);if(old===k)return;L().assign[pid]=k;render();
+    toast(p.name+' moved to '+(k?FULL[k]:'unassigned')+'. The plan, notes and family contacts go with them'+(old?'; '+FULL[old]+' gets a handover note.':'.'));};
+  window.lpDrag=function(ev,pid){try{ev.dataTransfer.setData('text/plain',pid);ev.dataTransfer.effectAllowed='move';}catch(e){}ev.target.classList.add('lp-drag');};
+  window.lpDrop=function(ev,k){ev.preventDefault();const pid=ev.dataTransfer.getData('text/plain');document.querySelectorAll('.lp-colh').forEach(c=>c.classList.remove('lp-colh'));if(pid)lpMovePt(pid,k);};
+  function boardHtml(){
+    const cols=TEAM.map(t=>({k:t.k,n:t.n+(t.you?' (you)':''),t})).concat([{k:'',n:'Unassigned',t:null}]);
+    return `<div class="pgc-board lp-board">${cols.map(c=>{const list=pts().filter(p=>(docKey(p.id)||'')===c.k);
+      return `<section class="pgc-col lp-col" ondragover="event.preventDefault();this.classList.add('lp-colh')" ondragleave="this.classList.remove('lp-colh')" ondrop="lpDrop(event,'${c.k}')"><div class="pgc-ch"><b>${esc(c.n)}</b><span>${list.length}</span></div><div class="pgc-cs">${c.t?esc(c.t.today)+(c.t.leave?' · '+esc(c.t.leave):''):'Needs a psychologist'}</div>
+        ${list.map(p=>{const x=protoOf(p.id);return `<div class="pgc-cd lp-card" draggable="true" ondragstart="lpDrag(event,'${p.id}')" ondragend="this.classList.remove('lp-drag')"><div class="pgc-cdh"><button class="pgc-nm" onclick="go('#/patient/${p.id}/therapy')">${esc(p.name)}</button><span class="pgc-rm">${esc(p.room||'')}</span></div><div class="pgc-md">${esc(x?x.th:'')}</div><div class="pgc-ln"><span>Last session: ${esc(x?x.last:'')}</span></div>
+          <div class="pgc-ac"><select class="input pgc-mv" aria-label="Move ${esc(p.name)}" onchange="lpMovePt('${p.id}',this.value)"><option value="" ${!docKey(p.id)?'selected':''}>Unassigned</option>${TEAM.map(t=>`<option value="${t.k}" ${docKey(p.id)===t.k?'selected':''}>${esc(t.n)}</option>`).join('')}</select></div></div>`;}).join('')||'<div class="small muted" style="padding:10px">Drop a patient here</div>'}</section>`;}).join('')}</div>`;
+  }
   function calendarBits(v){
-    if(v.querySelector('#lpCalBar'))return;
-    const h=[...v.querySelectorAll('h3,h2')].find(x=>/Calendar and caseload/i.test(x.textContent));if(!h)return;
-    const b=document.createElement('div');b.id='lpCalBar';b.className='lp-so';b.innerHTML=`<span><b>Whole team</b> · filter by psychologist</span><select class="lp-sel" onchange="lpSet('calD',this.value)"><option value="">Whole team</option>${TEAM.filter(t=>t.k!=='Ankit').map(t=>`<option value="${t.k}" ${L().calD===t.k?'selected':''}>${esc(t.you?'You':t.n)}</option>`).join('')}</select><span class="lp-ch red">Relapse prevention group, today 4:00 pm: no facilitator</span><span class="lp-ch red">Priya Nair on leave 14 to 16 Nov: 2 sessions booked</span>`;
-    (h.closest('section,.card')||h).insertAdjacentElement('beforebegin',b);
+    const h=[...v.querySelectorAll('h2,h3')].find(x=>/Calendar and caseload/i.test(x.textContent));if(!h)return;
+    if(!v.querySelector('#lpCalBar')){
+      const b=document.createElement('div');b.id='lpCalBar';b.className='lp-so';b.innerHTML=`<span><b>Whole team</b> · filter by psychologist</span><select class="lp-sel" onchange="lpSet('calD',this.value)"><option value="">Whole team</option>${TEAM.filter(t=>t.k!=='Ankit').map(t=>`<option value="${t.k}" ${L().calD===t.k?'selected':''}>${esc(t.you?'You':t.n)}</option>`).join('')}</select><span class="lp-ch red">Relapse prevention group: no facilitator</span><span class="lp-ch red">Priya Nair on leave 14 to 16 Nov: sessions booked</span>`;
+      (h.closest('.pgc-top')||h.parentElement).insertAdjacentElement('afterbegin',b);}
+    const tab=(S.pgc||{}).tab;
+    if(tab==='board'){const old=v.querySelector('.pgc-board:not(.lp-board)');if(old){const t=document.createElement('div');t.innerHTML=boardHtml();old.replaceWith(t.firstElementChild);}return;}
+    /* session calendar: filter per psychologist, red flags */
+    const cells=[...v.querySelectorAll('.pgc-grid .pgc-c')],wk=(S.pgc||{}).wk||0;
+    cells.forEach((cell,ci)=>{const dayIdx=ci%7,absDay=wk*7+dayIdx; /* 0 = Monday of this week; Sat 14 Nov = 5, Sun 15 = 6, Mon 16 = 7 */
+      cell.querySelectorAll('button.pgc-e').forEach(b=>{const p=evPatient(b),d=p?docKey(p.id):'';const isGroup=/Group/.test(b.getAttribute('title')||'');
+        b.style.display=(L().calD&&p&&d!==L().calD)||(L().calD&&!p&&!isGroup&&L().calD!=='Surabhi')?'none':'';
+        const onLeave=d==='Priya'&&absDay>=5&&absDay<=7,noFac=/Relapse prevention group/.test(b.textContent);
+        b.classList.toggle('lp-red',onLeave||noFac);
+        if((onLeave||noFac)&&!b.dataset.lpr){b.dataset.lpr='1';b.title=(b.title||'')+(noFac?' · no facilitator':' · Priya Nair on leave');}});});
   }
   /* Team and leave in the left menu */
   window.lpTeam=function(){const WK=[['Priya Nair','DDDDDLL'],['Kiran Mehra','DDWDDDD'],['Ankit Verma','DDDDDWW'],['Ishita Kapoor','OODSOWW'],['You','DDDDDDW']];
@@ -179,6 +223,8 @@
   .lp-sel{height:34px;border:1px solid #d6dee8;border-radius:10px;padding:0 10px;font:inherit;font-size:13px;background:#fff}
   .lp-so{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:9px 14px;border-radius:12px;margin:0 0 10px;font-size:13.5px;background:#f5f9ff;border:1px solid #d5e4fb}.lp-so.ok{background:#ecfdf3;border-color:#abefc6;color:#067647}.lp-so.wait{background:#fffaeb;border-color:#fedf89;color:#8a5a00}
   .lp-tg{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin:4px 0}.lp-fn{display:inline-block;border:1px solid #d5e4fb;background:#f5f9ff;border-radius:99px;padding:6px 14px;font:inherit;font-size:13px;margin:0 0 10px;cursor:pointer}`;
+  css.textContent+=`.lp-red{outline:2px solid #d9453d;background:#fef3f2!important;color:#912018!important}.lp-card{cursor:grab}.lp-card.lp-drag{opacity:.45}.lp-col.lp-colh{outline:2px dashed #1e6cdb;background:#f1f7ff}.lp-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;align-items:start}
+  .pr-queue .lp-wh{margin-top:4px}`;
   document.head.appendChild(css);
 
   const __r=render;
