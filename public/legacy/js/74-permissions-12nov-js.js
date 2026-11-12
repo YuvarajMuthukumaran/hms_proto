@@ -7,7 +7,7 @@
    - A PHQ-9 / GAD-7 (any assigned assessment) cannot be marked done without a score.
    Prototype PIN: 1234 (shown in the window). Nothing is stored except who signed and when. */
 (function(){
-  const real=()=>{const b=window.__TULASI__||{};return String(b.viewRole||b.role||'');};
+  const real=()=>{const b=window.__TULASI__||{};return String(b.role||b.viewRole||'');};
   const canDecide=()=>{const r=real();return !r||['psychiatrist','floor-lead-psychiatrist'].includes(r);};
   window.permCanDecide=canDecide;
   const PIN='1234';

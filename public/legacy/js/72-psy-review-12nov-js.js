@@ -6,7 +6,7 @@
       (family call, voice note with a category tag, from the patient, internal and automatic). */
 (function(){
   /* the psychologist draws some pages through the psychiatrist's code with S.role switched for a moment (asDoctor), so the page's own role is checked too */
-  const realRole=()=>{const b=window.__TULASI__||{};return String(b.viewRole||b.role||'');};
+  const realRole=()=>{const b=window.__TULASI__||{};return String(b.role||b.viewRole||'');};
   const psy=()=>S.role==='psychiatrist'&&!/psycholog|patient-experience/.test(realRole());
 
   const css=document.createElement('style');css.id='psy-review-12nov-css';
