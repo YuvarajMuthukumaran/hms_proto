@@ -328,10 +328,10 @@
   @media (max-width:980px){.hv-rc-heads{display:none}.hv-rc-p{grid-template-columns:1fr}.hv-rc-m:before{content:attr(data-l);display:block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#667085}}`;
   document.head.appendChild(rcCss2);
   function receivedCard(h){
-    const n=h.pids.length,open=!h.hide,KEYS=['Current symptoms','Past treatment trials','Future treatment plan'];
+    const n=h.pids.length,open=true,KEYS=['Current symptoms','Past treatment trials','Future treatment plan'];
     return `<section class="hv-rc" aria-label="Handover received">
       <div class="hv-rc-hd"><span class="hv-rc-ic">${IC}</span><div class="t"><b>${hesc(h.from)} handed over ${n} patient${n>1?'s':''} to you</b><span>${hesc(h.reason)} · sent ${hesc(shortAt(h.at))} · ${h.acceptedBy?'accepted by '+hesc(h.acceptedBy)+', '+hesc(shortAt(h.acceptedAt)):'until you accept, '+hesc(h.from)+' still sees them'}</span></div>
-        <button class="btn sm" onclick="psyHoToggle('${h.id}')">${open?'Hide':'Show'}</button>${h.acceptedBy?'':`<button class="btn sm pri" onclick="psyHoAccept('${h.id}')">Accept handover</button>`}</div>
+        ${h.acceptedBy?'':`<button class="btn sm pri" onclick="psyHoAccept('${h.id}')">Accept handover</button>`}</div>
       ${open?`<div class="hv-rc-wrap"><div class="hv-rc-heads" aria-hidden="true"><span>Patient</span>${KEYS.map(k=>`<span>${k}</span>`).join('')}<span></span></div><div class="hv-rc-list" tabindex="0" aria-label="Patients handed over to you">${h.pids.map(pid=>{const p=ptFind(pid);if(!p)return '';const l=lineFor(h,pid),rows=lineRows(l),get=k=>(rows.find(x=>x[0]===k)||[])[1]||'';
         return `<div class="hv-rc-p"><div class="hv-rc-who"><div style="min-width:0"><b>${hesc(p.name)}</b><div class="s">${hesc(subOf(p))}</div>${(l.tags||[]).length?`<div class="hv-tags">${l.tags.map(t=>`<span class="hv-tag">${hesc(t[0])}</span>`).join('')}</div>`:''}</div></div>
           ${KEYS.map(k=>`<div class="hv-rc-m" data-l="${k}">${hesc(get(k))||'<span class="muted">—</span>'}</div>`).join('')}
