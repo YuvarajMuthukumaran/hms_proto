@@ -21,6 +21,53 @@
   .hist-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 2px}
   .hist-h b{font-size:16px;font-weight:800;letter-spacing:-.01em;color:var(--ink,#101828)}
   .hist-h span{font-size:12.5px;color:var(--muted,#667085)}
+  /* Detailed history section strip (psychiatrist): number and name, a little bigger, on its own neat row */
+  body.psy-views:not(.psg) .hrow11 .hnav{flex:1 1 100%!important;order:3;margin-left:0!important;flex-wrap:wrap!important;gap:8px!important;padding:10px 12px!important;border-radius:16px!important;justify-content:flex-start}
+  body.psy-views:not(.psg) .hrow11 .hnav button{gap:8px!important;padding:5px 12px 5px 6px!important;border:1px solid var(--line,#e4e7ec)!important;background:#fff!important;border-radius:99px!important;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease,background .15s ease}
+  body.psy-views:not(.psg) .hrow11 .hnav button:hover{transform:translateY(-2px);border-color:#9ec0f7!important;box-shadow:0 4px 10px rgba(23,92,211,.15)}
+  body.psy-views:not(.psg) .hrow11 .hnav button>span:not(.hn){display:inline!important;flex:none!important;font-size:13.5px;font-weight:600;color:#344054;max-width:none;overflow:visible;opacity:1}
+  body.psy-views:not(.psg) .hrow11 .hnav button .hn{width:28px!important;height:28px!important;min-width:28px;font-size:13px!important;font-weight:800}
+  body.psy-views:not(.psg) .hrow11 .hnav button.on{background:#eaf2fd!important;border-color:#1e6cdb!important}
+  body.psy-views:not(.psg) .hrow11 .hnav button.on>span:not(.hn){color:#175cd3;font-weight:800}
+  body.psy-views:not(.psg) .hrow11 .hnav button:hover:after,body.psy-views:not(.psg) .hrow11 .hnav button:focus-visible:after{content:none!important;display:none!important}
+
+  /* capacity assessment, Fill form (psychiatrist): numbered parts, answers as a switch, quiet notes, large conclusion choices */
+  body.psy-views:not(.psg) #view #capCard .cap-prog{display:flex;align-items:center;gap:14px;padding:12px 16px;border:1px solid #dbe6f5;border-radius:14px;background:#f5f9ff}
+  body.psy-views:not(.psg) #view #capCard .cap-prog b{font-size:13.5px;font-weight:800;color:#14284b;white-space:nowrap}
+  body.psy-views:not(.psg) #view #capCard .cap-prog .bar{flex:1;height:8px;border-radius:99px;background:#dde8f7;overflow:hidden}
+  body.psy-views:not(.psg) #view #capCard .cap-prog .bar i{display:block;height:100%;width:0;background:#1e6cdb;border-radius:99px;transition:width .25s ease}
+  body.psy-views:not(.psg) #view #capCard .cap-g{border:1px solid #e1e9f4;border-radius:18px;background:#fff;padding:0;gap:0;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  body.psy-views:not(.psg) #view #capCard .cap-g>.cg-h{display:flex;align-items:center;gap:14px;margin:0;padding:15px 20px;background:#f8fafd;border-bottom:1px solid #e8eef7}
+  body.psy-views:not(.psg) #view #capCard .cg-n{flex:0 0 32px;width:32px;height:32px;border-radius:50%;background:#1e6cdb;color:#fff;font-style:normal;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center}
+  body.psy-views:not(.psg) #view #capCard .cg-n.warn{background:#fff3d6;color:#9a5b00;box-shadow:inset 0 0 0 1.5px #f1cf85}
+  body.psy-views:not(.psg) #view #capCard .cg-n.plain{background:#e8f0fc;color:#175cd3}
+  body.psy-views:not(.psg) #view #capCard .cg-t b{display:block;font-size:16px;font-weight:800;letter-spacing:-.01em;color:#14284b;line-height:1.3}
+  body.psy-views:not(.psg) #view #capCard .cg-t small{display:block;margin-top:2px;font-size:12.5px;color:#667085;line-height:1.4}
+  body.psy-views:not(.psg) #view #capCard .cap-g>.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 22px;padding:18px 20px 6px}
+  body.psy-views:not(.psg) #view #capCard .cap-g .field .lbl{display:block;margin-bottom:6px;font-size:12.5px;font-weight:700;color:#475467}
+  body.psy-views:not(.psg) #view #capCard .cap-g>.grid2 .input{height:44px;border-radius:11px;border:1px solid #d5dfec;background:#fff;padding:0 14px;font-size:14.5px;font-weight:600;color:#14284b}
+  body.psy-views:not(.psg) #view #capCard .cap-g .input:focus{outline:0;border-color:#1e6cdb;box-shadow:0 0 0 3px #d6e5fb}
+  body.psy-views:not(.psg) #view #capCard .cap-g>.tiny{padding:6px 20px 18px;font-size:12.5px;line-height:1.5;color:#667085}
+  body.psy-views:not(.psg) #view #capCard .cap-g .q{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 24px;align-items:center;padding:16px 20px;border-top:1px solid #eef2f8}
+  body.psy-views:not(.psg) #view #capCard .cap-g .cg-h+.q{border-top:0}
+  body.psy-views:not(.psg) #view #capCard .cap-g .q>.small{display:flex;gap:12px;align-items:flex-start;font-size:14.5px;line-height:1.5;font-weight:600;color:#1d2939}
+  body.psy-views:not(.psg) #view #capCard .cq-l{flex:0 0 24px;width:24px;height:24px;margin-top:1px;border-radius:7px;background:#eef2f8;color:#475467;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  body.psy-views:not(.psg) #view #capCard .cap-g .q>.radios{display:inline-flex;flex-wrap:nowrap;gap:3px;padding:3px;border-radius:12px;background:#eef2f8;justify-self:end}
+  body.psy-views:not(.psg) #view #capCard .cap-g .q>.radios .tog{height:34px;padding:0 16px;border:0;border-radius:9px;background:transparent;font-size:13.5px;font-weight:650;color:#475467;white-space:nowrap;transition:background .15s,color .15s,box-shadow .15s}
+  body.psy-views:not(.psg) #view #capCard .cap-g .q>.radios .tog:hover{background:#dfe8f5;color:#14284b}
+  body.psy-views:not(.psg) #view #capCard .cap-g .q>.radios .tog.on{background:#1e6cdb;color:#fff;box-shadow:0 2px 6px rgba(30,108,219,.35)}
+  body.psy-views:not(.psg) #view #capCard .cap-g .q>input.input{grid-column:1/-1;height:38px;min-height:38px!important;margin-left:36px;border:0;border-radius:10px;background:#f5f7fb;padding:0 14px;font-size:13.5px}
+  body.psy-views:not(.psg) #view #capCard .cap-g .q>input.input::placeholder{color:#98a2b3}
+  body.psy-views:not(.psg) #view #capCard .cap-g .radios.cap-concl{display:flex;flex-direction:column;gap:10px;padding:16px 20px 6px;background:none;border-radius:0}
+  body.psy-views:not(.psg) #view #capCard .cap-g .radios.cap-concl .tog{position:relative;display:flex;align-items:flex-start;gap:12px;width:100%;height:auto;min-height:56px;padding:14px 16px 14px 48px;border:1.5px solid #d5dfec;border-radius:14px;background:#fff;font-size:14.5px;font-weight:600;line-height:1.45;color:#1d2939;text-align:left;white-space:normal;box-shadow:none}
+  body.psy-views:not(.psg) #view #capCard .cap-concl .tog::before{content:'';position:absolute;left:16px;top:17px;width:20px;height:20px;border-radius:50%;border:2px solid #b8c4d6;background:#fff;box-sizing:border-box}
+  body.psy-views:not(.psg) #view #capCard .cap-concl .tog:hover{border-color:#9ec0f7;background:#f7faff}
+  body.psy-views:not(.psg) #view #capCard .cap-concl .tog.on{border-color:#1e6cdb;background:#eef4ff;color:#14284b;box-shadow:0 0 0 3px #d6e5fb}
+  body.psy-views:not(.psg) #view #capCard .cap-concl .tog.on::before{border:6px solid #1e6cdb}
+  body.psy-views:not(.psg) #view #capCard .cap-concl .tog b{color:#175cd3;margin-right:2px}
+  body.psy-views:not(.psg) #view #capCard .cap-g>.callout{margin:10px 20px 18px}
+  body.psy-views:not(.psg) #view #capCard .pad>.row[style*="flex-end"]{position:sticky;bottom:0;z-index:5;margin:0 -4px;padding:12px 4px;background:linear-gradient(180deg,rgba(255,255,255,0),#fff 28%);gap:10px}
+  @media(max-width:760px){body.psy-views:not(.psg) #view #capCard .cap-g .q{grid-template-columns:1fr}body.psy-views:not(.psg) #view #capCard .cap-g .q>.radios{justify-self:start}body.psy-views:not(.psg) #view #capCard .cap-g>.grid2{grid-template-columns:1fr}body.psy-views:not(.psg) #view #capCard .cap-g .q>input.input{margin-left:0}}
   /* past admissions dropdown */
   .padm{border:1px solid var(--line,#e4e7ec);border-radius:14px;background:#fff;margin:0 0 12px;overflow:hidden}
   .padm>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 18px;background:#f8fafc;transition:background .15s}
@@ -277,4 +324,53 @@
     S.pgriev.unshift({from:src==='patient'?'Patient':String($('gf').value).replace(/\s*\(.*\)$/,''),t:ta.value.trim().slice(0,90),via:$('ga').value,own,st:'Open',sla:'6 h left',src,cat:gCat,...whoAt()});
     S.pxTab='griev';closeModal();render();toast('Logged as '+SRC[src][0].toLowerCase()+' · tagged '+gCat+'; patient experience team alerted');
   };
+
+  /* ---------- 5. Capacity assessment: structure for the new look (same questions, same answers, same saved data) ---------- */
+  const __capF=capForm;
+  capForm=function(){
+    const h=__capF.apply(this,arguments);
+    if(!psy()||typeof h!=='string')return h;
+    const t=document.createElement('template');t.innerHTML=h;
+    const groups=[...t.content.querySelectorAll('.cap-g')];
+    if(!groups.length)return h;
+    groups.forEach((g,gi)=>{
+      const cs=g.querySelector(':scope > .capsec');
+      if(cs){
+        let num='',title='',cls='';
+        const st=(cs.querySelector('strong')||{}).textContent||'';const m=st.match(/^(\d)\s*·\s*(.+)$/);
+        if(m){num=m[1];title=m[2];}else{title=st;num='!';cls='warn';}
+        const hint=((cs.querySelector('.tiny')||{}).textContent||'').trim();
+        const hd=document.createElement('div');hd.className='cg-h';
+        hd.innerHTML='<i class="cg-n '+cls+'">'+num+'</i><div class="cg-t"><b>'+hesc(title)+'</b>'+(hint?'<small>'+hesc(hint)+'</small>':'')+'</div>';
+        cs.replaceWith(hd);
+      }else if(gi===0){
+        const hd=document.createElement('div');hd.className='cg-h';
+        hd.innerHTML='<i class="cg-n plain">i</i><div class="cg-t"><b>Assessment details</b><small>Who is assessed, where, and who speaks for them</small></div>';
+        g.prepend(hd);
+      }
+      g.querySelectorAll('.q').forEach(q=>{
+        const sm=q.querySelector(':scope > .small');
+        if(sm){const txt=sm.textContent.trim(),m=txt.match(/^([A-D])\.\s+([\s\S]+)$/);sm.removeAttribute('style');sm.innerHTML=m?'<span class="cq-l">'+m[1]+'</span><span>'+hesc(m[2])+'</span>':'<span>'+hesc(txt)+'</span>';}
+        const inp=q.querySelector(':scope > input.input');if(inp&&inp.getAttribute('placeholder')==='Explanation')inp.setAttribute('placeholder','Add a note (optional)');
+      });
+      g.querySelectorAll('.cap-concl .tog').forEach(b=>{const m=b.textContent.trim().match(/^(4[AB])\s*·\s*([\s\S]+)$/);if(m)b.innerHTML='<span><b>'+m[1]+'</b> '+hesc(m[2])+'</span>';});
+    });
+    const out=t.content.firstElementChild;
+    if(S.capView==='form'&&out&&!out.querySelector('.cap-prog')){
+      const pr=document.createElement('div');pr.className='cap-prog';pr.innerHTML='<b class="cap-prog-t">0 of 0 answered</b><div class="bar"><i></i></div>';
+      out.prepend(pr);
+    }
+    return t.innerHTML;
+  };
+  const capProg=()=>{
+    const card=document.getElementById('capCard');if(!card)return;
+    const qs=[...card.querySelectorAll('.cap-g .q')],cn=card.querySelector('.cap-concl');
+    const total=qs.length+(cn?1:0),done=qs.filter(q=>q.querySelector('.tog.on')).length+(cn&&cn.querySelector('.tog.on')?1:0);
+    const t=card.querySelector('.cap-prog-t'),b=card.querySelector('.cap-prog .bar i');
+    if(t)t.textContent=done+' of '+total+' answered';
+    if(b)b.style.width=(total?Math.round(done/total*100):0)+'%';
+  };
+  document.addEventListener('click',e=>{if(psy()&&e.target.closest&&e.target.closest('#capCard .tog'))setTimeout(capProg,0);});
+  const __rCap=render;
+  render=function(){const r=__rCap.apply(this,arguments);if(psy())capProg();return r;};
 })();
