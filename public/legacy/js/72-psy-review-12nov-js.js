@@ -84,16 +84,26 @@
   body.psy-views:not(.psg) .hrow11 .hnav button:focus-visible{outline:2px solid #1e6cdb;outline-offset:2px}
   @media (prefers-reduced-motion:reduce){body.psy-views:not(.psg) .hrow11 .hnav button.pop .hn{animation:none}body.psy-views:not(.psg) .hrow11 .hnav button .hn{transition:none}}
   /* past admissions dropdown */
-  .padm{border:1px solid var(--line,#e4e7ec);border-radius:14px;background:#fff;margin:0 0 12px;overflow:hidden}
-  .padm>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 18px;background:#f8fafc;transition:background .15s}
-  .padm>summary:hover{background:#eef4fd}
-  .padm>summary::-webkit-details-marker{display:none}
-  .padm>summary::after{content:'›';margin-left:auto;color:var(--muted,#667085);font-size:22px;line-height:1;transition:transform .15s}
-  .padm[open]>summary::after{transform:rotate(90deg)}
-  .padm[open]>summary{border-bottom:1px solid var(--line,#e4e7ec)}
-  .padm-t{font-weight:800;font-size:15px}
-  .padm-m{font-size:12.5px;color:var(--muted,#667085)}
-  .padm>section.card{border:0!important;border-radius:0!important;margin:0!important;box-shadow:none!important}
+  .pdd-wrap{margin:0 0 14px}
+  .pdd-l{display:flex;align-items:baseline;gap:10px;margin:0 2px 7px;font-size:13px;font-weight:700;color:#344054}
+  .pdd-l span{font-weight:500;color:#667085;font-size:12.5px}
+  .pdd{position:relative;max-width:560px}
+  .pdd-b{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;text-align:left;font:inherit;padding:12px 16px;border:1.5px solid #cfdcee;border-radius:14px;background:#fff;color:#14284b;cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:border-color .15s,box-shadow .15s,transform .15s}
+  .pdd-b:hover{border-color:#9ec0f7;transform:translateY(-1px)}
+  .pdd-b:focus-visible,.pdd-o:focus-visible{outline:2px solid #1e6cdb;outline-offset:2px}
+  .pdd.open .pdd-b{border-color:#1e6cdb;box-shadow:0 0 0 3px #d6e5fb}
+  .pdd-bt b,.pdd-ot b{display:block;font-size:15px;font-weight:800;letter-spacing:-.01em}
+  .pdd-bt small,.pdd-ot small{display:block;margin-top:2px;font-size:12.5px;color:#667085;font-weight:500}
+  .pdd-c{flex:0 0 18px;color:#667085;transition:transform .22s ease}
+  .pdd.open .pdd-c{transform:rotate(180deg)}
+  .pdd-m{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:40;padding:6px;border:1px solid #dbe6f5;border-radius:14px;background:#fff;box-shadow:0 18px 40px -12px rgba(16,40,90,.3);opacity:0;visibility:hidden;transform:translateY(-6px) scale(.98);transform-origin:top center;transition:opacity .16s ease,transform .18s ease,visibility 0s linear .18s}
+  .pdd.open .pdd-m{opacity:1;visibility:visible;transform:none;transition-delay:0s}
+  .pdd-o{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;font:inherit;padding:10px 12px;border:0;border-radius:10px;background:transparent;color:#14284b;cursor:pointer;transition:background .12s}
+  .pdd-o:hover,.pdd-o:focus{background:#eef4ff}
+  .pdd-o.on{background:#eaf2fd}
+  .pdd-tk{flex:0 0 16px;color:#1e6cdb;opacity:0;transform:scale(.5);transition:opacity .15s,transform .2s cubic-bezier(.3,1.6,.5,1)}
+  .pdd-o.on .pdd-tk{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.pdd-m,.pdd-c,.pdd-b,.pdd-tk{transition:none}}
   /* admission workup, four numbered panels */
   .wk-grp{border:1px solid var(--line,#e4e7ec);border-radius:14px;background:#fff;margin:0 0 14px;overflow:hidden}
   .wk-gh{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#f8fafc;border-bottom:1px solid var(--line,#e4e7ec)}
@@ -141,23 +151,46 @@
   `;
   document.head.appendChild(css);
 
-  /* ---------- 1. Past admissions: a dropdown per stay when there are two or more ---------- */
+  /* ---------- 1. Past admissions: a dropdown to choose one stay; only the chosen stay is shown ---------- */
+  function ensureDemoPast(){
+    /* the demo patient gets a second, older stay so the dropdown can be seen */
+    if(S.pid!=='neel'||!Array.isArray(S.pastAdm)||S.pastAdm.length!==1)return;
+    const b=JSON.parse(JSON.stringify(S.pastAdm[0]));
+    b.n=2;b.dates='10 Jun to 2 Jul 2024';b.days=22;b.dx='Bipolar affective disorder, current episode hypomanic';b.cond='Settled, good insight';b.meds=['Lithium carbonate 300 mg · 1-0-1'];b.plan='Lithium maintenance; sleep routine; review in 4 weeks';
+    S.pastAdm.push(b);
+  }
+  window.padmPick=function(i){S.padmSel=i;render();};
+  window.padmToggle=function(ev){
+    const dd=ev&&ev.currentTarget&&ev.currentTarget.closest('.pdd');if(!dd)return;
+    const open=!dd.classList.contains('open');dd.classList.toggle('open',open);
+    dd.querySelector('.pdd-b').setAttribute('aria-expanded',open?'true':'false');
+    if(open){const sel=dd.querySelector('.pdd-o.on')||dd.querySelector('.pdd-o');if(sel)setTimeout(()=>sel.focus({preventScroll:true}),30);}
+  };
+  window.padmKey=function(ev){
+    const dd=ev.currentTarget.closest('.pdd');if(!dd)return;
+    const opts=[...dd.querySelectorAll('.pdd-o')],i=opts.indexOf(document.activeElement);
+    if(ev.key==='Escape'){dd.classList.remove('open');dd.querySelector('.pdd-b').setAttribute('aria-expanded','false');dd.querySelector('.pdd-b').focus();}
+    else if(ev.key==='ArrowDown'){ev.preventDefault();if(!dd.classList.contains('open')){padmToggle({currentTarget:dd.querySelector('.pdd-b')});}else(opts[Math.min(opts.length-1,i+1)]||opts[0]).focus();}
+    else if(ev.key==='ArrowUp'){ev.preventDefault();(opts[Math.max(0,i-1)]||opts[0]).focus();}
+  };
+  document.addEventListener('click',e=>{document.querySelectorAll('.pdd.open').forEach(d=>{if(!d.contains(e.target)){d.classList.remove('open');const b=d.querySelector('.pdd-b');if(b)b.setAttribute('aria-expanded','false');}});});
   const __pa=pPast;
   pPast=function(){
+    if(psy())ensureDemoPast();
     const h=__pa.apply(this,arguments);
     if(!psy()||typeof h!=='string'||!S.pastAdm||S.pastAdm.length<2)return h;
     const t=document.createElement('template');t.innerHTML=h;
     const cards=[...t.content.children].filter(e=>e.matches&&e.matches('section.card'));
     if(cards.length<2)return h;
-    const first=cards[0];
-    cards.forEach((card,ai)=>{
-      const a=S.pastAdm[ai]||{};
-      const key='padm'+ai,open=(S.padmOpen||{})[key]!==undefined?(S.padmOpen||{})[key]:ai===0;
-      const d=document.createElement('details');d.className='padm';if(open)d.open=true;
-      d.setAttribute('ontoggle',"(S.padmOpen=S.padmOpen||{})['"+key+"']=this.open");
-      d.innerHTML='<summary><span class="padm-t">Past admission '+(ai+1)+'</span><span class="padm-m">'+hesc(String(a.dates||''))+(a.days?' · '+a.days+' days':'')+(a.psy?' · '+hesc(a.psy):'')+'</span></summary>';
-      card.replaceWith(d);d.appendChild(card);
-    });
+    const sel=Math.min(Math.max(+S.padmSel||0,0),cards.length-1);
+    const tick='<svg class="pdd-tk" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
+    const info=a=>hesc(String(a.dates||''))+(a.days?' · '+a.days+' days':'');
+    const a0=S.pastAdm[sel]||{};
+    const opts=cards.map((c,i)=>{const a=S.pastAdm[i]||{};return '<button type="button" role="option" aria-selected="'+(i===sel)+'" class="pdd-o'+(i===sel?' on':'')+'" onclick="padmPick('+i+')"><span class="pdd-ot"><b>Past admission '+(i+1)+'</b><small>'+info(a)+(a.psy?' · '+hesc(a.psy):'')+'</small></span>'+tick+'</button>';}).join('');
+    const dd=document.createElement('div');dd.className='pdd-wrap';
+    dd.innerHTML='<div class="pdd-l">Choose a past admission <span>'+cards.length+' on record</span></div><div class="pdd" onkeydown="padmKey(event)"><button type="button" class="pdd-b" aria-haspopup="listbox" aria-expanded="false" onclick="padmToggle(event)"><span class="pdd-bt"><b>Past admission '+(sel+1)+'</b><small>'+info(a0)+(a0.psy?' · '+hesc(a0.psy):'')+'</small></span><svg class="pdd-c" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><div class="pdd-m" role="listbox" aria-label="Past admissions">'+opts+'</div></div>';
+    cards.forEach((c,i)=>{if(i!==sel)c.remove();});
+    cards[sel].parentNode.insertBefore(dd,cards[sel]);
     return t.innerHTML;
   };
 
