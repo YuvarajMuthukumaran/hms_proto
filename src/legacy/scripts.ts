@@ -78,4 +78,7 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/76-prescribing-safety-12nov-js.js',
   '/legacy/js/77-session-notes-12nov-js.js',
   '/legacy/js/78-family-words-12nov-js.js',
+  '/legacy/js/79-mhca-events-12nov-js.js',
+  '/legacy/js/80-restraint-12nov-js.js',
+  '/legacy/js/81-results-safety-12nov-js.js',
 ];
