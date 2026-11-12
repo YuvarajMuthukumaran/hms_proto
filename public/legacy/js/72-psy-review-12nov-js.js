@@ -22,7 +22,7 @@
   .hist-h b{font-size:16px;font-weight:800;letter-spacing:-.01em;color:var(--ink,#101828)}
   .hist-h span{font-size:12.5px;color:var(--muted,#667085)}
   /* Detailed history section strip (psychiatrist): number and name, a little bigger, on its own neat row */
-  body.psy-views:not(.psg) .hrow11 .hnav{flex:1 1 100%!important;order:3;margin-left:0!important;flex-wrap:wrap!important;gap:8px!important;padding:10px 12px!important;border-radius:16px!important;justify-content:flex-start}
+  body.psy-views:not(.psg) .hrow11 .hnav{flex:1 1 100%!important;order:3;margin-left:0!important;gap:8px!important;padding:10px 12px!important;border-radius:16px!important;justify-content:flex-start}
   body.psy-views:not(.psg) .hrow11 .hnav button{gap:8px!important;padding:5px 12px 5px 6px!important;border:1px solid var(--line,#e4e7ec)!important;background:#fff!important;border-radius:99px!important;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease,background .15s ease}
   body.psy-views:not(.psg) .hrow11 .hnav button:hover{transform:translateY(-2px);border-color:#9ec0f7!important;box-shadow:0 4px 10px rgba(23,92,211,.15)}
   body.psy-views:not(.psg) .hrow11 .hnav button>span:not(.hn){display:inline!important;flex:none!important;font-size:13.5px;font-weight:600;color:#344054;max-width:none;overflow:visible;opacity:1}
@@ -68,6 +68,21 @@
   body.psy-views:not(.psg) #view #capCard .cap-g>.callout{margin:10px 20px 18px}
   body.psy-views:not(.psg) #view #capCard .pad>.row[style*="flex-end"]{position:sticky;bottom:0;z-index:5;margin:0 -4px;padding:12px 4px;background:linear-gradient(180deg,rgba(255,255,255,0),#fff 28%);gap:10px}
   @media(max-width:760px){body.psy-views:not(.psg) #view #capCard .cap-g .q{grid-template-columns:1fr}body.psy-views:not(.psg) #view #capCard .cap-g .q>.radios{justify-self:start}body.psy-views:not(.psg) #view #capCard .cap-g>.grid2{grid-template-columns:1fr}body.psy-views:not(.psg) #view #capCard .cap-g .q>input.input{margin-left:0}}
+
+  /* section strip: one line that scrolls, ticks for steps you have moved on from, a progress line along the bottom */
+  body.psy-views:not(.psg) .hrow11 .hnav{flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none;scroll-snap-type:x proximity;position:relative!important;padding:10px 14px 12px!important;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%)}
+  body.psy-views:not(.psg) .hrow11 .hnav::-webkit-scrollbar{display:none}
+  body.psy-views:not(.psg) .hrow11 .hnav button{flex:0 0 auto!important;scroll-snap-align:center}
+  body.psy-views:not(.psg) .hrow11 .hnav button .hn{position:relative;transition:background .25s ease,color .25s ease,transform .25s ease}
+  body.psy-views:not(.psg) .hrow11 .hnav button.on .hn{background:#1e6cdb!important;color:#fff!important;transform:scale(1.06)}
+  body.psy-views:not(.psg) .hrow11 .hnav button.seen{border-color:#bfe7d0!important;background:#f4fcf7!important}
+  body.psy-views:not(.psg) .hrow11 .hnav button.seen .hn{background:#1f9d57!important;color:#1f9d57!important;font-size:0!important}
+  body.psy-views:not(.psg) .hrow11 .hnav button.seen .hn::after{content:'';position:absolute;left:50%;top:48%;width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:translate(-50%,-55%) rotate(45deg)}
+  body.psy-views:not(.psg) .hrow11 .hnav button.seen>span:not(.hn){color:#0e6b3d}
+  body.psy-views:not(.psg) .hrow11 .hnav button.pop .hn{animation:hnPop .45s cubic-bezier(.3,1.6,.5,1)}
+  @keyframes hnPop{0%{transform:scale(.5)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+  body.psy-views:not(.psg) .hrow11 .hnav button:focus-visible{outline:2px solid #1e6cdb;outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){body.psy-views:not(.psg) .hrow11 .hnav button.pop .hn{animation:none}body.psy-views:not(.psg) .hrow11 .hnav button .hn{transition:none}}
   /* past admissions dropdown */
   .padm{border:1px solid var(--line,#e4e7ec);border-radius:14px;background:#fff;margin:0 0 12px;overflow:hidden}
   .padm>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 18px;background:#f8fafc;transition:background .15s}
@@ -275,7 +290,7 @@
     const h=__prefs.apply(this,arguments);
     if(!psy()||typeof h!=='string')return h;
     ensureAuto();
-    const tab=S.pxTab==='prefs'?'prefs':'griev';
+    const tab=S.pxTab==='griev'?'griev':'prefs';
     const t=document.createElement('template');t.innerHTML=h;
     const root=t.content;
     /* the old page carried the grievances under the preferences: take them out, they have their own tab now */
@@ -283,9 +298,9 @@
     [...root.querySelectorAll('section.card')].forEach(s=>{if(/^Grievances/.test(((s.querySelector('h3')||{}).textContent||'').trim()))s.remove();});
     [...root.querySelectorAll('button')].forEach(b=>{if(b.textContent.trim()==='Log grievance')b.remove();});
     const open=(S.pgriev||[]).filter(g=>g.st==='Open').length;
-    const tabs=`<div class="psy-tx-tabs" role="tablist" aria-label="Patient preferences and grievances"><button type="button" class="psy-tx-tab" role="tab" aria-selected="${tab==='griev'}" onclick="pxTab('griev')">Grievances${open?`<span class="pxp-n">${open}</span>`:''}</button><button type="button" class="psy-tx-tab" role="tab" aria-selected="${tab==='prefs'}" onclick="pxTab('prefs')">Patient preferences</button></div>`;
+    const tabs=`<div class="psy-tx-tabs" role="tablist" aria-label="Patient preferences and grievances"><button type="button" class="psy-tx-tab" role="tab" aria-selected="${tab==='prefs'}" onclick="pxTab('prefs')">Patient preferences</button><button type="button" class="psy-tx-tab" role="tab" aria-selected="${tab==='griev'}" onclick="pxTab('griev')">Grievances${open?`<span class="pxp-n">${open}</span>`:''}</button></div>`;
     const body=tab==='griev'?grievHtml():[...root.children].map(e=>e.outerHTML).join('');
-    return `<div class="pxp"><div class="pxp-head"><h3>Patient Preferences and Grievances</h3><p>Grievances come first. Preferences are what the clinical team tells admin, nursing, the kitchen and the front desk.</p></div>${tabs}${body}</div>`;
+    return `<div class="pxp"><div class="pxp-head"><h3>Patient Preferences and Grievances</h3><p>Preferences are what the clinical team tells admin, nursing, the kitchen and the front desk. Grievances are complaints from the patient or family.</p></div>${tabs}${body}</div>`;
   };
 
   /* ---------- the log window: one form for the three ways a person logs a grievance ---------- */
@@ -373,4 +388,31 @@
   document.addEventListener('click',e=>{if(psy()&&e.target.closest&&e.target.closest('#capCard .tog'))setTimeout(capProg,0);});
   const __rCap=render;
   render=function(){const r=__rCap.apply(this,arguments);if(psy())capProg();return r;};
+
+  /* ---------- 6. Section strip: one line, a tick once you have moved on from a step, current step scrolled into view ---------- */
+  const seenStore=()=>{const x=psyPx(S.pid);return x.hseen=x.hseen||{};};
+  let lastSec=null,lastPid=null;
+  function stripPaint(){
+    const nav=document.querySelector('#view .hrow11 .hnav');if(!nav)return;
+    const cur=S.hsec||'id',btns=[...nav.querySelectorAll('button')];
+    const keys=btns.map(b=>((b.getAttribute('onclick')||'').match(/hsec='(\w+)'/)||[])[1]);
+    const ci=keys.indexOf(cur);
+    if(lastPid!==S.pid){lastPid=S.pid;lastSec=null;}
+    const seen=seenStore();
+    const left=(lastSec&&lastSec!==cur)?lastSec:null;
+    if(left)seen[left]=true;
+    lastSec=cur;
+    btns.forEach((b,i)=>{
+      const k=keys[i],done=!!seen[k]&&k!==cur;
+      b.classList.toggle('seen',done);
+      if(done&&k===left)b.classList.add('pop');
+      if(!b.dataset.hnLabel){const sp=b.querySelector('.hn');if(sp)b.dataset.hnLabel=sp.textContent.trim();}
+      b.setAttribute('aria-label',(b.dataset.hnLabel||'')+' '+((b.querySelectorAll('span')[1]||{}).textContent||'')+(done?', done':k===cur?', current step':''));
+      if(k===cur)b.setAttribute('aria-current','step');
+    });
+    const on=btns[ci];
+    if(on){const target=on.offsetLeft-(nav.clientWidth-on.offsetWidth)/2;try{nav.scrollTo({left:Math.max(0,target),behavior:'smooth'});}catch(e){nav.scrollLeft=Math.max(0,target);}}
+  }
+  const __rStrip=render;
+  render=function(){const r=__rStrip.apply(this,arguments);if(psy()){try{stripPaint();}catch(e){}}return r;};
 })();
