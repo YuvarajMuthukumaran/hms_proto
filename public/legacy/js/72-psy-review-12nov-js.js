@@ -464,4 +464,71 @@
     if(!/^No answer/.test(o))ptRun(pid,()=>{S.calls=S.calls||{};S.calls[key]='done';return '';});
     closeModal();render();toast(/^No answer/.test(o)?'Saved. The call stays on the page for a retry':'Call marked done');
   };
+
+  /* ---------- 8. Actions open the patient they belong to (by patient id, never by list position) ---------- */
+  /* Daily notes: open the all-patients page on THIS patient. The page walks the patients still to write, so the index is taken from that list. */
+  window.openNotesFor=function(pid){
+    try{
+      S.eod=S.eod||{};
+      /* a patient who is not one of the five on the page yet (Rohit, Dev, Tarun ...) is added to it, so the page opens on them */
+      const psychologist=typeof isPsych==='function'&&isPsych();
+      if(psychologist&&typeof PSY_EOD==='function'&&!PSY_EOD().some(p=>p.id===pid)&&PTS.some(p=>p.id===pid)){S.eodExtra=(S.eodExtra||[]).concat([pid]);}
+      if(!S.eod[pid]&&PTS.some(p=>p.id===pid))S.eod[pid]={};
+      /* the page lists the same patients in the same order: all patients for the psychiatrist, the first five (plus any added) for the psychologist */
+      const L=psychologist?PSY_EOD():PTS;
+      let pend=L.filter(p=>!(S.eod[p.id]||{}).saved),i=pend.findIndex(p=>p.id===pid);
+      if(i<0&&L.some(p=>p.id===pid)){
+        /* this patient's note was already saved: open it again for editing */
+        if(typeof psyEodEdit==='function'){S.eod[pid]=S.eod[pid]||{};psyEodEdit(pid);go('#/notes');return;}
+        S.eod[pid]=S.eod[pid]||{};S.eod[pid].saved=false;pend=L.filter(p=>!(S.eod[p.id]||{}).saved);i=pend.findIndex(p=>p.id===pid);
+      }
+      S.eodI=Math.max(0,i);
+    }catch(e){}
+    go('#/notes');
+  };
+  /* Task rows were written with Neel's page in the link even when the task is about another patient (Sameer Das, Dev Kumar ...).
+     The link now uses the patient named in the task. Psychiatrist, psychologist and floor lead only. */
+  const __tasksFix=tasks;
+  tasks=function(){
+    const r=__tasksFix.apply(this,arguments);
+    if(!['psychiatrist','psychologist','lead'].includes(S.role)||!Array.isArray(r))return r;
+    r.forEach(t=>{
+      if(!t||typeof t.go!=='string'||t.go.indexOf('#/patient/neel/')!==0)return;
+      const title=String(t.title||'').replace(/<[^>]+>/g,'');
+      const p=(typeof PTS!=='undefined'?PTS:[]).find(x=>x.id!=='neel'&&title.indexOf(x.name)>=0);
+      if(p){t.go=t.go.replace('#/patient/neel/','#/patient/'+p.id+'/');if(/\/forms$/.test(t.go))t.go=t.go.replace(/\/forms$/,'/admission');}
+    });
+    return r;
+  };
+  /* A patient id in the address that does not exist shows "not found" (it used to open some other patient) */
+  const __vpNF=vPatient;
+  vPatient=function(sub){
+    const r=(location.hash||'').slice(2).split('/'),raw=r[0]==='patient'&&r[1]?r[1]:'';
+    let id='';try{id=decodeURIComponent(raw);}catch(e){id=raw;}
+    if(id&&!(typeof ptFind==='function'&&ptFind(id))){
+      return `<section class="card pad" style="max-width:560px;display:flex;flex-direction:column;gap:12px"><h3>Patient not found</h3><div class="muted">There is no patient with the id <b>${hesc(id)}</b>. The link may be old or mistyped.</div><div class="row" style="gap:8px"><button class="btn pri" onclick="go('#/inpatients')">Back to patients</button><button class="btn" onclick="go('#/myday')">Today</button></div></section>`;
+    }
+    return __vpNF.apply(this,arguments);
+  };
+
+  /* From inside a patient's record, the page links Daily notes, Nursing chart and Rounds open on THAT patient (they opened the first patient) */
+  const __goP=go;
+  let inNav=false;
+  go=function(h){
+    if(!inNav&&typeof h==='string'&&['psychiatrist','psychologist'].includes(S.role)){
+      const m=(location.hash||'').match(/^#\/patient\/([^\/?]+)/);
+      let id='';if(m){try{id=decodeURIComponent(m[1]);}catch(e){id=m[1];}}
+      if(id&&typeof ptFind==='function'&&ptFind(id)){
+        inNav=true;
+        try{
+          if(h==='#/notes'){openNotesFor(id);return;}
+          if(h==='#/nursing'&&S.role==='psychiatrist'){S.ncP=id;return __goP.call(this,'#/nursing/'+id);}
+          if(h==='#/rounds'&&S.rounds&&typeof WARDS!=='undefined'){
+            for(const wd of Object.keys(WARDS)){const k=WARDS[wd].findIndex(p=>p.id===id);if(k>=0){S.rounds.ward=wd;S.rounds.idx[wd]=k;S.focusPid=id;break;}}
+          }
+        }finally{inNav=false;}
+      }
+    }
+    return __goP.apply(this,arguments);
+  };
 })();

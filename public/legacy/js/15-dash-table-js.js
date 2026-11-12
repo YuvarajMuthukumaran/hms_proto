@@ -14,7 +14,7 @@ const DT={
   checks:p=>v3().grid.filter(g=>g.pid===p.id&&g.st!=='done').slice(0,1).map(g=>({txt:g.label+' · next '+g.slot,due:v3().grid.filter(x=>x.pid===p.id&&x.st!=='done').length+' today',tone:'',btn:null})),
   labs:p=>v3().labs.filter(l=>l.pid===p.id&&!l.rev).map(l=>({txt:'Review lab: '+l.test,due:'New result',tone:'',btn:null})),
   approvals:p=>v3().apps.filter(a=>a.pid===p.id&&a.st==='open').map(a=>({txt:'Approve: '+a.kind,due:'From '+a.by,tone:'',btn:['Review',`go('#/floor/approvals')`]})),
-  dailyNote:p=>((S.eod||{})[p.id]||{}).saved?[]:[{txt:'Daily note',due:'Today',tone:'',btn:['Write',`go('#/notes')`]}],
+  dailyNote:p=>((S.eod||{})[p.id]||{}).saved?[]:[{txt:'Daily note',due:'Today',tone:'',btn:['Write',`openNotesFor('${p.id}')`]}],
   meds:p=>{const c=typeof ptCtxOf==='function'?ptCtxOf(p.id):S,m=(c.meds||[]).filter(x=>/^\d-1-\d/.test(x.freq));return m.length?[{txt:'2 pm medicines: '+m.map(x=>x.name).join(', '),due:'2 pm',tone:'',btn:null}]:[]}
 };
 const dtObs=p=>((typeof EX!=='undefined'&&EX[p.id])||[])[0]||'Routine';

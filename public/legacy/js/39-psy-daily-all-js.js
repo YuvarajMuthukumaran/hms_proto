@@ -63,7 +63,7 @@
       const title=card.querySelector('h3')?.textContent.trim()||'';
       if(/^Daily note\s*·/.test(title)||title==='Family update')card.remove();
     });
-    const bar=`<section class="card"><div class="pad row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-weight:600">Writing notes for several patients?</div><div class="small muted">Fill them all in one go on the Daily notes page. Each saved note also shows here under Earlier notes.</div></div><button class="btn pri" onclick="go('#/notes')">Open Daily notes for all patients</button></div></section>`;
+    const bar=`<section class="card"><div class="pad row" style="justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-weight:600">Writing notes for several patients?</div><div class="small muted">Fill them all in one go on the Daily notes page. Each saved note also shows here under Earlier notes.</div></div><button class="btn pri" onclick="openNotesFor('${S.pid}')">Open Daily notes for all patients</button></div></section>`;
     return bar+t.innerHTML;
   };
 })();

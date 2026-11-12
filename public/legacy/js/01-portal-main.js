@@ -2840,7 +2840,7 @@ function psySave(kind,id){
   if(kind==='dn'){S.dn.line=psyGet('dn',id,'evy')==='Something happened'?psyGet('dn',id,'evl'):'None';saveDaily();toast('Note saved'+al+'. Family update drafted.');return;}
   const p=ptFind(id);S.eod[id].saved=true;S.eodI=0;render();toast('Daily note saved for '+(p?p.name:'this patient')+al);
 }
-const PSY_EOD=()=>PTS.slice(0,5); /* ward order, first patient first (3 Nov) */
+const PSY_EOD=()=>{const L=PTS.slice(0,5);(S.eodExtra||[]).forEach(id=>{const p=PTS.find(x=>x.id===id);if(p&&!L.includes(p))L.push(p);});return L;}; /* ward order, first patient first (3 Nov) */
 function psyEodEdit(id){S.eod[id].saved=false;const pend=PSY_EOD().filter(p=>!(S.eod[p.id]||{}).saved);S.eodI=Math.max(0,pend.findIndex(p=>p.id===id));render();}
 function psyEodPage(){
   S.eod=S.eod||{};const L=PSY_EOD();

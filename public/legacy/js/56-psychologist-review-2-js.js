@@ -141,10 +141,10 @@
     const out=__rs.apply(this,arguments);
     if(me()){
       const dd=document.querySelector('#side .sgdd');
-      if(dd&&!dd.querySelector('[data-pg56]')){
+      if(dd&&dd.children.length&&!dd.querySelector('[data-pg56]')){
         dd.querySelectorAll('[data-pgho]').forEach(x=>x.remove());
         const hash=location.hash||'';
-        let anchor=[...dd.children].find(x=>/Patients/.test(x.getAttribute('aria-label')||''))||dd.lastElementChild,lit=false;
+        let anchor=[...dd.children].find(x=>/Patients/.test(x.getAttribute('aria-label')||''))||dd.lastElementChild,lit=false;if(!anchor){anchor=document.createElement('i');anchor.hidden=true;dd.appendChild(anchor);}
         [['Rounds',RI,'#/rounds',/^#\/rounds/],['Daily notes',NI,'#/notes',/^#\/notes/],['Handover',HI,'#/handover',/^#\/handover/]].forEach(([l,ic,r,re])=>{
           const b=document.createElement('button');b.dataset.pg56='1';b.title=l;b.setAttribute('aria-label',l);b.setAttribute('onclick',`go('${r}')`);
           if(re.test(hash)){b.className='on';b.setAttribute('aria-current','page');lit=true;}
@@ -200,7 +200,7 @@
     const row=(go,t,sub)=>`<button class="pdm-i" onclick="pdMenuClose();${go}"><b>${t}</b><span>${sub}</span></button>`;
     const i=PSY_EOD().findIndex(x=>x.id===pid);
     const el=document.createElement('div');el.id='pdMenu';el.dataset.pid=pid;el.setAttribute('role','menu');
-    el.innerHTML=row(`S.eodI=${Math.max(0,i)};go('#/notes')`,'Write daily note','Today\'s note for this patient')
+    el.innerHTML=row(`openNotesFor('${pid}')`,'Write daily note','Today\'s note for this patient')
       +row(`go('#/patient/${pid}/therapy')`,'Plan a therapy session','Therapy Plans: individual, group, family')
       +row(`psyOpenRounds('${pid}')`,'Open Rounds','Therapeutic plan and notes')
       +row(`go('#/patient/${pid}/plans')`,'Management plan','Your plan for this stay')
