@@ -57,7 +57,7 @@
     let list=sc==='mine'?all.filter(p=>docKey(p.id)==='Surabhi'):all;
     const chipN=k=>list.filter(p=>k==='all'||(k==='none'?!docKey(p.id):famWait(p.id))).length;
     if(l.pF==='none')list=list.filter(p=>!docKey(p.id));if(l.pF==='fam')list=list.filter(p=>famWait(p.id));if(l.pD)list=list.filter(p=>docKey(p.id)===l.pD);
-    const sw=`<div class="pg-mine" role="tablist" aria-label="Which patients"><button role="tab" class="${sc==='floor'?'on':''}" onclick="lpSet('scope','floor')">Whole floor <span class="pg-n">${all.length}</span></button><button role="tab" class="${sc==='mine'?'on':''}" onclick="lpSet('scope','mine')">Mine <span class="pg-n">${mineIds().length}</span></button></div>`;
+    const sw=`<div class="pg-mine lp-sw" role="tablist" aria-label="Which patients"><button role="tab" class="${sc==='floor'?'on':''}" onclick="lpSet('scope','floor')">Whole floor <span class="pg-n">${all.length}</span></button><button role="tab" class="${sc==='mine'?'on':''}" onclick="lpSet('scope','mine')">Mine <span class="pg-n">${mineIds().length}</span></button></div>`;
     const chips=`<div class="lp-fr"><button class="lp-fc ${l.pF==='all'?'on':''}" onclick="lpSet('pF','all')">All</button><button class="lp-fc ${l.pF==='none'?'on':''}" onclick="lpSet('pF','none')">No psychologist ${chipN('none')}</button><button class="lp-fc ${l.pF==='fam'?'on':''}" onclick="lpSet('pF','fam')">Family waiting ${chipN('fam')}</button>
       <select class="lp-sel" onchange="lpSet('pD',this.value)" aria-label="Psychologist"><option value="">All psychologists</option>${TEAM.filter(t=>t.k!=='Ankit').map(t=>`<option value="${t.k}" ${l.pD===t.k?'selected':''}>${esc(t.you?'You':t.n)}</option>`).join('')}</select></div>`;
     const dis=p=>{const d=(typeof rmoEx==='function'?rmoEx(p):EX[p.id]||[])[2];return !!d&&d!=='Not set';};
@@ -215,7 +215,13 @@
   }
 
   const css=document.createElement('style');css.id='lp-12nov-css';
-  css.textContent=`.lp-emb{display:block;width:100%;border:0;background:transparent}
+  css.textContent=`.pg-mine.pg-seg.lp-sw{background:#f2f4f7;border:1px solid #e4e7ec;box-shadow:none;padding:3px}
+  .lp-sw .pg-ind{background:#fff!important;box-shadow:0 1px 3px rgba(16,24,40,.18)!important;border-radius:9px!important}
+  .lp-sw button,.ipd-h11 .pg-mine.pg-seg.lp-sw button{color:#475467;font-weight:600;font-size:14px!important;padding:7px 18px!important}
+  .lp-sw button.on{color:#175cd3}
+  .lp-sw .pg-n,.ipd-h11 .pg-mine.pg-seg.lp-sw .pg-n{background:#e4e7ec;color:#475467;font-size:11px!important;padding:2px 7px!important}
+  .lp-sw button.on .pg-n{background:#d1e0ff;color:#175cd3}
+  .lp-emb{display:block;width:100%;border:0;background:transparent}
   .lp-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid #d6dee8;border-radius:12px;margin:0 0 8px;cursor:pointer}.lp-opt:has(input:checked){border-color:#1e6cdb;background:#f1f7ff}.lp-opt small{display:block;color:#667085;font-weight:400}.lp-opt span:nth-of-type(1){flex:1}
   .lp-ch{display:inline-block;font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 10px;background:#eef2f7;color:#475467}.lp-ch.amb{background:#fffaeb;color:#b54708}.lp-ch.grn{background:#ecfdf3;color:#067647}.lp-ch.red{background:#fef3f2;color:#b42318}
   .lp-lnk{border:0;background:none;color:#1e5bb8;font:inherit;font-size:12.5px;font-weight:650;padding:2px 0;cursor:pointer}
