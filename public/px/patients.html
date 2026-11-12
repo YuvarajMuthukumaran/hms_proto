@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tulasi · Patient Experience · Patients (proposed)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F6FBFF;font-family:Inter,system-ui,sans-serif;color:#0F172A;font-size:15px}
+a{color:#1E5BB8;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+.app{display:flex;min-height:100vh}
+.side{width:264px;flex-shrink:0;background:#fff;border-right:1px solid #E3EAF2;padding:18px 14px;display:flex;flex-direction:column;gap:2px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px;font-weight:700;font-size:16px}
+.brand i{width:34px;height:34px;border-radius:999px;background:#E8F1FE;display:flex;align-items:center;justify-content:center;color:#1E6CDB}
+.mm{font-size:12px;font-weight:600;letter-spacing:.05em;color:#667085;padding:0 10px 8px;border-bottom:1px solid #EEF2F6;margin-bottom:6px}
+.nv{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:#1F2937;font-weight:600}
+.grp{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#1E6CDB;color:#fff;font-weight:500;margin-top:4px}
+.sub{border:1px solid #E3EAF2;border-radius:14px;padding:6px;margin:6px 0;display:flex;flex-direction:column;gap:2px}
+.sub a{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-radius:12px;color:#344054;font-weight:500}
+.sub a.on{background:#E8F1FE;border:1.5px solid #1E6CDB;color:#1E5BB8;font-weight:600}
+.bd{font-size:12px;font-weight:600;background:#FFF4D6;color:#93370D;border-radius:999px;padding:1px 8px}
+.me{display:flex;align-items:center;gap:10px;border:1px solid #E3EAF2;border-radius:12px;padding:10px;margin-top:auto}
+.av{border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.col{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:#fff;border-bottom:1px solid #E3EAF2}
+.top h1{margin:0;font-size:23px;font-weight:600}
+main{padding:14px 16px 48px;display:flex;flex-direction:column;gap:14px}
+.bar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
+.inp{width:280px;min-height:40px;border:1px solid #D6DEE8;border-radius:10px;padding:0 12px;font:inherit;font-size:14px}
+.btn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:10px;border:1px solid #D6DEE8;background:#fff;color:#0F172A;font-size:14px;font-weight:600}
+.btn.pri{background:#1E6CDB;border-color:#1E6CDB;color:#fff}
+.brief{background:#F2F7FF;border:1px solid #D5E4FB;border-radius:14px;padding:14px 16px}
+.brief ul{margin:8px 0 0 38px;padding-left:16px;font-size:14px;line-height:1.5;color:#1F2937}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:999px;background:#fff;border:1px solid #E3EAF2;color:#344054;font-size:13px;font-weight:600}
+.tw{overflow-x:auto}
+table{width:100%;min-width:1080px;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:0 16px 6px;font-size:11px;font-weight:700;letter-spacing:.05em;color:#5B6475}
+td{padding:14px 16px;background:#fff;border-bottom:1px solid #E3EAF2;vertical-align:top}
+.tag{font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;background:#F2F4F7;border:1px solid #E4E7EC;color:#475467}
+.dot{width:8px;height:8px;border-radius:99px;display:inline-block;flex-shrink:0;margin-top:7px}
+.mini{height:28px;padding:0 10px;border-radius:8px;border:1px solid #D6DEE8;background:#fff;color:#1E5BB8;font-size:12px;font-weight:600}
+.take{height:38px;padding:0 12px;border-radius:10px;border:1px solid #D6DEE8;background:#fff;font-size:13px;font-weight:600;white-space:nowrap}
+.eye{width:38px;height:38px;border:0;border-radius:10px;background:transparent;color:#475467;display:flex;align-items:center;justify-content:center}
+.menu{position:absolute;top:44px;right:0;z-index:5;width:260px;background:#fff;border:1px solid #E3EAF2;border-radius:12px;box-shadow:0 10px 24px rgba(15,23,42,.12);padding:6px;display:flex;flex-direction:column}
+.menu button{text-align:left;border:0;background:transparent;border-radius:8px;padding:9px 10px}
+.menu button:hover{background:#F2F7FF}
+.key{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;font-size:12px;color:#475467}
+.key span{display:flex;align-items:center;gap:6px}.key .dot{margin:0}
+.rev{position:fixed;right:16px;bottom:16px;z-index:20;display:flex;gap:4px;background:#0F172A;padding:5px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.2)}
+.rev button{border:0;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;background:transparent;color:#CBD5E1}
+.rev button.on{background:#fff;color:#0F172A}
+.doc{max-width:1200px;margin:0 auto;padding:32px 24px 90px}
+.doc h2{margin:6px 0 6px;font-size:26px}
+.doc p{color:#475569;margin:0 0 18px;line-height:1.5}
+.gt{display:grid;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;background:#fff}
+.gt>div{display:grid;border-top:1px solid #E2E8F0;font-size:14px;line-height:1.45}
+.gt>div:first-child{border-top:0;background:#F1F5F9;font-size:12px;font-weight:700;letter-spacing:.05em;color:#334155}
+.gt span{padding:12px 16px}
+.gt .hl{background:#F5F9FF}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;color:#1D4ED8}
+@media(max-width:900px){.side{display:none}}
+</style>
+<style id="embed-css">html.embed .side,html.embed .rev,html.embed .top{display:none!important}html.embed body{background:transparent}html.embed .app{min-height:0}html.embed main{padding-top:6px}</style>
+<script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');</script>
+</head>
+<body>
+<div id="root"></div><div id="cm"></div>
+<div class="rev" role="tablist" aria-label="Review views">
+  <button data-v="list" class="on">Patients list</button>
+  <button data-v="rec">Patient record</button>
+  <button data-v="cmp">Live vs proposed</button>
+</div>
+<script>
+/* Random family call pop-up, shared by Today and Patients */
+const CM = { open:false, p:null, outcome:null, ans:{}, action:null, cat:null, safety:false, compl:false, words:'', concern:'', who:null, n:1, gid:147 };
+const CM_Q = [
+  ['q1','How do you feel he/she is being looked after?',['Very happy','Happy','Okay','Not happy']],
+  ['q2','Do the 8 pm updates tell you what you want to know?',['Yes, useful','Too general, want more detail','Not every day','Not getting them']],
+  ['q3','Has the doctor spoken to you this week?',['Yes','No','Only the psychologist']],
+  ['q4','Do you understand how treatment is going and when to expect change?',['Yes','Not sure','No change seen, worried']],
+  ['q5','Has the psychologist changed, or were sessions missed (weekends, leave)?',['No','Yes']],
+  ['q6','Anything about food, room, cleanliness or billing?',['Nothing','Food','Room or cleanliness','Billing']],
+  ['q7','Any worry about how staff treat him/her, or anything that happened (fall, injury, force)?',['No concern','Yes, a concern']]
+];
+const CM_OWN = p => ({
+  'Family updates':['Psychology team lead','6 h'],
+  'Doctor communication':[p.dr||'Treating psychiatrist','6 h'],
+  'Treatment progress':[(p.dr||'Treating psychiatrist')+' (family meeting)','6 h'],
+  'Therapist continuity':['Psychology team lead','6 h'],
+  'Billing and insurance':['Billing desk','6 h'],
+  'Food and dietary':['Kitchen supervisor','6 h'],
+  'Room and housekeeping':['Housekeeping supervisor','6 h'],
+  'Rights':['Kanika and Chandraji','6 h'],
+  'Safety':['Chandraji and treating doctor','now'],
+  'Other':['Kanika','6 h']
+});
+function cmSuggest(){
+  const a=CM.ans;
+  if(a.q7==='Yes, a concern') return 'Safety';
+  if(a.q2&&a.q2!=='Yes, useful') return 'Family updates';
+  if(a.q3==='No'||a.q3==='Only the psychologist') return 'Doctor communication';
+  if(a.q4==='No change seen, worried') return 'Treatment progress';
+  if(a.q5==='Yes') return 'Therapist continuity';
+  if(a.q6==='Billing') return 'Billing and insurance';
+  if(a.q6==='Food') return 'Food and dietary';
+  if(a.q6==='Room or cleanliness') return 'Room and housekeeping';
+  if(a.q1==='Not happy') return 'Other';
+  return null;
+}
+
+function openCall(p, n){ Object.assign(CM,{open:true,p:p||null,outcome:null,ans:{},action:null,cat:null,safety:false,compl:false,words:'',concern:'',who:p?p.rep:null,n:n||1}); drawCM(); }
+function cmChip(group,val,cur){ const on=cur===val; return `<button type="button" data-cm="${group}" data-val="${esc(val)}" style="height:32px;padding:0 12px;border-radius:999px;border:1px solid ${on?'#1E6CDB':'#D6DEE8'};background:${on?'#E8F1FE':'#fff'};color:${on?'#1E5BB8':'#344054'};font-size:13px;font-weight:600">${esc(val)}</button>`; }
+function drawCM(){
+  const el=document.getElementById('cm'); if(!el) return;
+  if(!CM.open){ el.innerHTML=''; return; }
+  const p=CM.p; const pats=(window.CM_PATIENTS||[]);
+  const sug=cmSuggest(); if(CM.action===null && sug){ CM.action='yes'; CM.cat=sug; CM.safety=sug==='Safety'; }
+  const own=p?CM_OWN(p):{}; const o=CM.cat?own[CM.cat]:null;
+  const head = p ? `<div><div style="font-size:12px;font-weight:700;letter-spacing:.05em;color:#1D4ED8">RANDOM FAMILY CALL ${CM.n} OF 2</div><b style="font-size:18px">${esc(p.name)}</b><div style="font-size:13px;color:#667085">${esc(p.rep)} (${esc(p.rel)}) · ${esc(p.ph||'')} · Day ${p.day} · Room ${esc(p.room)}</div></div>`
+    : `<div><div style="font-size:12px;font-weight:700;letter-spacing:.05em;color:#1D4ED8">LOG A FAMILY CALL</div><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;margin-top:6px">Patient<select data-cmpick="1" class="inp" style="width:320px"><option value="">Choose a patient</option>${pats.map(x=>`<option value="${x.id}">${esc(x.name)} · Room ${esc(x.room)}</option>`).join('')}</select></label></div>`;
+  let body='';
+  if(p){
+    body += `<div style="display:flex;flex-direction:column;gap:8px"><b style="font-size:14px">Did they pick up?</b><div style="display:flex;flex-wrap:wrap;gap:6px">${['Connected','No answer','Asked to call later'].map(v=>cmChip('outcome',v,CM.outcome)).join('')}</div></div>`;
+    if(CM.outcome && CM.outcome!=='Connected') body += `<div style="background:#F8FAFC;border-radius:10px;padding:10px 12px;font-size:13px;color:#475467">Saved as attempt ${CM.outcome==='No answer'?'1 · no answer':'1 · asked to call later'}. It comes back on Today tomorrow at the same time. After 2 missed attempts, the backup contact is suggested.</div>`;
+    if(CM.outcome==='Connected'){
+      body += `<label style="display:flex;flex-direction:column;gap:6px;font-size:13px">Who answered<select class="inp" style="width:100%" data-cmf="who"><option>${esc(p.rep)} (${esc(p.rel)})</option><option>Backup contact</option><option>Other family member</option></select></label>`;
+      body += `<div style="display:flex;flex-direction:column;gap:12px"><b style="font-size:14px">Ask, then tap what they said</b>${CM_Q.map(([k,q,opts])=>`<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:#1F2937">${q}</span><div style="display:flex;flex-wrap:wrap;gap:6px">${opts.map(v=>cmChip(k,v,CM.ans[k])).join('')}</div></div>`).join('')}</div>`;
+      body += `<label style="display:flex;flex-direction:column;gap:6px;font-size:13px">What they said, in their words<textarea class="inp" data-cmf="words" style="width:100%;min-height:64px;padding:8px 12px" placeholder="Write it the way they said it">${esc(CM.words)}</textarea></label>`;
+      body += `<div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid #EEF2F6;padding-top:12px"><b style="font-size:14px">Does anything need action?</b>${sug?`<div style="font-size:12px;color:#B54708">Suggested from their answers: ${esc(sug)}</div>`:''}<div style="display:flex;gap:6px">${cmChip('action','No',CM.action==='no'?'No':'')}${cmChip('action','Yes, log a grievance',CM.action==='yes'?'Yes, log a grievance':'')}</div></div>`;
+      if(CM.action==='yes'){
+        body += `<div style="background:#F8FAFC;border:1px solid #E3EAF2;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px">
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px">Category<select class="inp" style="width:100%" data-cmcat="1">${Object.keys(own).map(c=>`<option ${c===CM.cat?'selected':''}>${c}</option>`).join('')}</select></label>
+          <div style="font-size:13px;display:grid;grid-template-columns:110px 1fr;gap:4px 10px"><span style="color:#667085">Goes to</span><b style="font-weight:600">${o?esc(o[0]):'Choose a category'}</b><span style="color:#667085">Due</span><span>${o?(o[1]==='now'?'Now. Chandraji is told immediately and an incident report number is needed to close.':'Within '+o[1]+'. Reminder at 3 hours.'):''}</span><span style="color:#667085">Logged as</span><span>G-0${CM.gid} · came in as Random call · family's words copied in</span></div>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px">What needs fixing (short)<input class="inp" style="width:100%" data-cmf="concern" value="${esc(CM.concern)}" placeholder="e.g. wants to know what he ate and how he slept"></label>
+          ${CM.cat==='Safety'?'<div style="background:#FEF3F2;border:1px solid #FDA29B;border-radius:10px;padding:8px 10px;font-size:12px;color:#B42318">Safety concern: Chandraji and the treating doctor are called now. The grievance cannot close without an incident report number.</div>':''}
+        </div>`;
+      }
+      if(CM.ans.q1==='Very happy') body += `<label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" data-cmcompl="1" ${CM.compl?'checked':''}>They praised someone. Log it as a compliment so the staff member hears about it.</label>`;
+    }
+  }
+  const canSave = p && CM.outcome && (CM.outcome!=='Connected' || (CM.action && (CM.action==='no' || CM.cat)));
+  el.innerHTML = `<div style="position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:40;display:flex;justify-content:flex-end" data-cmclose="bg">
+    <div role="dialog" aria-label="Log a family call" style="width:560px;max-width:100%;height:100%;overflow:auto;background:#fff;box-shadow:-10px 0 30px rgba(15,23,42,.15);display:flex;flex-direction:column">
+      <div style="padding:18px 20px;border-bottom:1px solid #E3EAF2;display:flex;justify-content:space-between;gap:10px;align-items:flex-start">${head}<button type="button" data-cmclose="x" aria-label="Close" style="border:0;background:transparent;font-size:22px;color:#667085">×</button></div>
+      ${p?`<div style="padding:12px 20px;border-bottom:1px solid #EEF2F6;display:flex;gap:8px;align-items:center"><button type="button" class="btn pri" style="height:36px">Call via HMS</button><span style="font-size:12px;color:#667085">Rings ${esc(p.rep)} from the hospital line. Time and length are logged on their own.</span></div>`:''}
+      <div style="padding:16px 20px;display:flex;flex-direction:column;gap:16px;flex:1">${body||'<span style="color:#667085;font-size:13px">Pick the patient to start.</span>'}</div>
+      <div style="padding:14px 20px;border-top:1px solid #E3EAF2;display:flex;justify-content:space-between;gap:8px;align-items:center"><span style="font-size:12px;color:#667085">Saved to the patient's call log${CM.action==='yes'?' and to Feedback':''}.</span><button type="button" data-cmsave="1" class="btn pri" ${canSave?'':'disabled style="opacity:.5;cursor:not-allowed"'}>${CM.action==='yes'&&CM.outcome==='Connected'?'Save call and log grievance':'Save call'}</button></div>
+    </div></div>`;
+}
+function toast(msg){ let t=document.getElementById('toast'); if(!t){ t=document.createElement('div'); t.id='toast'; document.body.appendChild(t);} t.style.cssText='position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#0F172A;color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:60;box-shadow:0 8px 20px rgba(0,0,0,.25);max-width:90vw'; t.textContent=msg; clearTimeout(window.__tt); window.__tt=setTimeout(()=>t.remove(),4200); }
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-cm],[data-cmclose],[data-cmsave],[data-cmcompl]'); if(!t) return;
+  if(t.dataset.cmclose){ if(t.dataset.cmclose==='bg' && e.target!==t) return; CM.open=false; drawCM(); return; }
+  if(t.dataset.cmcompl){ CM.compl=t.checked; return; }
+  if(t.dataset.cm){ const g=t.dataset.cm, v=t.dataset.val;
+    if(g==='outcome') CM.outcome=v;
+    else if(g==='action'){ CM.action = v==='No'?'no':'yes'; if(CM.action==='yes'&&!CM.cat) CM.cat=cmSuggest()||'Other'; }
+    else { CM.ans[g]=v; if(CM.action!=='no'){ const s=cmSuggest(); if(s){ CM.action='yes'; CM.cat=s; } } }
+    drawCM(); return; }
+  if(t.dataset.cmsave && !t.disabled){
+    const p=CM.p; const own=CM_OWN(p); const g = CM.outcome==='Connected'&&CM.action==='yes' ? { id:'G-0'+CM.gid, cat:CM.cat, owner:own[CM.cat][0], due:own[CM.cat][1], text: CM.concern || (CM.words?CM.words.slice(0,80):CM.cat), safety:CM.cat==='Safety' } : null;
+    const res={ p, n:CM.n, outcome:CM.outcome, who:CM.who, ans:{...CM.ans}, words:CM.words, grievance:g, compliment:CM.compl };
+    if(g) CM.gid++;
+    CM.open=false; drawCM();
+    if(window.onCallSaved) window.onCallSaved(res);
+    toast(CM.outcome!=='Connected' ? `Attempt saved for ${p.name}. It will come back on Today tomorrow.` : g ? `Call saved. Grievance ${g.id} (${g.cat}) sent to ${g.owner}${g.due==='now'?', Chandraji told now':', due in '+g.due}.` : `Call saved for ${p.name}. No action needed.`);
+  }
+});
+document.addEventListener('input',e=>{ const t=e.target; if(t.dataset.cmf) CM[t.dataset.cmf]=t.value; });
+document.addEventListener('change',e=>{ const t=e.target;
+  if(t.dataset.cmcat){ CM.cat=t.value; drawCM(); }
+  if(t.dataset.cmpick){ const x=(window.CM_PATIENTS||[]).find(q=>q.id===t.value); if(x){ CM.p=x; CM.who=x.rep; CM.n=x.callN||1; drawCM(); } }
+});
+
+</script>
+<script>
+const S = { mode:'in', view:'list', pid:'rs', rtab:'summary', filter:'all', sort:'attn', nps:null, ratings:{}, consent:null, done:{}, calls:{}, griev:{} };
+function set(p){ Object.assign(S,p); render(); }
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const DOT = { d:'#12B76A', l:'#F5A524', t:'#3B82F6', u:'#D0D5DD', x:'#E4E7EC' };
+const AV = [['#E8F1FE','#1E5BB8'],['#EDE9FE','#5B21B6'],['#E7F8EF','#067647'],['#FFF1E6','#B54708']];
+const STEPS = [
+  ['Family met at admission','Day 0','you','Rules, visiting hours, contact card, how the 8 pm update works'],
+  ['WhatsApp group made, update schedule explained','Day 0','you','Family, psychologist and you in the group'],
+  ['Cost estimate shared with family','Day 0','front desk','Room, expected stay, deposit (NABH: right to expected costs)'],
+  ['Rights explained to patient and nominated rep','Day 0','psychiatrist','Admission section, right to complain, Mental Health Review Board (MHCA s.22, s.28)'],
+  ['Met the patient','Day 1 to 2','you','Short private chat once settled: how are you finding it, anything you need'],
+  ['Preferences taken','by Day 2','you with RMO','Diet, calls and visits, visitors, belongings, family communication'],
+  ['Psychiatrist family call, 24 hours','24 h','psychiatrist','Ticks itself from the HMS call log'],
+  ['Psychiatrist family call, 72 hours','72 h','psychiatrist','Ticks itself from the HMS call log'],
+  ['Psychologist intake call','Week 1','psychologist','Therapy plan and family coping'],
+  ['End of Week 1 family meeting','Day 7','psychiatrist and you','In person or video'],
+  ['Random family call 1 of 2','by Day 7','you','Your own check on how the family feels. Log what they said.'],
+  ['Random family call 2 of 2','before discharge','you','Ask what would make the stay better. Log what they said.'],
+  ['Discharge meeting and feedback','at discharge','you','Follow-up dates, call centre number, form v6']
+];
+const RC = [10,11];
+
+const P = [
+  { id:'nb', name:'Neel Bose', ini:'NB', as:'23/M', room:'213 A', ward:'Male ward', type:'Twin sharing', day:6, sec:'Sec 89', uhid:'2026-27RG6890', tags:['Readmission'], dr:'Dr. Aanya Sharma', ps:'Kiran Mehra', rep:'Arun Bose', rel:'brother', ph:'98111 XXX20', bk:'Rita Bose (mother) · 98100 XXX61', adm:'6 Nov, 4:10 pm', dis:'Not set', st:'dddddldtuu', upd:'7 of 7 days · same text 5 days', last:'Brother called front desk, today 7:50 am', next:'Safety grievance · today', attn:1, open:2, prefs:true },
+  { id:'rk', name:'Rohit Kapoor', ini:'RK', as:'38/M', room:'Suite 201', ward:'Male ward', type:'Suite', day:1, sec:'Sec 89', uhid:'2026-27RG7311', tags:['New · 24 h','VIP','DAMA risk'], dr:'Dr. Aanya Sharma', ps:'Add psychologist', rep:'Nisha Kapoor', rel:'wife', ph:'98730 XXX12', bk:'Not given', adm:'11 Nov, 9:30 pm', dis:'Not set', st:'dtuuuuuuuu', upd:'0 of 1 day', last:'Wife called, today 8:40 am', next:'Meet wife · now', attn:1, open:1, prefs:false },
+  { id:'rs', name:'Rahul Sethi', ini:'RS', as:'45/M', room:'123 B', ward:'Male ward', type:'Deluxe', day:22, sec:'Sec 90', uhid:'2025-26RG6219', tags:['Discharge today'], dr:'Dr. Madhura Samudra', ps:'Barkha', rep:'Vikas Sethi', rel:'father', ph:'98110 XXX34', bk:'Anita Sethi (mother) · 98911 XXX02', adm:'21 Oct, 1:15 pm', dis:'Today, 3 pm', st:'ddddddddtt', upd:'20 of 22 days', last:'You, random call 2, 9 Nov', next:'Discharge meeting · 3 pm', attn:1, open:1, prefs:true },
+  { id:'am', name:'Arjun Mehta', ini:'AM', as:'34/M', room:'210', ward:'Male ward', type:'Deluxe', day:2, sec:'Sec 89', uhid:'2026-27RG6812', tags:['New admission'], dr:'Dr. Aanya Sharma', ps:'Priya Nair', rep:'Shalini Mehta', rel:'wife', ph:'98188 XXX51', bk:'Rakesh Mehta (brother) · 98990 XXX17', adm:'10 Nov, 6:10 pm', dis:'Not set', st:'dtuluuuuuu', upd:'1 of 1 day', last:'You, family meeting, 10 Nov', next:'24 h call · 6 h late', attn:1, open:0, prefs:false },
+  { id:'km', name:'Kavya Menon', ini:'KM', as:'29/F', room:'313', ward:'Female ward', type:'Single', day:9, sec:'Sec 89', uhid:'2026-27RG6744', tags:[], dr:'Dr. Alisha Nagar', ps:'Kiran Mehra', rep:'Ravi Menon', rel:'husband', ph:'99100 XXX88', bk:'Not given', adm:'3 Nov, 2:00 pm', dis:'Not set', st:'dldddddluu', upd:'5 of 8 days · none for 3 days', last:'Kiran Mehra, update 7 Nov', next:'Family not replying · call', attn:1, open:0, prefs:true },
+  { id:'kml', name:'Karan Malhotra', ini:'KM', as:'26/M', room:'212 A', ward:'Male ward', type:'Twin sharing', day:21, sec:'Sec 90', uhid:'2026-27RG6602', tags:[], dr:'Dr. Ichpreet Singh', ps:'Priya Nair', rep:'Sunita Malhotra', rel:'mother', ph:'98710 XXX44', bk:'Vivek Malhotra (father) · 98711 XXX45', adm:'22 Oct, 11:00 am', dis:'30 Nov', st:'ddddddddtu', upd:'21 of 21 days · TODAY line copied 5 days', last:'You, random call 1, 4 Nov', next:'Random call 2 · this week', attn:0, open:0, prefs:true },
+  { id:'mi', name:'Meera Iyer', ini:'MI', as:'27/F', room:'310 A', ward:'Female ward', type:'Single', day:0, sec:'Sec 89', uhid:'2026-27RG7320', tags:['New · 24 h','VIP'], dr:'Dr. Alisha Nagar', ps:'Priya Nair', rep:'S. Iyer', rel:'father', ph:'98450 XXX09', bk:'Lakshmi Iyer (mother) · 98451 XXX10', adm:'12 Nov, 8:20 am', dis:'Not set', st:'ttuuuuuuuu', upd:'Starts tonight', last:'Father called front desk, 9:05 am', next:'Family meeting · 11 am', attn:0, open:1, prefs:false },
+  { id:'dk', name:'Dev Kumar', ini:'DK', as:'31/M', room:'215 A', ward:'Male ward', type:'Twin sharing', day:3, sec:'Sec 89', uhid:'2026-27RG7104', tags:[], dr:'Dr. Rohan Mehta', ps:'Priya Nair', rep:'Sunita Kumar', rel:'mother', ph:'97170 XXX92', bk:'Not given', adm:'9 Nov, 5:45 pm', dis:'Not set', st:'ddlddtuuuu', upd:'3 of 3 days', last:'Dr. Rohan Mehta, 72 h call, today', next:'Preferences · 1 day late', attn:1, open:0, prefs:false },
+  { id:'sd', name:'Sameer Das', ini:'SD', as:'22/M', room:'213 A', ward:'Male ward', type:'Twin sharing', day:7, sec:'Sec 89', uhid:'2026-27RG6905', tags:[], dr:'Dr. Rohan Mehta', ps:'Kiran Mehra', rep:'Mitali Das', rel:'mother', ph:'98790 XXX75', bk:'Pooja Das (cousin) · 98791 XXX33', adm:'5 Nov, 11:20 am', dis:'Not set', st:'ddddddttuu', upd:'7 of 7 days', last:'Dr. Rohan Mehta, Week 1 meeting booked', next:'Random call 1 · by tomorrow', attn:0, open:0, prefs:true }
+];
+P.forEach(p=>{ const o=p.st; const d0=p.day>=1?'d':o[0];
+  const met = p.day>=3?'d':(p.day>=1?'t':'u');
+  p.st = o[0]+o[1]+(p.id==='rs'?'l':d0)+d0+(p.id==='dk'?'l':met)+o.slice(2); });
+const I = {
+  grid:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>',
+  users:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>',
+  heart:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
+  msg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v11H8l-4 4z"/></svg>',
+  cog:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>',
+  bell:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
+  phone:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>',
+  wa:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.5-4A8 8 0 1 1 8 18.5z"/></svg>',
+  plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+  lock:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'
+};
+function shell(inner, crumb){
+  const sub=(t,b,on)=>`<a href="#" class="${on?'on':''}">${t}${b?` <span class="bd">${b}</span>`:''}</a>`;
+  return `<div class="app"><nav class="side" aria-label="Main menu">
+    <div class="brand"><i>${I.heart}</i>Tulasi Healthcare</div><div class="mm">MAIN MENU</div>
+    <a href="#" class="grp">${I.heart}Patient experience</a>
+    <div class="sub">${sub('Today')}${sub('Patients','',1)}${sub('Feedback',5)}${sub('Nurse training')}${sub('Reports')}</div>
+    <a href="#" class="nv">${I.cog}Setting</a>
+    <div class="me"><div class="av" style="width:36px;height:36px;background:#EDE9FE;color:#5B21B6;font-size:13px">KA</div><div style="display:flex;flex-direction:column"><b style="font-size:14px;font-weight:600">Kanika</b><span style="font-size:12px;color:#667085">Patient experience · Gurgaon · backup Prab</span></div></div>
+  </nav><div class="col">
+    <header class="top"><h1 style="font-size:${crumb?'15px':'23px'};font-weight:${crumb?500:600};color:${crumb?'#475467':'#0F172A'}">${crumb||'Inpatients'}</h1><div style="display:flex;align-items:center;gap:14px"><button class="eye" aria-label="Notifications">${I.bell}</button><div style="display:flex;align-items:center;gap:8px"><div class="av" style="width:32px;height:32px;background:#1E6CDB;color:#fff;font-size:12px">KA</div><span style="font-size:14px;font-weight:500">Patient Experience</span></div></div></header>
+    ${inner}</div></div>`;
+}
+const stepsDone = p => [...p.st].filter(c=>c==='d').length;
+const isLate = p => p.st.includes('l');
+function pill(t,kind){ const k={amber:'background:#FFF4D6;border-color:#F79009;color:#93370D',blue:'background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF',green:'background:#ECFDF3;border-color:#ABEFC6;color:#067647'}[kind]||''; return `<span class="tag" style="${k}">${esc(t)}</span>`; }
+function tagKind(t){ return /DAMA/.test(t)?'amber':/New/.test(t)?'blue':/Discharge/.test(t)?'green':''; }
+function list(){
+  const counts = { all:P.length, new:P.filter(p=>p.tags.some(t=>/New/.test(t))).length, late:P.filter(isLate).length, dis:P.filter(p=>p.dis!=='Not set').length, griev:P.filter(p=>p.open>0).length, prefs:P.filter(p=>!p.prefs).length, vip:P.filter(p=>p.tags.includes('VIP')).length };
+  const F = [['all','All inpatients'],['new','New in 24 h'],['late','Steps late'],['dis','Discharge planned'],['griev','Open grievance'],['prefs','Preferences pending'],['vip','VIP']];
+  let rows = P.filter(p=> S.filter==='all'||(S.filter==='new'&&p.tags.some(t=>/New/.test(t)))||(S.filter==='late'&&isLate(p))||(S.filter==='dis'&&p.dis!=='Not set')||(S.filter==='griev'&&p.open>0)||(S.filter==='prefs'&&!p.prefs)||(S.filter==='vip'&&p.tags.includes('VIP')));
+  if(S.sort==='room') rows=[...rows].sort((a,b)=>a.room.localeCompare(b.room)); else if(S.sort==='day') rows=[...rows].sort((a,b)=>b.day-a.day); else rows=[...rows].sort((a,b)=>b.attn-a.attn);
+  const tr = rows.map((p,i)=>{ const a=AV[P.indexOf(p)%4]; const dn=stepsDone(p);
+    return `<tr>
+    <td style="padding-left:18px"><a href="#" data-open="${p.id}" style="display:flex;gap:10px;color:#0F172A"><span class="av" style="width:38px;height:38px;background:${a[0]};color:${a[1]};font-size:13px">${p.ini}</span><span style="display:flex;flex-direction:column;gap:3px"><b style="font-size:15px;font-weight:600">${esc(p.name)}</b><span style="font-size:12px;color:#667085">${p.as} · R ${esc(p.room)} · ${p.uhid}</span><span style="display:flex;flex-wrap:wrap;gap:4px">${p.tags.map(t=>pill(t,tagKind(t))).join('')}</span></span></a></td>
+    <td><div style="font-weight:600">R-${esc(p.room)}</div><div style="font-size:12px;color:#667085">${p.type} · Day ${p.day} · ${p.sec}</div>${p.dis!=='Not set'?`<div style="font-size:12px;color:#067647;font-weight:600">Discharge ${esc(p.dis)}</div>`:''}</td>
+    <td><div style="font-weight:600;font-size:14px">${esc(p.rep)}</div><div style="font-size:12px;color:#667085">${esc(p.rel)} · nominated rep</div><div style="font-size:12px;color:#475467;margin-top:3px">${esc(p.last)}</div></td>
+    <td><div style="display:flex;flex-direction:column;gap:4px;font-size:13px"><span>${esc(p.dr)}</span><span style="color:${p.ps==='Add psychologist'?'#1E5BB8':'#475467'}">${esc(p.ps)}</span></div></td>
+    <td><div style="display:flex;gap:3px;margin-bottom:6px" aria-label="${dn} of 13 stay steps done">${[...p.st].map(c=>`<i style="width:14px;height:6px;border-radius:3px;background:${DOT[c]}"></i>`).join('')}</div><div style="font-size:12px;color:#475467">${dn} of 13 · 8 pm updates ${esc(p.upd)}</div></td>
+    <td><span style="font-size:13px;font-weight:600;color:${p.attn?'#B54708':'#344054'}">${esc(p.next)}</span>${p.open?`<div style="font-size:12px;color:#667085;margin-top:3px">${p.open} open grievance${p.open>1?'s':''}</div>`:''}</td>
+    <td style="text-align:right;padding-right:14px"><button class="take" data-open="${p.id}">View</button></td></tr>`; }).join('');
+  return shell(`<main>
+    ${`<div class="bar"><div style="display:flex;flex-direction:column;gap:2px"><b style="font-size:18px">All inpatients</b><span style="font-size:13px;color:#667085">${P.length} patients · Gurgaon · all wards</span></div><div style="display:flex;gap:8px;flex-wrap:wrap"><input class="inp" type="search" placeholder="Type a name, room or UHID" aria-label="Search patients"><label class="btn" style="gap:6px">Ward <select aria-label="Ward" style="border:0;font:inherit;background:transparent"><option>All wards</option><option>Male ward</option><option>Female ward</option><option>Child ward</option></select></label></div></div>
+    <div class="chips">${F.map(([k,l])=>`<button class="chip" data-f="${k}" style="${S.filter===k?'background:#E8F1FE;border-color:#1E6CDB;color:#1E5BB8':''}"><span style="font-size:15px;font-weight:700">${counts[k]}</span> ${l}</button>`).join('')}</div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#475467">Sort ${[['attn','Needs attention first'],['room','Room'],['day','Day of stay']].map(([k,l])=>`<button class="mini" data-s="${k}" style="${S.sort===k?'background:#1E6CDB;color:#fff;border-color:#1E6CDB':'color:#344054'}">${l}</button>`).join('')}</div>
+    <div class="tw"><table><thead><tr><th style="padding-left:18px">PATIENT</th><th>ROOM</th><th>FAMILY</th><th>CARE TEAM</th><th>STAY STEPS</th><th>NEXT DUE</th><th></th></tr></thead><tbody>${tr}</tbody></table></div>
+    <div class="key"><b style="font-size:11px;color:#667085;letter-spacing:.05em">STAY STEPS</b><span><i class="dot" style="background:#12B76A"></i>Done</span><span><i class="dot" style="background:#3B82F6"></i>Due today</span><span><i class="dot" style="background:#F5A524"></i>Late</span><span><i class="dot" style="background:#D0D5DD"></i>Upcoming</span><span style="color:#667085">Diagnosis, notes and medicines are not shown in the patient experience view.</span></div>`}
+  </main>`);
+}
+const OUT=[
+  ['Aman Gill','AG','28 Oct','Dr. Ichpreet Singh','Psychiatrist OPD 1 Nov','Missed','2 attempts · no answer','Harjeet Gill (father)','Readmission',1],
+  ['Dev Sharma','DS','4 Nov','Dr. Ichpreet Singh','Psychiatrist OPD 8 Nov','Missed','1 attempt · will call back','Sunita Sharma (mother)','',1],
+  ['Imran Sheikh','IS','3 Nov','Dr. Alisha Nagar','Day 14 call 17 Nov','Due Mon','Call centre','Farah Sheikh (wife)','',0],
+  ['Kavita Joshi','KJ','30 Oct','Dr. Ichpreet Singh','Online OPD today','Booked','Came for 1 of 2','Mohan Joshi (father)','',0],
+  ['Mohit Sachdeva','MS','14 Oct','Dr. Naseem Akhtar','Day 30 call','Done','Readmitted at Tulasi','Komal (wife)','',0],
+  ['Gorav Bose','GB','6 Oct','Dr. Pooja Sharma','Psychologist OPD','Closed','Went to Hauz Khas OPD','Ambika (sister)','',0]];
+function outList(){
+  const tr=OUT.map((o,i)=>{const a=AV[i%4]; const late=o[9]; return `<tr>
+   <td style="padding-left:18px"><span style="display:flex;gap:10px"><span class="av" style="width:38px;height:38px;background:${a[0]};color:${a[1]};font-size:13px">${o[1]}</span><span><b style="font-weight:600">${o[0]}</b><div style="font-size:12px;color:#667085">Discharged ${o[2]}</div>${o[8]?pill(o[8],''):''}</span></span></td>
+   <td style="font-size:13px">${o[3]}</td><td style="font-size:13px"><b style="font-weight:600">${o[4]}</b><div style="font-size:12px;color:${late?'#B54708':'#667085'};font-weight:${late?600:400}">${o[5]}</div></td>
+   <td style="font-size:13px;color:#475467">${o[6]}</td><td style="font-size:13px">${o[7]}</td>
+   <td style="text-align:right;padding-right:14px">${late?'<button class="take">Call now</button>':'<button class="take" style="color:#475467">View</button>'}</td></tr>`}).join('');
+  return `<div class="tw"><table><thead><tr><th style="padding-left:18px">PATIENT</th><th>DOCTOR</th><th>FOLLOW-UP</th><th>WHAT HAPPENED</th><th>FAMILY</th><th></th></tr></thead><tbody>${tr}</tbody></table></div>
+  <div class="key"><span style="color:#667085">Built from the discharge checklist and OPD bookings. The call centre does Day 14 and Day 30 calls; Kanika calls patients who missed an OPD. Closing asks for a reason (came, went elsewhere, readmitted, cost, feeling better).</span></div>`;
+}
+function card(label, val, sub){ return `<div style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font-size:11px;font-weight:700;letter-spacing:.05em;color:#667085">${label}</span><b style="font-size:14px;font-weight:600">${val}</b><span style="font-size:12px;color:#667085">${sub}</span></div>`; }
+function rec(){
+  const p=P.find(x=>x.id===S.pid)||P[0]; const idx=P.indexOf(p); const a=AV[idx%4];
+  const prev=P[(idx-1+P.length)%P.length], next=P[(idx+1)%P.length];
+  const due=[...p.st].map((c,i)=>[c,i]).filter(([c,i])=>(c==='l'||c==='t')&&!S.done[p.id+i]);
+  const TABS=[['summary','Stay summary'],['family','Family calls and updates'],['prefs','Preferences'],['griev','Grievances'],['dis','Discharge and feedback'],['past','Past admissions']];
+  let body='';
+  if(S.rtab==='summary') body=summary(p); else if(S.rtab==='family') body=family(p); else if(S.rtab==='prefs') body=prefs(p); else if(S.rtab==='griev') body=griev(p); else if(S.rtab==='dis') body=dis(p); else body=`<div style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:18px">${p.tags.includes('Readmission')?`<b>Admission 1 · 2 to 19 Jul 2026</b><div style="font-size:13px;color:#667085;margin-top:4px">Dr. Ichpreet Singh · Kiran Mehra · feedback NPS 8 · 1 grievance (laundry)</div><button class="mini" style="margin-top:10px">Open</button>`:'<span style="color:#667085">No earlier stays at Tulasi.</span>'}</div>`;
+  return shell(`<main>
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#667085"><span>Patient ${idx+1} of ${P.length}</span><div style="display:flex;gap:8px"><button class="mini" data-open="${prev.id}" style="color:#344054">‹ ${esc(prev.name)}</button><button class="mini" data-open="${next.id}" style="color:#344054">${esc(next.name)} ›</button></div></div>
+    <section style="background:#fff;border:1px solid #E3EAF2;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px">
+        <div style="display:flex;gap:12px"><span class="av" style="width:48px;height:48px;background:${a[0]};color:${a[1]};font-size:16px">${p.ini}</span><div style="display:flex;flex-direction:column;gap:4px"><b style="font-size:20px">${esc(p.name)}</b><span style="font-size:13px;color:#667085">${p.as} · Room ${esc(p.room)} · ${p.ward} · UHID ${p.uhid}</span><span style="display:flex;flex-wrap:wrap;gap:4px">${pill(p.sec==='Sec 90'?'Section 90':'Section 89 · day '+(p.day+1)+' of 30','')}${p.tags.map(t=>pill(t,tagKind(t))).join('')}</span></div></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start"><button class="btn pri">${I.phone}Call family</button><button class="btn">${I.wa}Message family</button><button class="btn">${I.plus}Log grievance</button></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+        ${card('ADMITTED',p.adm,'Day '+p.day+' · '+p.type)}
+        ${card('NOMINATED REPRESENTATIVE',esc(p.rep),esc(p.rel)+' · gets clinical updates')}
+        ${card('FAMILY CONTACT',esc(p.ph),'Backup: '+esc(p.bk))}
+        ${card('TREATING TEAM',esc(p.dr),esc(p.ps))}
+        ${card('EXPECTED DISCHARGE',esc(p.dis),'Set by the psychiatrist')}
+      </div>
+      ${due.length?`<div style="background:#FFFAEB;border:1px solid #FEDF89;border-radius:12px;padding:10px 14px;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:13px"><b style="color:#93370D">Due for this patient · ${due.length}</b>${due.map(([c,i])=>`<span style="display:flex;align-items:center;gap:6px"><i class="dot" style="margin:0;background:${DOT[c]}"></i>${STEPS[i][0]} · ${c==='l'?'late':'today'}</span>`).join('')}</div>`:''}
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#667085">${I.lock}Diagnosis, clinical notes and medicines are not shown in the patient experience view.</div>
+    </section>
+    <div role="tablist" style="display:flex;gap:4px;border-bottom:1px solid #E3EAF2;overflow-x:auto">${TABS.map(([k,l])=>`<button role="tab" data-t="${k}" style="border:0;background:transparent;padding:10px 14px;font-size:14px;font-weight:600;white-space:nowrap;color:${S.rtab===k?'#1E5BB8':'#475467'};border-bottom:2px solid ${S.rtab===k?'#1E6CDB':'transparent'}">${l}${k==='griev'&&p.open?` <span class="bd">${p.open}</span>`:''}</button>`).join('')}</div>
+    ${body}
+  </main>`, `Patient experience / Patients / <b style="color:#0F172A">${esc(p.name)}</b>`);
+}
+function summary(p){
+  const rows=STEPS.map((s,i)=>{ const c=p.st[i]; const key=p.id+i; const d=S.done[key]||c==='d'; const own=/you/.test(s[2]);
+    const lab={d:'Done',l:'Late',t:'Due today',u:'Upcoming'}[d?'d':c];
+    return `<div style="display:grid;grid-template-columns:20px minmax(0,1fr) 140px 120px;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid #EEF2F6">
+      <i class="dot" style="margin:0;background:${DOT[d?'d':c]}"></i>
+      <div style="min-width:0"><div style="font-weight:600;font-size:14px">${s[0]}</div><div style="font-size:12px;color:#667085">${s[3]}</div></div>
+      <div style="font-size:12px;color:#475467">${s[1]} · ${s[2]}</div>
+      <div style="text-align:right">${own&&!d&&c!=='u'?(RC.includes(i)?`<button class="mini" data-call="${p.id}" data-n="${i-9}">Call and log</button>`:`<button class="mini" data-step="${key}">Mark done</button>`):`<span style="font-size:12px;font-weight:600;color:${d?'#067647':c==='l'?'#B54708':c==='t'?'#1E40AF':'#667085'}">${lab}</span>`}</div></div>`; }).join('');
+  return `<div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:14px;align-items:start">
+    <section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;overflow:hidden"><div style="padding:14px 16px;display:flex;justify-content:space-between"><b>Stay steps</b><span style="font-size:12px;color:#667085">From the Family Communication SOP · calls tick themselves from the HMS call log</span></div>${rows}</section>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:14px 16px"><b>8 pm family updates</b><div style="font-size:13px;color:#475467;margin-top:6px">${esc(p.upd)}</div><div style="font-size:12px;color:#667085;margin-top:4px">Sent by ${esc(p.ps)} from the HMS. Flagged if missed or if the TODAY line repeats.</div></section>
+      <section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:14px 16px"><b>Costs shared with family</b><div style="font-size:13px;color:#475467;margin-top:6px">${p.id==='rs'?'Estimate not shared · grievance G-0137':'Estimate shared on admission · interim bill weekly'}</div><div style="font-size:12px;color:#667085;margin-top:4px">From billing. NABH asks that families know expected costs.</div></section>
+      <section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:14px 16px"><b>Last contact with family</b><div style="font-size:13px;color:#475467;margin-top:6px">${esc(p.last)}</div></section>
+      <section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:14px 16px"><b>Stay timeline</b>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;font-size:13px">
+          <div><b>${p.adm.split(',')[0]}</b> · Admitted, ${p.sec==='Sec 90'?'Section 90':'Section 89 supported admission'}<div style="font-size:12px;color:#667085">Forms signed by ${esc(p.rep)} (${esc(p.rel)})</div></div>
+          ${stepsDone(p)?`<div><b>Day 0</b> · Family met at admission<div style="font-size:12px;color:#667085">Done by Kanika · in person</div></div>`:''}
+          ${p.st[3]==='d'?`<div><b>Day 1</b> · 24-hour family call<div style="font-size:12px;color:#667085">By ${esc(p.dr)} · logged automatically</div></div>`:''}
+        </div></section>
+    </div></div>`;
+}
+function family(p){
+  const extra=(S.calls[p.id]||[]);
+  const calls=[...extra,
+    ['Today, 7:50 am','Inbound','Front desk','Brother asked about the night incident · logged as grievance G-0145'],
+    ['10 Nov, 6:30 pm','Random call 1 of 2','Kanika','Happy with the room, wants more updates on sleep · no concern'],
+    ['9 Nov, 11:00 am','72-hour call',p.dr,'Early progress shared · 9 min'],
+    ['7 Nov, 10:15 am','24-hour call',p.dr,'Settled well, plan confirmed · 6 min']];
+  const ups=[['Tue 11 Nov','Sent 7:55 pm','TODAY: joined music group, ate full dinner','ok'],['Mon 10 Nov','Sent 8:20 pm','TODAY: calmer than yesterday, slept 6 hours','late'],['Sun 9 Nov','Sent 7:40 pm','TODAY: calmer than yesterday, slept 6 hours','copy'],['Sat 8 Nov','Not sent','','miss']];
+  const flag={ok:['On time','green'],late:['After 8 pm','amber'],copy:['TODAY line same as next day','amber'],miss:['Missed','amber']};
+  return `<div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px;align-items:start">
+  <section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;overflow:hidden"><div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center"><b>Family call log</b><button class="btn" style="height:34px" data-call="${p.id}" data-n="${p.st[10]==='d'?2:1}">${I.phone}Log a random call</button></div>
+    ${calls.map(c=>`<div style="padding:12px 16px;border-top:1px solid #EEF2F6;display:grid;grid-template-columns:130px 150px minmax(0,1fr);gap:10px;font-size:13px"><span style="color:#667085">${c[0]}</span><span><b>${c[1]}</b><div style="font-size:12px;color:#667085">${esc(c[2])}</div></span><span>${esc(c[3])}${c[4]?`<div style="margin-top:4px">${c[4]}</div>`:''}</span></div>`).join('')}
+    <div style="padding:10px 16px;border-top:1px solid #EEF2F6;font-size:12px;color:#667085">Every call placed from the HMS is logged here. Inbound calls are logged by front desk or RMO (after 7 pm).</div></section>
+  <div style="display:flex;flex-direction:column;gap:14px">
+  <section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;overflow:hidden"><div style="padding:14px 16px"><b>8 pm WhatsApp updates</b><div style="font-size:12px;color:#667085">Sent by ${esc(p.ps)} · you only check them</div></div>
+    ${ups.map(u=>`<div style="padding:10px 16px;border-top:1px solid #EEF2F6;font-size:13px;display:flex;justify-content:space-between;gap:10px"><span><b>${u[0]}</b> · ${u[1]}${u[2]?`<div style="font-size:12px;color:#667085">${u[2]}</div>`:''}</span>${pill(flag[u[3]][0],flag[u[3]][1])}</div>`).join('')}
+    <div style="padding:10px 16px;border-top:1px solid #EEF2F6"><button class="mini">Nudge ${esc(p.ps)}</button></div></section>
+
+  </div></div>`;
+}
+function prefs(p){
+  const blk=(t,seen,rows)=>`<section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:14px 16px"><div style="display:flex;justify-content:space-between;gap:8px"><b>${t}</b><span style="font-size:12px;color:#667085">Seen by ${seen}</span></div><div style="display:grid;grid-template-columns:170px 1fr;gap:6px 12px;font-size:13px;margin-top:10px">${rows.map(r=>`<span style="color:#667085">${r[0]}</span><span>${r[1]}</span>`).join('')}</div></section>`;
+  if(!p.prefs) return `<section style="background:#FFFAEB;border:1px solid #FEDF89;border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b>Preferences not taken yet</b><div style="font-size:13px;color:#475467">Due by Day 2. Take them with the RMO, the patient and the family. Same form the psychiatrist sees under Patient Experience.</div></div><button class="btn pri">Take preferences</button></section>`;
+  return `<div style="font-size:13px;color:#475467;margin-bottom:10px">Same record as the psychiatrist's Patient Experience tab. First filled by the RMO with you; anyone on the care team can update it.</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px">
+  ${blk('Diet','Kitchen · Ward',[['Diet type','Vegetarian'],['Foods to avoid','None known'],['Likes, dislikes, fasting days','No onion or garlic on Tuesdays; prefers roti to rice']])}
+  ${blk('Calls and visits','Front desk · Ward',[['Phone calls (hospital phone)','2 a day, 10 minutes'],['Visits','Family, weekends']])}
+  ${blk('Approved visitors','Front desk · Security',[[esc(p.rep),esc(p.rel)+' · nominated representative · Allowed'],['Cousin','Allowed'],['Friend','Not for now']])}
+  ${blk('Room and belongings','Front desk · Housekeeping',[['Room','Keep in current room'],['Belongings','Phone and wallet in locker; belts, laces and sharps at nursing station'],['Signed by',esc(p.rep)+', on admission']])}
+  ${blk('Activities and outings','Ward · Activity team',[['Activities allowed','Yoga, group therapy, indoor games'],['Outings','Not yet']])}
+  ${blk('Communication with family','Patient experience · Billing',[['Language for updates','Hindi'],['Clinical updates go to',esc(p.rep)+' only'],['Billing contact',esc(p.rep)],['Do not share with','Employer, if they call']])}
+  ${blk('Other requests','Admin · Ward',[['Religious or cultural needs','Fasts on Tuesdays'],['Routine','Wakes early; likes the newspaper in the morning']])}
+  </div><div style="font-size:12px;color:#667085;margin-top:10px">First filled by Dr. Sameer Khan (RMO) with Kanika · last updated by ${esc(p.dr)}</div>`;
+}
+function griev(p){
+  const G={nb:[['G-0145','Brother says a night attendant pushed Neel','Safety','red','Escalated to Chandraji · incident report not added yet','Open'],['G-0140','Room too noisy at night','Room and housekeeping','','Sister Rekha · 4 h 10 m left','Open']],rk:[['G-0146','Wife wants to take him home today (DAMA risk)','Family concern','amber','Dr. Aanya Sharma to speak within 30 min','Open']],rs:[['G-0137','Bill estimate not shared before discharge','Billing and insurance','amber','Billing desk · 5 h left','Open']],mi:[['G-0138','Asked for visiting hours and what to bring','Other','','You · due 6 pm','Open']]}[p.id]||[];
+  G.unshift(...(S.griev[p.id]||[]));
+  return `<section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;overflow:hidden"><div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center"><b>Grievances for this stay</b><button class="btn" style="height:34px">${I.plus}Log grievance</button></div>
+  ${G.length?G.map(g=>`<div style="padding:12px 16px;border-top:1px solid #EEF2F6;display:grid;grid-template-columns:80px minmax(0,1fr) 180px 220px 70px;gap:10px;font-size:13px;align-items:center"><span style="color:#667085">${g[0]}</span><b style="font-weight:600">${esc(g[1])}</b><span>${g[3]==='red'?'<span class="tag" style="background:#FEF3F2;border-color:#FDA29B;color:#B42318">Safety</span>':esc(g[2])}</span><span style="color:#475467">${esc(g[4])}</span><a href="#">${g[5]}</a></div>`).join(''):'<div style="padding:14px 16px;border-top:1px solid #EEF2F6;color:#667085">No grievances logged for this stay.</div>'}
+  <div style="padding:10px 16px;border-top:1px solid #EEF2F6;font-size:12px;color:#667085">Full workflow lives in the Grievances tab. A safety grievance cannot close without Escalated to and an incident report number.</div></section>`;
+}
+function dis(p){
+  if(p.dis==='Not set') return `<section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:18px;color:#475467">Discharge not planned yet. This opens when the psychiatrist sets a discharge date and front desk confirms it.</section>`;
+  const gate=[['Front desk told you about the discharge','Yesterday, 6:10 pm',1],['Treating doctor met the family',esc(p.dr)+' · today 10:00 am',1],['Psychologist met the family',esc(p.ps)+' · not yet',0],['Doctor follow-up date on checklist','19 Nov · OPD Gurgaon',1],['Psychologist follow-up date on checklist','Blank · 2nd time this month for '+esc(p.ps),0],['Medicines from Tulasi','Yes · 7 days',1]];
+  const ok=gate.every(g=>g[2]);
+  const meet=['Introduced yourself as their contact after discharge','Explained why follow-up treatment is not optional','Walked through the next doctor and psychologist dates','Gave the call centre number +91 88000 00255','Told them the call centre will call on Day 14 and Day 30'];
+  const R=['Admission and registration','Doctor communication','Nursing and attendants','Family updates','Discharge briefing','Cleanliness'];
+  const npsBtns=[...Array(11).keys()].map(n=>`<button data-nps="${n}" style="width:36px;height:36px;border-radius:8px;border:1px solid ${S.nps===n?'#1E6CDB':'#D6DEE8'};background:${S.nps===n?'#1E6CDB':'#fff'};color:${S.nps===n?'#fff':'#0F172A'};font-weight:600">${n}</button>`).join('');
+  const npsNote = S.nps===null?'':S.nps<=6?`<div style="background:#FFFAEB;border:1px solid #FEDF89;border-radius:10px;padding:10px 12px;font-size:13px;color:#93370D;margin-top:10px">Detractor. On save this goes to Chandraji today with the family's own words.</div>`:S.nps>=9?`<div style="background:#ECFDF3;border:1px solid #ABEFC6;border-radius:10px;padding:10px 12px;font-size:13px;color:#067647;margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:10px">Promoter. Ask for a Google review before they leave. <button class="mini">Send review link on WhatsApp</button></div>`:'';
+  return `<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:14px;align-items:start">
+  <div style="display:flex;flex-direction:column;gap:14px">
+  <section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;overflow:hidden"><div style="padding:14px 16px"><b>1. Before you meet the family</b><div style="font-size:12px;color:#667085">From the discharge checklist. Your meeting unlocks when all are done.</div></div>
+    ${gate.map(g=>`<div style="padding:10px 16px;border-top:1px solid #EEF2F6;display:flex;gap:10px;align-items:flex-start;font-size:13px"><i class="dot" style="margin-top:5px;background:${g[2]?'#12B76A':'#F5A524'}"></i><span style="flex:1"><b style="font-weight:600">${g[0]}</b><div style="font-size:12px;color:#667085">${g[1]}</div></span>${g[2]?'':'<button class="mini">Remind</button>'}</div>`).join('')}</section>
+  <section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;overflow:hidden;opacity:${ok?1:.95}"><div style="padding:14px 16px"><b>2. Family meeting, 10 to 15 minutes</b>${ok?'':'<div style="font-size:12px;color:#B54708">Waiting on 2 items above. You can still start if the family is leaving.</div>'}</div>
+    ${meet.map((m,i)=>`<label style="padding:10px 16px;border-top:1px solid #EEF2F6;display:flex;gap:10px;font-size:13px;align-items:center"><input type="checkbox" ${S.done['m'+i]?'checked':''} data-chk="m${i}">${m}</label>`).join('')}</section>
+  </div>
+  <section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px"><div><b>3. Feedback interview (form v6)</b><div style="font-size:12px;color:#667085">You ask each question and record the answer. Do not hand the form over.</div></div>
+    <label style="font-size:13px;display:flex;flex-direction:column;gap:6px">Who is answering<select class="inp" style="width:100%"><option>${esc(p.rep)} (${esc(p.rel)})</option><option>Patient</option><option>Other family member</option></select></label>
+    <div><div style="font-size:13px;margin-bottom:6px">How likely are you to recommend Tulasi to a friend or family member? (0 to 10)</div><div style="display:flex;flex-wrap:wrap;gap:4px">${npsBtns}</div>${npsNote}</div>
+    <div style="display:flex;flex-direction:column;gap:8px">${R.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px"><span>${r}</span><span style="display:flex;gap:4px">${[1,2,3,4,5].map(n=>`<button data-r="${r}|${n}" style="width:30px;height:30px;border-radius:8px;border:1px solid ${S.ratings[r]===n?'#1E6CDB':'#D6DEE8'};background:${S.ratings[r]===n?'#E8F1FE':'#fff'};font-weight:600;color:#0F172A">${n}</button>`).join('')}</span></div>`).join('')}</div>
+    <label style="font-size:13px;display:flex;flex-direction:column;gap:6px">What helped most?<textarea class="inp" style="width:100%;min-height:56px;padding:8px 12px"></textarea></label>
+    <label style="font-size:13px;display:flex;flex-direction:column;gap:6px">What could be better? (write their words)<textarea class="inp" style="width:100%;min-height:56px;padding:8px 12px"></textarea></label>
+    <div style="font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px">OK for the call centre to call on Day 14 and Day 30?<span style="display:flex;gap:4px">${['Yes','No'].map(v=>`<button class="mini" data-c="${v}" style="${S.consent===v?'background:#1E6CDB;color:#fff;border-color:#1E6CDB':'color:#344054'}">${v}</button>`).join('')}</span></div>
+    <button class="btn pri" style="justify-content:center">Save feedback</button>
+    <div style="font-size:12px;color:#667085">On save: follow-up dates and consent go to the call centre's list, the answers go to the weekly report. Nothing to type into the Google Sheet.</div>
+  </section></div>`;
+}
+const CMP=[
+ ['Patients list','The Patient dashboard is the only list: 6 rows with stay steps and reminders, 3 tabs (Admitted, Needs you today, Discharging).','Same layout as the psychiatrist’s My inpatients: counter filters (All, New in 24 h, Steps late, Discharge planned, Open grievance, Preferences pending, VIP), sort (Needs attention first, Room, Day of stay), ward filter, View button.'],
+ ['Columns','Patient, Stay steps, Reminders.','Patient (UHID, tags), Room (type, day, section, discharge date), Family (nominated rep, last contact), Care team, Stay steps (10 small bars, 8 pm update count), Next due.'],
+ ['Stay steps','9 steps incl. 3 coordinator random calls and a 48-hour check after OPD.','10 steps from the Family Communication SOP and her job list: family met, WhatsApp group, preferences, psychiatrist 24 h and 72 h calls, psychologist intake call, Week 1 meeting, random calls 1 and 2, discharge meeting and feedback.'],
+ ['Record header','Name, room, UHID, treating team, admitted, nominated rep, family contact, expected discharge.','Same as the psychiatrist record header: section and day counter, tags, Call family, Message family, Log grievance, a backup contact (SOP asks for one), and a Due for this patient strip.'],
+ ['Record tabs','Stay, Family and visits, Preferences and belongings, Grievances.','Stay summary, Family calls and updates, Preferences, Grievances, Discharge and feedback, Past admissions.'],
+ ['Family calls','Contact log with a few entries.','One HMS call log for everyone (psychiatrist, psychologist, Kanika, front desk, RMO) plus the 8 pm update log with On time, After 8 pm, TODAY line copied and Missed flags.'],
+ ['Preferences','Its own form: food, language, faith, updates go to, do not share with, belongings.','The same record the psychiatrist sees under Patient Experience (Diet, Calls and visits, Approved visitors, Room and belongings, Activities, Communication with family, Other), each block showing who sees it. One form, two views.'],
+ ['Discharge','Separate Discharge SOP tab with a 40-item read-only checklist.','Inside the record: 1. gate from the checklist (doctor and psychologist met family, follow-up dates, medicines), 2. family meeting checklist, 3. form v6 feedback interview with NPS. Detractor goes to Chandraji, promoter gets a Google review link.'],
+ ['Menu','12 links: Dashboard, All Patients (OPD screens), 7 patient experience items, Calendar, Messages, Setting. Several open the same screen.','5 items: Today, Patients, Feedback, Nurse training, Reports, plus Setting. Feedback holds grievances, compliments and ward meetings. Family calls and discharge live inside Today and Patients. After-discharge calls stay with the call centre.'],
+ ['Random calls','"Log a random call" button and a 0 of 3 counter. Nothing captured about what the family said.','2 per stay. A side panel with a short script (care, 8 pm updates, team contact, food / room / billing / visits, staff behaviour), their words, and "Does anything need action?". Answers suggest a grievance category; one tap logs it with owner and deadline. Praise can be logged as a compliment. No answer comes back tomorrow.'],
+ ['Rights, costs, the patient','Not tracked.','3 new stay steps: cost estimate shared (NABH), rights explained to patient and nominated rep (MHCA s.22 and s.28), and Kanika meeting the patient herself on Day 1 to 2, since patients have no phone.'],
+ ['Privacy','Diagnosis, notes and medicines hidden.','Kept. No diagnosis column on the list either.']
+];
+function cmp(){ return `<div class="doc"><div class="eyebrow">TAB 2 OF 7 · PATIENTS AND THE PATIENT RECORD</div><h2>Live screen vs what we want</h2><p>Use the switcher at the bottom right to click through the proposed Patients list and a patient record. Rahul Sethi shows the full discharge flow.</p>
+  <div class="gt"><div style="grid-template-columns:160px 1fr 1.3fr"><span>AREA</span><span>LIVE NOW</span><span>PROPOSED</span></div>${CMP.map(r=>`<div style="grid-template-columns:160px 1fr 1.3fr"><span style="font-weight:600">${r[0]}</span><span style="color:#475569">${esc(r[1])}</span><span class="hl">${esc(r[2])}</span></div>`).join('')}</div></div>`; }
+function render(){ document.getElementById('root').innerHTML = S.view==='list'?list():S.view==='rec'?rec():cmp(); document.querySelectorAll('.rev button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view)); }
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,a,input'); if(!t) return;
+  if(t.tagName==='A'&&t.getAttribute('href')==='#') e.preventDefault();
+  const d=t.dataset;
+  if(d.v){ set({view:d.v}); scrollTo(0,0); }
+  else if(d.open){ set({view:'rec',pid:d.open,rtab:S.pid===d.open?S.rtab:'summary',nps:null,ratings:{},consent:null}); scrollTo(0,0); }
+  else if(d.m) set({mode:d.m});
+  else if(d.f) set({filter:d.f});
+  else if(d.s) set({sort:d.s});
+  else if(d.t) set({rtab:d.t});
+  else if(d.call){ const p=P.find(x=>x.id===d.call); openCall(p, +d.n||1); }
+  else if(d.step) set({done:{...S.done,[d.step]:true}});
+  else if(d.nps) set({nps:+d.nps});
+  else if(d.r){ const [k,n]=d.r.split('|'); set({ratings:{...S.ratings,[k]:+n}}); }
+  else if(d.c) set({consent:d.c});
+  else if(d.chk) set({done:{...S.done,[d.chk]:t.checked}});
+});
+window.CM_PATIENTS = P;
+window.onCallSaved = r => {
+  const p=r.p; const when='Today, just now';
+  const summary = r.outcome!=='Connected' ? r.outcome : [r.ans.q1, r.ans.q2, r.ans.q4&&r.ans.q4!=='Nothing'?r.ans.q4:null].filter(Boolean).join(' · ') + (r.words?' · “'+r.words+'”':'');
+  const tag = r.grievance ? `<span class="tag" style="background:#FFF4D6;border-color:#F79009;color:#93370D">Grievance ${r.grievance.id} · ${esc(r.grievance.cat)} → ${esc(r.grievance.owner)}</span>` : (r.compliment?'<span class="tag" style="background:#ECFDF3;border-color:#ABEFC6;color:#067647">Compliment logged</span>':'');
+  const calls={...S.calls}; calls[p.id]=[[when,'Random call '+r.n+' of 2','Kanika',summary||'Connected',tag],...(calls[p.id]||[])];
+  const done={...S.done}; if(r.outcome==='Connected') done[p.id+(9+r.n)]=true;
+  const griev={...S.griev}; if(r.grievance){ griev[p.id]=[[r.grievance.id, r.grievance.text, r.grievance.cat, r.grievance.safety?'red':'', r.grievance.owner+' · due '+(r.grievance.due==='now'?'now':'in '+r.grievance.due), 'Open'],...(griev[p.id]||[])]; p.open=(p.open||0)+1; }
+  set({calls, done, griev});
+};
+render();
+</script>
+
+</body>
+</html>

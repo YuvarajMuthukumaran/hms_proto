@@ -6,7 +6,7 @@
 // Nothing is stored here: the draft goes back to the clinician, who reviews it before anything enters the record.
 'use strict';
 const { env, authorized } = require('../lib/wa');
-const { SYSTEM, userMsg, FORM_SYSTEM, formMsg } = require('../lib/scribe-prompt');
+const { SYSTEM, userMsg, FORM_SYSTEM, formMsg, OUTPUTS_SYSTEM } = require('../lib/scribe-prompt');
 
 const MAX_BYTES = 4 * 1024 * 1024; // Vercel's request body limit is 4.5 MB; about 20 minutes at the portal's 24 kbps
 const GROQ = 'https://api.groq.com/openai/v1';
@@ -115,6 +115,21 @@ module.exports = async (req, res) => {
       const values = cleanValues(fields, d.values);
       console.log(JSON.stringify({ kind: 'scribe-form', form: schema.form || '', bytes: audio.size, filled: Object.keys(values).length, of: fields.length }));
       return send(200, { ok: true, mode: 'form', transcript, values, unclear: arr(d.unclear).map(String) });
+    }
+
+    // text in, several drafts out (12 Nov): one transcript becomes the family update, summary line, ICD-11 suggestion and risk words
+    if (ctype.startsWith('application/json')) {
+      let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { return send(400, { ok: false, error: 'Bad JSON' }); }
+      const transcript = String(b.transcript || '').trim();
+      if (transcript.length < 20) return send(400, { ok: false, error: 'There is no text to work from.' });
+      const d = await writeJson(OUTPUTS_SYSTEM, JSON.stringify({ patient: b.patient || '', diagnosis: b.dx || '', medicines: arr(b.meds), who: b.who || 'clinician', transcript: transcript.slice(0, 12000) }));
+      console.log(JSON.stringify({ kind: 'scribe-outputs', words: transcript.split(/\s+/).length }));
+      return send(200, {
+        ok: true, mode: 'outputs',
+        note: String(d.note || ''), summaryLine: String(d.summaryLine || ''), familyEn: String(d.familyEn || ''), familyHi: String(d.familyHi || ''),
+        icd11: arr(d.icd11).filter(x => x && x.code && x.title).slice(0, 3).map(x => ({ code: String(x.code), title: String(x.title) })),
+        risk: arr(d.risk).map(String).slice(0, 8), unclear: arr(d.unclear).map(String)
+      });
     }
 
     // round note (raw audio body)
