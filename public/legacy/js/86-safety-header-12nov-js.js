@@ -44,6 +44,8 @@
     if(!old||old.dataset.pid!==pid||old.dataset.k!==k+S.rmoFloor){if(old)old.remove();const el=document.createElement('div');el.id='safeBar';el.dataset.pid=pid;el.dataset.k=k+S.rmoFloor;el.innerHTML=bar(pid);
       const top=document.querySelector('.top');const tp=top&&getComputedStyle(top).position;document.documentElement.style.setProperty('--shTop',(tp==='sticky'||tp==='fixed')?(top.getBoundingClientRect().height)+'px':'0px');
       const root=v.querySelector('.ws-mid')||v;root.insertBefore(el,root.firstChild);}
+    /* the orange event strip only belongs on Stay summary; on the other tabs it is noise (psychologist, like the psychiatrist) */
+    if(k==='psychologist'&&location.hash.indexOf('/overview')<0)v.querySelectorAll('.callout.row').forEach(c=>{if(/reported by/.test(c.textContent))c.remove();});
     /* the old big primary button, and tags that say nothing */
     v.querySelectorAll('button').forEach(b=>{if(/^(Call caregiver|Round note|Session note)$/.test(b.textContent.trim())&&b.closest('.dph')&&!b.closest('#safeBar')){b.remove();}});
     v.querySelectorAll('.chip,.c,.tag,.pg-tag').forEach(c=>{if(/^(No known (drug )?allergies?|Allergies not recorded|Not recorded|None)$/i.test(c.textContent.trim()))c.remove();});

@@ -177,6 +177,9 @@
   const css=document.createElement('style');css.id='tp-12nov-css';
   css.textContent=`.tp-body{padding:14px 20px 18px;display:flex;flex-direction:column;gap:14px}
   .tp-segs,.tp-tabs{display:inline-flex;gap:3px;padding:4px;border:1px solid #d5e1ef;border-radius:12px;background:#f1f5fa;align-self:flex-start}
+  .tp-tabs{border:0;background:transparent;padding:0;border-bottom:1px solid #e3eaf2;border-radius:0;gap:20px;align-self:stretch;display:flex}
+  .tp-tabs .tp-t{border-radius:0;padding:8px 2px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;min-height:0;background:transparent!important;color:#667085;box-shadow:none}.tp-tabs .tp-t.on{color:#1e6cdb;border-bottom-color:#1e6cdb}
+  #auScribeBtn{margin:0 0 8px auto!important;display:flex!important;width:auto!important;align-self:flex-end;font-size:13px;min-height:34px;padding:6px 12px}
   .tp-s,.tp-t{border:1px solid transparent;border-radius:9px;background:transparent;padding:8px 16px;font:inherit;font-size:13.5px;font-weight:650;color:#344054;cursor:pointer;min-height:38px;transition:background .15s,color .15s}
   .tp-s:hover,.tp-t:hover{background:#e3edfb;color:#1e5bb8}.tp-s.on,.tp-t.on{background:#1e6cdb;color:#fff;box-shadow:0 2px 5px rgba(30,108,219,.28)}
   .tp-t{padding:6px 12px;min-height:32px;font-size:13px}
