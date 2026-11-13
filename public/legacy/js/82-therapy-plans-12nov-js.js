@@ -138,7 +138,7 @@
     if(!x.tpPlanAt)x.tpPlanAt=Date.now()-3*86400000*(pid==='neel'?0:1);
     const hrsWait=Math.floor((Date.now()+((S.au||{}).skip||0)*3600000-x.tpPlanAt)/3600000);
     const so=document.createElement('div');so.className='tp-so '+(sg?'ok':'wait');
-    so.innerHTML=sg?`<span>Signed off by <b>${esc(sg.by)}</b>, Psychologist Lead, on ${esc(sg.at)}</span>`:`<span><b>Awaiting sign-off</b> by the Psychologist Lead${hrsWait>=48?' · waiting '+hrsWait+' hours, the lead has been nudged':''}</span>${lead?`<button class="btn sm pri" onclick="tpSignOff('${pid}')">Sign off the plan</button>`:''}`;
+    so.innerHTML=sg?`<span>Signed off by <b>${esc(sg.by)}</b>, Psychologist Lead, on ${esc(sg.at)}</span>`:`<span><b>Awaiting sign-off</b> by the Psychologist Lead${hrsWait>=48?' · waiting '+hrsWait+' hours, the lead has been nudged':''}</span>${lead?`<button class="btn sm" onclick="lpBack('${pid}')">Updates needed</button><button class="btn sm pri" onclick="tpSignOff('${pid}')">Sign off the plan</button>`:''}`;
     nb.insertBefore(so,nb.firstChild);
     if(!sg&&hrsWait>=48){x.tpNudged=x.tpNudged||0;if(!x.tpNudged){x.tpNudged=1;try{V3.alert({pid,sev:'amber',title:'Therapy plan awaiting sign-off for '+hrsWait+' hours · '+pat(pid).name,detail:'Psychologist Lead to sign off.',src:'Quality',by:'System'});}catch(e){}}}
   }

@@ -111,14 +111,24 @@
   window.lpNoteSave=function(pid){const t=(($('lpLn')||{}).value||'').trim();if(!t){toast('Write the note first');return;}L().note[pid]={t,by:signer(),at:atNow()};closeModal();render();toast('Lead note saved');};
   window.lpCosign=function(pid,i){pinSign('Co-sign the session note',[['Signing as',signer()]],()=>{L().cosign[pid+':'+i]={by:signer(),at:atNow()};render();toast('Co-signed');});};
   /* demo: a session note written by the assistant psychologist, waiting for the lead's co-sign (Aman Gill, from the prototype's review queue) */
-  function seedAssistant(){
-    const id=idOf('Aman Gill');if(!id)return;const x=psyPx(id);if(x.__asst)return;x.__asst=1;
+  function seedAssistant(nm){
+    const id=idOf(nm||'Aman Gill');if(!id)return;const x=psyPx(id);if(x.__asst)return;x.__asst=1;
     x.sn=x.sn||{ladder:[],notes:[],goals:null,relapse:null,ybocs:'',planned:8,hwLog:{},hwWhy:{},told:{},grp:[]};x.sn.notes=x.sn.notes||[];
     x.sn.notes.push({id:'nasst1',ts:Date.now()-3*3600000,status:'signed',at:'12 Nov 2026, 10:05 am',by:'Ankit Verma (assistant psychologist)',signedBy:'Ankit Verma (assistant psychologist)',signedAt:'12 Nov 2026, 10:50 am',mod:'Motivational interviewing',mins:'40',risk:{a:'no',b:'no',c:'no'},kind:'ind',addenda:[],summaryLine:'MI session 40 min. Risk check: all no. Ambivalence about stopping; decisional balance done.'});
   }
+  /* the lead sees "Patient n of the floor" and Previous / Next walk the whole floor, not only her own patients */
+  function floorNav(v,r){
+    const list=WARD_ORDER().map(x=>x.p);const i=list.findIndex(p=>p.id===r.pid);if(i<0)return;
+    const bar=[...v.querySelectorAll('span.tiny.muted')].find(e=>/^Patient \d+ of \d+$/.test(e.textContent.trim()));if(!bar||bar.dataset.fl)return;
+    bar.dataset.fl='1';bar.textContent='Patient '+(i+1)+' of '+list.length+' on the floor';
+    const row=bar.parentElement;[...row.querySelectorAll('button')].forEach(b=>b.remove());
+    const t=r.tab||'overview',mk=(p,l)=>{const b=document.createElement('button');b.className='btn sm';b.textContent=l;b.onclick=()=>go('#/patient/'+p.id+'/'+t);row.appendChild(b);};
+    if(list[i-1])mk(list[i-1],'‹ '+list[i-1].name);if(list[i+1])mk(list[i+1],list[i+1].name+' ›');
+  }
+  window.lpSeedAsst=seedAssistant;
   function therapyBits(v,r){
     if(r.tab!=='therapy')return;
-    if(!(psyPx(r.pid).__asst)&&r.pid===idOf('Aman Gill')){seedAssistant();render();return;}
+    if(!(psyPx(r.pid).__asst)&&(r.pid===idOf('Aman Gill')||r.pid===idOf('Kavya Menon'))){seedAssistant(r.pid===idOf('Kavya Menon')?'Kavya Menon':'Aman Gill');render();return;}
     const hd=[...v.querySelectorAll('section.card .hd')].find(h=>/^Therapy Plans/.test((h.querySelector('h3')||{}).textContent||''));
     if(hd&&!hd.querySelector('#lpLnBtn')){const b=document.createElement('button');b.id='lpLnBtn';b.className='btn sm';b.textContent='Lead note';b.onclick=()=>lpNote(r.pid);hd.appendChild(b);}
     const n=L().note[r.pid];if(n&&!v.querySelector('#lpLnShow')){const d=document.createElement('div');d.id='lpLnShow';d.className='lp-so';d.innerHTML=`<span><b>Lead note</b> · ${esc(n.t)} <span class="tiny muted">· ${esc(n.by)}, ${esc(n.at)}</span></span>`;const card=hd&&hd.closest('section.card');card?card.parentNode.insertBefore(d,card):v.insertBefore(d,v.firstChild);}
@@ -241,7 +251,7 @@
       if(S.role==='psychologist'&&!lead())authorBits(v);
       if(!lead())return r;
       careTeamLinks(v);
-      if(rt){recordHeader(v);planSignoff(v,rt);therapyBits(v,rt);}
+      if(rt){recordHeader(v);planSignoff(v,rt);therapyBits(v,rt);floorNav(v,rt);}
       if(/^#\/rounds/.test(hash))roundsBits(v);
       if(/^#\/notes/.test(hash))notesBits(v);
       if(/^#\/handover/.test(hash))handoverBits(v);
