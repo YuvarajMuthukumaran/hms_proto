@@ -15,7 +15,7 @@
     const p=pt(pid);if(!p)return '';const x=(window.psyPx&&psyPx(pid))||{},day=+p.day||0,sec=String(p.sec||'');
     const left=sec==='89'?Math.max(0,30-day):null;
     const legal=sec?`<span class="sh-c ${left!==null&&left<=5?'amber':''}">Section ${esc(sec)}${sec==='89'?' · day '+day+' of 30 · '+left+' days left':' · day '+day}</span>`:'';
-    const obs=(typeof EX!=='undefined'&&(EX[pid]||[])[0])||'Routine';
+    const obs=(pid==='neel'&&S.obs)||(typeof EX!=='undefined'&&(EX[pid]||[])[0])||'Routine';
     const doc=(typeof PSYOF!=='undefined'&&PSYOF[pid])||'the treating psychiatrist';
     const obsC=`<span class="sh-c" title="Set by ${esc(doc)} · review by today 6:00 pm">${esc(obs)}<span class="sh-s">set by ${esc(String(doc).replace(/^Dr\.\s*/,'Dr. '))} · review by 6 pm</span></span>`;
     const tags=(x.riskTags||[]).map(t=>`<span class="sh-c red">${esc(t)}</span>`).join('');
@@ -23,12 +23,12 @@
     const al=x.allergy&&x.allergy.list&&x.allergy.list.length?`<span class="sh-c">Allergy: ${x.allergy.list.map(a=>esc(a.drug)).join(', ')}</span>`:'';
     const sx=p.sex||'',ag=p.age||'';
     const btn=kind()==='psychologist'?`<button class="btn pri sh-b" onclick="shNote('${pid}')">Session note</button>`:`<button class="btn pri sh-b" onclick="shNote('${pid}')">Round note</button>`;
-    return `<div class="sh-n"><b>${esc(p.name)}</b><span class="sh-s2">${ag?esc(ag)+(sx?'/'+esc(sx):''):''} ${esc(p.room||'')}</span></div>${legal}${obsC}${risk}${al}<button class="sh-c sh-nr" onclick="shCall('${pid}')">NR · Call</button><span style="flex:1"></span>${btn}`;
+    return `<div class="sh-n"><b>${esc(p.name)}</b><span class="sh-s2">${ag?esc(ag)+(sx?'/'+esc(sx):''):''} · UHID ${esc(p.uhid||'')} · ${esc(p.room||'')}</span></div>${legal}${obsC}${risk}${al}<button class="sh-c sh-nr" onclick="shCall('${pid}')">NR · Call</button><span style="flex:1"></span>${btn}`;
   }
   window.shNote=function(pid){S.pid=pid;if(kind()==='psychologist'){try{pgTherapyModal(pid);}catch(e){go('#/patient/'+pid+'/therapy');}}else{try{psyOpenRounds(pid);}catch(e){go('#/rounds');}}};
   window.shCall=function(pid){const b=[...document.querySelectorAll('#view button')].find(x=>/^Call caregiver$/.test(x.textContent.trim()));if(b)b.click();else toast('Calling the nominated representative through the HMS (demo)');};
   const css=document.createElement('style');css.id='sh-css';
-  css.textContent=`#safeBar{position:sticky;top:var(--shTop,0px);z-index:40;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid var(--line,#e3eaf2);border-radius:12px;padding:8px 12px;margin:0 0 10px;box-shadow:0 4px 14px rgba(15,23,42,.06)}
+  css.textContent=`#safeBar{position:sticky;top:var(--shTop,0px);z-index:40;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid var(--line,#e3eaf2);border-radius:12px;padding:8px 12px;margin:0 0 10px;box-shadow:0 -12px 0 var(--bg,#f6fbff),0 4px 14px rgba(15,23,42,.06)}
   #safeBar .sh-n{display:flex;align-items:baseline;gap:8px;margin-right:6px}#safeBar .sh-n b{font-size:16px}#safeBar .sh-s2{font-size:12.5px;color:#667085}
   #safeBar .sh-c{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:650;border-radius:99px;padding:4px 11px;background:#f2f4f7;color:#344054;border:1px solid transparent}
   #safeBar .sh-c.amber{background:#fffaeb;color:#b54708;border-color:#fedf89}#safeBar .sh-c.red{background:#fef3f2;color:#b42318;border-color:#fecdca}
@@ -45,7 +45,7 @@
       const top=document.querySelector('.top');const tp=top&&getComputedStyle(top).position;document.documentElement.style.setProperty('--shTop',(tp==='sticky'||tp==='fixed')?(top.getBoundingClientRect().height)+'px':'0px');
       const root=v.querySelector('.ws-mid')||v;root.insertBefore(el,root.firstChild);}
     /* the old big primary button, and tags that say nothing */
-    v.querySelectorAll('button').forEach(b=>{if(/^Call caregiver$/.test(b.textContent.trim())&&!b.dataset.sh){b.dataset.sh='1';b.textContent=k==='psychologist'?'Session note':'Round note';b.removeAttribute('onclick');b.onclick=()=>shNote(pid);}});
+    v.querySelectorAll('button').forEach(b=>{if(/^(Call caregiver|Round note|Session note)$/.test(b.textContent.trim())&&b.closest('.dph')&&!b.closest('#safeBar')){b.remove();}});
     v.querySelectorAll('.chip,.c,.tag,.pg-tag').forEach(c=>{if(/^(No known (drug )?allergies?|Allergies not recorded|Not recorded|None)$/i.test(c.textContent.trim()))c.remove();});
   }
 

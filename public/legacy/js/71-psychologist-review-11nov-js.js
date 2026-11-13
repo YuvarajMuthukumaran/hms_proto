@@ -294,7 +294,7 @@
     seedRoundAssessments(pid);
     const plan=v.querySelector('#pgRp .pg-rp-b');if(!plan||plan.querySelector('.pg-asg'))return;
     const L=mineAsg(pid),section=document.createElement('div');section.className='pg-asg';
-    section.innerHTML=`<div class="pg-asg-h">Received assessments</div><div class="pg-asg-sub">Assigned to you by the treating psychiatrist.</div>${L.length?L.map(o=>`<div class="pg-asg-r"><span><b>${hesc(o.a.name)}</b><span class="tiny muted">Assigned by ${hesc(o.a.by||'Treating psychiatrist')}${o.a.at?' · '+hesc(o.a.at):''}</span>${o.a.demoKey?'<span class="pg-asg-demo">Demo assignment</span>':''}</span>${o.a.status==='Done'?'<span class="pg-asg-done">✓ Done</span>':`<button type="button" class="btn sm" onclick="pgAsgDone('${pid}',${o.i})">Mark done</button>`}</div>`).join(''):'<div class="small muted">No assessments received yet.</div>'}`;
+    section.innerHTML=`<div class="pg-asg-h">Received assessments</div><div class="pg-asg-sub">Assigned to you by the treating psychiatrist.</div>${L.length?L.map(o=>`<div class="pg-asg-r"><span><b>${hesc(o.a.name)}</b><span class="tiny muted">Assigned by ${hesc(o.a.by||'Treating psychiatrist')}${o.a.at?' · '+hesc(o.a.at):''}</span></span>${o.a.status==='Done'?'<span class="pg-asg-done">✓ Done</span>':`<button type="button" class="btn sm" onclick="pgAsgDone('${pid}',${o.i})">Mark done</button>`}</div>`).join(''):'<div class="small muted">No assessments received yet.</div>'}`;
     plan.appendChild(section);
   };
 

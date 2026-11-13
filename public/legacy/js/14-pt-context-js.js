@@ -124,6 +124,7 @@ function ptSwaps(){
     ['Ananya Bose (Sister)',id.nr+' ('+id.rel+')'],['Ananya Bose (sister)',id.nr+' ('+id.rel.toLowerCase()+')'],['Ananya Bose, sister',id.nr+', '+id.rel.toLowerCase()],
     ['Calmer today, sleep improved, engaging in groups. Pressured speech at times. Plan: increase olanzapine, check lithium level.',(c.dnHist&&c.dnHist[0]?c.dnHist[0].sum:'Seen on round')+'. Plan: continue '+(c.meds&&c.meds[0]?c.meds[0].name:'current medicines')+'; '+set.labs[0].toLowerCase()+'.'],
     ['Serum lithium level tomorrow morning',set.labs[0]+' tomorrow morning'],
+    ['Relapse of bipolar disorder after stopping lithium',set.dx+' (relapse or new episode)'],['Bipolar affective disorder, current episode manic without psychotic symptoms (6A60.0), relapse after stopping lithium.',set.dx+' ('+set.icd+').'],
     ['Ananya Bose',id.nr],['Ananya',id.nrFirst],['Rakesh Bose',(PT_CTX[S.pid]||{}).otherRel||id.nr],['Neel Bose',p.name],['Neel',id.first],['NB · ',id.ini+' · ']
   ];
 }

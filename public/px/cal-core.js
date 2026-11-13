@@ -2,7 +2,7 @@
    Roster, leave, visits and family meetings in one place. Demo data until greytHR gives the real roster; leave is entered by the PX lead for now.
    Family meetings are made from each patient's stay (admission, end of week 1, discharge briefing) so nobody types them twice. */
 (function(){
-  const KEY='px_cal_v1';
+  const KEY='px_cal_v2';
   const DAY=86400000;
   const pad=n=>String(n).padStart(2,'0');
   const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -18,11 +18,10 @@
   const TEAM=[
     {id:'ka',name:'Kanika',role:'Patient Experience Coordinator',floor:'Floor 2'},
     {id:'pr',name:'Prabh',role:'Backup coordinator',floor:'Floor 1'},
-    {id:'kh',name:'Khalid',role:'Call centre',floor:'Call centre'},
-    {id:'po',name:'Pooja',role:'Call centre',floor:'Call centre'}
+    {id:'px',name:'PX Lead',role:'Patient Experience Lead',floor:'Whole hospital'}
   ];
   /* weekly pattern by weekday (0 = Sunday) */
-  const PAT={ka:'OMMMMMO',pr:'MEEEEEO',kh:'OMMMMME',po:'OEEEEEM'};
+  const PAT={ka:'OMMMMMO',pr:'MEEEEEO',px:'OMMMMMO'};
   /* patients on the floors: the family meetings come from these stays. admit and discharge are days from today. */
   const STAYS=[
     {p:'Sameer Das',room:'213 A',floor:'Floor 2',admit:-6,dis:null,who:'ka'},
@@ -43,7 +42,7 @@
     let fri=addDays(t,1);while(parse(fri).getDay()!==5)fri=addDays(fri,1);
     let mon=addDays(t,1);while(parse(mon).getDay()!==1)mon=addDays(mon,1);
     return {
-      leave:[{id:'l1',who:'ka',from:fri,to:fri,type:'Planned leave',cover:'pr'},{id:'l2',who:'kh',from:mon,to:mon,type:'Comp off',cover:'po'}],
+      leave:[{id:'l1',who:'ka',from:fri,to:fri,type:'Planned leave',cover:'pr'},{id:'l2',who:'px',from:mon,to:mon,type:'Comp off',cover:'pr'}],
       shifts:{},
       events:[
         {id:'e1',type:'Ward visit or floor round',date:addDays(t,5),time:'14:00',owner:'pr',patient:'',floor:'Floor 3',note:'NABH walk-through of the common areas',status:'planned'},

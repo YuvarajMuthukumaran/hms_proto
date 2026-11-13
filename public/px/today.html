@@ -336,7 +336,7 @@ function today(){
       <td style="width:240px"><a href="#" style="display:flex;gap:10px;color:#0F172A"><span class="av" style="width:38px;height:38px;background:${a[0]};color:${a[1]};font-size:${r.initials.length>2?11:13}px">${esc(r.initials)}</span><span style="display:flex;flex-direction:column;gap:3px"><b style="font-size:15px;font-weight:600">${esc(r.name)}</b><span style="font-size:12px;color:#667085">${esc(r.sub)}</span><span style="display:flex;flex-wrap:wrap;gap:4px">${r.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</span></span></a></td>
       <td><div style="display:flex;flex-direction:column;gap:8px">${items}</div></td>
       <td style="width:240px"><div style="font-size:13px;color:${/nothing yet|no update|no answer/i.test(r.others)?'#667085':'#344054'}">${esc(r.others)}</div>${acted[r.id]?`<div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:13px;color:#067647;font-weight:600"><i class="dot" style="background:#12B76A;margin:0"></i>You: ${esc(acted[r.id])} · just now</div>`:''}</td>
-      <td style="width:170px;padding:14px 14px 14px 8px"><div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;position:relative"><button class="eye" aria-label="View details for ${esc(r.name)}">${I.eye}</button><button class="take" aria-haspopup="menu" data-open="${r.id}">Take Action ▾</button>${menu}</div></td></tr>`;
+      <td style="width:170px;padding:14px 14px 14px 8px"><div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;position:relative"><button class="eye" data-eye="${r.id}" aria-label="View details for ${esc(r.name)}">${I.eye}</button><button class="take" aria-haspopup="menu" data-open="${r.id}">Take Action ▾</button>${menu}</div></td></tr>`;
   }).join('');
   const chip=(l,c,w)=>`<a href="#" class="chip">${l} <span style="font-weight:700;color:${w?'#B54708':'#0F172A'}">${c}</span></a>`;
   const chips=[chip('Late now',late,late>0),chip('Safety open',1,1),chip('Grievances open',5+state.newG,1),chip('Discharges today',2),chip('NPS, last 30 days','+58'),chip('Random calls due',3),chip('Team calls or updates late',4,1)].join('');
@@ -346,7 +346,7 @@ function today(){
     <div class="bar"><input class="inp" type="search" placeholder="Type a name" aria-label="Search patients"><div style="display:flex;gap:8px"><button class="btn">${I.plus}Log a grievance</button><button class="btn pri" data-call="pick">${I.phone}Log a family call</button></div></div>
     ${brief}<div class="chips">${chips}</div>
     <div class="tw"><table><thead><tr><th style="padding-left:18px">TYPE</th><th>PATIENT</th><th>WHAT'S DUE</th><th>ACTION TAKEN BY OTHERS</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
-    <div class="key" role="note"><b style="font-size:11px;color:#667085;letter-spacing:.05em">KEY</b><span><i class="dot" style="background:#E5484D"></i>Safety or rights concern <em style="color:#667085">· needs you now</em></span><span><i class="dot" style="background:#F5A524"></i>Late <em style="color:#667085">· past its time</em></span><span><i class="dot" style="background:#3B82F6"></i>Due today</span><span><i class="dot" style="background:#12B76A"></i>Action taken</span></div>
+    ${(()=>{const e=raw.find(x=>x.id===state.eye);if(!e)return "";return `<div class="tw" style="margin:12px 0;padding:16px 18px" role="region" aria-label="Details for ${esc(e.name)}"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><b style="font-size:16px">${esc(e.name)}</b> <span style="color:#667085;font-size:13px">${esc(e.sub)}</span></div><button class="btn" data-eye="">Close</button></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">${e.items.map(it=>`<div style="display:flex;gap:8px"><i class="dot" style="background:${state.done[it.id]?dotC.ok:dotC[it.c]}"></i><span>${esc(it.text)} <span style="font-size:12px;color:#667085">· ${esc(state.done[it.id]?"done just now":it.meta)}</span></span></div>`).join("")}</div><div style="margin-top:12px;font-size:13px;color:#344054"><b>Action taken by others:</b> ${esc(e.others)}</div></div>`})()}<div class="key" role="note"><b style="font-size:11px;color:#667085;letter-spacing:.05em">KEY</b><span><i class="dot" style="background:#E5484D"></i>Safety or rights concern <em style="color:#667085">· needs you now</em></span><span><i class="dot" style="background:#F5A524"></i>Late <em style="color:#667085">· past its time</em></span><span><i class="dot" style="background:#3B82F6"></i>Due today</span><span><i class="dot" style="background:#12B76A"></i>Action taken</span></div>
   </main>`);
 }
 function cmp(){
@@ -373,6 +373,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.open){setState({open:state.open===t.dataset.open?null:t.dataset.open});return;}
   if(t.dataset.act){setState({open:null,acted:{...state.acted,[t.dataset.act]:t.dataset.m}});return;}
   if(t.dataset.hide){setState({brief:false});return;}
+  if(t.hasAttribute("data-eye")){setState({eye:t.dataset.eye||null,open:null});return;}
   if(state.open&&!t.closest('.menu')) setState({open:null});
 });
 const TP=[

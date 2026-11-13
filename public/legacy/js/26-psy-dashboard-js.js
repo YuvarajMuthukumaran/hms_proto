@@ -184,10 +184,13 @@
     /* the word "Alert" is not repeated on every row (Nikita, 5 Nov): the type is where the alert came from, e.g. Vitals */
     DT.alerts(p).forEach(i=>items.push({k:'alert',aid:((i.btn&&i.btn[1]||'').match(/'([^']+)'/)||[])[1],lab:['red',(i.due&&i.due!=='Now')?i.due:'Urgent'],txt:i.txt.replace(/^Alert:\s*/,''),due:'',btn:i.btn&&['Mark seen',i.btn[1],false]}));
     DT.orders(p).forEach(i=>{const id=(i.btn[1].match(/'([^']+)'/)||[])[1];items.push({k:'order',oid:id,lab:['blue','Approve'],txt:i.txt.replace(/^Countersign:\s*/,''),due:(window.psyOrderLeft&&psyOrderLeft(id))||i.due,btn:['Approve',`psyApprove('${id}')`,false]});});
+    /* clinical category and an action-named button (card 135): never "Late" or "Do it now" */
+    const catOf=t=>/advance directive|mhca|capacity|section 8|section 9|nominated|form c|mhrb|legal/i.test(t)?'MHCA':/family|caregiver|sister|brother|relative/i.test(t)?'Family':/lab|result|level|test|ecg|bloods?|investigation/i.test(t)?'Investigation':/admission|workup|admit/i.test(t)?'Admission':/medicine|order|dose|prescri|countersign/i.test(t)?'Medication':/event|vitals|fall|incident/i.test(t)?'Clinical event':'Documentation';
+    const actOf=t=>/detailed history|history/i.test(t)?'Open detailed history':/capacity/i.test(t)?'Record capacity review':/mhrb/i.test(t)?'Send MHRB notice':/advance directive/i.test(t)?'Ask about advance directive':/family|caregiver|call/i.test(t)?'Call family':/summary|sign/i.test(t)?'Review and sign':/plan/i.test(t)?'Open management plan':/note/i.test(t)?'Write the note':/result|lab|level|bloods?/i.test(t)?'Review the result':'Open the record';
     DT.tasks(p,T).forEach(i=>{
       const sign=/discharge summary/i.test(i.txt),late=!!i.overdue;
-      items.push({k:late?'late':'task',lab:late?['amber','Late']:sign?['grey','To sign']:['grey','Today'],txt:i.txt,due:i.due,
-        btn:[sign?'Review and sign':late?'Do it now':'Open',`go('${i.go||'#/patient/'+p.id+'/overview'}')`,false]});
+      items.push({k:late?'late':'task',lab:late?['amber',catOf(i.txt)]:sign?['grey','To sign']:['grey','Today'],txt:i.txt,due:i.due,
+        btn:[sign?'Review and sign':late?actOf(i.txt):'Open',`go('${i.go||'#/patient/'+p.id+'/overview'}')`,false]});
     });
     if(window.psyExtraItems)window.psyExtraItems(p).forEach(i=>items.push(i)); /* results to review, daily observation review */
     const act=items.filter(i=>i.lab[1]!=='Today'); /* routine "Today" items are not shown on the dashboard any more */

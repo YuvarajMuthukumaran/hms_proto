@@ -179,7 +179,7 @@ const P=[
  {n:'Varun Rao',fm:'Wife · today',d:'41/M · R 211 · Day 4',doc:'Priya',th:'MI, relapse prevention',g:[3,4,8],last:'Today',fam:2,fl:['amb|Plan to sign off'],f:['signoff']},
  {n:'Dev Kumar',fm:'Brother · 2 days',d:'31/M · R 215 A · Day 15',doc:'Priya',th:'Relapse prevention',g:[3,6,8],last:'Yesterday',fam:4,fl:['amb|Discharge 15 Nov','amb|Relapse plan not reviewed'],f:['dc']},
  {n:'Rohit Kapoor',fm:'Wife · 24 h call due',d:'38/M · Suite 201 · Day 0',doc:'',th:'Not started',g:null,last:'None',fam:0,fl:['blue|No psychologist'],f:['new']},
- {n:'Karan Malhotra',fm:'Mother · concern open|Concern 1 h 40 m left',d:'26/M · R 212 A · Day 26',doc:'Kiran',th:'CBT for psychosis',g:[2,4,7],last:'4 days ago',fam:5,fl:['amb|No session 4 days','amb|No PHQ-9 in 14 d'],f:['fam','rom','nosess']},
+ {n:'Karan Malhotra',fm:'Mother · concern open|Concern 1 h 40 m left',d:'26/M · R 212 A · Day 21',doc:'Priya',th:'CBT for psychosis',g:[2,4,7],last:'4 days ago',fam:5,fl:['amb|No session 4 days','amb|No PHQ-9 in 14 d'],f:['fam','rom','nosess']},
  {n:'Arjun Mehta',fm:'Wife · 3 days',d:'34/M · R 210 · Day 12',doc:'Priya',th:'CBT, behavioural activation',g:[2,5,8],last:'Yesterday',fam:3,fl:[],f:['rom',]},
  {n:'Tarun Roy',fm:'Father · 4 days|Day 3 to 4 call overdue',d:'19/M · R 216 · Day 3',doc:'Kiran',th:'Supportive',g:[1,1,6],last:'3 days ago',fam:0,fl:['red|Restrained today: debrief due','amb|No session 3 days'],f:['fam','nosess']},
  {n:'Sana Qureshi',fm:'Mother · yesterday',d:'27/F · R 311 · Day 3',doc:'Priya',th:'Supportive',g:[2,2,7],last:'Yesterday',fam:1,fl:['blue|Transfer requested'],f:[]},
@@ -233,7 +233,7 @@ function openPlan(){
  ['plan','Varun Rao · therapy plan','Priya Nair · 1 day','MI and relapse prevention. Goals: no drinking on 2 home leaves; 3 triggers with a plan each; AA weekly after discharge.'],
  ['note','Aman Gill · session note','Ankit Verma (assistant) · today','MI session 40 min. Risk check: all no. Ambivalence about stopping; decisional balance done. Homework: drinking diary.'],
  ['note','Kavya Menon · group note line','Ankit Verma (assistant) · today','Mindfulness group. Attended, quiet, left 10 min early.']];
- modal(`<h4>Review queue · ${left} waiting</h4><p>Sign it, or send it back with what to fix (the author sees "Updates needed" on their Today). Signed plans count towards the hospital quality measure.</p>
+ modal(`<div class="row sp" style="align-items:center"><h4 style="margin:0">Review queue · ${left} waiting</h4><button class="btn p sm" onclick="[0,1,2,3,4].forEach(i=>{const r=document.querySelector('#pl'+i+' .row:last-child');if(r&&r.querySelector('button'))signPlan(i)})">Sign all remaining</button></div><p>Sign it, or send it back with what to fix (the author sees "Updates needed" on their Today). Signed plans count towards the hospital quality measure.</p>
  <div style="max-height:52vh;overflow:auto">${L.map((x,i)=>`<div class="plan" id="pl${i}"><div class="row sp"><b>${x[1]}</b><span class="chip ${x[0]==='plan'?'vio':'blue'}">${x[0]==='plan'?'Plan sign-off':'Co-sign'}</span></div><div style="font-size:12px;color:var(--muted);margin-bottom:4px">${x[2]}</div><div>${x[3]}</div><div class="row" style="justify-content:flex-end;margin-top:8px;gap:6px"><button class="btn sm" onclick="sendBack(${i})">Updates needed</button><button class="btn p sm" onclick="signPlan(${i})">Sign</button></div></div>`).join('')}</div>
  <div class="row sp" style="margin-top:10px"><button class="btn" onclick="close_()">Close</button><button class="btn p" onclick="[0,1,2,3,4].forEach(i=>{const r=document.querySelector('#pl'+i+' .row:last-child');if(r&&r.querySelector('button'))signPlan(i)})">Sign all remaining</button></div>`);
 }
@@ -284,7 +284,7 @@ function openLeave(){modal(`<h4>Add leave</h4><p>Until greytHR is connected, lea
 function openFormul(){modal(`<h4>Team formulation · Wed 18 Nov, 2:00 pm</h4><p>Pick a patient the ward team is finding hard. Suggested from this week's events.</p>
  <div class="opt on" onclick="sel(this,'Tarun Roy')"><div><b>Tarun Roy</b><small>Restrained today; 2 aggression events this week</small></div><span class="chip red">Suggested</span></div>
  <div class="opt" onclick="sel(this,'Kavya Menon')"><div><b>Kavya Menon</b><small>Refused meals 3 times; staff unsure how to respond</small></div></div>
- <div class="opt" onclick="sel(this,'Karan Malhotra')"><div><b>Karan Malhotra</b><small>Family concern open; day 26 of Section 89</small></div></div>
+ <div class="opt" onclick="sel(this,'Karan Malhotra')"><div><b>Karan Malhotra</b><small>Family concern open; day 21, Section 90</small></div></div>
  <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" onclick="close_()">Cancel</button><button class="btn p" onclick="const c=window._as||'Tarun Roy';close_();document.getElementById('tfCase').textContent=c;const ch=document.getElementById('tfChip');ch.className='chip grn';ch.textContent='Invite sent to ward team';toast('Team formulation on '+c+' booked; ward team and Dr. Rao invited')">Book and invite ward</button></div>`);}
 
 </script></body></html>

@@ -9,4 +9,4 @@ module.exports = handler('POST', async b => {
   const messageId = await sendText(g.id, text);
   console.log(JSON.stringify({ kind: 'callcentre', by: b.by || '', groupId: g.id, chars: text.length }));
   return { ok: true, groupId: g.id, groupName: name, messageId };
-});
+}, { send: true });

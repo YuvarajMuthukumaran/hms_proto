@@ -163,4 +163,29 @@
     }
     return r;
   };
+
+  /* ---------------- card 140: an allergy also checks the orders that are already on the chart ---------------- */
+  function hitFor(al,name){const b=base(name);return (al.list||[]).find(a=>{const x=String(a.drug||'').toLowerCase();if(!x||!b)return false;if(b.includes(x)||x.includes(b))return true;return Object.keys(CLASSES).some(k=>x.includes(k)&&CLASSES[k].some(m=>b.startsWith(m)));});}
+  window.rxAllergyHits=function(pid){
+    try{const al=psyPx(pid).allergy;if(!al||!(al.list||[]).length)return [];
+      const meds=((ptCtxOf(pid)||{}).meds||[]).filter(m=>m&&m.name&&!/waiting/i.test(m.name)&&!m.stopped);
+      return meds.map(m=>({m,a:hitFor(al,m.name)})).filter(x=>x.a).map(x=>({name:x.m.name,drug:x.a.drug}));}catch(e){return [];}
+  };
+  const __xtra=window.psyExtraItems;
+  window.psyExtraItems=function(p){
+    const out=__xtra?__xtra.apply(this,arguments):[];
+    const hits=window.rxAllergyHits(p.id);
+    if(hits.length)out.unshift({k:'safety',lab:['red','Medication'],txt:'Allergy to '+hits[0].drug+': '+hits.map(h=>h.name).join(', ')+' is still on the chart. Review and stop.',due:'Now',btn:['Open nursing chart',"psyToChart('"+p.id+"')",false]});
+    return out;
+  };
+  function paintAllergy(){
+    const v=$('view');if(!v)return;const m=String(location.hash||'').match(/^#\/patient\/([^/?]+)/);const pid=m?decodeURIComponent(m[1]):'';
+    const old=v.querySelector('#rxAlg');const hits=pid?window.rxAllergyHits(pid):[];
+    if(!hits.length){if(old)old.remove();return;}
+    const txt='Allergy to '+hits[0].drug+': '+hits.map(h=>h.name).join(', ')+(hits.length>1?' are':' is')+' on the chart. Review and stop, or record why it is safe.';
+    if(old){if(old.dataset.t===txt)return;old.remove();}
+    const d=document.createElement('div');d.id='rxAlg';d.dataset.t=txt;d.className='callout red';d.style.cssText='margin:0 0 10px;border:1px solid #fecdca;background:#fef3f2;color:#b42318;font-weight:600;padding:10px 14px;border-radius:10px';d.textContent=txt;
+    const bar=v.querySelector('#safeBar');if(bar)bar.insertAdjacentElement('afterend',d);else v.insertBefore(d,v.firstChild);
+  }
+  const __rAlg=render;render=function(){const r=__rAlg.apply(this,arguments);try{paintAllergy();}catch(e){}return r;};
 })();

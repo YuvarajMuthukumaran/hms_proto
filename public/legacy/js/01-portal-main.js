@@ -31,7 +31,7 @@ const S = {
   therapyNotes: [{d:'22 Oct', wk:1, t:'Individual session · Psychoeducation on mood episodes', by:'Priya Nair', body:'Aim: understand mood episodes. Used a mood chart to map the last 3 weeks. Neel linked reduced sleep to the start of spending. Outcome: engaged, partial insight. Next: early warning signs.'},{d:'19 Oct', wk:1, t:'Intake session · Rapport and goals', by:'Priya Nair', body:'Aim: build rapport and agree goals. Irritable at start, settled after 15 minutes. Goals agreed: sleep routine, understanding the illness, plan with sister. Next: psychoeducation.'}],
   team: {psy:'Dr. Aanya Sharma', psych:'Priya Nair'},
   discharge: {capacity:false, risk:false, formC:false, meds:false, followups:false, family:false, summary:false, dconsent:false},
-  obs: 'Every 15 minutes', edd: '2026-11-02', eddShared: false, labs: [{t:'Serum lithium', d:'Tomorrow, 7:00', st:'Ordered', by:'Dr. Aanya Sharma', at:'23 Oct 2026, 10:40 am'}], restraints: [],
+  obs: 'Every 15 minutes', edd: __relISO(4), eddShared: false, labs: [{t:'Serum lithium', d:'Tomorrow, 7:00', st:'Ordered', by:'Dr. Aanya Sharma', at:'23 Oct 2026, 10:40 am'}], restraints: [],
   obsBy: {by:'Dr. Aanya Sharma', at:'18 Oct 2026, 11:45 am'}, eddBy: {by:'Dr. Aanya Sharma', at:'24 Oct 2026, 10:15 am'},
   dischargeDrafted:false, draftBy:'', signer:'', discharged:false, dtype:'Planned', reassessDone:false,
   rounds: {mc:[], adv:[], ward:'Male ward', idx:{'Male ward':0,'Female ward':0,'De-addiction ward':0}, listening:false, drafted:false},
@@ -47,16 +47,18 @@ const S = {
   rp: true, rpt: 'timeline', dn: {}, rx: [], ptq: '',
 };
 const PTS = [
-  {id:'arjun', age:34, sex:'M', uhid:'2026-27RG6812', name:'Arjun Mehta', ini:'AM', room:'Room 210', day:12, sec:'89', risk:false, dx:'Severe depressive episode'},
+  {id:'arjun', age:34, sex:'M', uhid:'2026-27RG6812', name:'Arjun Mehta', ini:'AM', room:'Room 210', day:12, sec:'86', risk:false, dx:'Severe depressive episode'},
   {id:'varun', age:41, sex:'M', uhid:'2026-27RG6870', name:'Varun Rao', ini:'VR', room:'Room 211', day:4, sec:'89', risk:false, dx:'Alcohol dependence, withdrawal'},
   {id:'kabir', age:26, sex:'M', uhid:'2026-27RG6731', name:'Karan Malhotra', ini:'KM', room:'Room 212 A', day:21, sec:'90', risk:false, dx:'Schizophrenia'},
-  {id:'sameer', age:22, sex:'M', uhid:'2026-27RG6905', name:'Sameer Das', ini:'SD', room:'Room 213 A', day:7, sec:'89', risk:false, dx:'Obsessive-compulsive disorder'},
-  {id:'neel', age:23, sex:'M', uhid:'2026-27RG6990', name:'Neel Bose', ini:'NB', room:'Room 213 A', day:6, sec:'89', risk:true, dx:'Bipolar affective disorder, manic'},
+  {id:'sameer', age:22, sex:'M', uhid:'2026-27RG6905', name:'Sameer Das', ini:'SD', room:'Suite 202', day:7, sec:'89', risk:false, dx:'Obsessive-compulsive disorder'},
+  {id:'neel', age:23, sex:'M', uhid:'2026-27RG6990', name:'Neel Bose', ini:'NB', room:'Room 213 A', get day(){return Math.max(0,Math.floor((new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate())-new Date(2026,9,18))/864e5));}, sec:'89', risk:true, dx:'Bipolar affective disorder, manic'},
   {id:'rohit', age:38, sex:'M', uhid:'2026-27RG7012', name:'Rohit Kapoor', ini:'RK', room:'Suite 201', day:0, sec:'89', risk:false, dx:'Admitted today'},
   {id:'dev', age:31, sex:'M', uhid:'2026-27RG6788', name:'Dev Kumar', ini:'DK', room:'Room 215 A', day:15, sec:'89', risk:false, dx:'Opioid dependence', dischargeToday:true},
   {id:'tarun', age:19, sex:'M', uhid:'2026-27RG6961', name:'Tarun Roy', ini:'TR', room:'Room 216 · Observation', day:3, sec:'89', risk:true, dx:'Acute psychotic episode'}
 ];
-const EX = {arjun:['Routine','Re-assessment · Mon','28 Oct'],varun:['Every 30 minutes','Daily note','Not set'],kabir:['Routine','Re-assessment · today','30 Oct'],sameer:['Routine','Capacity · 1 day late','Not set'],neel:['Every 15 minutes','History · 1 day late','2 Nov'],rohit:['Every 15 minutes','Workup · today','Not set'],dev:['Routine','Summary to sign','Today'],tarun:['1:1 constant','Day 3 to 4 call · today','Not set']};
+function __relD(n){const d=new Date();d.setDate(d.getDate()+n);return d.getDate()+' '+d.toLocaleString('en-GB',{month:'short'});}
+function __relISO(n){const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const EX = {arjun:['Routine','Re-assessment · Mon',__relD(7)],varun:['Every 30 minutes','Daily note','Not set'],kabir:['Routine','Re-assessment · today',__relD(7)],sameer:['Routine','Capacity · 1 day late','Not set'],neel:['Every 15 minutes','History · 1 day late',__relD(4)],rohit:['Every 15 minutes','Workup · today','Not set'],dev:['Routine','Summary to sign','Today'],tarun:['1:1 constant','Day 3 to 4 call · today','Not set']};
 const PTS_F = [
   {id:'meera', name:'Meera Iyer', ini:'MI', room:'Room 310 A', day:9, sec:'89', risk:false, dx:'Severe depressive episode'},
   {id:'sana', name:'Sana Qureshi', ini:'SQ', room:'Room 311', day:3, sec:'89', risk:true, dx:'Acute psychotic episode'},
@@ -749,7 +751,7 @@ function spark(vals,max,label,unit,color){
       ${vals.map((v,i)=>`<text x="${X(i)}" y="${h+12}" text-anchor="middle" font-size="10" fill="#5b6475">D${i+1}</text>`).join('')}
     </svg></div>`;
 }
-const EVGROUPS=[['Medical or safety',['Fall','Seizure','Self-harm attempt','Aggression or violence','Absconding attempt','Choking','Adverse drug reaction','Medication error','Near miss','Fever or infection','Medical emergency or transfer out']],
+const EVGROUPS=[['Medical or safety',['Fall','Seizure','Self-harm attempt','Aggression or violence','Absconding attempt','Absconded (left the building)','Choking','Adverse drug reaction','Medication error','Near miss','Fever or infection','Medical emergency or transfer out']],
   ['Admission and paperwork',['Admission out of hours, workup pending','History or paperwork incomplete','Consent or form pending from family','Handover to the next team']],
   ['Ward and family',['Behaviour on the ward','Family or visitor issue','Complaint or dissatisfaction','Belongings or property','Refused food or medicines','Other']]];
 const EVTYPES=EVGROUPS.flatMap(g=>g[1]);
@@ -758,7 +760,7 @@ const evChip=e=>!EVMED.includes(e.type)?chip(e.type,'c-blue'):chip(e.type+(e.sev
 function eventsBar(){
   const open=S.events.filter(e=>!e.ack); if(!open.length) return '';
   const e=open[0];
-  return `<div class="callout row" style="background:#fff6ec;border:1px solid #f3c58c;justify-content:space-between;gap:12px"><div class="row" style="gap:10px;flex-wrap:nowrap">${evChip(e)}<span class="small"><strong>${e.when}</strong> · reported by ${e.by}. ${open.length>1?(open.length-1)+' more not yet reviewed.':''}</span></div>
+  return `<div class="callout row" style="background:#fff6ec;border:1px solid #f3c58c;justify-content:space-between;gap:12px"><div class="row" style="gap:10px;flex-wrap:nowrap"><strong style="color:${(['Seizure','Self-harm attempt','Medical emergency or transfer out','Choking'].includes(e.type)||e.sev==='Major')?'#b42318':'#b54708'}">${e.type}${e.sev?' · '+e.sev:''}</strong><span class="small"><strong>${e.when}</strong> · reported by ${e.by}. ${open.length>1?(open.length-1)+' more not yet reviewed.':''}</span></div>
     <div class="row" style="gap:8px"><button class="btn sm" onclick="go('#/patient/neel/overview');setTimeout(()=>{const x=document.getElementById('evcard');x&&x.scrollIntoView({behavior:'smooth'})},50)">View</button>${isPsy()?`<button class="btn sm pri" onclick="S.events.find(x=>x.id===${e.id}).ack=true;render();toast('Marked reviewed by ${signer()}')">Mark reviewed</button>`:''}</div></div>`;
 }
 function eventsCard(){
@@ -846,7 +848,7 @@ function pOverview(){
     ${box('Daily note', S.dailySaved?'Saved today':'Pending today',S.dailySaved?'Saved by '+signer()+(S.dailyAt?' · '+S.dailyAt:''):'Assigned to '+S.team.psych+' · yesterday by Priya Nair, 23 Oct 2026, 6:10 pm: under 4 h sleep, irritable; yoga only',lnk('Daily notes',"go('#/patient/neel/daily')"), S.dailySaved?'':'warn')}
     ${box('Medicines', S.meds.length+' active','Adherence 94% this week · 1 refusal · prescribed by '+[...new Set(S.meds.map(m=>m.by).filter(Boolean))].join(', '),lnk('Medicines',"go('#/patient/neel/orders')"))}
     ${box('Family','24-hour call done · 19 Oct','By Dr. Aanya Sharma · Ananya Bose, sister · updates in Hindi',lnk('Therapy and family',"go('#/patient/neel/therapy')"))}
-    ${box('Mental Healthcare Act','Section '+S.section+' · day 6 of 30','Nominated representative: Ananya Bose · rights explained by Dr. Aanya Sharma, 18 Oct 2026, 11:00 am')}
+    ${box('Mental Healthcare Act','Section '+S.section+' · day '+((PTS.find(x=>x.id==='neel')||{}).day||0)+' of 30','Nominated representative: Ananya Bose · rights explained by Dr. Aanya Sharma, 18 Oct 2026, 11:00 am')}
     <div class="sbox"><div class="lbl">Observation level</div>
       <select class="input" style="min-height:34px" ${isPsy()?'':'disabled'} onchange="S.obs=this.value;S.obsBy=whoAt();render();toast('Observation changed to '+this.value+' by '+S.obsBy.by+'. Ward notified.')">${['1:1 constant','Every 15 minutes','Every 30 minutes','Routine'].map(o=>`<option ${S.obs===o?'selected':''}>${o}</option>`).join('')}</select>
       ${byl(S.obsBy.by,S.obsBy.at,'Set by')}</div>
@@ -2886,7 +2888,7 @@ function rmoLocBar(){
   const b=$('locBar');if(b)b.innerHTML='';
 }
 function rmoLocSel(){
-  return `<label class="loc"><span class="locl">You are on duty at</span><select class="input" id="locSel" aria-label="RMO duty location" onchange="rmoSetLoc(this.value)">${['All floors'].concat(FLOORS).map(k=>`<option value="${k}" ${(S.rmoLoc||'All floors')===k?'selected':''}>${k==='All floors'?'All floors':k}</option>`).join('')}</select></label>`;
+  return `<label class="loc"><span class="locl">You are on duty at</span><select class="input" id="locSel" aria-label="RMO duty location" onchange="rmoSetLoc(this.value)">${['All floors'].concat(FLOORS.slice().sort((a,b)=>floorNo(WARDS[a][0])-floorNo(WARDS[b][0]))).map(k=>`<option value="${k}" ${(S.rmoLoc||'All floors')===k?'selected':''}>${k==='All floors'?'All floors':k}</option>`).join('')}</select></label>`;
 }
 function rmoInit(){
   if(S.rmoInit)return; S.rmoInit=true;
@@ -2897,7 +2899,7 @@ function rmoInit(){
 }
 function floorTabs(){
   if(locFloors().length===1){const k=locFloors()[0];return `<div class="row" style="gap:8px;flex-wrap:wrap"><span class="lbl">Floor</span><span class="tog on" style="cursor:default;display:inline-flex;align-items:center;line-height:1">${wardFloor(k)} · ${k}</span><span class="tiny muted">Your floor. Patients on other floors are not shown to you.</span></div>`;}
-  return `<div class="row" style="gap:8px;flex-wrap:wrap"><span class="lbl">Floor</span>${['All floors'].concat(FLOORS).map(k=>`<button class="tog ${(S.rmoFloor||'All floors')===k?'on':''}" onclick="S.rmoFloor='${k}';render()">${k==='All floors'?k:wardFloor(k)+' · '+k}</button>`).join('')}</div>`;
+  return `<div class="row" style="gap:8px;flex-wrap:wrap"><span class="lbl">Floor</span>${['All floors'].concat(FLOORS.slice().sort((a,b)=>floorNo(WARDS[a][0])-floorNo(WARDS[b][0]))).map(k=>`<button class="tog ${(S.rmoFloor||'All floors')===k?'on':''}" onclick="S.rmoFloor='${k}';render()">${k==='All floors'?k:wardFloor(k)+' · '+k}</button>`).join('')}</div>`;
 }
 function printHtml(h){
   const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';f.srcdoc=h;
@@ -3216,7 +3218,7 @@ function bigMode(on){
   if(on){let c=0;Object.keys(plan).forEach(w=>{const [A,n,fl]=plan[w];for(let i=0;i<n;i++,c++){
     const female=w==='Female ward',fn=(female?BIG_FF:BIG_FN)[(c*7)%(female?BIG_FF:BIG_FN).length],ln=BIG_LN[(c*3+i)%BIG_LN.length],id='sx'+c,room=fl*100+1+Math.floor(i/2);
     A.push({id,syn:true,age:20+(c*7)%40,sex:female?'F':'M',uhid:'2026-27RG'+(9000+c),name:fn+' '+ln,ini:fn[0]+ln[0],room:'Room '+room+' '+'AB'[i%2],day:1+(c*5)%19,sec:(c%5===0)?'90':'89',risk:c%7===3,dx:BIG_DX[w][c%BIG_DX[w].length]});
-    EX[id]=[['Routine','Every 30 minutes','Every 15 minutes'][c%3],['Daily note','Re-assessment · Mon','Capacity · 1 day late'][c%3],['Not set','2 Nov','30 Oct'][c%3]];
+    EX[id]=[['Routine','Every 30 minutes','Every 15 minutes'][c%3],['Daily note','Re-assessment · Mon','Capacity · 1 day late'][c%3],['Not set',__relD(3),__relD(6)][c%3]];
     PSYOF[id]=w==='Male ward'?['Dr. Aanya Sharma','Dr. Rohan Mehta','Dr. Kunal Sethi'][c%3]:(WARD_PSY[w]||'Dr. Aanya Sharma');PSYCHOF[id]=['Priya Nair','Kiran Mehra',''][c%3];
     if(w==='Male ward'){NPLAN[id]={'8 am':c%2?['vit']:['sugar'],'12 pm':c%3?[]:['sugar'],'4 pm':['vit']};NMEDS[id]={'8 am':['Sertraline 50 mg','Vitamin D3'],'9 pm':['Quetiapine 50 mg']};}
   }});}
@@ -3449,7 +3451,7 @@ V3.seed = () => {
   A('tarun','urgent','Repeated refusal: Escitalopram 10 mg, 2nd in 24 hours','Refused again at 8 am. Says he does not want tablets.','Refusal','Sister Rekha',H(13,55),{by:'Dr. Sameer Khan',role:'rmo',t:H(13,58)});
   A('sana','urgent','Lorazepam 1 mg given at 1:15 pm: no effect after 30 minutes','Still pacing and shouting. Alert, no sedation.','SOS or PRN','Sister Maya',H(13,48),{by:'Dr. Sameer Khan',role:'rmo',t:H(13,52)},{by:'Dr. Sameer Khan',role:'rmo',t:H(13,58),note:'Settled after talking. Repeat check in 1 hour. Dr. Kunal Sethi informed.'},{by:'Dr. Sameer Khan',role:'rmo',t:H(14,3)});
   A('nikhil','critical','Temp 100.4 °F, pulse 118, tremor: possible withdrawal delirium','Day 2 of alcohol withdrawal. Restless, not oriented to time.','Vitals','Brother Anil',H(14,9));
-  A('neel','urgent','Demo alert: elevated pulse after rounds','Repeat pulse 118 bpm. Nurse has not received a response yet.','Vitals','Sister Rekha',H(13,40));
+  A('neel','urgent','Elevated pulse after rounds','Repeat pulse 118 bpm. Nurse has not received a response yet.','Vitals','Sister Rekha',H(13,40));
 
   /* ---------- patient timeline seeds (Neel Bose is the worked example) ---------- */
   L('neel',H(13,30,-1),'nurse','vital','Sugar 192 mg/dL after lunch. Duty doctor told.','Sister Rekha');

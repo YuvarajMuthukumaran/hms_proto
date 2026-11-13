@@ -67,14 +67,19 @@
     const p=pid=>(PTS.concat(typeof PTS_F!=='undefined'?PTS_F:[],typeof PTS_D!=='undefined'?PTS_D:[]).find(x=>x.id===pid)||{name:pid});
     const al=(v3().alerts||[]).filter(a=>!a.closed).sort((a,b)=>(a.sev==='urgent'?0:1)-(b.sev==='urgent'?0:1));
     const od=(v3().orders||[]).filter(o=>!o.cs);
-    const adm=PTS.filter(x=>(+x.day||0)<=1);
+    const adm=(window.rmoAllPts?rmoAllPts():PTS).filter(x=>(+x.day||0)<=1);
     const sos=[['Varun Rao','Lorazepam 1 mg SOS given at 1:20 am, effective'],['Tarun Roy','Haloperidol 5 mg IM given at 11:05 pm after aggression']];
     const res=(v3().labs||[]).filter(l=>!l.rev);
-    const out=[['Open alerts (red first)',al.map(a=>({t:a.title+' · '+p(a.pid).name,red:a.sev==='urgent'}))],['Orders waiting for psychiatrist countersign',od.map(o=>({t:o.text+' · '+p(o.pid).name+' · '+(window.psyOrderLeft?psyOrderLeft(o.id):'')}))],
-      ['Admissions this shift',adm.map(x=>({t:x.name+' · '+x.room+' · '+(x.day===0?'today':'yesterday')}))],['SOS doses given',sos.map(s=>({t:s[0]+': '+s[1]}))],['Results back',res.map(l=>({t:l.test+' · '+p(l.pid).name}))],['Patients out of ward',[{t:'Dev Kumar · accompanied walk in the garden until 5 pm'}]]];
+    const out=[['Open alerts (red first)',al.map(a=>({t:a.title,pid:a.pid,red:a.sev==='urgent'}))],['Orders waiting for psychiatrist countersign',od.map(o=>({t:o.text,pid:o.pid,x:(window.psyOrderLeft?psyOrderLeft(o.id):'')}))],
+      ['Admissions this shift',adm.map(x=>({t:'Admitted '+(x.day===0?'today':'yesterday'),pid:x.id}))],['SOS doses given',sos.map(s=>({t:s[1],pid:(PTS.find(z=>z.name===s[0])||{}).id,nm:s[0]}))],['Results back',res.map(l=>({t:l.test,pid:l.pid}))],['Patients out of ward',[{t:'Accompanied walk in the garden until 5 pm',pid:'dev'}]]];
     return out;
   }
-  function sections(){return buildHandover().map(s=>`<div style="margin-bottom:12px"><div class="lbl">${hesc(s[0])} <span class="tiny muted">· ${s[1].length}</span></div>${s[1].length?s[1].map(i=>`<div class="small" style="padding:4px 0;${i.red?'color:#b42318;font-weight:600':''}">${hesc(i.t)}</div>`).join(''):'<div class="small muted">None</div>'}</div>`).join('');}
+  function sections(){
+    const ptOf=id=>PTS.concat(typeof PTS_F!=='undefined'?PTS_F:[],typeof PTS_D!=='undefined'?PTS_D:[]).find(x=>x.id===id)||{};
+    const hdr='<tr><th>Patient</th><th>Room</th><th>Detail</th><th></th></tr>';
+    return buildHandover().map(s=>{const red=/Open alerts/.test(s[0]);
+      const rows=s[1].map(i=>{const q=ptOf(i.pid),nm=q.name||i.nm||'';return '<tr><td><b style="background:#eaf2ff;color:#1e5bb8;border-radius:99px;padding:3px 10px;white-space:nowrap">'+hesc(nm)+'</b></td><td>'+hesc(q.room||'')+'</td><td>'+(i.red?'<b style="color:#b42318;background:#fef3f2;border-radius:99px;padding:2px 8px">Urgent</b> ':'')+hesc(i.t)+(i.x?' <span class="tiny muted">· '+hesc(i.x)+'</span>':'')+'</td><td style="text-align:right">'+(q.id?'<button class="btn sm" onclick="go(&quot;#/patient/'+q.id+'/overview&quot;)">View</button>':'')+'</td></tr>';}).join('');
+      return '<section class="card" style="margin-bottom:12px"><div class="hd"><h3>'+hesc(s[0])+' <b style="font-size:12px;border-radius:99px;padding:2px 9px;background:'+(red&&s[1].length?'#fef3f2;color:#b42318':'#f2f4f7;color:#475467')+'">'+s[1].length+'</b></h3></div>'+(s[1].length?'<div class="scroll"><table><thead>'+hdr+'</thead><tbody>'+rows+'</tbody></table></div>':'<div class="pad small muted">None</div>')+'</section>';}).join('');}
   window.shiftChip=function(h){const a=A();a.clock=h;render();};
   window.shiftSign=function(){const a=A();a.note=(($('shNote')||{}).value||a.note||'').trim();
     pinSign('Sign the '+shiftNow().name.toLowerCase()+' shift handover',[['Signing as',signer()],['Alerts passed on',String(buildHandover()[0][1].length)]],()=>{a.signed={by:signer(),at:atNow(),shift:shiftNow().name};a.accepted=false;render();toast('Handover signed. The incoming RMO sees it on Today.');});};
@@ -82,7 +87,7 @@
   function shiftPage(){
     $('title').textContent='Shift handover';const a=A(),mn=minsLeft();
     return `<section class="card"><div class="hd"><div><h3>Shift handover · ${shiftNow().name} shift</h3><div class="small muted" style="margin-top:4px">Built automatically 30 minutes before duty end from open items. Open alerts belong to the role on duty, so they move to the incoming RMO on their own. You only review, add a line and sign.</div></div>
-      <div class="row" style="gap:6px;flex-wrap:wrap"><span class="tiny muted">Demo time</span>${[[null,'Now'],[19.5,'30 min before end']].map(x=>`<button class="btn sm ${((a.clock===x[0])?'pri':'')}" onclick="shiftChip(${x[0]})">${x[1]}</button>`).join('')}</div></div>
+      <div class="row" style="gap:6px;flex-wrap:wrap">${/[?&]demo=1/.test(location.search)?'<span class="tiny muted">Demo time</span>':''}${(/[?&]demo=1/.test(location.search)?[[null,'Now'],[19.5,'30 min before end']]:[]).map(x=>`<button class="btn sm ${((a.clock===x[0])?'pri':'')}" onclick="shiftChip(${x[0]})">${x[1]}</button>`).join('')}</div></div>
       <div class="pad">${(dueNow()||a.clock!=null)?`<div class="callout blue" style="margin-bottom:12px">Duty ends ${mn>0?'in '+mn+' minutes':'now'}. This handover was built for you.</div>${sections()}
         <label class="field"><span class="lbl">Add a line if needed</span><textarea class="input" id="shNote" rows="2" placeholder="For the incoming RMO">${hesc(a.note||'')}</textarea></label>
         <div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px">${a.signed?`<span class="chip c-green">Signed by ${hesc(a.signed.by)}, ${hesc(a.signed.at)}</span>`:`<button class="btn pri" onclick="shiftSign()">Review and sign</button>`}</div>`
@@ -110,7 +115,17 @@
   const WAIT=[{id:'w1',name:'Anil Chopra',age:44,sex:'M',phone:'98100 11122',by:'Meena Arora, front desk'},{id:'w2',name:'Pooja Nair',age:29,sex:'F',phone:'99100 55511',by:'Meena Arora, front desk'}];
   const KNOWN=[{phone:'98188 00051',name:'Shalini Mehta',uhid:'2026-27RG6812'},{phone:'98110 00024',name:'Anjali Bose',uhid:'2026-27RG6988'}];
   const BEDS={'Male ward':['Room 218','Room 219','Room 220'],'Female ward':['Room 314','Room 315'],'De-addiction ward':['Room 118','Room 119']};
-  const adm=()=>{const s=A();if(!s.adm)s.adm={step:1,pick:null,reg:{name:'',age:'',sex:'M',addr:'',phone:''},ward:'Male ward',bed:'',psy:'Dr. Aanya Sharma',sec:'89',forms:{consent:'',forme:'',risk:''},ad:'',call:{who:'',at:'',advice:''},err:''};return s.adm;};
+  /* card 146: beds come from the ward bed list (one patient per bed); wards match the sex; a minor is never put in a room with an adult */
+  (window.TULASI_RULES=window.TULASI_RULES||{}).minor=Object.assign({},window.TULASI_RULES.minor||{},{room:{noAdultInRoom:true,note:'MHCA section 87: a minor is kept apart from adults. Only a room with no adult is offered (for Dr. Anu to review).'}});
+  const roomNo=l=>String(l).replace(/\s+[AB]$/,"").replace(/\s*·.*$/,"");
+  const allPts=()=>PTS.concat(typeof PTS_F!=='undefined'?PTS_F:[],typeof PTS_D!=='undefined'?PTS_D:[]);
+  const admWho=a=>{const w=WAIT.find(x=>x.id===a.pick)||{};return a.pick==='new'||a.pick==='old'?{age:+a.reg.age||35,sex:a.reg.sex||'M'}:{age:w.age||35,sex:w.sex||'M'};};
+  const wardsFor=a=>{const sx=admWho(a).sex;return Object.keys(V3.BEDS).filter(w=>a.override||(sx==='M'?w!=='Female ward':sx==='F'?w!=='Male ward':true));};
+  function bedOpts(a){const who=admWho(a),minor=who.age<(window.TULASI_RULES.minor.age||18);
+    return V3.bedsOf(a.ward).map(b=>{let why='';const adults=allPts().filter(p=>roomNo(p.room)===roomNo(b.label)&&p.id!==a.id&&(+p.age||30)>=18);
+      if(b.patient)why='occupied by '+b.patient.name;else if(V3.bedState(a.ward,b)==='res')why='reserved';else if(V3.bedState(a.ward,b)==='clean')why='being cleaned';else if(minor&&adults.length)why='adult in the room: '+adults[0].name+' (minor kept apart, MHCA s.87)';
+      return {label:b.label,type:b.type,why};});}
+  const adm=()=>{const s=A();if(!s.adm)s.adm={step:1,pick:null,reg:{name:'',age:'',sex:'M',addr:'',phone:''},ward:'Male ward',bed:'',override:false,why:'',psy:'Dr. Aanya Sharma',sec:'89',forms:{consent:'',forme:'',risk:''},ad:'',call:{who:'',at:'',advice:''},err:''};return s.adm;};
   const STEPS=['Patient','Ward and bed','Admission forms','Confirm'];
   window.admBack=function(){const a=adm();if(a.step>1)a.step--;a.err='';render();};
   window.admSet=function(k,v){const a=adm();const p=k.split('.');if(p.length===2)a[p[0]][p[1]]=v;else a[k]=v;};
@@ -123,7 +138,7 @@
   window.admUseExisting=function(){const a=adm();a.pick='old';a.step=2;render();};
   window.admForm=function(k,mode){adm().forms[k]=mode;render();};
   window.admNext=function(){const a=adm();a.err='';
-    if(a.step===2){const e=$('ad_bed');a.bed=e?e.value:a.bed;if(!a.bed){a.err='Pick a bed.';render();return;}}
+    if(a.step===2){const e=$('ad_bed');a.bed=e?e.value:a.bed;if(!a.bed){a.err='Pick a bed.';render();return;}const bo=bedOpts(a).find(b=>b.label===a.bed);if(bo&&bo.why){a.err='That bed cannot be used: '+bo.why+'.';a.bed='';render();return;}const sx=admWho(a).sex,mism=(sx==='M'&&a.ward==='Female ward')||(sx==='F'&&a.ward==='Male ward');if(a.override||mism){const y=$('ad_why');a.why=y?y.value.trim():a.why;if(mism&&!a.why){a.err='This ward does not match the patient. Write the reason.';render();return;}}}
     if(a.step===3){if(!a.ad){a.err='Ask about an advance directive and record the answer (MHCA requires it at admission).';render();return;}
       if(!a.forms.consent||!a.forms.forme||!a.forms.risk){a.err='Say who took each form: front desk, e-sign by you, or an upload of the signed paper.';render();return;}
       if(isRmo()){const w=$('ac_who'),t=$('ac_at'),d=$('ac_adv');a.call={who:w?w.value.trim():a.call.who,at:t?t.value.trim():a.call.at,advice:d?d.value.trim():a.call.advice};if(!a.call.who||!a.call.at||!a.call.advice){a.err='Record the call to the on-call psychiatrist: who, what time, and the advice in one line.';render();return;}}}
@@ -152,8 +167,9 @@
         ${a.match?`<div class="callout amber" style="margin-top:10px"><b>This phone number is already registered.</b> ${hesc(a.match.name)} · UHID ${hesc(a.match.uhid)}. No new UHID is made.<div style="margin-top:8px"><button class="btn pri sm" onclick="admUseExisting()">Use this UHID</button></div></div>`:''}
         <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn pri" onclick="admRegister()">Register and continue</button></div>`;}
     if(a.step===2){
-      body=`<div class="fgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="field"><span class="lbl">Ward</span><select class="input" onchange="admSet('ward',this.value);render()">${Object.keys(BEDS).map(w=>`<option ${a.ward===w?'selected':''}>${w}</option>`).join('')}</select></label>
-        <label class="field"><span class="lbl">Bed</span><select class="input" id="ad_bed"><option value="">Pick a bed</option>${BEDS[a.ward].map(b=>`<option ${a.bed===b?'selected':''}>${b}</option>`).join('')}</select></label>
+      const wl=wardsFor(a);if(!wl.includes(a.ward))a.ward=wl[0];const who=admWho(a),bo=bedOpts(a);
+      body=`<div class="small muted" style="margin-bottom:8px">${hesc(who.sex==='F'?'Female':who.sex==='M'?'Male':'Patient')}, ${who.age} years${who.age<18?' · <b>under 18</b>: only rooms with no adult are open':''}.</div><div class="fgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="field"><span class="lbl">Ward</span><select class="input" onchange="admSet('ward',this.value);admSet('bed','');render()">${wl.map(w=>`<option ${a.ward===w?'selected':''}>${w}</option>`).join('')}</select><span class="tiny muted">${a.override?'':'Wards that match the patient. <a href="#" onclick="admSet(&quot;override&quot;,true);render();return false">Another ward (needs a reason)</a>'}</span></label>
+        <label class="field"><span class="lbl">Bed</span><select class="input" id="ad_bed"><option value="">Pick a bed</option>${bo.map(b=>`<option value="${hesc(b.label)}" ${b.why?'disabled':''} ${a.bed===b.label?'selected':''}>${hesc(b.label)} · ${hesc(b.type)}${b.why?' · '+hesc(b.why):''}</option>`).join('')}</select></label>${a.override?`<label class="field" style="grid-column:1/-1"><span class="lbl">Reason for a ward that does not match the patient (required)</span><input class="input" id="ad_why" value="${hesc(a.why||'')}"></label>`:''}
         <label class="field"><span class="lbl">Admitting psychiatrist <span class="tiny muted">(default: treating or on-call)</span></span><select class="input" onchange="admSet('psy',this.value)">${['Dr. Aanya Sharma','Dr. Rohan Mehta','Dr. Kunal Sethi'].map(d=>`<option ${a.psy===d?'selected':''}>${d}</option>`).join('')}</select></label>
         <label class="field"><span class="lbl">Section</span><select class="input" onchange="admSet('sec',this.value)">${['89','90'].map(s=>`<option ${a.sec===s?'selected':''} value="${s}">Section ${s}</option>`).join('')}</select></label></div>`;}
     if(a.step===3){

@@ -15,7 +15,7 @@ function waCfg(){return {url:WA_DEF_URL};}
 async function waPost(p,body){const c=waCfg();
   let r;try{r=await fetch(c.url+p,{method:body?'POST':'GET',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(45000)});}
   catch(e){throw new Error('WhatsApp bridge not running at '+c.url+'. Nothing was sent; use Copy for WhatsApp.');}
-  const j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw new Error(j.error||('Bridge error '+r.status));return j;}
+  const j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw new Error(j.error||('Bridge error '+r.status));if(j.simulated)toast('Demo mode: this would be sent to the WhatsApp group. Nothing was sent.');return j;}
 function waBusy(btn,on){if(!btn)return;btn.disabled=on;if(on){btn.dataset.l=btn.innerHTML;btn.innerHTML='Sending…';}else if(btn.dataset.l)btn.innerHTML=btn.dataset.l;}
 function waCopy(text,okMsg){
   const bad=()=>{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();

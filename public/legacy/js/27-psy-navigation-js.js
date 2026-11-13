@@ -55,6 +55,15 @@
         hb.innerHTML=`<span class="si"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h14l-3-3"/><path d="M20 16H6l3 3"/></svg></span><span class="sl">Handover</span>`;
         b.after(hb);
       }
+      /* card 141: New admission has its own rail item, so Patients is not lit on that page; the Patients tooltip says All inpatients for the RMO */
+      if(dd&&!dd.querySelector('[data-newadm]')){
+        const onA=location.hash.indexOf('#/admissions')===0,pat=[...dd.children].find(x=>/Patients/.test(x.getAttribute('aria-label')||''));
+        const nb=document.createElement('button');nb.dataset.newadm='1';nb.title='New admission';nb.setAttribute('aria-label','New admission');nb.setAttribute('onclick',"go('#/admissions')");
+        if(onA){nb.className='on';nb.setAttribute('aria-current','page');if(pat){pat.classList.remove('on');pat.removeAttribute('aria-current');}}
+        nb.innerHTML='<span class="si"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></span><span class="sl">New admission</span>';
+        if(pat)pat.after(nb);else dd.appendChild(nb);
+        if(pat&&String((window.__TULASI__||{}).role||'')==='rmo'){['title','aria-label'].forEach(k=>{const t=pat.getAttribute(k);if(t)pat.setAttribute(k,t.replace('My inpatients','All inpatients').replace('New admission, ',''));});}
+      }
     }
     return out;
   };
