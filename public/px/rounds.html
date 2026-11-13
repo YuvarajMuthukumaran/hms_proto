@@ -324,6 +324,7 @@ document.addEventListener('click',e=>{
     const res={ p, kind:'concern', n:CM.n, outcome:'Concern', src:CM.src, who:CM.who, ans:{}, words:CM.words, grievance:g, compliment:CM.compl };
     if(g) CM.gid++;
     CM.open=false; drawCM();
+    try{const L=JSON.parse(localStorage.getItem('px_calls_v1')||'[]');L.unshift({pid:p.id,name:p.name,n:CM.n,outcome:res.outcome,who:res.who,words:res.words||'',ans:res.ans||{},grievance:g?{id:g.id,cat:g.cat,owner:g.owner}:null,at:new Date().toISOString()});localStorage.setItem('px_calls_v1',JSON.stringify(L.slice(0,200)));}catch(e){}
     if(window.onCallSaved) window.onCallSaved(res);
     toast(g ? `Concern ${g.id} (${g.cat}) sent to ${g.owner}${g.due==='now'?', Chandraji called now':', due in '+g.due}. Added to ${p.name}'s record.` : `Compliment saved to ${p.name}'s record and Reports.`);
     return;
@@ -333,6 +334,7 @@ document.addEventListener('click',e=>{
     const res={ p, n:CM.n, outcome:CM.outcome, who:CM.who, ans:{...CM.ans}, words:CM.words, grievance:g, compliment:CM.compl };
     if(g) CM.gid++;
     CM.open=false; drawCM();
+    try{const L=JSON.parse(localStorage.getItem('px_calls_v1')||'[]');L.unshift({pid:p.id,name:p.name,n:CM.n,outcome:res.outcome,who:res.who,words:res.words||'',ans:res.ans||{},grievance:g?{id:g.id,cat:g.cat,owner:g.owner}:null,at:new Date().toISOString()});localStorage.setItem('px_calls_v1',JSON.stringify(L.slice(0,200)));}catch(e){}
     if(window.onCallSaved) window.onCallSaved(res);
     toast(CM.outcome!=='Connected' ? `Attempt saved for ${p.name}. It will come back on Today tomorrow.` : g ? `Call saved. Grievance ${g.id} (${g.cat}) sent to ${g.owner}${g.due==='now'?', Chandraji told now':', due in '+g.due}.` : `Call saved for ${p.name}. No action needed.`);
   }
