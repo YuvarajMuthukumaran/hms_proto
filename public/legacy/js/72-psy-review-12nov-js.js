@@ -8,6 +8,8 @@
   /* the psychologist draws some pages through the psychiatrist's code with S.role switched for a moment (asDoctor), so the page's own role is checked too */
   const realRole=()=>{const b=window.__TULASI__||{};return String(b.role||b.viewRole||'');};
   const psy=()=>S.role==='psychiatrist'&&!/psycholog|patient-experience/.test(realRole());
+  /* the Admission tab (steps, section strip, capacity look, mental status chips) looks the same for the psychologist (13 Nov, Nikita: copy the psychiatrist's design) */
+  const admLook=()=>psy()||(S.role==='psychologist'&&/psycholog/.test(realRole()));
 
   const css=document.createElement('style');css.id='psy-review-12nov-css';
   css.textContent=`
@@ -205,7 +207,7 @@
   const __adm=pAdmission;
   pAdmission=function(){
     const h=__adm.apply(this,arguments);
-    if(!psy()||typeof h!=='string')return h;
+    if(!admLook()||typeof h!=='string')return h;
     const sec=S.admSec||'hist';
     if(sec!=='workup'&&sec!=='hist')return h;
     const t=document.createElement('template');t.innerHTML=h;
@@ -257,7 +259,7 @@
   const __fldM=fld;
   fld=function(f,ro){
     const [l,ty,op]=f;
-    if(!psy()||S.hsec!=='mse'||(ty!=='o'&&ty!=='m'&&ty!=='ap'))return __fldM.apply(this,arguments);
+    if(!admLook()||S.hsec!=='mse'||(ty!=='o'&&ty!=='m'&&ty!=='ap'))return __fldM.apply(this,arguments);
     const i=mseIdx(l),st=mseStore(),dis=ro?'disabled':'';
     let cur;
     if(ty==='o'){const v=st[l]!==undefined?st[l]:{sel:mseDraft(l)||''};cur=[v&&v.sel!=='__other'?v.sel:(v&&v.free)||''];}
@@ -377,7 +379,7 @@
   const __capF=capForm;
   capForm=function(){
     const h=__capF.apply(this,arguments);
-    if(!psy()||typeof h!=='string')return h;
+    if(!admLook()||typeof h!=='string')return h;
     const t=document.createElement('template');t.innerHTML=h;
     const groups=[...t.content.querySelectorAll('.cap-g')];
     if(!groups.length)return h;
@@ -418,9 +420,9 @@
     if(t)t.textContent=done+' of '+total+' answered';
     if(b)b.style.width=(total?Math.round(done/total*100):0)+'%';
   };
-  document.addEventListener('click',e=>{if(psy()&&e.target.closest&&e.target.closest('#capCard .tog'))setTimeout(capProg,0);});
+  document.addEventListener('click',e=>{if(admLook()&&e.target.closest&&e.target.closest('#capCard .tog'))setTimeout(capProg,0);});
   const __rCap=render;
-  render=function(){const r=__rCap.apply(this,arguments);if(psy())capProg();return r;};
+  render=function(){const r=__rCap.apply(this,arguments);if(admLook())capProg();return r;};
 
   /* ---------- 6. Section strip: one line, a tick once you have moved on from a step, current step scrolled into view ---------- */
   const seenStore=()=>{const x=psyPx(S.pid);return x.hseen=x.hseen||{};};
@@ -447,7 +449,7 @@
     if(on){const target=on.offsetLeft-(nav.clientWidth-on.offsetWidth)/2;try{nav.scrollTo({left:Math.max(0,target),behavior:'smooth'});}catch(e){nav.scrollLeft=Math.max(0,target);}}
   }
   const __rStrip=render;
-  render=function(){const r=__rStrip.apply(this,arguments);if(psy()){try{stripPaint();}catch(e){}}return r;};
+  render=function(){const r=__rStrip.apply(this,arguments);if(admLook()){try{stripPaint();}catch(e){}}return r;};
 
   /* ---------- 7. Family call card: pressing "Call via HMS" no longer removes the card. It goes away only when the outcome is saved. ---------- */
   window.psyCallDone=function(pid,key){
