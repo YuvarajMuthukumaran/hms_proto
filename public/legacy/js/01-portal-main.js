@@ -47,7 +47,7 @@ const S = {
   rp: true, rpt: 'timeline', dn: {}, rx: [], ptq: '',
 };
 const PTS = [
-  {id:'arjun', age:34, sex:'M', uhid:'2026-27RG6812', name:'Arjun Mehta', ini:'AM', room:'Room 210', day:12, sec:'86', risk:false, dx:'Severe depressive episode'},
+  {id:'arjun', age:34, sex:'M', uhid:'2026-27RG6812', name:'Arjun Mehta', ini:'AM', room:'Room 210', day:12, sec:'89', risk:false, dx:'Severe depressive episode'},
   {id:'varun', age:41, sex:'M', uhid:'2026-27RG6870', name:'Varun Rao', ini:'VR', room:'Room 211', day:4, sec:'89', risk:false, dx:'Alcohol dependence, withdrawal'},
   {id:'kabir', age:26, sex:'M', uhid:'2026-27RG6731', name:'Karan Malhotra', ini:'KM', room:'Room 212 A', day:21, sec:'90', risk:false, dx:'Schizophrenia'},
   {id:'sameer', age:22, sex:'M', uhid:'2026-27RG6905', name:'Sameer Das', ini:'SD', room:'Suite 202', day:7, sec:'89', risk:false, dx:'Obsessive-compulsive disorder'},
@@ -558,7 +558,7 @@ function vInpatients(){
     title:L?'Floor inpatients':isWard()?'Ward inpatients':'My inpatients',where:'Gurgaon · Male ward'+(L?' · grouped by psychiatrist':''),
     cur:filt,set:k=>`filt='${k}'`,count:k=>PTS.filter(p=>ipdIn(k,p,dis)).length,keys:['all','h24','risk','new','dis','vip'],filters:L?ptFilters(DOCS):'',
     doc:p=>PSYOF[p.id],psy:p=>PSYCHOF[p.id]||'',dc:p=>EX[p.id][2],go:()=>'#/patient/neel/overview',
-    id:p=>`${p.age}/${p.sex} ${p.room.replace(/^Room\s*/i,'R ')} · TH-${1040+PTS.indexOf(p)}`,c6l:'',c6:p=>`<span style="white-space:nowrap;${/late/.test(EX[p.id][1])?'color:var(--amber);font-weight:600':''}">${EX[p.id][1]}</span>`,
+    id:p=>`${p.age}/${p.sex} ${p.room.replace(/^Room\s*/i,'R ')}`,c6l:'',c6:p=>`<span style="white-space:nowrap;${/late/.test(EX[p.id][1])?'color:var(--amber);font-weight:600':''}">${EX[p.id][1]}</span>`,
     groups:L?(rf,vis)=>DOCS.filter(d=>!S.psyF||d===S.psyF).map(d=>{const g=f.filter(p=>PSYOF[p.id]===d&&vis(p));if(!g.length)return '';const od=g.filter(p=>/late/.test(EX[p.id][1])).length;
       return `<tr class="fh"><td colspan="6"><div class="row" style="gap:8px;padding:9px 14px"><strong>${d}</strong>${SENIOR[d]?chip(SENIOR[d],'c-violet'):''}<span class="tiny muted">${g.length} patient${g.length>1?'s':''}</span>${od?chip(od+' overdue','c-amber'):''}${d==='Unassigned'?`<button class="btn sm" style="margin-left:auto" onclick="assignModal('l0')">Assign</button>`:''}</div></td></tr>${g.map(rf).join('')}`}).join(''):null});
 }
@@ -713,7 +713,7 @@ function compactHeader(){
   <section class="card dph">
     <div class="dpav"><div class="avbig">NB</div><span class="chip c-green" style="font-size:11px">${S.admNo>2?'Admitted today':'Day '+(S.admNo>2?0:6)+' of stay'}</span></div>
     <div class="dpmain">
-      <div class="row" style="gap:10px;align-items:baseline"><h2 style="font-size:26px">Neel Bose</h2><span class="muted" style="font-weight:600">TH-1042 · 23/M R 213 A</span><span class="tiny muted">UHID 2026-27RG6990</span></div>
+      <div class="row" style="gap:10px;align-items:baseline"><h2 style="font-size:26px">Neel Bose</h2><span class="muted" style="font-weight:600">23/M R 213 A</span><span class="tiny muted">UHID 2026-27RG6990</span></div>
       <div class="row" style="gap:6px;flex-wrap:nowrap;overflow-x:auto">${chip('⚠ High risk','c-red')}${chip('No known allergies','c-grey')}${chip('Admission # '+S.admNo,'c-blue')}${chip('Section '+S.section,'c-violet')}${chip('R 213 A','c-grey')}${chip(S.diet.type,'c-grey')}${S.discharged?chip('Discharged','c-green'):''}</div>
       <div class="dpcards">
         ${card(ic.dx,'Primary diagnosis',S.dx,'6A60.0 · ICD-11')}
@@ -3026,7 +3026,7 @@ function vRmoWards(){
     title:'Ward inpatients',where:`Gurgaon · ${FLOORS.length} wards`,
     cur:flt,set:k=>`S.rmoFilt='${k}'`,count:k=>rows.filter(r=>ipdIn(k,r.p,dis)).length,keys:['all','h24','risk','new','dis'],filters:`<div class="ptfil">${floorTabs()}</div>`,
     doc:p=>psyOfP(p),psy:p=>rmoPsych(p),dc:p=>rmoEx(p)[2],go:p=>`#/patient/${p.id}/overview`,
-    id:p=>{const fl=RMO_FILL[p.id]||[],sx=p.sex||fl[3],ag=p.age||fl[4],th=PTS.indexOf(p)>=0?1040+PTS.indexOf(p):fl[5];return `${sx?ag+'/'+sx+' '+p.room.replace(/^Room\s*/i,'R '):p.room}${th?' · TH-'+th:''}`;},
+    id:p=>{const fl=RMO_FILL[p.id]||[],sx=p.sex||fl[3],ag=p.age||fl[4],th=PTS.indexOf(p)>=0?1040+PTS.indexOf(p):fl[5];return `${sx?ag+'/'+sx+' '+p.room.replace(/^Room\s*/i,'R '):p.room}${''}`;},
     mh:'Monitoring · physical exam',c6l:'',c6:p=>`<div class="pew">${peCell(p)}</div>`,after:rmoRefCard()});
 }
 /* ---- physical exam, nutrition status, hard copy ---- */
@@ -3451,7 +3451,7 @@ V3.seed = () => {
   A('tarun','urgent','Repeated refusal: Escitalopram 10 mg, 2nd in 24 hours','Refused again at 8 am. Says he does not want tablets.','Refusal','Sister Rekha',H(13,55),{by:'Dr. Sameer Khan',role:'rmo',t:H(13,58)});
   A('sana','urgent','Lorazepam 1 mg given at 1:15 pm: no effect after 30 minutes','Still pacing and shouting. Alert, no sedation.','SOS or PRN','Sister Maya',H(13,48),{by:'Dr. Sameer Khan',role:'rmo',t:H(13,52)},{by:'Dr. Sameer Khan',role:'rmo',t:H(13,58),note:'Settled after talking. Repeat check in 1 hour. Dr. Kunal Sethi informed.'},{by:'Dr. Sameer Khan',role:'rmo',t:H(14,3)});
   A('nikhil','critical','Temp 100.4 °F, pulse 118, tremor: possible withdrawal delirium','Day 2 of alcohol withdrawal. Restless, not oriented to time.','Vitals','Brother Anil',H(14,9));
-  A('neel','urgent','Elevated pulse after rounds','Repeat pulse 118 bpm. Nurse has not received a response yet.','Vitals','Sister Rekha',H(13,40));
+  /* removed 13 Nov (QA 135): a made-up alert. A real one comes from a nurse vitals entry. */
 
   /* ---------- patient timeline seeds (Neel Bose is the worked example) ---------- */
   L('neel',H(13,30,-1),'nurse','vital','Sugar 192 mg/dL after lunch. Duty doctor told.','Sister Rekha');

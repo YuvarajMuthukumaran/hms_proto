@@ -12,7 +12,10 @@ const waDate=()=>new Date().toLocaleDateString('en-IN',{weekday:'short',day:'num
    No token is asked for or kept in the browser (owner's decision): the API accepts requests from the portal's own pages. */
 const WA_DEF_URL=location.origin+'/api';
 function waCfg(){return {url:WA_DEF_URL};}
-async function waPost(p,body){const c=waCfg();
+async function waPost(p,body){
+  /* card 142 (13 Nov): no network call at all in the demo. Real sending needs window.TULASI_LIVE_SEND === true, which is not set anywhere. */
+  if(window.TULASI_LIVE_SEND!==true){toast('Demo mode: would send to the WhatsApp group. Nothing was sent.');return {ok:true,simulated:true};}
+  const c=waCfg();
   let r;try{r=await fetch(c.url+p,{method:body?'POST':'GET',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(45000)});}
   catch(e){throw new Error('WhatsApp bridge not running at '+c.url+'. Nothing was sent; use Copy for WhatsApp.');}
   const j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw new Error(j.error||('Bridge error '+r.status));if(j.simulated)toast('Demo mode: this would be sent to the WhatsApp group. Nothing was sent.');return j;}

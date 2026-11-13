@@ -8,7 +8,7 @@ const ptClone=o=>JSON.parse(JSON.stringify(o));
 const PT_CTX={neel:ptClone(Object.fromEntries(PT_KEYS.map(k=>[k,S[k]])))};
 S.pid='neel';
 S.hview='read'; /* Detailed history opens on Read only first (3 Nov) */
-const PT_TODAY=new Date(2026,9,24); // demo "today": Neel is on day 6, admitted 18 Oct
+const PT_TODAY=(()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate());})(); // today (13 Nov QA): every record date is relative to today, Neel's literal 18 Oct admission gives day 26
 const ptDay=n=>{const d=new Date(PT_TODAY);d.setDate(d.getDate()-n);return d};
 const ptD=d=>d.getDate()+' '+d.toLocaleString('en-GB',{month:'short'});
 const ptDT=(d,t)=>ptD(d)+' 2026, '+t;
@@ -118,7 +118,7 @@ function ptSwaps(){
   const p=ptFind(S.pid),id=ptIdentity(p),c=PT_CTX[S.pid]||{},set=ptDxSet(p);
   return [
     ['#/patient/neel/','#/patient/'+p.id+'/'],["go('#/patient/neel')","go('#/patient/"+p.id+"')"],
-    ['<div class="avbig">NB</div>','<div class="avbig">'+id.ini+'</div>'],['TH-1042 · 29/M',id.th+' · '+id.age+'/'+id.sex+' '+String(p.room||'').replace(/^Room\s*/i,'R ')],['UHID 2026-27RG6990','UHID '+id.uhid],
+    ['<div class="avbig">NB</div>','<div class="avbig">'+id.ini+'</div>'],['23/M R 213 A',id.age+'/'+id.sex+' '+String(p.room||'').replace(/^Room\s*/i,'R ')],['UHID 2026-27RG6990','UHID '+id.uhid],
     ['Room 214 · Bed A','R '+String(p.room||'').replace(/^Room\s*/i,'')],['6A60.0 · ICD-11',set.icd+' · ICD-11'],['18 Oct, 11:20',ptD(id.adm)+', 11:20'],['24 Oct, 16:40',ptD(id.adm)+', 16:40'],
     ["Day 6 of stay","Day "+p.day+" of stay"],['day 6 of 30','day '+p.day+' of 30'],['+91 98XXX XXX21',id.phone],
     ['Ananya Bose (Sister)',id.nr+' ('+id.rel+')'],['Ananya Bose (sister)',id.nr+' ('+id.rel.toLowerCase()+')'],['Ananya Bose, sister',id.nr+', '+id.rel.toLowerCase()],
