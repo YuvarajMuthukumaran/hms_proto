@@ -1,6 +1,8 @@
 export interface SupabaseConfig {
   url: string;
   key: string;
+  /** true once the role-keys migration is applied: each link then syncs under its own role key */
+  roleKeys?: boolean;
 }
 
 /** The project URL and anon (public) key. Build-time VITE_ values win for local work; on Vercel they come from /api/config,
@@ -12,8 +14,8 @@ export async function loadSupabaseConfig(): Promise<SupabaseConfig | null> {
   try {
     const res = await fetch('/api/config', { cache: 'no-store' });
     if (!res.ok) return null;
-    const json = (await res.json()) as { supabase?: SupabaseConfig | null };
-    return json?.supabase?.url && json.supabase.key ? json.supabase : null;
+    const json = (await res.json()) as { supabase?: SupabaseConfig | null; roleKeys?: boolean };
+    return json?.supabase?.url && json.supabase.key ? { ...json.supabase, roleKeys: !!json.roleKeys } : null;
   } catch {
     return null; // not on Vercel (the dev server answers with the page), or offline
   }

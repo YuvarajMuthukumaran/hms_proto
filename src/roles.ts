@@ -29,6 +29,9 @@ export const workspaceRole = (k: RoleKey): RoleKey => {
   }
 };
 
+/** The key a link syncs under when SUPABASE_ROLE_KEYS is on. The floor coordinator keeps the old `lead` key; the Patient Experience Lead is a separate app. */
+export const syncKey = (k: RoleKey): RoleKey => (k === 'floor-coordinator' ? 'lead' : k === 'patient-experience-lead' ? 'psychologist' : k);
+
 /** One link per role: /lead, /psychiatrist, ... A link opens straight into its role (no password, owner's choice).
  *  `?as=<role>` stands in for the path when the app is served from a plain file host. */
 export function roleFromLocation(loc: Location = window.location): PickerRole | null {

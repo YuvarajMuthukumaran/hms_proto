@@ -195,7 +195,7 @@
     V3.modal('Team and leave','D duty · W week off · L leave · S sick · O off. This is a placeholder for the separate Team and leave screen (next card).',`<table class="t"><thead><tr><th></th>${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>${WK.map(r=>`<tr><td><b>${esc(r[0])}</b></td>${[...r[1]].map(c=>`<td style="text-align:center">${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`,'<button class="btn" onclick="closeModal()">Close</button>');};
   function menuBits(){
     const sub=[...document.querySelectorAll('#app .side button')].find(b=>/^Handover$/.test(b.textContent.trim()));
-    if(sub&&!document.querySelector('#lpTeamBtn')){const t=sub.cloneNode(true);t.id='lpTeamBtn';t.textContent='Team and leave';t.removeAttribute('onclick');t.onclick=()=>lpTeam();sub.insertAdjacentElement('afterend',t);}
+    if(sub&&!document.querySelector('#lpTeamBtn')){const t=sub.cloneNode(true);t.id='lpTeamBtn';t.textContent='Team and leave';t.setAttribute('aria-label','Team and leave');t.title='Team and leave';t.removeAttribute('data-handover');t.removeAttribute('onclick');t.onclick=()=>lpTeam();sub.insertAdjacentElement('afterend',t);}
   }
 
   /* ---------------- 131: Today = the team's prototype ---------------- */

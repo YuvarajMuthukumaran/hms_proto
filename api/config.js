@@ -5,5 +5,5 @@ module.exports = (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   const url = process.env.SUPABASE_URL || '';
   const key = process.env.SUPABASE_ANON_KEY || '';
-  res.status(200).json({ supabase: url && key ? { url, key } : null });
+  res.status(200).json({ supabase: url && key ? { url, key } : null, roleKeys: process.env.SUPABASE_ROLE_KEYS === 'true', pxStore: process.env.SUPABASE_PX_STORE === 'true' });
 };

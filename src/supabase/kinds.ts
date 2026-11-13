@@ -20,15 +20,15 @@ export type WriteScope = RecordKind | 'docs';
 export const RECORD_KINDS: RecordKind[] = [...(Object.keys(CONTEXT_KINDS) as ContextKind[]), 'notes', 'mar'];
 
 const WRITERS: Record<WriteScope, readonly RoleKey[]> = {
-  doctor: ['psychiatrist', 'lead', 'rmo'],
-  psychology: ['psychologist', 'psychiatrist', 'lead'],
-  consents: ['psychiatrist', 'lead', 'rmo'],
-  events: ['lead', 'psychiatrist', 'psychologist', 'nurse', 'rmo'],
-  prefs: ['lead', 'psychiatrist', 'psychologist', 'nurse', 'rmo'],
+  doctor: ['psychiatrist', 'lead', 'rmo', 'floor-lead-psychiatrist'],
+  psychology: ['psychologist', 'psychiatrist', 'lead', 'floor-lead-psychologist', 'floor-lead-psychiatrist'],
+  consents: ['psychiatrist', 'lead', 'rmo', 'floor-lead-psychiatrist'],
+  events: ['lead', 'psychiatrist', 'psychologist', 'nurse', 'rmo', 'floor-lead-psychiatrist', 'floor-lead-psychologist'],
+  prefs: ['lead', 'psychiatrist', 'psychologist', 'nurse', 'rmo', 'floor-lead-psychiatrist', 'floor-lead-psychologist'],
   vitals: ['nurse', 'rmo'],
-  notes: ['psychologist', 'psychiatrist', 'lead'],
+  notes: ['psychologist', 'psychiatrist', 'lead', 'floor-lead-psychologist', 'floor-lead-psychiatrist'],
   mar: ['nurse', 'rmo'],
-  docs: ['lead', 'psychiatrist', 'psychologist'],
+  docs: ['lead', 'psychiatrist', 'psychologist', 'floor-lead-psychologist', 'floor-lead-psychiatrist'],
 };
 
 export const canWrite = (role: RoleKey, scope: WriteScope) => WRITERS[scope].includes(role);
