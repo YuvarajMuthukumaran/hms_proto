@@ -67,6 +67,7 @@ body.phone #dr [role=dialog]{width:100%!important}
 body.phone{background:#E4E7EC}
 body.phone .side{display:none!important} body.phone .top{padding:12px 14px!important} body.phone .top h1{font-size:20px} body.phone .top .nm,.top .eye{display:none} body.phone .lg{display:none} body.phone .sm{display:inline} body.phone main{padding:12px 12px 90px!important} body.phone .rg{grid-template-columns:repeat(2,1fr)!important} body.phone .isr{flex-wrap:wrap} body.phone .isr span{width:auto!important;text-align:left!important} body.phone .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #E3EAF2;z-index:15;justify-content:space-around;padding:8px 0 12px} body.phone .bnav a{font-size:12px;color:#475467;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px} body.phone .bnav a.on{color:#1E6CDB} body.phone .rev{bottom:76px} body.phone #dr [role=dialog]{width:100%!important} body.phone .drbtn{height:56px!important}
 </style><style id="embed-css">html.embed .side,html.embed .rev,html.embed .top,html.embed .bnav{display:none!important}html.embed body{background:transparent}html.embed .app{min-height:0}html.embed main{padding:10px 4px 40px}html.embed .col{width:100%}</style>
+<script src="hms-patients.js"></script>
 <script src="px-store.js"></script>
 <script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');</script>
 </head><body><div id="root"></div><div id="cm"></div><div id="dr"></div>
@@ -205,13 +206,15 @@ document.addEventListener('click',e=>{const t=e.target.closest('button,a,[data-c
  if(d.savenext!==undefined){const i=+d.savenext;const r=rooms()[i];if(!S.r.room){toast('Tap "Room is fine" or "Something is wrong" first.');return;}const miss=r.pts.find(p=>!S.r['p:'+p.n]);if(miss){toast('Tap an answer for '+miss.n+' first.');return;}const noTopic=r.pts.find(p=>/Not good|Wants/.test(S.r['p:'+p.n]||'')&&!S.r['a:'+p.n]);if(noTopic){toast('Pick what it is about for '+noTopic.n+'.');return;}if(S.r.room==='bad'&&!Object.keys(S.r).some(k=>k.startsWith('i:')&&S.r[k])){toast('Pick what is wrong in the room.');return;}save(i);S.r={};const nx=rooms().slice(i+1).find(x=>x.st==='todo');return set({cur:nx?nx.room:null});}
 });
 document.addEventListener('input',e=>{const t=e.target;if(t.dataset.w)S.r['w:'+t.dataset.w]=t.value;});
-window.CM_PATIENTS=[
+window.CM_PATIENTS_RAW=[ /* identity is then overwritten from the HMS list */
  {id:'sd',name:'Sameer Das',rep:'Mitali Das',rel:'mother',ph:'98790 XXX75',room:'213 A',day:6,dr:'Dr. Aanya Sharma',callN:2},
  {id:'nb',name:'Neel Bose',rep:'Arun Bose',rel:'brother',ph:'98111 XXX20',room:'213 A',day:3,dr:'Dr. Aanya Sharma',callN:1},
  {id:'rk',name:'Rohit Kapoor',rep:'Nisha Kapoor',rel:'wife',ph:'98730 XXX12',room:'Suite 201',day:9,dr:'Dr. Aanya Sharma',callN:2},
  {id:'vr',name:'Varun Rao',rep:'Kiran Rao',rel:'brother',ph:'98100 XXX41',room:'211',day:12,dr:'Dr. Ichpreet Singh',callN:2},
  {id:'km',name:'Kavya Menon',rep:'Lakshmi Menon',rel:'mother',ph:'98450 XXX08',room:'313',day:2,dr:'Dr. Ichpreet Singh',callN:1}
 ];
+window.CM_PATIENTS=window.CM_PATIENTS_RAW;
+if(window.HMSX)HMSX.fix(window.CM_PATIENTS,(x,h)=>{x.rep=h.nr;x.rel=String(h.nrRel).toLowerCase();x.room=HMSX.room(h);x.day=HMSX.day(h);x.dr=h.doctor;});
 
 
 

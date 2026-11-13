@@ -64,6 +64,7 @@ td{padding:14px 16px;background:#fff;border-bottom:1px solid #E3EAF2;vertical-al
 .eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;color:#1D4ED8}
 @media(max-width:900px){.side{display:none}}
 </style>
+<script src="hms-patients.js"></script>
 <script src="px-store.js"></script>
 <script src="cal-core.js"></script>
 <style id="embed-css">html.embed .side,html.embed .rev,html.embed .top{display:none!important}html.embed body{background:transparent}html.embed .app{min-height:0}html.embed main{padding-top:6px}</style>
@@ -325,6 +326,7 @@ function shell(inner){
 function today(){
   const done=state.done, acted=state.acted;
   let late=0;
+  if(window.HMSX)HMSX.fix(raw,(r,h)=>{r.sub=h.age+'/'+h.sex+' · Day '+HMSX.day(h)+' · '+h.room;});
   const rows=raw.map((r,idx)=>{
     const stillLate=r.late&&r.items.some(it=>(it.c==='amber'||it.c==='red')&&!done[it.id]);
     if(stillLate) late++;
@@ -384,6 +386,7 @@ const TP=[
   {id:'km',name:'Kavya Menon',rep:'Ravi Menon',rel:'husband',ph:'99100 XXX88',day:9,room:'313',dr:'Dr. Alisha Nagar',callN:1,row:'km'},
   {id:'mi',name:'Meera Iyer',rep:'S. Iyer',rel:'father',ph:'98450 XXX09',day:0,room:'310 A',dr:'Dr. Alisha Nagar',callN:1,row:'mi'}];
 window.CM_PATIENTS=TP;
+if(window.HMSX)HMSX.fix(TP,(x,h)=>{x.rep=h.nr;x.rel=String(h.nrRel).toLowerCase();x.room=HMSX.room(h);x.day=HMSX.day(h);x.dr=h.doctor;});
 window.onCallSaved = r => {
   const p=r.p; const done={...state.done}; if(r.outcome==='Connected'&&p.item) done[p.item]=true;
   const txt = r.outcome!=='Connected' ? 'random call, '+r.outcome.toLowerCase() : r.grievance ? 'random call logged, grievance '+r.grievance.id+' ('+r.grievance.cat+') to '+r.grievance.owner : 'random call logged, no concern';

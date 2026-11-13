@@ -65,6 +65,7 @@ td{padding:14px 16px;background:#fff;border-bottom:1px solid #E3EAF2;vertical-al
 @media(max-width:900px){.side{display:none}}
 </style>
 <style id="embed-css">html.embed .side,html.embed .rev,html.embed .top{display:none!important}html.embed body{background:transparent}html.embed .app{min-height:0}html.embed main{padding-top:6px}</style>
+<script src="hms-patients.js"></script>
 <script src="px-store.js"></script>
 <script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');</script>
 <script>if(/[?&]embed=1/.test(location.search)){var __rm=function(){document.querySelectorAll('button').forEach(function(b){if(/^\s*\+?\s*(Log a grievance|Log a family call|Log grievance)\s*$/.test(b.textContent)&&!b.dataset.keep)b.remove();});};new MutationObserver(__rm).observe(document.documentElement,{childList:true,subtree:true});document.addEventListener('DOMContentLoaded',__rm);}</script>
@@ -214,6 +215,24 @@ const P = [
   { id:'dk', name:'Dev Kumar', ini:'DK', as:'31/M', room:'215 A', ward:'Male ward', type:'Twin sharing', day:3, sec:'Sec 89', uhid:'2026-27RG7104', tags:[], dr:'Dr. Rohan Mehta', ps:'Priya Nair', rep:'Sunita Kumar', rel:'mother', ph:'97170 XXX92', bk:'Not given', adm:'9 Nov, 5:45 pm', dis:'Not set', st:'ddlddtuuuu', upd:'3 of 3 days', last:'Dr. Rohan Mehta, 72 h call, today', next:'Preferences · 1 day late', attn:1, open:0, prefs:false },
   { id:'sd', name:'Sameer Das', ini:'SD', as:'22/M', room:'213 A', ward:'Male ward', type:'Twin sharing', day:7, sec:'Sec 89', uhid:'2026-27RG6905', tags:[], dr:'Dr. Rohan Mehta', ps:'Kiran Mehra', rep:'Mitali Das', rel:'mother', ph:'98790 XXX75', bk:'Pooja Das (cousin) · 98791 XXX33', adm:'5 Nov, 11:20 am', dis:'Not set', st:'ddddddttuu', upd:'7 of 7 days', last:'Dr. Rohan Mehta, Week 1 meeting booked', next:'Random call 1 · by tomorrow', attn:0, open:0, prefs:true }
 ];
+/* the list is the HMS list (13 Nov, cards 144 and 147): same patients, UHID, room, day, doctor, psychologist, nominated representative */
+(function(){
+  const H=window.HMS_PATIENTS; if(!H||!H.patients) return;
+  const t0=new Date(); t0.setHours(0,0,0,0);
+  const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const WARD={f1:'De-addiction ward',f2:'Male ward',f3:'Female ward'};
+  const by={}; P.forEach(x=>by[x.name]=x);
+  const out=H.patients.map(h=>{
+    const day=h.adm?Math.max(0,Math.floor((t0-(function(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2]);})(h.adm))/864e5)):h.day, ad=new Date(t0); ad.setDate(ad.getDate()-day);
+    const base=by[h.name], rel=String(h.nrRel||'Relative').toLowerCase();
+    const o=base?Object.assign({},base):{ id:h.id, tags:[], type:'Standard', ph:'98XXX XXX'+String(10+h.name.length*7%89), bk:'Not given', dis:'Not set',
+      st:(day>=2?'ddd':day>=1?'dtu':'tuu')+'uuuuuuu', upd:'0 of '+Math.max(1,day)+' days', last:'No contact logged yet', next:'Family meeting at admission', attn:0, open:0, prefs:false };
+    return Object.assign(o,{ id:base?base.id:h.id, hmsId:h.id, name:h.name, ini:h.ini, as:h.age+'/'+h.sex, room:String(h.room).replace(/^Room\s*/,''), ward:WARD[h.floor]||'Male ward', day:day, sec:'Sec '+h.sec, uhid:h.uhid,
+      dr:h.doctor, ps:h.psych||'Add psychologist', rep:h.nr, rel:rel, adm:ad.getDate()+' '+MN[ad.getMonth()]+', 10:00 am',
+      tags:(o.tags||[]).filter(t=>!/New · 24 h/.test(t)).concat(day<=1?['New · 24 h']:[]) });
+  });
+  P.length=0; out.forEach(x=>P.push(x));
+})();
 P.forEach(p=>{ const o=p.st; const d0=p.day>=1?'d':o[0];
   const met = p.day>=3?'d':(p.day>=1?'t':'u');
   p.st = o[0]+o[1]+(p.id==='rs'?'l':d0)+d0+(p.id==='dk'?'l':met)+o.slice(2); });

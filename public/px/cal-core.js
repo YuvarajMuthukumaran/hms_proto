@@ -32,6 +32,7 @@
     {p:'Kavya Menon',room:'313',floor:'Floor 3',admit:-1,dis:null,who:'pr'},
     {p:'Rahul Sethi',room:'Suite 305',floor:'Floor 3',admit:-13,dis:0,who:'pr'}
   ];
+  if(window.HMSX){STAYS.forEach(s=>{const h=HMSX.by[s.p];if(h){s.room=HMSX.room(h);s.admit=-HMSX.day(h);}});}
   /* grievances that a person owns and that are due on a day (demo) */
   const GRV=[{id:'G-0141',who:'ka',due:1,text:'Call the family back (pending close)'},{id:'G-0139',who:'pr',due:3,text:'Check the fix with the family'}];
   const nameOf=id=>(TEAM.find(t=>t.id===id)||{name:id}).name;
