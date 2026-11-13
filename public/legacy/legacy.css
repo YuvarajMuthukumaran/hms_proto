@@ -1485,3 +1485,13 @@ select.cdf-in{cursor:pointer}
 .dt-tasks .li:first-child,.dt-tasks .v3task-row:first-child{border-top:0;padding-top:0}
 .dt-tasks .grow{min-width:180px}
 
+
+/* selected answer chips on the Daily notes page must look selected (13 Nov) */
+.eqc .eseg button.on{background:#e8f0ff;border-color:#1e6cdb;color:#175cd3;font-weight:700;box-shadow:0 0 0 1px #1e6cdb inset}
+.eqc .eseg button.on.g{background:#ecfdf3;border-color:#1f9d57;color:#067647;box-shadow:0 0 0 1px #1f9d57 inset}
+.eqc .eseg button.on.a{background:#fffaeb;border-color:#f79009;color:#b54708;box-shadow:0 0 0 1px #f79009 inset}
+.eqc .eseg button.on.r{background:#d92d20;border-color:#d92d20;color:#fff;box-shadow:none}
+body.psy-views:not(.psg) #view .ecard .ef button.on{background:#e8f0ff;border-color:#1e6cdb;color:#175cd3;font-weight:700;box-shadow:0 0 0 1px #1e6cdb inset}
+body.psy-views:not(.psg) #view .ecard .ef button.on.g{background:#ecfdf3;border-color:#1f9d57;color:#067647;box-shadow:0 0 0 1px #1f9d57 inset}
+body.psy-views:not(.psg) #view .ecard .ef button.on.a{background:#fffaeb;border-color:#f79009;color:#b54708;box-shadow:0 0 0 1px #f79009 inset}
+body.psy-views:not(.psg) #view .ecard .ef button.on.r{background:#d92d20;border-color:#d92d20;color:#fff;box-shadow:none}
