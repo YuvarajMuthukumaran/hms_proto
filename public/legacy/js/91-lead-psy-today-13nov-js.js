@@ -12,6 +12,9 @@
   const mineName='Surabhi Sengar',dayMs=864e5;
   const first=n=>String(n||'the psychologist').split(' ')[0];
   const lastSess=p=>{try{const sn=(psyPx(p.id).sn||{}).notes||[];const ts=sn.filter(n=>n.status==='signed').map(n=>n.ts||0).sort((a,b)=>b-a)[0];if(ts)return Math.floor((Date.now()-ts)/dayMs);}catch(e){}return +p.day||0;};
+  /* the therapy plan sets 3 sessions a week; flag once that is overdue. No signed note yet = flag from day 7. Discharge today and patients out of the ward are skipped. */
+  const hasNote=p=>{try{return ((psyPx(p.id).sn||{}).notes||[]).some(n=>n.status==='signed');}catch(e){return false;}};
+  const noSess=p=>{if(!doc(p)||p.dischargeToday)return false;const d=+p.day||0;return hasNote(p)?lastSess(p)>=3:d>=7;};
   const hasScore=p=>{try{const x=psyPx(p.id);return !!((x.scores&&x.scores.length)||(x.scaleLog&&x.scaleLog.length)||(x.sn&&x.sn.ybocs));}catch(e){return false;}};
   const planWait=p=>{try{const x=psyPx(p.id);return !!(x.mgmtPsych&&x.mgmtPsych.signed)&&!L().sign[p.id];}catch(e){return false;}};
   const coWait=p=>{try{const sn=(psyPx(p.id).sn||{}).notes||[];return sn.map((n,i)=>({n,i})).filter(o=>/assistant/i.test(String(o.n.by||''))&&!L().cosign[p.id+':'+o.i]);}catch(e){return [];}};
@@ -34,7 +37,7 @@
     const all=floor(),t=T(),w=t.who;
     const inScope=p=>!w||doc(p)===w;
     const risk=all.filter(p=>p.risk&&!t.acted[p.id]);
-    const nosess=all.filter(p=>(+p.day||0)>=5&&!!doc(p)&&lastSess(p)>=3);
+    const nosess=all.filter(noSess);
     const sign=all.filter(p=>planWait(p)||coWait(p).length);
     const noscore=all.filter(p=>(+p.day||0)>=14&&!hasScore(p));
     const fam=all.filter(p=>openGr(p)||famLate(p));
@@ -55,7 +58,7 @@
     if(late.length)rows.push({k:'famcalls',id:'famcalls',p:null,why:late.length+' required family calls overdue: '+late.map(p=>p.name.split(' ')[0]+' ('+first(doc(p)||'no one')+')').join(', '),btn:`<button class="btn sm" onclick="ltFlt('fam')">See them</button><button class="btn sm pri" onclick="ltRemind()">Remind psychologists</button>`});
     M.sign.forEach(p=>rows.push({k:'sign',id:'sg'+p.id,p,why:(planWait(p)?'Therapy plan to sign off':'')+(planWait(p)&&coWait(p).length?' · ':'')+(coWait(p).length?coWait(p).length+' assistant note to co-sign':''),btn:`<button class="btn sm pri" onclick="ltQueue()">Open review queue</button>`}));
     restDebrief().forEach(e=>{const p=M.all.find(x=>x.id===e.pid);if(p)rows.push({k:'rst',id:'rst'+e.id+e.pid,p,why:'Assign a debrief and a behaviour support plan within 72 h',btn:`<button class="btn sm pri" onclick="ltDebrief('${e.id}','${e.pid}')">Assign</button>`});});
-    M.nosess.forEach(p=>rows.push({k:'nosess',id:'ns'+p.id,p,why:'No session for '+lastSess(p)+' days',btn:`<button class="btn sm" onclick="ltAsk('${p.id}')">Ask ${esc(first(doc(p)))}</button>`}));
+    M.nosess.forEach(p=>rows.push({k:'nosess',id:'ns'+p.id,p,why:hasNote(p)?'No session for '+lastSess(p)+' days (plan: 3 a week)':'No therapy session recorded yet, day '+(+p.day||0),btn:`<button class="btn sm" onclick="ltAsk('${p.id}')">Ask ${esc(first(doc(p)))}</button>`}));
     M.nopsy.forEach(p=>rows.push({k:'nopsy',id:'np'+p.id,p,why:'New admission, no psychologist assigned',btn:`<button class="btn sm pri" onclick="lpAssign('${p.id}')">Assign</button>`}));
     M.noscore.forEach(p=>rows.push({k:'noscore',id:'sc'+p.id,p,why:'No PHQ-9, GAD-7 or Y-BOCS in 14 days',btn:`<button class="btn sm" onclick="ltAsk('${p.id}')">Send to ${esc(first(doc(p)))}'s Today</button>`}));
     rows.push({k:'grp',id:'grp',p:null,why:'Mindfulness group, Saturday 4 pm has no facilitator',btn:`<button class="btn sm pri" onclick="ltGrp('me')">I will take it</button><button class="btn sm" onclick="ltGrp('move')">Move time</button>`});
@@ -68,7 +71,7 @@
   const FILT=[['all','All'],['risk','Risk'],['nosess','No session 3+ days'],['sign','To review'],['noscore','No score 14 d'],['fam','Family waiting'],['disch','Discharge this week']];
   function caseTable(M,list){
     const f=T().flt;
-    const keep=p=>f==='all'||(f==='risk'&&p.risk)||(f==='nosess'&&(+p.day||0)>=5&&lastSess(p)>=3)||(f==='sign'&&(planWait(p)||coWait(p).length))||(f==='noscore'&&(+p.day||0)>=14&&!hasScore(p))||(f==='fam'&&(openGr(p)||famLate(p)))||(f==='disch'&&dischSoon(p));
+    const keep=p=>f==='all'||(f==='risk'&&p.risk)||(f==='nosess'&&noSess(p))||(f==='sign'&&(planWait(p)||coWait(p).length))||(f==='noscore'&&(+p.day||0)>=14&&!hasScore(p))||(f==='fam'&&(openGr(p)||famLate(p)))||(f==='disch'&&dischSoon(p));
     const rows=list.filter(p=>M.inScope(p)&&keep(p)).map(p=>{
       const ls=lastSess(p),fm=famOf(p),fl=[];if(p.risk)fl.push('High risk');if(planWait(p))fl.push('Plan to sign');if(coWait(p).length)fl.push('Note to co-sign');if((+p.day||0)>=14&&!hasScore(p))fl.push('No score');if(dischSoon(p))fl.push('Discharge this week');
       const dots=Array.from({length:8},(_,i)=>`<i class="lt-d${i<topics(p)?' on':''}"></i>`).join('');
