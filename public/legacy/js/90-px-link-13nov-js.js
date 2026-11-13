@@ -50,7 +50,7 @@
   async function toPx(g,id){
     if(!cfg||!g)return;const nm=nameOf(id);if(!nm)return;
     const key='pxn:'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-    try{await put(key,{name:nm,title:g.t,desc:g.t,cat:g.via||'Other',src:g.src==='patient'?'patient':g.src==='voice'?'voice':'family',by:(g.by||'')+(g.role?'':''),at:g.at||'',owner:/psychiatrist/i.test(g.own||'')?'Treating psychiatrist':/psychologist/i.test(g.own||'')?'Treating psychologist':'Patient experience team',ownerRole:g.own||''});}catch(e){}
+    try{await put(key,{name:nm,title:g.t,desc:g.t,cat:(/food|diet|meal/i.test(g.via+g.t)?'Food and dietary':/room|noise|clean|laundry/i.test(g.via+g.t)?'Room and housekeeping':/bill|insurance|payment/i.test(g.via+g.t)?'Billing and insurance':/update|communicat|call/i.test(g.via+g.t)?'Family updates':/doctor|psychiatrist/i.test(g.via+g.t)?'Doctor communication':'Other'),src:g.src==='patient'?'patient':g.src==='voice'?'voice':'family',by:(g.by||'')+(g.role?'':''),at:g.at||'',owner:/psychiatrist/i.test(g.own||'')?'Treating psychiatrist':/psychologist/i.test(g.own||'')?'Treating psychologist':'Patient experience team',ownerRole:g.own||''});}catch(e){}
   }
   ['pgSave2','tpGriev'].forEach(fn=>{const f=window[fn];if(typeof f!=='function')return;
     window[fn]=function(){const id=S.pid||pid(),n0=(S.pgriev||[]).length,r=f.apply(this,arguments);const L=S.pgriev||[];if(L.length>n0)toPx(L[0],id);return r;};});
