@@ -22,6 +22,7 @@
     },
     /* called on every render: saves what changed */
     sync: function (self, seeded) {
+      PXG.self = self; PXG.seedList = seeded || PXG.seedList;
       if (!cfg) return;
       var s = self.state, extra = {}, rows = [];
       PXG.seedIds = {}; (seeded || []).forEach(function (c) { PXG.seedIds[c.id] = 1; extra[c.id] = c; });
@@ -63,9 +64,9 @@
         if (changed) self.setState({ extraConcerns: extra, concernStatus: cs });
       }).catch(function () {});
     },
-    start: function (self) { if (timer) return; PXG.pull(self); timer = setInterval(function () { PXG.pull(self); }, 20000); }
+    start: function (self) { PXG.self = self; if (!cfg || timer) return; PXG.pull(self); timer = setInterval(function () { PXG.pull(self); }, 20000); }
   };
   fetch('/api/config', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
-    if (j && j.supabase && j.pxStore) cfg = j.supabase;
+    if (j && j.supabase && j.pxStore) { cfg = j.supabase; if (PXG.self) { PXG.sync(PXG.self, PXG.seedList); PXG.start(PXG.self); } }
   }).catch(function () {});
 })();
