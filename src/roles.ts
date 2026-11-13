@@ -1,7 +1,7 @@
 export const ROLES = [
   { key: 'floor-lead-psychologist', label: 'Floor Lead Psychologist', desc: 'Psychology across wards' },
   { key: 'floor-lead-psychiatrist', label: 'Floor Lead Psychiatrist', desc: 'Psychiatry across wards' },
-  { key: 'floor-coordinator', label: 'Floor Coordinator', desc: 'All wards and teams' },
+  /* Floor Coordinator is hidden for now (13 Nov): { key: 'floor-coordinator', label: 'Floor Coordinator', desc: 'All wards and teams' }, */
   { key: 'psychiatrist', label: 'Psychiatrist', desc: 'Patients, rounds and orders' },
   { key: 'patient-experience-lead', label: 'Patient Experience Lead', desc: 'Concerns and preferences' },
   { key: 'psychologist', label: 'Psychologist', desc: 'Therapy and family updates' },
@@ -10,7 +10,7 @@ export const ROLES = [
 ] as const;
 
 /** Roles that can be picked. `lead` is only the old workspace behind the Floor Coordinator (and the old /lead link). */
-export type PickerRole = (typeof ROLES)[number]['key'];
+export type PickerRole = (typeof ROLES)[number]['key'] | 'floor-coordinator';
 export type RoleKey = PickerRole | 'lead';
 
 export const isRole = (v: string): v is PickerRole => ROLES.some((r) => r.key === v);
@@ -36,10 +36,10 @@ export const syncKey = (k: RoleKey): RoleKey => (k === 'floor-coordinator' ? 'le
  *  `?as=<role>` stands in for the path when the app is served from a plain file host. */
 export function roleFromLocation(loc: Location = window.location): PickerRole | null {
   const seg = (loc.pathname.split('/').filter(Boolean)[0] ?? '').toLowerCase();
-  if (seg === 'lead') return 'floor-coordinator'; // the old link for the Floor Coordinator
+  if (seg === 'lead') return null; // Floor Coordinator is hidden for now
   if (isRole(seg)) return seg;
   const q = (new URLSearchParams(loc.search).get('as') ?? '').toLowerCase();
-  return q === 'lead' ? 'floor-coordinator' : isRole(q) ? q : null;
+  return q === 'lead' ? null : isRole(q) ? q : null;
 }
 
 export const roleLink = (k: RoleKey) => `${window.location.origin}/${k}`;
