@@ -1,4 +1,4 @@
-.sync-badge{position:fixed;right:12px;bottom:12px;z-index:60;padding:4px 10px;border-radius:99px;font:600 11px/1.4 Inter,system-ui,sans-serif;background:#f1f4f8;color:#475467;border:1px solid #e3eaf2;pointer-events:auto}
+.sync-badge{position:fixed;left:50%;transform:translateX(-50%);bottom:6px;pointer-events:none;opacity:.9;z-index:60;padding:4px 10px;border-radius:99px;font:600 11px/1.4 Inter,system-ui,sans-serif;background:#f1f4f8;color:#475467;border:1px solid #e3eaf2}
 .sync-badge.ok{background:#e3f7ea;color:#11703a;border-color:#bfe6cc}
 .sync-badge.bad{background:#fdecec;color:#b42318;border-color:#f3c3be}
 .sync-badge.off{background:#fef3e2;color:#92500a;border-color:#f5d9a8}

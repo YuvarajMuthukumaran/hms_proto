@@ -78,7 +78,7 @@
         el.insertAdjacentHTML('beforeend',`<button class="pdm-i" data-pgev="1" onclick="pdMenuClose();pgEventModal('${pid}')"><b>Log an event</b><span>Anything that happened on the floor</span></button>`);
         try{
           const b=ev.currentTarget.getBoundingClientRect();
-          el.style.top=Math.min(b.bottom+6,innerHeight-el.offsetHeight-12)+'px';
+          {const z=parseFloat(getComputedStyle(document.body).zoom)||1;el.style.top=(Math.min(b.bottom+6,innerHeight-el.offsetHeight*z-12)/z)+'px';}
         }catch(e){}
       }
       return r;

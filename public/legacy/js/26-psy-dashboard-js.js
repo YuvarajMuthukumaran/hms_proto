@@ -113,7 +113,7 @@
       +row(`psyActionTaken('${pid}')`,'Log action taken','Write what was done');
     document.body.appendChild(el);
     const r=ev.currentTarget.getBoundingClientRect();
-    el.style.top=Math.min(r.bottom+6,innerHeight-el.offsetHeight-12)+'px';el.style.left=Math.max(12,Math.min(r.right-el.offsetWidth,innerWidth-el.offsetWidth-12))+'px';
+    {const z=parseFloat(getComputedStyle(document.body).zoom)||1;el.style.top=(Math.min(r.bottom+6,innerHeight-el.offsetHeight*z-12)/z)+'px';el.style.left=(Math.max(12,Math.min(r.right-el.offsetWidth*z,innerWidth-el.offsetWidth*z-12))/z)+'px';}
   };
   document.addEventListener('mousedown',e=>{const o=document.getElementById('pdMenu');if(o&&!o.contains(e.target)&&!(e.target.closest&&e.target.closest('.pd-take')))o.remove();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')pdMenuClose();});

@@ -70,7 +70,7 @@
           +row(`psyOpenRounds('${pid}')`,'Round note','Opens Rounds on this patient only'));
         try{
           const b=ev.currentTarget.getBoundingClientRect();
-          el.style.top=Math.min(b.bottom+6,innerHeight-el.offsetHeight-12)+'px';
+          {const z=parseFloat(getComputedStyle(document.body).zoom)||1;el.style.top=(Math.min(b.bottom+6,innerHeight-el.offsetHeight*z-12)/z)+'px';}
         }catch(e){}
       }
       return r;

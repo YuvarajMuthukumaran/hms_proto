@@ -88,7 +88,7 @@
   let fil='all',sel=0,hits=[];
   const inp=()=>document.getElementById('hsq');
   function panel(){let el=document.getElementById('hsqPanel');if(!el){el=document.createElement('div');el.id='hsqPanel';el.hidden=true;document.body.appendChild(el);}return el;}
-  function place(){const i=inp(),el=panel();if(!i)return;const r=i.getBoundingClientRect();el.style.top=(r.bottom+8)+'px';el.style.left=Math.max(12,Math.min(r.right-460,innerWidth-472))+'px';}
+  function place(){const i=inp(),el=panel();if(!i)return;const r=i.getBoundingClientRect();const z=parseFloat(getComputedStyle(document.body).zoom)||1;el.style.top=((r.bottom+8)/z)+'px';el.style.left=(Math.max(12,Math.min(r.right-460*z,innerWidth-472*z))/z)+'px';}
   function find(){
     const q=(inp().value||'').trim().toLowerCase(),dis=p=>(EX[p.id]||[])[2]!=='Not set';
     hits=allPts().filter(p=>ipdIn(fil,p,dis)&&(!q||[p.name,p.uhid,p.room,p.dx,p.id].some(x=>String(x||'').toLowerCase().includes(q))));

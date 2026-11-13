@@ -326,10 +326,10 @@
       <div class="ic-rec"><div class="ic-p">Recorded ${hesc(el.dataset.p)}</div><div class="ic-v${el.dataset.o==='1'?' out':''}">${hesc(el.dataset.v)}<span>${hesc(unit)}</span></div><div class="ic-w">${hesc(el.dataset.d)}${el.dataset.s?' at '+hesc(el.dataset.s):''}</div>${el.dataset.o==='1'?'<div class="ic-flag">Outside the usual range</div>':''}</div>
       <div class="ic-ft">${n} reading${n===1?'':'s'} by ${hesc(s[0].split(' ').slice(0,2).join(' '))} in this table</div><i class="ic-ar"></i>`;
     c.classList.remove('show');c.style.left='0px';c.style.top='0px';c.style.visibility='hidden';c.style.display='block';
-    const r=el.getBoundingClientRect(),w=c.offsetWidth,h=c.offsetHeight,vw=document.documentElement.clientWidth,vh=window.innerHeight;
+    const zz=parseFloat(getComputedStyle(document.body).zoom)||1;const r=el.getBoundingClientRect(),w=c.offsetWidth*zz,h=c.offsetHeight*zz,vw=document.documentElement.clientWidth,vh=window.innerHeight;
     let left=Math.max(10,Math.min(r.left+r.width/2-w/2,vw-w-10)),below=r.bottom+12+h<=vh||r.top-12-h<0,top=below?r.bottom+10:r.top-10-h;
     c.dataset.pos=below?'below':'above';c.style.setProperty('--ax',Math.max(14,Math.min(w-14,r.left+r.width/2-left))+'px');
-    c.style.left=left+'px';c.style.top=top+'px';c.style.visibility='';
+    c.style.left=(left/zz)+'px';c.style.top=(top/zz)+'px';c.style.visibility='';
     requestAnimationFrame(()=>c.classList.add('show'));
   }
   function hideIni(){if(card){card.classList.remove('show');card.style.display='none';}cur=null;}

@@ -207,7 +207,7 @@
       +row(`pgLogAction('${pid}')`,'Log action taken','Write what was done');
     document.body.appendChild(el);
     const r=ev.currentTarget.getBoundingClientRect();
-    el.style.top=Math.min(r.bottom+6,innerHeight-el.offsetHeight-12)+'px';el.style.left=Math.max(12,Math.min(r.right-el.offsetWidth,innerWidth-el.offsetWidth-12))+'px';
+    {const z=parseFloat(getComputedStyle(document.body).zoom)||1;el.style.top=(Math.min(r.bottom+6,innerHeight-el.offsetHeight*z-12)/z)+'px';el.style.left=(Math.max(12,Math.min(r.right-el.offsetWidth*z,innerWidth-el.offsetWidth*z-12))/z)+'px';}
   };
   window.pgLogAction=function(pid){
     const p=ptFind(pid);
@@ -294,8 +294,8 @@
     if(!n){tip.style.display='none';return;}
     tip.innerHTML='<b>'+n[0]+'</b><div style="opacity:.75;font-size:11.5px">'+n[1]+' · initials '+k+'</div>';
     const r=el.getBoundingClientRect();tip.style.display='block';
-    tip.style.left=Math.max(8,Math.min(innerWidth-tip.offsetWidth-8,r.left+r.width/2-tip.offsetWidth/2))+'px';
-    tip.style.top=(r.top-tip.offsetHeight-8>8?r.top-tip.offsetHeight-8:r.bottom+8)+'px';
+    {const z=parseFloat(getComputedStyle(document.body).zoom)||1;tip.style.left=(Math.max(8,Math.min(innerWidth-tip.offsetWidth*z-8,r.left+r.width/2-tip.offsetWidth*z/2))/z)+'px';}
+    {const z=parseFloat(getComputedStyle(document.body).zoom)||1;tip.style.top=((r.top-tip.offsetHeight*z-8>8?r.top-tip.offsetHeight*z-8:r.bottom+8)/z)+'px';}
     el.style.cursor='help';
   });
   document.addEventListener('mouseout',e=>{if(e.target&&e.target.closest&&e.target.closest('#view'))tip.style.display='none';});
