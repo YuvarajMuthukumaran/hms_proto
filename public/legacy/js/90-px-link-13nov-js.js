@@ -58,8 +58,8 @@
   const __r=render;
   render=function(){const out=__r.apply(this,arguments);try{
     const v=$('view'),id=pid();if(!v||!id||!/^#\/patient\/[^/]+\/prefs/.test(location.hash||'')||!(S.role==='psychiatrist'||S.role==='psychologist'))return out;
-    if(!cfg)return out;const pxp=v.querySelector('.pxp');if(!pxp||S.pxTab!=='griev')return out;
+    if(!cfg)return out;const gc=[...v.querySelectorAll('section.card')].find(c=>/^Grievances ·/.test(((c.querySelector('h3')||{}).textContent||'').trim()));if(!gc)return out;
     const old=v.querySelector('#pxgSec');if(old)old.remove();
-    const t=document.createElement('template');t.innerHTML=sec(id);pxp.appendChild(t.content);
+    const t=document.createElement('template');t.innerHTML=sec(id);gc.after(t.content);
   }catch(e){}return out;};
 })();
