@@ -70,7 +70,9 @@
   .ipd-h11 .pg-mine.pg-seg button{font-size:15px!important;padding:9px 22px!important}
   .ipd-h11 .pg-mine.pg-seg .pg-n{font-size:12px!important;padding:3px 8px!important}
   /* Today: the due list reads as clean lines */
-  .pg-dl .pg-di{padding:5px 0}.pg-dl .pg-dt b{font-weight:650}
+  .pg-dl .pg-di{padding:2px 0;gap:10px;align-items:center}.pg-dl .pg-dt b{font-weight:650;font-size:13.5px}
+  /* compact Due today: title and detail on one line, the button on the right (13 Nov) */
+  .pg-dl{gap:0!important}.pg-dl .pg-dt{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 8px;flex:1}.pg-dl .pg-dt span{font-size:12px}.pg-dl .pg-dd{margin-top:0}.pg-dl .pg-dt .btn{margin:0 0 0 auto!important;height:26px;padding:0 10px;font-size:12px}
   /* inpatients: title on the left, Mine / Whole ward on the right */
   .ipd-h11{display:flex!important;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap}
   .ipd-h11 .pg-mine.pg-seg{margin:0!important;flex:none}
