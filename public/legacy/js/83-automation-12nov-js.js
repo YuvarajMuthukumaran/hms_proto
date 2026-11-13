@@ -265,7 +265,8 @@
       const who=tr.querySelector('[onclick*="#/patient/"]'),m=who&&(who.getAttribute('onclick')||'').match(/#\/patient\/([^/']+)/);if(!m)return;
       [...tr.querySelectorAll('button')].forEach(b=>{if(/^Mark done$/.test(b.textContent.trim())){b.textContent='Open';b.removeAttribute('onclick');b.onclick=()=>go('#/patient/'+m[1]+'/'+(/Management plan/.test(t)?'therapy':'admission'));}});});}
   function oneLineHandover(){const v=$('view');if(!v)return;const b=v.querySelector('.hv-rc');if(!b||b.dataset.one)return;b.dataset.one='1';
-    const hd=b.querySelector('.hv-rc-hd');if(hd){const btn=document.createElement('button');btn.className='btn sm';btn.textContent='View';btn.onclick=()=>b.classList.toggle('k-open');hd.appendChild(btn);}}
+    b.classList.add('k-open'); /* the handover is open by default; its own Hide / Show button closes it */
+  }
   const __r=render;
   render=function(){const r=__r.apply(this,arguments);try{nnEscalate();famEscalate();paint();openNotDone();oneLineHandover();}catch(e){}return r;};
   window.auPaint=paint;

@@ -13,7 +13,8 @@
   .pg-seg.pg-none .pg-ind{opacity:0}
   .pg-seg.pg-noanim .pg-ind{transition:none}
   .pg-seg button{position:relative;z-index:2;display:inline-flex;align-items:center;gap:8px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:#175cd3;padding:8px 18px;border-radius:99px;cursor:pointer;white-space:nowrap;box-shadow:none!important;min-height:0;height:auto}
-  .pg-seg button.on{background:none!important;color:#fff}
+  .pg-seg button.on{background:linear-gradient(180deg,#2f7df0,#175cd3)!important;color:#fff;box-shadow:0 1px 3px rgba(23,92,211,.35)}
+  .pg-seg .pg-ind{display:none!important}
   .pg-seg button:hover:not(.on){color:#0b3f9a}
   .pg-seg button:focus-visible{outline:2px solid #175cd3;outline-offset:2px}
   .pg-seg .pg-n{font-size:11.5px;font-weight:700;line-height:1;min-width:20px;text-align:center;padding:3px 7px;border-radius:99px;background:#d1e0ff;color:#175cd3}
@@ -25,6 +26,7 @@
   .pg-scope.pg-seg button.on,.pg-mine.pg-seg button.on{color:#fff}
   .pg-scope.pg-seg .pg-n,.pg-mine.pg-seg .pg-n{font-size:10.5px;min-width:16px;padding:2px 6px;background:#b9d0fa;color:#0f4bb5}
   .pg-scope.pg-seg button.on .pg-n,.pg-mine.pg-seg button.on .pg-n{background:rgba(255,255,255,.28);color:#fff}
+  .pg-scope.pg-seg button,.pg-mine.pg-seg button{padding:5px 14px 5px 14px}.pg-scope.pg-seg .pg-n,.pg-mine.pg-seg .pg-n{margin-right:2px}
   .pg-add.pg-start:hover .pg-pl{transform:none}
   /* Daily notes filters */
   .pg-frow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:2px 0 4px}
