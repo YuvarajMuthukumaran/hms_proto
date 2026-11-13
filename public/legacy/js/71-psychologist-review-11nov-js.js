@@ -72,6 +72,9 @@
   /* Today: the due list reads as clean lines */
   .pg-dl .pg-di{padding:2px 0;gap:10px;align-items:center}.pg-dl .pg-dt b{font-weight:650;font-size:13.5px}
   /* compact Due today: keep assessment actions beside their label and reduce the empty gap (13 Nov) */
+  body.psg .pg-today-inline{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  body.psg .pg-today-inline-list{flex:0 1 auto;min-width:0}
+  body.psg .pg-today-inline .pd-acts{flex:0 0 auto;justify-content:flex-start}
   .pg-dl{gap:0!important}.pg-dl .pg-dt{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 8px;flex:0 1 auto;min-width:0}.pg-dl .pg-dt span{font-size:12px;white-space:normal}.pg-dl .pg-dd{margin-top:0}.pg-dl .pg-dt b{white-space:normal;min-width:0}.pg-dl .pg-di{align-items:center}.pg-dl .pg-dt .btn{margin:0!important;height:26px;padding:0 10px;font-size:12px}
   /* inpatients: title on the left, Mine / Whole ward on the right */
   .ipd-h11{display:flex!important;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap}
@@ -232,6 +235,23 @@
     });
   };
 
+  /* Today: place patient-level actions beside the items they apply to, closing the wide table gap. */
+  const inlineTodayActions=v=>{
+    if(!/^#\/myday/.test(location.hash||''))return;
+    v.querySelectorAll('#dtBody tr[data-dt]').forEach(tr=>{
+      const acts=tr.querySelector('.pd-acts'),actionCell=acts&&acts.closest('td');
+      if(!acts||!actionCell||acts.dataset.pgInline)return;
+      const cells=[...tr.children];
+      const dueCell=cells.find(td=>td!==actionCell&&td.querySelector('.pg-dl'))
+        ||cells.find(td=>td!==actionCell&&td.querySelector('.pd-d'))
+        ||cells.find(td=>td!==actionCell&&/Nothing due/i.test(td.textContent));
+      if(!dueCell)return;
+      const row=document.createElement('div'),list=document.createElement('div');
+      row.className='pg-today-inline';list.className='pg-today-inline-list';
+      while(dueCell.firstChild)list.appendChild(dueCell.firstChild);
+      row.append(list,acts);dueCell.appendChild(row);acts.dataset.pgInline='1';
+    });
+  };
   /* the colour key on Today, same look as the psychiatrist's (the styles are in the psychiatrist block); the second dot is the psychologist's own */
   const KEY=`<div class="pdk" role="note" aria-label="What the coloured dots mean"><b>Key</b>
     <span><i class="red"></i>Alert <em>· needs you now</em></span>
@@ -335,7 +355,7 @@
   const __r=render;
   render=function(){
     const out=__r.apply(this,arguments);
-    if(me()){try{const v=$('view');if(v){v.querySelector('#asgCard')?.remove();tidy(v);colourKey(v);histNav(v);startBtn(v);scribeBtn(v);asgRounds(v);asgTop(v);todayTrim(v);ipdTabs(v);asgToday(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
+    if(me()){try{const v=$('view');if(v){v.querySelector('#asgCard')?.remove();tidy(v);colourKey(v);histNav(v);startBtn(v);scribeBtn(v);asgRounds(v);asgTop(v);todayTrim(v);ipdTabs(v);asgToday(v);inlineTodayActions(v);therapyTable(v);dnTable(v);if(S.admSec==='formc'&&window.psyFormCTable)psyFormCTable(v);}}catch(e){}}
     return out;
   };
 })();
