@@ -323,7 +323,7 @@
   const __prefs=pPrefs;
   pPrefs=function(){
     const h=__prefs.apply(this,arguments);
-    if(!psy()||typeof h!=='string')return h;
+    if(!admLook()||typeof h!=='string')return h;
     ensureAuto();
     const tab=S.pxTab==='griev'?'griev':'prefs';
     const t=document.createElement('template');t.innerHTML=h;
