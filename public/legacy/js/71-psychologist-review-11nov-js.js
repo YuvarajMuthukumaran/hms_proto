@@ -72,7 +72,7 @@
   /* Today: the due list reads as clean lines */
   .pg-dl .pg-di{padding:2px 0;gap:10px;align-items:center}.pg-dl .pg-dt b{font-weight:650;font-size:13.5px}
   /* compact Due today: title and detail on one line, the button on the right (13 Nov) */
-  .pg-dl{gap:0!important}.pg-dl .pg-dt{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 8px;flex:1}.pg-dl .pg-dt span{font-size:12px}.pg-dl .pg-dd{margin-top:0}.pg-dl .pg-dt{flex-wrap:nowrap}.pg-dl .pg-dt b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.pg-dl .pg-dt span{white-space:nowrap;flex:none}.pg-dl .pg-di{align-items:center}.pg-dl .pg-dt .btn{margin:0 0 0 auto!important;height:26px;padding:0 10px;font-size:12px}
+  .pg-dl{gap:0!important}.pg-dl .pg-dt{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 8px;flex:1}.pg-dl .pg-dt span{font-size:12px}.pg-dl .pg-dd{margin-top:0}.pg-dl .pg-dt{flex-wrap:nowrap}.pg-dl .pg-dt b{white-space:nowrap;min-width:0}.pg-dl .pg-dt span{white-space:nowrap;flex:none}.pg-dl .pg-di{align-items:center}.pg-dl .pg-dt .btn{margin:0 0 0 auto!important;height:26px;padding:0 10px;font-size:12px}
   /* inpatients: title on the left, Mine / Whole ward on the right */
   .ipd-h11{display:flex!important;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap}
   .ipd-h11 .pg-mine.pg-seg{margin:0!important;flex:none}
@@ -226,7 +226,7 @@
       const pid=(tr.innerHTML.match(/#\/patient\/([^/']+)\//)||[])[1];if(!pid)return;
       const L=mineAsg(pid);if(!L.length)return;
       const cell=[...tr.children].find(td=>td.querySelector('.pg-dl')||/Nothing due/.test(td.textContent));
-      const items=L.map(o=>`<div class="pg-di"><i class="pg-dd blue" style="background:#3b82f6" aria-hidden="true"></i><div class="pg-dt"><b>Assessment: ${hesc(o.a.name)}</b><span>${hesc(o.a.by||'')} · ${hesc(String(o.a.at||'').split(',')[0].split(' ').slice(0,2).join(' '))}</span><button class="btn sm" onclick="pgAsgDone('${pid}',${o.i})">Mark done</button></div></div>`).join('');
+      const items=L.map(o=>`<div class="pg-di"><i class="pg-dd blue" style="background:#3b82f6" aria-hidden="true"></i><div class="pg-dt"><b title="${hesc(o.a.name)}">${hesc(String(o.a.name).split(' (')[0])}</b><span>${hesc(o.a.by||'')} · ${hesc(String(o.a.at||'').split(',')[0].split(' ').slice(0,2).join(' '))}</span><button class="btn sm" onclick="pgAsgDone('${pid}',${o.i})">Mark done</button></div></div>`).join('');
       if(cell){let dl=cell.querySelector('.pg-dl');if(!dl){cell.innerHTML='<div class="pg-dl"></div>';dl=cell.querySelector('.pg-dl');}dl.insertAdjacentHTML('afterbegin',items);}
       const ty=tr.querySelector('.pd-ty');if(ty&&/^(Up to date|Nothing due)$/i.test(ty.textContent.trim())){ty.textContent='Assessment';ty.classList.remove('red','amber');ty.classList.add('blue');ty.removeAttribute('style');}
     });
