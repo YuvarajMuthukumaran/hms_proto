@@ -122,8 +122,8 @@ const SPOKEN_SEED={kabir:5,arjun:4,tarun:6};   /* days since a PX round last spo
 const FLOORS=(function(){
   const out={'Floor 1':[],'Floor 2':[],'Floor 3':[]},fl={f1:'Floor 1',f2:'Floor 2',f3:'Floor 3'};
   const H=(window.HMS_PATIENTS&&window.HMS_PATIENTS.patients)||[];
-  const num=r=>parseInt(String(r).replace(/D/g,''),10)||0;
-  H.forEach(h=>{const room=String(h.room).replace(/^(Room|Suite)s+/,(m,w)=>w==='Suite'?'Suite ':'').replace(/s*·.*$/,'').trim();
+  const num=r=>parseInt(String(r).replace(/\D/g,''),10)||0;
+  H.forEach(h=>{const room=String(h.room).replace(/^(Room|Suite)\s+/,(m,w)=>w==='Suite'?'Suite ':'').replace(/\s*·.*$/,'').trim();
     const p={n:h.name,hms:h.id,last:SPOKEN_SEED[h.id]!==undefined?SPOKEN_SEED[h.id]:1};
     if(h.safetyOpen)p.safety=1;
     if(h.noSession!=null)p.rec='No session logged for '+h.noSession+' days';

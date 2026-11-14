@@ -47,7 +47,7 @@
       if(snap[id]!==t){snap[id]=t;const w=whoAt();PH[id]=Object.assign({},p,{by:w.by,at:w.at});put('pxo:h-'+id,PH[id]).catch(()=>{});}});
   }
   /* vitals not charted: the nurse plan has a vitals check whose time has passed and nothing was recorded since (Rounds shows it as a flag, nobody ticks it) */
-  const slotMin=k=>{const m=String(k).match(/(d+)s*(am|pm)/i);if(!m)return null;let h=+m[1]%12;if(/pm/i.test(m[2]))h+=12;return h*60;};
+  const slotMin=k=>{const m=String(k).match(/(\d+)\s*(am|pm)/i);if(!m)return null;let h=+m[1]%12;if(/pm/i.test(m[2]))h+=12;return h*60;};
   function vitGap(id){try{const s=v3(),l=s.vit.last[id],plan=NPLAN[id]||{},lastT=l?l.t:null,now=V3.now();
     const due=Object.keys(plan).filter(k=>(plan[k]||[]).some(x=>/^(vit|dis)/.test(String(x)))).map(k=>({k,m:slotMin(k)})).filter(x=>x.m!=null&&x.m<=now&&(lastT==null||lastT<x.m)).sort((a,b)=>a.m-b.m);
     return due.length?{since:lastT==null?'not recorded yet':V3.hm(lastT),due:due[0].k}:null;}catch(e){return null;}}
