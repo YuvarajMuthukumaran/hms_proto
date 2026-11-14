@@ -4,3 +4,5 @@ body{padding-bottom:22px}
 .sync-badge.bad{background:#fdecec;color:#b42318;border-color:#f3c3be}
 .sync-badge.off{background:#fef3e2;color:#92500a;border-color:#f5d9a8}
 @media print{.sync-badge{display:none}}
+/* the bar is 20 px tall: keep the sidebar's last card (the profile) clear of it */
+aside.side{padding-bottom:38px}

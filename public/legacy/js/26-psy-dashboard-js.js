@@ -124,7 +124,8 @@
     closeModal();
     const R=S.rounds;
     for(const w of Object.keys(WARDS)){const j=WARDS[w].findIndex(x=>x.id===pid);if(j>=0){R.ward=w;R.idx[w]=j;R.drafted=false;R.mc=[];R.adv=[];R.mon=[];R.inv=[];R.ref=[];R.noteFromScribe=false;R.scribeNote=((R.noteBy||{})[pid])||'';break;}}
-    go('#/rounds');
+    S.focusPid=pid;
+    if(String(location.hash||'').split('?')[0]==='#/rounds'){render();}else go('#/rounds'); /* already on Rounds: the address does not change, so draw the page again (the list rows on Rounds did nothing) */
   };
 
   /* the eye: that patient's items, each with its action */

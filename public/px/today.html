@@ -337,13 +337,13 @@ function today(){
     const menu=state.open===r.id?`<div class="menu" role="menu">${(menus[r.type]||[]).map(m=>`<button role="menuitem" data-act="${r.id}" data-m="${esc(m[0])}"><div style="font-size:14px;font-weight:600">${esc(m[0])}</div><div style="font-size:12px;color:#667085">${esc(m[1])}</div></button>`).join('')}</div>`:'';
     return `<tr>
       <td style="padding-left:18px;width:120px"><span style="font-weight:700;color:${tcol}">${esc(r.type)}</span></td>
-      <td style="width:240px"><a href="#" style="display:flex;gap:10px;color:#0F172A"><span class="av" style="width:38px;height:38px;background:${a[0]};color:${a[1]};font-size:${r.initials.length>2?11:13}px">${esc(r.initials)}</span><span style="display:flex;flex-direction:column;gap:3px"><b style="font-size:15px;font-weight:600">${esc(r.name)}</b><span style="font-size:12px;color:#667085">${esc(r.sub)}</span><span style="display:flex;flex-wrap:wrap;gap:4px">${r.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</span></span></a></td>
+      <td style="width:240px"><a href="#" data-pname="${esc(r.name)}" data-ptype="${esc(r.type)}" title="${r.type==='Ward check'?'Open Rounds':r.type==='Training'?'Open Staff training':'Open '+esc(r.name)+' record'}" style="display:flex;gap:10px;color:#0F172A"><span class="av" style="width:38px;height:38px;background:${a[0]};color:${a[1]};font-size:${r.initials.length>2?11:13}px">${esc(r.initials)}</span><span style="display:flex;flex-direction:column;gap:3px"><b style="font-size:15px;font-weight:600">${esc(r.name)}</b><span style="font-size:12px;color:#667085">${esc(r.sub)}</span><span style="display:flex;flex-wrap:wrap;gap:4px">${r.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</span></span></a></td>
       <td><div style="display:flex;flex-direction:column;gap:8px">${items}</div></td>
       <td style="width:240px"><div style="font-size:13px;color:${/nothing yet|no update|no answer/i.test(r.others)?'#667085':'#344054'}">${esc(r.others)}</div>${acted[r.id]?`<div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:13px;color:#067647;font-weight:600"><i class="dot" style="background:#12B76A;margin:0"></i>You: ${esc(acted[r.id])} · just now</div>`:''}</td>
       <td style="width:170px;padding:14px 14px 14px 8px"><div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;position:relative"><button class="eye" data-eye="${r.id}" aria-label="View details for ${esc(r.name)}">${I.eye}</button><button class="take" aria-haspopup="menu" data-open="${r.id}">Take Action ▾</button>${menu}</div></td></tr>`;
   }).join('');
-  const chip=(l,c,w)=>`<a href="#" class="chip">${l} <span style="font-weight:700;color:${w?'#B54708':'#0F172A'}">${c}</span></a>`;
-  const chips=[chip('Late now',late,late>0),chip('Safety open',1,1),chip('Grievances open',5+state.newG,1),chip('Discharges today',2),chip('NPS, last 30 days','+58'),chip('Random calls due',3),chip('Team calls or updates late',4,1)].join('');
+  const chip=(l,c,w,k)=>`<a href="#" class="chip" data-chip="${k}" title="${esc(CHIPTIP[k]||'')}">${l} <span style="font-weight:700;color:${w?'#B54708':'#0F172A'}">${c}</span></a>`;
+  const chips=[chip('Late now',late,late>0,'late'),chip('Safety open',1,1,'safety'),chip('Grievances open',5+state.newG,1,'griev'),chip('Discharges today',2,0,'disch'),chip('NPS, last 30 days','+58',0,'nps'),chip('Random calls due',3,0,'calls'),chip('Team calls or updates late',4,1,'team')].join('');
   const brief=state.brief?`<section class="brief" aria-label="Morning brief"><div style="display:flex;justify-content:space-between;gap:12px"><div style="display:flex;gap:10px"><span class="av" style="width:28px;height:28px;background:#fff;border:1px solid #D5E4FB;color:#1E6CDB">${I.sun}</span><div><div style="font-weight:700">Morning brief</div><div style="font-size:12px;color:#667085">9:00 am · from overnight calls, family updates, feedback and grievances · no clinical notes</div></div></div><button data-hide="1" style="border:0;background:transparent;color:#1E5BB8;font-weight:600;font-size:13px">Hide</button></div>
     <ul><li>1 safety allegation overnight (Room 213 A). It needs Chandraji and an incident report number today.</li><li>Rohit Kapoor's wife wants to take him home (DAMA risk). Rahul Sethi goes home at 3 pm, and his psychologist has not met the family yet.</li><li>Yesterday: 1 detractor (NPS 5) and 3 families with no 8 pm update. Kavya Menon had no psychologist session over the weekend.</li><li>1 compliment: Karan Malhotra's mother thanked Priya Nair for the daily updates. Shared with Priya.</li></ul></section>`:'';
   return shell(`<main>
@@ -368,9 +368,25 @@ function render(){
   document.getElementById('root').innerHTML = state.view==='today'?today():state.view==='cmp'?cmp():trk();
   document.querySelectorAll('.rev button').forEach(b=>b.classList.toggle('on',b.dataset.v===state.view));
 }
+/* every chip and name does something: it jumps to the rows it counts, or opens the page that holds the detail */
+const CHIPTIP={late:'Jump to the first late row',safety:'Open Grievances (safety concerns are on top)',griev:'Open Grievances',disch:'Jump to patients going home today',nps:'Open Reports',calls:'Jump to the first random call that is due',team:'Jump to the first row where the team is late'};
+function navShell(page,name){try{if(window.parent&&window.parent!==window){window.parent.postMessage({pxNav:page,pxOpen:name||''},'*');return true;}}catch(e){}return false;}
+function flashRow(tr){if(!tr){const tw=document.querySelector('.tw');if(tw)tw.scrollIntoView({block:'start',behavior:'smooth'});return false;}tr.scrollIntoView({block:'center',behavior:'smooth'});tr.style.transition='background .3s';tr.style.background='#FFF7E6';setTimeout(()=>{tr.style.background='';},2200);return true;}
+function chipGo(k){
+  const trs=[...document.querySelectorAll('.tw tbody tr')];
+  const has=(tr,re)=>re.test(tr.innerText||'');
+  if(k==='griev'||k==='safety'){if(!navShell('grievances'))flashRow(trs.find(tr=>has(tr,/safety|grievance/i)));return;}
+  if(k==='nps'){if(!navShell('reports'))window.scrollTo({top:0,behavior:'smooth'});return;}
+  if(k==='disch'){flashRow(trs.find(tr=>has(tr,/goes home|discharge/i)));return;}
+  if(k==='calls'){flashRow(trs.find(tr=>tr.querySelector('[data-call]')));return;}
+  if(k==='team'){flashRow(trs.find(tr=>/no update|nothing yet|no answer|late/i.test((tr.children[3]||{}).innerText||'')));return;}
+  flashRow(trs.find(tr=>tr.querySelector('.dot[style*="F5A524"],.dot[style*="E5484D"]')));
+}
 document.addEventListener('click',e=>{
   const t=e.target.closest('button,a'); if(!t) return;
   if(t.tagName==='A'&&t.getAttribute('href')==='#') e.preventDefault();
+  if(t.dataset.chip){chipGo(t.dataset.chip);return;}
+  if(t.dataset.pname){const ty=t.dataset.ptype;if(ty==='Ward check'){navShell('rounds');return;}if(ty==='Training'){navShell('training');return;}if(!navShell('patients',t.dataset.pname))setState({eye:(raw.find(x=>x.name===t.dataset.pname)||{}).id||null});return;}
   if(t.dataset.v){setState({view:t.dataset.v,open:null});window.scrollTo(0,0);return;}
   if(t.dataset.call){ if(t.dataset.call==='pick') openCall(null); else { const pp=TP.find(x=>x.id===t.dataset.call); pp.item=t.dataset.item; pp.row=t.dataset.row; openCall(pp, pp.callN); } return; }
   if(t.dataset.done){setState({done:{...state.done,[t.dataset.done]:true}});return;}

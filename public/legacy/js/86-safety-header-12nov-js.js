@@ -23,11 +23,11 @@
     const lvl=x.riskLevel||(p.risk?'High':'');
     const risk=(lvl==='High'||tags)?`<span class="sh-c red">Risk of harm: High</span>${tags}`:lvl==='Moderate'?'<span class="sh-c amber">Risk of harm: Moderate</span>':'';
     const al=x.allergy&&x.allergy.list&&x.allergy.list.length?`<span class="sh-c">Allergy: ${x.allergy.list.map(a=>esc(a.drug)).join(', ')}</span>`:'';
-    const sx=p.sex||'',ag=p.age||'';
+    let rf=[];try{rf=(typeof RMO_FILL!=='undefined'&&RMO_FILL[p.id])||[];}catch(e){}const sx=p.sex||rf[3]||'',ag=p.age||rf[4]||'';
     const btn=kind()==='psychologist'?`<button class="btn pri sh-b" onclick="shNote('${pid}')">Session note</button>`:`<button class="btn pri sh-b" onclick="shNote('${pid}')">Round note</button>`;
     return `<div class="sh-n"><b>${esc(p.name)}</b><span class="sh-s2">${ag?esc(ag)+(sx?'/'+esc(sx):''):''} · UHID ${esc(p.uhid||(()=>{try{return ptIdentity(p).uhid;}catch(e){return '';}})())} · ${esc(p.room||'')}</span></div>${legal}${obsC}${risk}${al}<button class="sh-c sh-nr" onclick="shCall('${pid}')">NR · Call</button><span style="flex:1"></span>${btn}`;
   }
-  window.shNote=function(pid){S.pid=pid;if(kind()==='psychologist'){try{pgTherapyModal(pid);}catch(e){go('#/patient/'+pid+'/therapy');}}else{try{psyOpenRounds(pid);}catch(e){go('#/rounds');}}};
+  window.shNote=function(pid){S.pid=pid;if(kind()==='psychologist'){try{pgTherapyModal(pid);}catch(e){go('#/patient/'+pid+'/therapy');}}else{try{psyOpenRounds(pid);}catch(e){go('#/rounds');}setTimeout(()=>{const n=document.getElementById('prNote');if(n&&String(location.hash).split('?')[0]==='#/rounds'){n.scrollIntoView({block:'center',behavior:'smooth'});n.focus();}},120);}};
   window.shCall=function(pid){const b=[...document.querySelectorAll('#view button')].find(x=>/^Call caregiver$/.test(x.textContent.trim()));if(b)b.click();else toast('Calling the nominated representative through the HMS (demo)');};
   const css=document.createElement('style');css.id='sh-css';
   css.textContent=`#safeBar{position:sticky;top:var(--shTop,0px);z-index:40;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid var(--line,#e3eaf2);border-radius:12px;padding:8px 12px;margin:0 0 10px;box-shadow:0 -12px 0 var(--bg,#f6fbff),0 4px 14px rgba(15,23,42,.06)}

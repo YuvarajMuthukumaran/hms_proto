@@ -7,6 +7,7 @@
 (function(){
   const lead=()=>String((window.__TULASI__||{}).role||'')==='floor-lead-psychologist'&&S.role==='psychologist';
   const esc=s=>hesc(String(s==null?'':s));
+  const ageSex=p=>{let f=[];try{f=(typeof RMO_FILL!=='undefined'&&RMO_FILL[p.id])||[];}catch(e){}const a=p.age||f[4]||'',x=p.sex||f[3]||'';return a&&x?a+'/'+x:(a||x||'');};
   const L=()=>window.lpState();
   const LPX=pid=>window.lpLPX(pid);
   const T=()=>{const l=L();return l.td||(l.td={tab:'act',flt:'all',who:'',done:{},acted:{},asked:{},reminded:0,cover:'',grp:'',opened:{},ticks:{},qf:''});};
@@ -162,7 +163,7 @@
       const ls=sessAge(p),fm=famOf(p),fl=[];if(p.risk)fl.push('High risk');if(planWait(p))fl.push('Plan to sign');if(coWait(p).length)fl.push('Note to co-sign');if(noSess(p))fl.push('No session');if(noPlan(p))fl.push('No therapy plan yet');if((+p.day||0)>=14&&!hasScore(p))fl.push('No score');if(dischSoon(p))fl.push('Discharge this week');
       const dots=Array.from({length:8},(_,i)=>`<i class="lt-d${i<topics(p)?' on':''}"></i>`).join('');
       const aw=awayOf(p),lsTxt=aw?'On '+aw.kind.toLowerCase()+' until '+new Date(aw.until).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):(+p.day||0)<1?'Admitted today':ls===null?'No session yet':ls===0?'Today':ls===1?'Yesterday':ls+' days ago';
-      return `<tr><td>${nameCell(p)}<div class="tiny muted">${p.age||''}/${p.sex||''} · ${esc(therapyOf(p))}</div></td><td class="small">${esc(doc(p)||'—')}</td><td class="small" style="${noSess(p)?'color:#b54708;font-weight:700':''}">${lsTxt}</td>
+      return `<tr><td>${nameCell(p)}<div class="tiny muted">${ageSex(p)} · ${esc(therapyOf(p))}</div></td><td class="small">${esc(doc(p)||'—')}</td><td class="small" style="${noSess(p)?'color:#b54708;font-weight:700':''}">${lsTxt}</td>
         <td class="small">${esc(fm.name)} <span class="muted">(${esc(String(fm.rel||'').toLowerCase())})</span><div class="tiny muted">${esc(fm.last)}</div>${openGr(p)?'<span class="lt-c r">Concern open</span>':''}${famLate(p)?'<span class="lt-c a">Call overdue</span>':''}<div class="lt-ds" title="Family topics covered">${dots}</div></td>
         <td class="small">${fl.map(x=>`<span class="lt-c ${/risk/i.test(x)?'r':'a'}">${esc(x)}</span>`).join('')||'<span class="muted">On track</span>'}</td>
         <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="go('#/patient/${p.id}/overview')">Open record</button> <button class="btn sm" onclick="lpAssign('${p.id}')">Change</button> <button class="btn sm" onclick="ltLeave('${p.id}')">${awayOf(p)?'Back from leave':'Leave'}</button></td></tr>`;}).join('');
