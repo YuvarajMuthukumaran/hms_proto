@@ -93,4 +93,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/91-lead-psy-today-13nov-js.js',
   '/legacy/js/92-nurse-compact-13nov-js.js',
   '/legacy/js/93-ciwa-14nov-js.js',
+  '/legacy/js/94-scales-14nov-js.js',
 ];

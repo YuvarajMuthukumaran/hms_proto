@@ -19,11 +19,13 @@
     const doc=(typeof PSYOF!=='undefined'&&PSYOF[pid])||'the treating psychiatrist';
     const obsC=`<span class="sh-c" title="Set by ${esc(doc)} · review by today 6:00 pm">${esc(obs)}<span class="sh-s">set by ${esc(String(doc).replace(/^Dr\.\s*/,'Dr. '))} · review by 6 pm</span></span>`;
     const tags=(x.riskTags||[]).map(t=>`<span class="sh-c red">${esc(t)}</span>`).join('');
-    const risk=(p.risk||tags)?`<span class="sh-c red">Risk of harm: High</span>${tags}`:'';
+    /* the level comes from the suicide / self-harm screen when one was done (card "Rating scales"), otherwise from the record */
+    const lvl=x.riskLevel||(p.risk?'High':'');
+    const risk=(lvl==='High'||tags)?`<span class="sh-c red">Risk of harm: High</span>${tags}`:lvl==='Moderate'?'<span class="sh-c amber">Risk of harm: Moderate</span>':'';
     const al=x.allergy&&x.allergy.list&&x.allergy.list.length?`<span class="sh-c">Allergy: ${x.allergy.list.map(a=>esc(a.drug)).join(', ')}</span>`:'';
     const sx=p.sex||'',ag=p.age||'';
     const btn=kind()==='psychologist'?`<button class="btn pri sh-b" onclick="shNote('${pid}')">Session note</button>`:`<button class="btn pri sh-b" onclick="shNote('${pid}')">Round note</button>`;
-    return `<div class="sh-n"><b>${esc(p.name)}</b><span class="sh-s2">${ag?esc(ag)+(sx?'/'+esc(sx):''):''} · UHID ${esc(p.uhid||'')} · ${esc(p.room||'')}</span></div>${legal}${obsC}${risk}${al}<button class="sh-c sh-nr" onclick="shCall('${pid}')">NR · Call</button><span style="flex:1"></span>${btn}`;
+    return `<div class="sh-n"><b>${esc(p.name)}</b><span class="sh-s2">${ag?esc(ag)+(sx?'/'+esc(sx):''):''} · UHID ${esc(p.uhid||(()=>{try{return ptIdentity(p).uhid;}catch(e){return '';}})())} · ${esc(p.room||'')}</span></div>${legal}${obsC}${risk}${al}<button class="sh-c sh-nr" onclick="shCall('${pid}')">NR · Call</button><span style="flex:1"></span>${btn}`;
   }
   window.shNote=function(pid){S.pid=pid;if(kind()==='psychologist'){try{pgTherapyModal(pid);}catch(e){go('#/patient/'+pid+'/therapy');}}else{try{psyOpenRounds(pid);}catch(e){go('#/rounds');}}};
   window.shCall=function(pid){const b=[...document.querySelectorAll('#view button')].find(x=>/^Call caregiver$/.test(x.textContent.trim()));if(b)b.click();else toast('Calling the nominated representative through the HMS (demo)');};
@@ -41,7 +43,8 @@
     const v=$('view'),k=kind();if(!v||!k)return;const pid=pidNow();
     const old=v.querySelector('#safeBar');
     if(!pid||!pt(pid)){if(old)old.remove();return;}
-    if(!old||old.dataset.pid!==pid||old.dataset.k!==k+S.rmoFloor){if(old)old.remove();const el=document.createElement('div');el.id='safeBar';el.dataset.pid=pid;el.dataset.k=k+S.rmoFloor;el.innerHTML=bar(pid);
+    const kk=k+S.rmoFloor+((window.psyPx&&psyPx(pid).riskLevel)||'');
+    if(!old||old.dataset.pid!==pid||old.dataset.k!==kk){if(old)old.remove();const el=document.createElement('div');el.id='safeBar';el.dataset.pid=pid;el.dataset.k=kk;el.innerHTML=bar(pid);
       const top=document.querySelector('.top');const tp=top&&getComputedStyle(top).position;document.documentElement.style.setProperty('--shTop',(tp==='sticky'||tp==='fixed')?(top.getBoundingClientRect().height)+'px':'0px');
       const root=v.querySelector('.ws-mid')||v;root.insertBefore(el,root.firstChild);}
     /* the orange event strip only belongs on Stay summary; on the other tabs it is noise (psychologist, like the psychiatrist) */
@@ -71,8 +74,12 @@
     if(tb&&window.psyNewsCalc){tb.dataset.nw='1';const hr=tb.querySelector('thead tr');if(hr){hr.insertAdjacentHTML('beforeend','<th>Resp. rate<br><span class="tiny muted">per min</span></th><th>NEWS2</th>');}
       [...tb.querySelectorAll('tbody tr')].forEach((tr,i)=>{const c=tr.children,bp=String(c[2]?c[2].textContent:'').match(/(\d+)\s*\/\s*(\d+)/),pulse=+String(c[3]?c[3].textContent:'').match(/\d+/),temp=+String(c[4]?c[4].textContent:'').match(/[\d.]+/),spo2=+String(c[5]?c[5].textContent:'').match(/\d+/);
         if(!bp||!pulse){tr.insertAdjacentHTML('beforeend','<td>—</td><td>—</td>');return;}
-        const rr=rrDemo(i),n=psyNewsCalc({rr,spo2:spo2||98,o2:false,sbp:+bp[1],pulse,cons:'Alert',temp:temp>45?Math.round((temp-32)*5/9*10)/10:temp||36.8});
-        tr.insertAdjacentHTML('beforeend',`<td>${rr}</td><td><span class="sh-n2 ${n.band==='Urgent RMO review'?'red':n.band==='Inform RMO'?'amber':''}" title="${esc(n.band)}">${n.total}</span></td>`);});}
+        /* the older readings in this table have no respiratory rate on record: nothing is made up (card "Rating scales") */
+        tr.insertAdjacentHTML('beforeend','<td title="Respiratory rate was not recorded for this reading">—</td><td>—</td>');});
+      /* readings the nurse recorded (Record vitals): real respiratory rate, real NEWS2, newest first */
+      try{const h=(v3().vit.hist||{})[pid]||(v3().vit.last[pid]?[v3().vit.last[pid]]:[]);
+        h.slice().reverse().forEach(v=>{if(!v||!isFinite(v.rr))return;const n=psyNewsCalc({rr:v.rr,spo2:v.spo2,o2:false,sbp:v.sbp,pulse:v.hr,cons:'Alert',temp:Math.round((v.temp-32)*5/9*10)/10});
+          tb.querySelector('tbody').insertAdjacentHTML('afterbegin',`<tr><td style="font-weight:600">${V3.day&&V3.day(v.t)!==0?esc(V3.stamp(v.t)):'Today'}</td><td>${esc(V3.hm?V3.hm(v.t):V3.stamp(v.t))}</td><td>${v.sbp}/${v.dbp}</td><td>${v.hr}</td><td>${v.temp}</td><td>${v.spo2}</td><td>—</td><td>—</td><td>—</td><td>${v.rr}</td><td><span class="sh-n2 ${n.band==='Urgent RMO review'?'red':n.band==='Inform RMO'?'amber':''}" title="${esc(n.band)} · recorded by ${esc(v.by||'')}">${n.total}</span></td></tr>`);});}catch(e){}}
     /* Order a scale button in the monitoring card */
     const mh=[...v.querySelectorAll('h3')].find(x=>/^Other monitoring/.test(x.textContent.trim())),mc=mh&&mh.closest('section.psy-tx-panel,section.card');
     if(mc&&!mc.querySelector('[data-sc]')){const hd=mc.querySelector('.hd,.psy-tx-head'),b=document.createElement('button');b.className='btn sm';b.dataset.sc='1';b.textContent='Order a scale';b.onclick=()=>shScaleOrder(pid);if(hd)hd.appendChild(b);}

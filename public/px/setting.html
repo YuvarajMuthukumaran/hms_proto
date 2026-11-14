@@ -26,7 +26,7 @@ html.embed body{background:transparent}
 <script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');</script>
 <div class="wrap">
   <div><h2>Setting</h2><div class="small muted">Everything the team may change without a developer. Saved for everyone (same store as Rounds and Grievances).</div></div>
-  <div class="seg" role="tablist"><button id="t1" class="on" onclick="tab(1)">Time limits</button><button id="t2" onclick="tab(2)">Checklists, topics and owners</button></div>
+  <div class="seg" role="tablist"><button id="t1" class="on" onclick="tab(1)">Time limits</button><button id="t2" onclick="tab(2)">Checklists, topics and owners</button><button id="t3" onclick="tab(3)">Training modules</button></div>
   <section class="card" id="p1">
     <h3>Time limits</h3>
     <div class="pad">
@@ -38,6 +38,14 @@ html.embed body{background:transparent}
     <h3>Checklists, topics and owners</h3>
     <div class="pad small muted">Room issues (checklist v1), common areas, and what patients can talk about: each line says what it is and who fixes it. Safety lines go to Chandraji now.</div>
     <iframe id="lists" title="Checklists and owners" src="rounds.html?embed=1&setting=1"></iframe>
+  </section>
+  <section class="card" id="p3" style="display:none">
+    <h3>Training modules</h3>
+    <div class="pad">
+      <div class="small muted" style="margin-bottom:8px">One module per line: <b>id | name | team | first due within (days) | yearly (yes or no)</b>. Team is All (for everyone), Nurses, Call centre, Front desk or Ward staff. Leave the id as it is to keep people's records; write <b>new</b> for a new module. Staff training reads this list.</div>
+      <textarea class="inp" id="mods" rows="16" style="font-family:ui-monospace,Menlo,monospace;font-size:13px"></textarea>
+      <div class="row" style="margin-top:12px"><button class="btn pri" onclick="saveMods()">Save modules</button><button class="btn" onclick="resetMods()">Back to the team's list</button></div>
+    </div>
   </section>
 </div>
 <div class="toast" id="toast"></div>
@@ -62,7 +70,24 @@ function save(){
   try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}
   document.getElementById('note').textContent='Saved '+new Date().toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'})+'. New clocks use these limits.';toast('Limits saved.');}
 function resetAll(){try{localStorage.setItem(KEY,'{}');}catch(e){}draw();document.getElementById('note').textContent='Back to the team\'s limits.';toast('Back to the team\'s limits.');}
-function tab(n){[1,2].forEach(function(i){document.getElementById('p'+i).style.display=i===n?'':'none';document.getElementById('t'+i).classList.toggle('on',i===n);});}
+function tab(n){[1,2,3].forEach(function(i){document.getElementById('p'+i).style.display=i===n?'':'none';document.getElementById('t'+i).classList.toggle('on',i===n);});}
+var DEFMODS=[['rights','Patient rights and dignity','All',7,'no'],['listen','Listening and tone','All',30,'no'],['concern','Handling a concern','All',30,'no'],['n1','Talking with families','Nurses',30,'no'],['n2','Following patient preferences','Nurses',30,'no'],['n3','Calming and safe handling','Nurses',30,'yes'],['c1','Enquiry and admission calls','Call centre',7,'no'],['c2','Crisis calls (caller at risk goes to the duty doctor)','Call centre',30,'yes'],['c3','Privacy on the phone','Call centre',30,'no'],['f1','Welcoming a family at admission','Front desk',7,'no'],['f2','Visitors and privacy','Front desk',30,'no'],['f3','Upset visitors and DAMA requests','Front desk',30,'no'],['w1','Respect on the floor','Ward staff',30,'no']];
+function modsText(){var L=null;try{L=JSON.parse(localStorage.getItem('px_training_mods_v1')||'null');}catch(e){}
+  var rows=Array.isArray(L)&&L.length?L.map(function(m){return [m.id,m.name,m.team,m.days,m.yearly?'yes':'no'];}):DEFMODS;
+  return rows.map(function(r){return r.join(' | ');}).join('\n');}
+function saveMods(){
+  var TEAMS=['All','Nurses','Call centre','Front desk','Ward staff'],out=[],bad=[],ids={};
+  document.getElementById('mods').value.split(/\r?\n/).forEach(function(l,i){l=l.trim();if(!l)return;var p=l.split('|').map(function(x){return x.trim();});
+    var team=TEAMS.filter(function(t){return t.toLowerCase()===String(p[2]||'').toLowerCase();})[0],days=+p[3];
+    if(!p[1]||!team||!(days>=1&&days<=365)||Math.floor(days)!==days){bad.push(i+1);return;}
+    var id=(!p[0]||p[0].toLowerCase()==='new')?'x'+Date.now().toString(36)+out.length:p[0];if(ids[id]){bad.push(i+1);return;}ids[id]=1;
+    out.push({id:id,name:p[1],team:team,days:days,yearly:/^y/i.test(p[4]||'')?1:0});});
+  if(bad.length){toast('Check line '+bad.join(', ')+': name, team and days are needed, and ids must differ.');return;}
+  if(!out.length){toast('Keep at least one module.');return;}
+  try{localStorage.setItem('px_training_mods_v1',JSON.stringify(out));}catch(e){}
+  document.getElementById('mods').value=modsText();toast('Modules saved. Staff training uses them now.');}
+function resetMods(){try{localStorage.setItem('px_training_mods_v1','null');}catch(e){}document.getElementById('mods').value=modsText();toast('Back to the team\'s list.');}
+document.getElementById('mods').value=modsText();
 draw();
 </script>
 </body></html>

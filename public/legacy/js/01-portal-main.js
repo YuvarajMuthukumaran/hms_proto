@@ -50,7 +50,7 @@ const PTS = [
   {id:'arjun', age:34, sex:'M', uhid:'2026-27RG6812', name:'Arjun Mehta', ini:'AM', room:'Room 210', day:12, sec:'89', risk:false, dx:'Severe depressive episode'},
   {id:'varun', age:41, sex:'M', uhid:'2026-27RG6870', name:'Varun Rao', ini:'VR', room:'Room 211', day:4, sec:'89', risk:false, dx:'Alcohol dependence, withdrawal'},
   {id:'kabir', age:26, sex:'M', uhid:'2026-27RG6731', name:'Karan Malhotra', ini:'KM', room:'Room 212 A', day:21, sec:'90', risk:false, dx:'Schizophrenia'},
-  {id:'sameer', age:22, sex:'M', uhid:'2026-27RG6905', name:'Sameer Das', ini:'SD', room:'Suite 202', day:7, sec:'89', risk:false, dx:'Obsessive-compulsive disorder'},
+  {id:'sameer', age:16, sex:'M', uhid:'2026-27RG6905', name:'Sameer Das', ini:'SD', room:'Suite 202', day:7, sec:'87', risk:false, dx:'Obsessive-compulsive disorder'},
   {id:'neel', age:23, sex:'M', uhid:'2026-27RG6990', name:'Neel Bose', ini:'NB', room:'Room 213 A', get day(){return Math.max(0,Math.floor((new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate())-new Date(2026,9,18))/864e5));}, sec:'89', risk:true, dx:'Bipolar affective disorder, manic'},
   {id:'rohit', age:38, sex:'M', uhid:'2026-27RG7012', name:'Rohit Kapoor', ini:'RK', room:'Suite 201', day:0, sec:'89', risk:false, dx:'Admitted today'},
   {id:'dev', age:31, sex:'M', uhid:'2026-27RG6788', name:'Dev Kumar', ini:'DK', room:'Room 215 A', day:15, sec:'89', risk:false, dx:'Opioid dependence', dischargeToday:true},
@@ -58,7 +58,7 @@ const PTS = [
 ];
 function __relD(n){const d=new Date();d.setDate(d.getDate()+n);return d.getDate()+' '+d.toLocaleString('en-GB',{month:'short'});}
 function __relISO(n){const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-const EX = {arjun:['Routine','Re-assessment · Mon',__relD(7)],varun:['Every 30 minutes','Daily note','Not set'],kabir:['Routine','Re-assessment · today',__relD(7)],sameer:['Routine','Capacity · 1 day late','Not set'],neel:['Every 15 minutes','History · 1 day late',__relD(4)],rohit:['Every 15 minutes','Workup · today','Not set'],dev:['Routine','Summary to sign','Today'],tarun:['1:1 constant','Day 3 to 4 call · today','Not set']};
+const EX = {arjun:['Routine','Re-assessment · Mon',__relD(7)],varun:['Every 30 minutes','Daily note',__relD(10)],kabir:['Routine','Re-assessment · today',__relD(7)],sameer:['Routine','Capacity · 1 day late',__relD(7)],neel:['Every 15 minutes','History · overdue',__relD(4)],rohit:['Every 15 minutes','Workup · today',__relD(14)],dev:['Routine','Summary to sign','Today'],tarun:['1:1 constant','Day 3 to 4 call · today',__relD(11)]};
 const PTS_F = [
   {id:'meera', name:'Meera Iyer', ini:'MI', room:'Room 310 A', day:9, sec:'89', risk:false, dx:'Severe depressive episode'},
   {id:'sana', name:'Sana Qureshi', ini:'SQ', room:'Room 311', day:3, sec:'89', risk:true, dx:'Acute psychotic episode'},
@@ -205,7 +205,7 @@ function vJourney(){
 function tasks(){
   const griev = {id:'griev', late:true, title:'Grievance raised · Neel Bose', meta:'Family: updates feel repetitive · patient experience team has it, 5 h left on the 6-hour clock', due:'New grievance', go:'#/patient/neel/griev'};
   const psy = [griev,
-    {id:'hist', late:true, title:'Detailed history · Neel Bose', meta:'72-hour deadline passed yesterday, 10:30 · with Priya Nair', due:'1 day late', go:'#/patient/neel/admission'},
+    {id:'hist', late:true, title:'Detailed history · Neel Bose', meta:'72-hour deadline passed, 10:30 · with Priya Nair', due:'Overdue', go:'#/patient/neel/admission'},
     {id:'cap', late:true, title:'Capacity assessment, week 2 · Sameer Das', meta:'Weekly for 30 days under Section 89', due:'Due yesterday', go:'#/patient/neel/forms'},
     {id:'addps', title:'Add psychologist · Rohit Kapoor', meta:'Assigned to you by ward · no psychologist on the team yet', due:'New', chipc:'c-blue', addps:true},
     {id:'workup', title:'Admission workup · Rohit Kapoor', meta:'Admitted 10:30 · Suite 201 · Form C decision pending', due:'New', chipc:'c-blue', go:'#/patient/neel/admission'},
@@ -215,7 +215,7 @@ function tasks(){
     {id:'sum', title:'Discharge summary to sign · Dev Kumar', meta:'Draft by Priya Nair, psychologist · needs a psychiatrist\'s signature', due:'Sign', chipc:'c-blue', go:'#/patient/neel/discharge'},
   ];
   const psych = [griev,
-    {id:'hist', late:true, title:'Detailed history · Neel Bose', meta:'Your parts: personal and family history, premorbid personality', due:'1 day late', go:'#/patient/neel/admission'},
+    {id:'hist', late:true, title:'Detailed history · Neel Bose', meta:'Your parts: personal and family history, premorbid personality', due:'Overdue', go:'#/patient/neel/admission'},
     {id:'d34', title:'Day 3 to 4 family call · Tarun Roy', meta:'Suresh Roy, father · logged automatically', due:'Today', call:true},
     {id:'daily', title:'Daily notes and family updates · 5 patients', meta:'Each note drafts that family\'s update', due:'Today', go:'#/patient/neel/daily'},
     {id:'sumd', title:'Draft discharge summary · Dev Kumar', meta:'Built from the stay\'s notes, plans and orders · goes to the psychiatrist to sign', due:'Today', chipc:'c-blue', go:'#/patient/neel/discharge'},
@@ -224,7 +224,7 @@ function tasks(){
   const lead = [
     {id:'griev',late:true,title:'Grievance raised · Neel Bose',meta:'Family: updates feel repetitive · Dr. Aanya Sharma and Priya Nair alerted',due:'New grievance',lead:true,go:'#/patient/neel/griev'},
     {id:'l0',title:'Confirm team · Rohit Kapoor',meta:'New admission 10:30 · Suite 201 · VVIP · Dr. Aanya Sharma (senior) assigned by ward · psychologist not added',due:'Check',chipc:'c-blue',assign:true},
-    {id:'l1',late:true,title:'Detailed history · Neel Bose',meta:'Dr. Aanya Sharma · deadline passed yesterday',due:'1 day late',lead:true,go:'#/patient/neel/admission'},
+    {id:'l1',late:true,title:'Detailed history · Neel Bose',meta:'Dr. Aanya Sharma · deadline passed',due:'Overdue',lead:true,go:'#/patient/neel/admission'},
     {id:'l2',late:true,title:'Capacity assessment · Sameer Das',meta:'Dr. Rohan Mehta · due yesterday',due:'Due yesterday',lead:true,go:'#/patient/neel/admission'},
     {id:'l3',late:true,title:'Daily notes · 3 patients',meta:'Dr. Kunal Sethi · not written yesterday',due:'1 day late',lead:true,go:'#/inpatients'},
     {id:'l5',title:'Sign discharge summary · Dev Kumar',meta:'Dr. Rohan Mehta is off duty today · draft by Priya Nair is ready',due:'Cover sign-off',chipc:'c-blue',go:'#/patient/neel/discharge'},
@@ -343,7 +343,7 @@ function flFx(id,text,cls){S.flx=S.flx||{};S.flx[id]={text,cls};}
 function flWide(w){$('modal').style.width=w||'min(640px,100%)';}
 const FL_NUDGE={
   griev:{what:'Grievance raised · Neel Bose',due:'New grievance',to:['Dr. Aanya Sharma','Priya Nair'],msg:'The family of Neel Bose says the updates they get feel repetitive. Please call or message them today and note what you will change. The grievance has 5 hours left on its response time.'},
-  l1:{what:'Detailed history · Neel Bose',due:'1 day late',to:['Dr. Aanya Sharma'],msg:'The detailed history for Neel Bose was due yesterday. Please complete it today so the plan and orders can be reviewed.'},
+  l1:{what:'Detailed history · Neel Bose',due:'Overdue',to:['Dr. Aanya Sharma'],msg:'The detailed history for Neel Bose is overdue. Please complete it today so the plan and orders can be reviewed.'},
   l2:{what:'Capacity assessment · Sameer Das',due:'Due yesterday',to:['Dr. Rohan Mehta'],msg:'The capacity assessment for Sameer Das was due yesterday. Please record it today.'},
   l3:{what:'Daily notes · 3 patients',due:'1 day late',to:['Dr. Kunal Sethi'],msg:'Daily notes for Varun Rao, Karan Malhotra and Tarun Roy were not written yesterday. Please add them today.'}
 };
@@ -391,7 +391,7 @@ function flGrievSave(){
   closeModal();render();toast('Assigned to '+g.owner+'. They have been told to reply within 5 hours.');
 }
 const FL_PEND={
-  l1:{pid:'neel',doc:'Dr. Aanya Sharma',ini:'AS',role:'Treating psychiatrist',title:'Detailed history',sub:'Deadline passed yesterday · 6 pm',late:'1 day late',
+  l1:{pid:'neel',doc:'Dr. Aanya Sharma',ini:'AS',role:'Treating psychiatrist',title:'Detailed history',sub:'Deadline passed · 6 pm',late:'Overdue',
     items:[['Chief complaints','Recorded 21 Oct',1],['History of presenting illness','Not written',0],['Physical examination','Done by the RMO',1],['Observation','Not written',0],['Behaviour','Not written',0]],
     ext:['Until today 6 pm','Until tomorrow 12 pm'],go:'#/patient/neel/admission'},
   l2:{pid:'sameer',doc:'Dr. Rohan Mehta',ini:'RM',role:'Treating psychiatrist',title:'Capacity assessment',sub:'Was due yesterday',late:'Due yesterday',
@@ -674,7 +674,7 @@ function ptList(){
 function dueItems(){
   if(S.role==='rmo')return rmoDue();
   const d=[];
-  if(S.historyStatus!=='signed') d.push(['Detailed history','1 day late',true,'admission']);
+  if(S.historyStatus!=='signed') d.push(['Detailed history','Overdue',true,'admission']);
   if(!S.dailySaved) d.push(['Daily note','today',false,'daily']);
   if((isPsy()?S.calls.d34psy:S.calls.d34psych)==='due') d.push(['Day 3 to 4 family call','today',false,'therapy']);
   if(!S.capacityDone) d.push(['Capacity assessment','25 Oct',false,'forms']);
@@ -906,11 +906,11 @@ function pAdmission(){
     ['forms','Front desk forms','Signed 18 Oct','Admission form, undertaking, Form E','c-green'],
     ['workup','Admission workup','Signed 18 Oct','Dr. Aanya Sharma, on the day','c-green'],
     ['capadm','Detailed capacity at admission','Done 18 Oct','Needs 100% support from nominated representative','c-green'],
-    ['hist','Detailed history', hs?'Signed':(S.historyDraft?'Draft ready':'1 day late'),'Within 72 hours · psychiatrist and psychologist', hs?'c-green':'c-amber'],
+    ['hist','Detailed history', hs?'Signed':(S.historyDraft?'Draft ready':'Overdue'),'Within 72 hours · psychiatrist and psychologist', hs?'c-green':'c-amber'],
     ['formc','Form C · independent admission','Clinical review pending','Psychiatrist or psychologist decides whether Form C is indicated','c-amber']
   ];
   const grid=`<div class="sumgrid">${steps.map(x=>`<div class="sbox pick ${sec===x[0]?'sel':''} ${x[4]==='c-amber'?'warn':''}" role="button" tabindex="0" onclick="S.admSec='${x[0]}';render()" onkeydown="if(event.key==='Enter'){S.admSec='${x[0]}';render()}"><div class="lbl">${x[1]}</div><div>${chip(x[2],x[4])}</div><div class="tiny muted">${x[3]}</div></div>`).join('')}</div>`;
-  const hist = hs?chip('Signed','c-green'):(S.historyDraft?chip('Draft ready','c-blue'):chip('1 day late','c-amber'));
+  const hist = hs?chip('Signed','c-green'):(S.historyDraft?chip('Draft ready','c-blue'):chip('Overdue','c-amber'));
   const panels={
     forms:`<section class="card"><div class="hd"><h3>Front desk forms</h3>${chip('Taken by front desk','c-grey')}</div>${[['Admission consent form','Signed 18 Oct by Ananya Bose, sister'],['Letter of undertaking (advance and charges)','Signed 18 Oct'],['Form E · request for admission with high support needs (rule 8)','Signed by Ananya Bose, sister'],['High risk informed consent','Signed 18 Oct']].map(f=>`<div class="li"><span class="grow" style="font-weight:600">${f[0]}</span><span class="small muted">${f[1]}</span>${chip('Signed','c-green')}</div>`).join('')}<div class="pad small muted">Taken in the admin portal on the tablet. Other consents are on Orders and consents.</div></section>`,
     workup:`<section class="card"><div class="hd"><h3>Admission workup</h3>${chip('Signed 18 Oct · Dr. Aanya Sharma','c-green')}</div><div class="pad grid2">${[['Reason for admission','Manic symptoms, overspending, irritability for 3 weeks'],['Risk at admission','Harm to others: moderate · suicide: low'],['Physical examination','Unremarkable; BP 138/88'],['Investigations sent','CBC, LFT, RFT, TSH, serum lithium']].map(f=>`<div class="box small"><div class="lbl">${f[0]}</div><div style="margin-top:4px">${f[1]}</div></div>`).join('')}${wkTreatment()}</div></section>`,

@@ -135,15 +135,20 @@
   const itemsFor=(name,M)=>{const out=[];M.all.filter(p=>doc(p)===name).forEach(p=>{issuesOf(p,M).forEach(i=>{if(i.k==='nopsy')return;out.push({p,i});});});return out;};
   function askBar(M){
     const b=TEAMN.filter(n=>n!==mineName&&!onLeave(n)).map(n=>({n,c:itemsFor(n,M).length})).filter(x=>x.c);
-    if(!b.length)return '';
-    return `<div class="lt-ask"><span class="small muted">One message per psychologist:</span>${b.map(x=>`<button class="btn sm" onclick="ltAskPsy('${x.n}')">Ask ${esc(first(x.n))} (${x.c})</button>`).join('')}</div>`;
+    const late=M.all.filter(p=>famLate(p)&&!concOf(p));
+    const rem=late.length?`<button class="btn sm" onclick="ltRemind()">Remind psychologists · ${late.length} family call${late.length===1?'':'s'} overdue</button>${T().reminded?`<span class="tiny muted">reminded ${esc(T().reminded)}</span>`:''}`:'';
+    if(!b.length&&!rem)return '';
+    return `<div class="lt-ask"><span class="small muted">One message per psychologist:</span>${b.map(x=>`<button class="btn sm" onclick="ltAskPsy('${x.n}')">Ask ${esc(first(x.n))} (${x.c})</button>`).join('')}${rem}</div>`;
   }
   function actionsBody(M){
     const t=T(),P=patientRows(M),F=FLOORROWS();
+    t.seen=t.seen||{};P.forEach(r=>{t.seen[r.p.id]=1;});
+    const DONE=Object.keys(t.seen).filter(id=>!P.some(r=>r.p.id===id)).map(id=>M.all.find(p=>p.id===id)).filter(p=>p&&M.inScope(p));
     const tr=P.map(r=>{const p=r.p,asked=t.asked[p.id];return `<tr><td style="min-width:190px">${nameCell(p)}</td><td><div class="lt-cs">${r.iss.map(i=>`<span class="lt-c ${i.red?'r':'a'}">${esc(i.t)}</span>`).join('')}</div>${asked?`<div class="tiny muted">asked ${esc(first(doc(p)))} ${esc(asked)}</div>`:''}</td><td style="text-align:right;white-space:nowrap">${rowBtns(p,r.iss)}</td></tr>`;}).join('');
     const fr=F.map(r=>`<tr><td><b class="lt-k grp">Floor</b></td><td class="small">${esc(r.why)}</td><td style="text-align:right;white-space:nowrap">${r.btn}</td></tr>`).join('');
-    if(!P.length&&!F.length)return '<div class="pad small muted">Nothing needs you right now.</div>';
-    return `<table class="lt-tb"><tbody>${tr}${F.length?`<tr><td colspan="3" class="lt-sec">Floor</td></tr>${fr}`:''}</tbody></table>`;
+    const dn=DONE.map(p=>`<tr class="lt-done"><td style="min-width:190px">${nameCell(p)}</td><td><span class="lt-c g">Done</span> <span class="small muted">everything for this patient is handled</span></td><td></td></tr>`).join('');
+    if(!P.length&&!F.length&&!DONE.length)return '<div class="pad small muted">Nothing needs you right now.</div>';
+    return `<table class="lt-tb"><tbody>${tr}${dn}${F.length?`<tr><td colspan="3" class="lt-sec">Floor</td></tr>${fr}`:''}</tbody></table>`;
   }
   const FILT=[['all','All'],['risk','Risk'],['nosess','No session 3+ days'],['sign','To review'],['noscore','No score 14 d'],['fam','Family waiting'],['disch','Discharge this week']];
   function caseTable(M,list){
@@ -173,7 +178,7 @@
       const cls=riskN?' r':late?' a':'';
       const askN=itemsFor(n,M).length;
       return `<div class="lt-pc${cls}" role="button" tabindex="0" onclick="ltTeamGo('${n}')"><div class="lt-pn"><b>${esc(you?'You · '+n:n)}</b><span class="lt-st ${leave?'off':'on'}">${leave?'On leave':'On today'}</span></div>
-        <div class="small">${n==='Ankit Verma'?'Assistant psychologist':mine.length+' patients'} · ${planned?done+' of '+planned+' sessions today':'no sessions today'}</div>
+        <div class="small" title="Sessions done are counted from signed notes. Sessions planned are demo numbers until the calendar is linked.">${n==='Ankit Verma'?'Assistant psychologist':mine.length+' patients'} · ${planned?done+' of '+planned+' sessions today':'no sessions today'}</div>
         <div class="small ${late?'lt-lt':'muted'}">${late?late+' late: '+Object.keys(parts).map(k=>parts[k]+' '+(parts[k]===1?({families:'family','sessions behind':'session behind','scores missing':'score missing'}[k]||k):k)).join(', '):'Nothing late'}${riskN?` · <b style="color:#b42318">${riskN} risk not acted on</b>`:''}</div>
         <div class="lt-pf">${you?'<span class="tiny muted">Lead</span>':`<span class="tiny ${amb?'lt-amb':'muted'}">${esc(sup)}</span>`}<span>${!you&&askN&&!leave?`<button class="btn sm" onclick="event.stopPropagation();ltAskPsy('${n}')">Ask ${esc(first(n))} (${askN})</button>`:''}${you?'':`<button class="btn sm" onclick="event.stopPropagation();lpSup('${n}')">Supervision</button>`}</span></div></div>`;}).join('')}</div>`;
   }
@@ -222,7 +227,7 @@
     sendAsk(name,pick,(($('ltAskNote')||{}).value||'').trim(),'a'+Date.now());closeModal();toast('One message sent to '+name+' with '+pick.length+' item'+(pick.length===1?'':'s'));keepScroll();};
   window.ltCall=pid=>{const p=floor().find(x=>x.id===pid);T().acted[pid]=signer()+' · '+atNow();toast('Call to the treating psychiatrist logged for '+(p||{}).name+'.');keepScroll();};
   window.ltWill=pid=>{try{lpCallFam(pid);}catch(e){}};
-  window.ltRemind=()=>{toast('Reminder sent to the psychologists with overdue family calls');keepScroll();};
+  window.ltRemind=()=>{const M=model(),late=M.all.filter(p=>famLate(p)&&!concOf(p)),by={};late.forEach(p=>{const d=doc(p);if(d)(by[d]=by[d]||[]).push({p,i:{k:'famcall',t:'Family call overdue'}});});Object.keys(by).forEach(n=>{if(n!==mineName)sendAsk(n,by[n],'Please make the overdue family calls today.','a'+Date.now()+n[0]);});T().reminded=clock();toast('Reminder sent to '+Object.keys(by).filter(n=>n!==mineName).join(', ')+' with their overdue family calls');keepScroll();};
   window.ltDebriefFor=pid=>{const e=restDebrief().find(x=>x.pid===pid);if(e)ltDebrief(e.id,e.pid);};
   window.ltDebrief=(eid,pid)=>{try{const e=S.rst.eps.find(x=>String(x.id)===String(eid)&&x.pid===pid);if(e)e.debrief={by:signer(),at:atNow()};}catch(x){}toast('Debrief and behaviour support plan assigned (due within 72 h)');keepScroll();};
   window.ltGrp=a=>{if(a==='me'){toast('You will run the Mindfulness group on Saturday');mark('grp','You take it');}else{toast('Group moved to Saturday 5 pm. The facilitators are told.');mark('grp','Moved to 5 pm');}};
@@ -316,7 +321,7 @@
   .lt-ask{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px 0}.lt-ai{display:flex;gap:8px;align-items:center;padding:6px 2px;font-size:13.5px}.lt-qt{display:flex;gap:8px;align-items:center}.lt-q.plan{border:1px solid #e3eaf2;border-radius:10px;padding:10px}
   .lt-fl{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 14px}.lt-ch{border:1px solid #d6dee8;background:#fff;border-radius:99px;padding:4px 12px;font:inherit;font-size:12.5px;cursor:pointer}.lt-ch.on{background:#eaf2ff;color:#1e5bb8;border-color:#9ec0f7;font-weight:700}.lt-sel{max-width:190px;min-height:32px;margin-left:auto}
   .lt-c{display:inline-block;font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 9px;margin:2px 4px 2px 0;background:#fffaeb;color:#b54708}.lt-c.r{background:#fef3f2;color:#b42318}.lt-c.g{background:#ecfdf3;color:#067647}
-  .lt-ds{display:flex;gap:3px;margin-top:4px}.lt-d{width:8px;height:8px;border-radius:50%;background:#dfe6ef}.lt-d.on{background:#1f9d57}
+  .lt-done td{opacity:.6}.lt-ds{display:flex;gap:3px;margin-top:4px}.lt-d{width:8px;height:8px;border-radius:50%;background:#dfe6ef}.lt-d.on{background:#1f9d57}
   #ltSignBtn[disabled]{opacity:.45;cursor:not-allowed}
   @media(max-width:900px){.lt-ts{grid-template-columns:repeat(2,minmax(0,1fr))}.lt-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.lt-tb{display:block;overflow-x:auto}}`;document.head.appendChild(css);
   const prev=ROLE.psychologist.myday;

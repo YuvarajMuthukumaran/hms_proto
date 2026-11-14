@@ -47,6 +47,8 @@ const PER={
   tiles:{calls:[26,40,22,40],closed:[34,41,30,40],fb:[19,26,17,25,'NPS +54','NPS +49']},
   steps:[['Family met at admission',97,95],['Rights explained to patient and rep',82,78],['Met the patient on day 1 or 2',71,66],['Preferences taken',90,88],['Random calls 1 and 2',55,48],['Discharge meeting and feedback',78,76]],
   themes:[['Family updates too general',11,'Weekly update draft added for psychologists.'],['Meals served cold',8,'Kitchen supervisor reviewing the tray order.'],['Room too noisy at night',6,'Night nurses briefed. Housekeeping checks the corridor.']]}};
+/* random calls this week: counted from the calls logged in Today, Patients, Rounds and the Log button (2 per admitted patient) */
+try{let n=0;const M=JSON.parse(localStorage.getItem('px_calls_main_v1')||'{}')||{};Object.keys(M).forEach(k=>(M[k]||[]).forEach(l=>{if(l&&l.rc)n++;}));(JSON.parse(localStorage.getItem('px_calls_v1')||'[]')||[]).forEach(c=>{if(c&&c.outcome==='Connected')n++;});const T=PER.week.tiles.calls;PER.week.tiles.calls=[n,34,T[2],T[3]];}catch(e){}
 const COMPL=[{id:'c1',who:'Sister Rekha',team:'Nurses',words:'She sat with my daughter on the first night. We felt safe leaving her.',by:'S. Iyer, father'},
  {id:'c2',who:'Dr. Kunal Sethi',team:'Psychiatrist',words:'He called back the same day and explained the plan.',by:'Kiran Rao, brother'},
  {id:'c3',who:'Geeta Devi',team:'Housekeeping',words:'Returned the laundry and said sorry. Thank you.',by:'Vikas Sethi, father'},
@@ -62,7 +64,7 @@ function csv(){const P=PER[S.per],T=P.tiles;const rows=[['Patient Experience rep
 function render(){const P=PER[S.per],T=P.tiles;
  const tile=(l,v,of,sub)=>`<div class="tile"><span class="l">${l}</span><b>${v}${of!=null?' <span class="muted" style="font-size:15px;font-weight:600">of '+of+'</span>':''}</b>${sub}</div>`;
  document.getElementById('root').innerHTML=`
- <div class="hello"><div><h2>Reports</h2><div class="muted">${P.label}, ${P.dates}. Your own work only. Nothing here is typed in.</div></div>
+ <div class="hello"><div><h2>Reports</h2><div class="muted">${P.label}, ${P.dates}. Your own work only. Nothing here is typed in.</div><div class="small muted" style="margin-top:4px">Counted from what is logged: random calls, compliments and staff training. The other figures are demo numbers until grievances and discharge feedback are saved to the shared store.</div></div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><div class="seg"><button class="${S.per==='week'?'on':''}" data-per="week">This week</button><button class="${S.per==='month'?'on':''}" data-per="month">Last month</button></div><button class="btn" data-dl="1">Download for ops review</button></div></div>
  <div class="tiles">
   ${tile('Random calls done',T.calls[0],T.calls[1],chg(Math.round(T.calls[0]/T.calls[1]*100),Math.round(T.calls[2]/T.calls[3]*100),'%'))}

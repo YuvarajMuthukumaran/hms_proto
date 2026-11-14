@@ -51,6 +51,9 @@ const MODS=[
  {id:'c1',name:'Enquiry and admission calls',team:'Call centre',days:7},{id:'c2',name:'Crisis calls (caller at risk goes to the duty doctor)',team:'Call centre',days:30,yearly:1},{id:'c3',name:'Privacy on the phone',team:'Call centre',days:30},
  {id:'f1',name:'Welcoming a family at admission',team:'Front desk',days:7},{id:'f2',name:'Visitors and privacy',team:'Front desk',days:30},{id:'f3',name:'Upset visitors and DAMA requests',team:'Front desk',days:30},
  {id:'w1',name:'Respect on the floor',team:'Ward staff',days:30}];
+/* the module list can be edited in Setting (px_training_mods_v1); an empty or reset list means the team's list above */
+try{const ML=JSON.parse(localStorage.getItem('px_training_mods_v1')||'null');if(Array.isArray(ML)&&ML.length&&ML.every(m=>m&&m.id&&m.name&&m.team)){MODS.splice(0,MODS.length,...ML.map(m=>Object.assign({},m,{days:+m.days||30,core:m.team==='All'?1:undefined})));}}catch(e){}
+const MOD=id=>MODS.find(m=>m.id===id)||{id,name:'(module removed in Setting)',team:'All'};
 const TEAMS=['Nurses','Call centre','Front desk','Ward staff'];
 const PEOPLE=[
  {id:'p1',name:'Sister Rekha',role:'Nursing in-charge',team:'Nurses',where:'Floor 2, day',joined:'2023-04-03',concerns:1},
@@ -80,7 +83,7 @@ const isNew=p=>(TODAY-D(p.joined))/86400000<=30;
 const stats=p=>{const ms=mods(p),d=ms.filter(m=>status(p,m)==='d').length,l=ms.filter(m=>status(p,m)==='l').length;return{ms,d,l,n:ms.length};};
 const nextDue=p=>{const ms=mods(p).filter(m=>status(p,m)!=='d').sort((a,b)=>dueDate(p,a)-dueDate(p,b))[0];return ms?{m:ms,at:dueDate(p,ms),late:dueDate(p,ms)<TODAY}:null;};
 const fmt=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-const modName=id=>MODS.find(m=>m.id===id).name;
+const modName=id=>MOD(id).name;
 function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),3200);}
 function alerts(){const out=[];
   S.sess.filter(s=>!s.came&&D(s.when).toDateString()===TODAY.toDateString()).forEach(s=>out.push(`<div class="alert blue"><span><b>Session today at ${D(s.when).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}).toLowerCase()}:</b> ${esc(modName(s.mod))}, ${s.invited.length} invited</span><button class="btn sm pri" data-att="${s.id}">Take attendance</button></div>`));
@@ -97,15 +100,15 @@ function people(){let L=PEOPLE.filter(p=>S.team==='All'||p.team===S.team);
     <td>${nx?`<span class="${nx.late?'late':''}">${esc(nx.m.name)}</span><div class="muted small">${nx.late?'Late, was due ':'Due '}${fmt(nx.at)}</div>`:'<span class="ok">Up to date</span>'}</td>
     <td>${p.concerns?p.concerns:'<span class="muted">0</span>'}</td><td><button class="btn sm" data-addp="${p.id}">Add to a session</button></td></tr>`}).join('')}</tbody></table></div>
     <div class="muted small">Linked concerns are shown to plan training, not as a mark against the person. Clinical training (BLS, infection control, fire) stays with the nursing head.</div>`;}
-function sessions(){const L=S.sess.filter(s=>S.team==='All'||MODS.find(m=>m.id===s.mod).team===S.team||MODS.find(m=>m.id===s.mod).team==='All').sort((a,b)=>D(b.when)-D(a.when));
-  return `<div class="card"><table><thead><tr><th>When</th><th>Module</th><th>For</th><th>People</th><th>Quick check</th><th></th></tr></thead><tbody>${L.map(s=>{const m=MODS.find(x=>x.id===s.mod),c=s.came,came=c?Object.keys(c).length:0,pass=c?Object.values(c).filter(v=>v==='P').length:0;
+function sessions(){const L=S.sess.filter(s=>S.team==='All'||MOD(s.mod).team===S.team||MOD(s.mod).team==='All').sort((a,b)=>D(b.when)-D(a.when));
+  return `<div class="card"><table><thead><tr><th>When</th><th>Module</th><th>For</th><th>People</th><th>Quick check</th><th></th></tr></thead><tbody>${L.map(s=>{const m=MOD(s.mod),c=s.came,came=c?Object.keys(c).length:0,pass=c?Object.values(c).filter(v=>v==='P').length:0;
     return `<tr><td>${D(s.when).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}<div class="muted small">${D(s.when).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}).toLowerCase()}</div></td><td>${esc(m.name)}</td><td>${esc(m.team==='All'?'Everyone':m.team)}<div class="muted small">${esc(s.place)}</div></td>
     <td>${c?came+' of '+s.invited.length+' came':s.invited.length+' invited'}</td><td>${c?pass+' passed'+(came-pass?', '+(came-pass)+' repeat':''):'<span class="muted">After the session</span>'}</td><td>${c?'<span class="ok small">Done</span>':`<button class="btn sm pri" data-att="${s.id}">Take attendance</button>`}</td></tr>`}).join('')}</tbody></table></div>`;}
 function drawer(){
   if(S.open){const p=PEOPLE.find(x=>x.id===S.open);return `<div class="ov" data-close="1"><div class="dr"><div style="display:flex;justify-content:space-between"><h3>${esc(p.name)}</h3><button class="btn sm" data-close="1">Close</button></div><div class="muted small">${esc(p.role)} · ${esc(p.team)} · ${esc(p.where)} · joined ${fmt(D(p.joined))}</div>
     ${mods(p).map(m=>{const s=status(p,m);return `<div class="row"><span>${esc(m.name)}<div class="muted small">${m.yearly?'Every year. ':''}Due ${m.days} days after joining</div></span><span class="st ${s}">${s==='d'?'Done':s==='l'?'Late, '+fmt(dueDate(p,m)):'Due '+fmt(dueDate(p,m))}</span></div>`}).join('')}
     <button class="btn pri" data-addp="${p.id}">Add to a session</button></div></div>`;}
-  if(S.plan){const P=S.plan;const m=MODS.find(x=>x.id===P.mod);const need=PEOPLE.filter(p=>mods(p).some(x=>x.id===P.mod)&&!S.done[p.id].includes(P.mod));
+  if(S.plan){const P=S.plan;const m=MOD(P.mod);const need=PEOPLE.filter(p=>mods(p).some(x=>x.id===P.mod)&&!S.done[p.id].includes(P.mod));
     const groups=['All',...TEAMS].map(t=>`<optgroup label="${t==='All'?'Core, for everyone':t}">${MODS.filter(x=>x.team===t).map(x=>`<option value="${x.id}" ${x.id===P.mod?'selected':''}>${esc(x.name)}</option>`).join('')}</optgroup>`).join('');
     return `<div class="ov"><div class="dr"><div style="display:flex;justify-content:space-between"><h3>Plan a session</h3><button class="btn sm" data-close="1">Close</button></div>
     <div class="field"><label>Module</label><select id="pm">${groups}</select></div>

@@ -46,7 +46,7 @@ function ptMakeCtx(p){
   const adm=id.adm,at=(n,t)=>ptDT(ptDay(Math.max(0,p.day-n)),t),fresh=p.day<=1;
   Object.assign(c,{
     dx:set.dx,section:String(p.sec||'89'),team:{psy,psych},obs:(EX[p.id]||[])[0]||set.obs,
-    obsBy:{by:psy,at:ptDT(adm,'12:10 pm')},edd:(()=>{const d=new Date(adm);d.setDate(d.getDate()+Math.max(14,p.day+7));return d.toISOString().slice(0,10)})(),eddShared:false,eddBy:{by:psy,at:ptDT(adm,'12:15 pm')},
+    obsBy:{by:psy,at:ptDT(adm,'12:10 pm')},edd:(()=>{/* the Patients list and the record show one date: the ward's planned date when there is one, otherwise admission + the stay so far + 7 days (min 14) */const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const e=((typeof EX!=='undefined'&&EX[p.id])||[])[2];if(e==='Today')return ymd(new Date());const m=String(e||'').match(/^(d+) (w{3})$/);if(m){const d=new Date(m[1]+' '+m[2]+' '+new Date().getFullYear());if(!isNaN(d))return ymd(d);}const d=new Date(adm);d.setDate(d.getDate()+Math.max(14,p.day+7));return ymd(d)})(),eddShared:false,eddBy:{by:psy,at:ptDT(adm,'12:15 pm')},
     historyStatus:p.day>=3?(ptHash(p.id)%3?'signed':'overdue'):'pending',historyDraft:false,
     dailySaved:false,familySent:false,scribeDaily:false,capacityOpen:false,capacityDone:p.day>=7,reassessDone:p.day>=14,
     plansSigned:{psy:p.day>=7,psych:p.day>=7&&!!psych},calls:{h24:p.day>=1?'done':'due',d34psy:p.day>4?'done':'due',d34psych:p.day>4||!psych?'done':'due'},
