@@ -89,6 +89,9 @@
     const o=document.getElementById('mhcaPrompt');if(o)o.remove();render();toast('Recorded: '+label+'. The follow-up tasks are on Today.');
   };
   function dayPrompt(){
+    /* the choice belongs to the psychiatrist: the RMO (who borrows this workspace) is never stopped by it, and it never stays on screen after leaving the patient */
+    const own=document.getElementById('mhcaPrompt');if(own&&(String((window.__TULASI__||{}).role||'')==='rmo'||!/^#\/patient\//.test(location.hash||'')))own.remove();
+    if(String((window.__TULASI__||{}).role||'')==='rmo')return;
     if(!doc()||document.getElementById('mhcaPrompt'))return;
     const m=(location.hash||'').match(/^#\/patient\/([^/]+)/);if(!m)return;
     const L=legal(m[1]);if(!L.promptDue)return;
