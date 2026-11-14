@@ -95,4 +95,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/93-ciwa-14nov-js.js',
   '/legacy/js/94-scales-14nov-js.js',
   '/legacy/js/95-audit-14nov-js.js',
+  '/legacy/js/96-registry-14nov-js.js',
 ];

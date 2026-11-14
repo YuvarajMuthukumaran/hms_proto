@@ -4,3 +4,5 @@ dist
 .env*
 !.env.example
 *.bak
+*.csv
+tools/.env.import
