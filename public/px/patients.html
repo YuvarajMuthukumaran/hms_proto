@@ -375,13 +375,14 @@ function family(p){
   </div></div>`;
 }
 function prefs(p){
+  const H=(window.PXH||{})[((window.HMSX&&HMSX.by[p.name])||{}).id];   /* what the care team wrote in the HMS record (diet, approved visitors), published through the shared store */
   const blk=(t,seen,rows)=>`<section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:14px 16px"><div style="display:flex;justify-content:space-between;gap:8px"><b>${t}</b><span style="font-size:12px;color:#667085">Seen by ${seen}</span></div><div style="display:grid;grid-template-columns:170px 1fr;gap:6px 12px;font-size:13px;margin-top:10px">${rows.map(r=>`<span style="color:#667085">${r[0]}</span><span>${r[1]}</span>`).join('')}</div></section>`;
   if(!p.prefs) return `<section style="background:#FFFAEB;border:1px solid #FEDF89;border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b>Preferences not taken yet</b><div style="font-size:13px;color:#475467">Due by Day 2. Take them with the RMO, the patient and the family. Same form the psychiatrist sees under Patient Experience.</div></div><button class="btn pri">Take preferences</button></section>`;
   return `<div style="font-size:13px;color:#475467;margin-bottom:10px">Same record as the psychiatrist's Patient Experience tab. First filled by the RMO with you; anyone on the care team can update it.</div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px">
-  ${blk('Diet','Kitchen · Ward',[['Diet type','Vegetarian'],['Foods to avoid','None known'],['Likes, dislikes, fasting days','No onion or garlic on Tuesdays; prefers roti to rice']])}
+  ${blk('Diet','Kitchen · Ward',H&&H.diet?[['Diet type',esc(H.diet.type||'Not set')],['Foods to avoid',esc(H.diet.avoid||'Not set')],['Likes, dislikes, fasting days',esc(H.diet.notes||'Not set')],['Written by',esc((H.by||'the care team')+(H.at?', '+H.at:''))]]:[['Diet type','Vegetarian'],['Foods to avoid','None known'],['Likes, dislikes, fasting days','No onion or garlic on Tuesdays; prefers roti to rice']])}
   ${blk('Calls and visits','Front desk · Ward',[['Phone calls (hospital phone)','2 a day, 10 minutes'],['Visits','Family, weekends']])}
-  ${blk('Approved visitors','Front desk · Security',[[esc(p.rep),esc(p.rel)+' · nominated representative · Allowed'],['Cousin','Allowed'],['Friend','Not for now']])}
+  ${blk('Approved visitors','Front desk · Security',H&&H.contacts&&H.contacts.length?H.contacts.map(c=>[esc(c[0]),esc(c[1])+' · '+esc(c[2])]):[[esc(p.rep),esc(p.rel)+' · nominated representative · Allowed'],['Cousin','Allowed'],['Friend','Not for now']])}
   ${blk('Room and belongings','Front desk · Housekeeping',[['Room','Keep in current room'],['Belongings','Phone and wallet in locker; belts, laces and sharps at nursing station'],['Signed by',esc(p.rep)+', on admission']])}
   ${blk('Activities and outings','Ward · Activity team',[['Activities allowed','Yoga, group therapy, indoor games'],['Outings','Not yet']])}
   ${blk('Communication with family','Patient experience · Billing',[['Language for updates','Hindi'],['Clinical updates go to',esc(p.rep)+' only'],['Billing contact',esc(p.rep)],['Do not share with','Employer, if they call']])}
@@ -470,6 +471,8 @@ document.addEventListener('click',e=>{
   else if(d.chk) set({done:{...S.done,[d.chk]:t.checked}});
 });
 window.CM_PATIENTS = P;
+/* preferences written in the HMS record (px_state rows pxh:<patient>): read here so nobody types them twice */
+(function(){function pull(){fetch('/api/config',{cache:'no-store'}).then(r=>r.json()).then(j=>{if(!j||!j.supabase||!j.pxStore)return;const c=j.supabase;return fetch(c.url+'/rest/v1/px_state?select=key,data&key=like.pxo:h-*',{headers:{apikey:c.key,Authorization:'Bearer '+c.key,'x-tulasi-role':'patient-experience-lead'}}).then(r=>r.ok?r.json():[]).then(rows=>{const m={};(rows||[]).forEach(x=>{m[x.key.slice(6)]=typeof x.data==='string'?JSON.parse(x.data):x.data;});const was=JSON.stringify(window.PXH||{});window.PXH=m;if(was!==JSON.stringify(m)&&S.view==='rec'&&S.rtab==='prefs')render();});}).catch(()=>{});}pull();setInterval(pull,60000);})();
 /* search in the top bar: open this patient's record (message from the app, or the name saved just before this page loaded) */
 function pxOpenByName(n){const p=P.find(x=>x.name===n);if(p)set({view:'rec',pid:p.id,rtab:'summary',nps:null,ratings:{},consent:null});}
 window.addEventListener('message',e=>{if(e.data&&e.data.pxOpen)pxOpenByName(e.data.pxOpen);});

@@ -1,0 +1,72 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tulasi · Owner inbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F6FBFF;font-family:Inter,system-ui,sans-serif;color:#0F172A;font-size:15px}
+button,select,input,textarea{font-family:inherit}button{cursor:pointer}
+.wrap{padding:16px;display:flex;flex-direction:column;gap:14px;max-width:860px;margin:0 auto}
+h1{margin:0;font-size:22px;font-weight:600}.muted{color:#667085}.small{font-size:13px}.tiny{font-size:12px}
+.card{background:#fff;border:1px solid #E3EAF2;border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{height:38px;padding:0 14px;border-radius:10px;border:1px solid #D6DEE8;background:#fff;color:#0F172A;font-size:14px;font-weight:600}
+.btn.pri{background:#1E6CDB;border-color:#1E6CDB;color:#fff}
+.inp{min-height:40px;border:1px solid #D6DEE8;border-radius:10px;padding:8px 12px;font-size:14px;background:#fff;width:100%}
+.chip{display:inline-block;font-size:12px;font-weight:700;border-radius:99px;padding:2px 10px;background:#EEF2F7;color:#475467}
+.chip.red{background:#FEF3F2;color:#B42318}.chip.amb{background:#FFFAEB;color:#B54708}.chip.grn{background:#ECFDF3;color:#067647}
+.seg{display:inline-flex;border:1px solid #D6DEE8;border-radius:10px;overflow:hidden;background:#fff}.seg button{border:0;background:#fff;height:38px;padding:0 16px;font-weight:600;color:#344054}.seg button.on{background:#E8F1FE;color:#1E5BB8}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;display:none;z-index:9}
+.bad{border-color:#D92D20!important;background:#FEF3F2}
+</style></head><body>
+<div class="wrap">
+  <div><h1>Owner inbox</h1><div class="small muted">For teams without an HMS login: nursing in-charge, housekeeping, kitchen, billing and maintenance. See what Patient Experience sent you, post an update, and mark it fixed. Patient Experience then calls the family to confirm.</div></div>
+  <div class="row"><label class="small" style="font-weight:600">You are
+    <select id="team" class="inp" style="width:auto;margin-left:6px" onchange="setTeam(this.value)"></select></label>
+    <div class="seg" role="tablist"><button id="tb1" class="on" onclick="tab(1)">Room issues <span id="n1"></span></button><button id="tb2" onclick="tab(2)">Grievances <span id="n2"></span></button></div></div>
+  <div id="body"></div>
+  <div class="small muted" id="foot"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="px-store.js"></script>
+<script>
+var TEAMS=[['Nursing in-charge',/nurs|sister|brother anil/i],['Housekeeping supervisor',/housekeep/i],['Kitchen supervisor',/kitchen|dietician/i],['Billing desk',/billing|tpa/i],['Maintenance (electrical)',/electrical/i],['Maintenance (plumbing)',/plumbing/i],['Maintenance (civil)',/civil/i],['Maintenance (TV)',/\btv\b/i]];
+var KEYT='pxowner_team',TAB=1,cfg=null,G={},O={};
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(t){var e=document.getElementById('toast');e.textContent=t;e.style.display='block';clearTimeout(window._t);window._t=setTimeout(function(){e.style.display='none';},3200);}
+function team(){var t=null;try{t=localStorage.getItem(KEYT);}catch(e){}return TEAMS.some(function(x){return x[0]===t;})?t:TEAMS[0][0];}
+function setTeam(t){try{localStorage.setItem(KEYT,t);}catch(e){}draw();}
+function tab(n){TAB=n;draw();}
+function mine(txt){var t=team(),def=TEAMS.filter(function(x){return x[0]===t;})[0];return def[1].test(String(txt||''));}
+function rounds(){var R=null;try{R=JSON.parse(localStorage.getItem('px_rounds_v1')||'null');}catch(e){}return (R&&R.iss)||[];}
+function left(t0,lim){var ms=t0+lim-Date.now(),H=3600000,M=60000;if(ms<=0)return 'Overdue '+Math.floor(-ms/H)+' h '+Math.floor((-ms%H)/M)+' m';return Math.floor(ms/H)+' h '+Math.floor((ms%H)/M)+' m left';}
+function saveRounds(mut){var R=null;try{R=JSON.parse(localStorage.getItem('px_rounds_v1')||'null');}catch(e){}if(!R||!R.iss)return false;mut(R.iss);try{localStorage.setItem('px_rounds_v1',JSON.stringify(R));}catch(e){}return true;}
+function roomCards(){var L=rounds().filter(function(i){return mine(i.team);});
+  document.getElementById('n1').textContent='('+L.filter(function(i){return i.st==='open';}).length+')';
+  if(!L.length)return '<div class="card muted">No room issues for '+esc(team())+'.</div>';
+  return L.map(function(i){var open=i.st==='open',late=open&&i.t0&&Date.now()-i.t0>(i.lim||14400000);
+    return '<div class="card"><div class="row" style="justify-content:space-between"><b>Room '+esc(i.room)+' · '+esc(i.what)+'</b>'+(open?(i.safety?'<span class="chip red">Safety, told now</span>':'<span class="chip '+(late?'red':'amb')+'">'+esc(left(i.t0,i.lim||14400000))+'</span>'):'<span class="chip grn">Fixed</span>')+'</div>'
+      +'<div class="small muted">Sent to '+esc(i.team)+' by '+esc(i.by||'Patient Experience')+(i.latest?' · Latest: '+esc(i.latest):'')+(i.fixNote?' · Fixed: '+esc(i.fixNote):'')+'</div>'
+      +(open?'<textarea class="inp" id="t_'+esc(i.id)+'" rows="2" placeholder="What has been done? (required)"></textarea><div class="row"><button class="btn" onclick="roomAct(\''+esc(i.id)+'\',false)">Post update</button><button class="btn pri" onclick="roomAct(\''+esc(i.id)+'\',true)">Mark fixed</button></div>':'')+'</div>';}).join('');}
+function roomAct(id,fixed){var el=document.getElementById('t_'+id),t=(el.value||'').trim();el.classList.remove('bad');if(!t){el.classList.add('bad');toast('Write what was done first.');return;}
+  var by=team(),at=new Date().toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+  var ok=saveRounds(function(L){L.forEach(function(i){if(i.id===id){if(fixed){i.st='fixed';i.fixNote=t;i.fixedBy=by;i.fixedAt=at;}else{i.latest=t+' ('+by+', '+at+')';}}});});
+  if(!ok){toast('Could not save. Open Rounds once first.');return;}toast(fixed?'Marked fixed. Patient Experience can see it.':'Update posted.');draw();}
+function rest(path,opt){opt=opt||{};opt.headers=Object.assign({apikey:cfg.key,Authorization:'Bearer '+cfg.key,'x-tulasi-role':'patient-experience-lead','Content-Type':'application/json'},opt.headers||{});return fetch(cfg.url+'/rest/v1/'+path,opt);}
+function load(){return fetch('/api/config',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){if(!j||!j.supabase||!j.pxStore)return;cfg=j.supabase;return rest('px_state?select=key,data&key=like.px*:*').then(function(r){return r.ok?r.json():[];}).then(function(rows){G={};O={};(rows||[]).forEach(function(x){var id=x.key.split(':')[1];if(x.key.indexOf('pxg:')===0)G[id]=x.data;else if(x.key.indexOf('pxo:')===0&&!/^(h|v)-/.test(id))O[id]=x.data;});draw();});}).catch(function(){});}
+function grvCards(){var L=[];Object.keys(G).forEach(function(id){var d=G[id]||{},c=d.c;if(!c)return;var st=d.st||{},o=O[id]||{},status=st.status||c.status;if(!mine((c.owner||'')+' '+(c.ownerRole||'')))return;L.push({id:id,c:c,status:status,o:o,fixed:!!(o.fixed||st.stage==='confirm'),closed:status==='Resolved'});});
+  document.getElementById('n2').textContent='('+L.filter(function(x){return !x.closed&&!x.fixed;}).length+')';
+  if(!cfg)return '<div class="card muted">Grievances need the shared store. It is off on this address.</div>';
+  if(!L.length)return '<div class="card muted">No grievances for '+esc(team())+'.</div>';
+  return L.map(function(x){var c=x.c;return '<div class="card"><div class="row" style="justify-content:space-between"><b>“'+esc(c.title)+'”</b><span class="chip '+(x.closed?'grn':x.fixed?'grn':'amb')+'">'+(x.closed?'Closed':x.fixed?'Fixed, family to confirm':esc(c.sla||'Open'))+'</span></div>'
+    +'<div class="small muted">'+esc(x.id)+' · '+esc(c.category||'')+' · '+esc(c.pname||'')+' · '+esc(c.raisedBy||'')+'</div><div class="small">'+esc(c.desc||'')+'</div>'
+    +(x.o.latest?'<div class="small muted">Latest: '+esc(x.o.latest)+' ('+esc(x.o.latestBy||'')+', '+esc(x.o.latestAt||'')+')</div>':'')+(x.o.fixed?'<div class="small muted">Fixed: '+esc(x.o.fixNote||'')+'</div>':'')
+    +(x.closed||x.fixed?'':'<textarea class="inp" id="g_'+esc(x.id)+'" rows="2" placeholder="What has been done? (required)"></textarea><div class="row"><button class="btn" onclick="grvAct(\''+esc(x.id)+'\',false)">Post update</button><button class="btn pri" onclick="grvAct(\''+esc(x.id)+'\',true)">Owner has fixed it</button></div>')+'</div>';}).join('');}
+function grvAct(id,fixed){var el=document.getElementById('g_'+id),t=(el.value||'').trim();el.classList.remove('bad');if(!t){el.classList.add('bad');toast('Write what was done first.');return;}
+  var by=team(),at=new Date().toLocaleString('en-IN',{day:'numeric',month:'short',year:'numeric'})+', '+new Date().toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});
+  var data=fixed?{fixed:true,fixNote:t,by:by,at:at}:{latest:t,latestBy:by,latestAt:at};
+  rest('px_state?on_conflict=key',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify([{key:'pxo:'+id,data:data,updated_at:new Date().toISOString()}])}).then(function(r){if(!r.ok)throw 1;O[id]=data;toast(fixed?'Sent to Patient Experience: they will call the family.':'Update posted. Patient Experience can see it.');draw();}).catch(function(){toast('Could not save. Check the connection.');});}
+function draw(){var sel=document.getElementById('team');sel.innerHTML=TEAMS.map(function(x){return '<option'+(x[0]===team()?' selected':'')+'>'+esc(x[0])+'</option>';}).join('');
+  document.getElementById('tb1').classList.toggle('on',TAB===1);document.getElementById('tb2').classList.toggle('on',TAB===2);
+  var r=roomCards(),g=grvCards();document.getElementById('body').innerHTML=TAB===1?r:g;
+  document.getElementById('foot').textContent='Updates reach Patient Experience at once. Prototype: there is no password on this page yet.';}
+draw();load();setInterval(load,30000);window.addEventListener('storage',draw);
+</script></body></html>

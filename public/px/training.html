@@ -43,8 +43,11 @@ html.embed body{background:transparent}
 <main id="root"></main>
 <script src="px-store.js"></script>
 <script>
-const TODAY=new Date('2026-11-12T09:00:00');
-const KEY='px_training_v1';
+/* dates are relative to today: the demo was written for 12 Nov 2026, so sessions and joining dates move by the same number of days */
+const OFF=Math.round((new Date().setHours(0,0,0,0)-new Date('2026-11-12T00:00:00').getTime())/864e5);
+const shiftD=s=>{const d=new Date(s.length<=10?s+'T00:00:00':s);d.setDate(d.getDate()+OFF);const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+(s.length>10?'T'+s.slice(11):'');};
+const TODAY=new Date();TODAY.setHours(9,0,0,0);
+const KEY='px_training_v2';
 const MODS=[
  {id:'rights',name:'Patient rights and dignity',team:'All',days:7,core:1},{id:'listen',name:'Listening and tone',team:'All',days:30,core:1},{id:'concern',name:'Handling a concern',team:'All',days:30,core:1},
  {id:'n1',name:'Talking with families',team:'Nurses',days:30},{id:'n2',name:'Following patient preferences',team:'Nurses',days:30},{id:'n3',name:'Calming and safe handling',team:'Nurses',days:30,yearly:1},
@@ -70,6 +73,7 @@ const PEOPLE=[
  {id:'p12',name:'Lata Kumari',role:'Housekeeping',team:'Ward staff',where:'Floor 1',joined:'2026-11-04',concerns:0}];
 const DONE0={p1:['rights','listen','concern','n1','n2','n3'],p2:['rights','listen','n1'],p3:['listen'],p4:['rights'],p5:['rights','listen','concern','w1'],p6:[],p7:['rights','listen','concern','c1','c2','c3'],p8:['c1'],p9:['rights','listen','concern','f1','f2'],p10:['rights','listen','concern','f1','f2'],p11:['rights','listen','concern','n1','n2','n3'],p12:[]};
 const SESS0=[{id:'s1',when:'2026-11-12T15:00',mod:'rights',place:'Training room',invited:['p3','p6','p8','p12'],came:null},{id:'s2',when:'2026-11-05T11:00',mod:'listen',place:'Floor 2 lounge',invited:['p1','p2','p4','p5'],came:{p1:'P',p2:'P',p4:'R',p5:'P'}}];
+SESS0.forEach(x=>{x.when=shiftD(x.when);});PEOPLE.forEach(p=>{p.joined=shiftD(p.joined);});
 let S;try{S=JSON.parse(localStorage.getItem(KEY));}catch(e){}
 if(!S||!S.done){S={done:JSON.parse(JSON.stringify(DONE0)),sess:SESS0,view:'people',team:'All',flt:'all',open:null,plan:null,att:null,n:3};}
 S.view='people';S.team='All';S.flt='all';S.open=null;S.plan=null;S.att=null;
@@ -85,20 +89,33 @@ const nextDue=p=>{const ms=mods(p).filter(m=>status(p,m)!=='d').sort((a,b)=>dueD
 const fmt=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const modName=id=>MOD(id).name;
 function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),3200);}
+/* concerns linked to training come from the Grievances list (px_state pxg rows). Off (no shared store): the two examples stay as they were. */
+let GR=null;
+function link(c){const k=String(c.category||'');
+  if(/safety/i.test(k))return {mod:'n3',who:p=>/night/i.test(p.where)&&/Floor 2/.test(p.where)&&(p.team==='Nurses'||p.team==='Ward staff'),text:'the night nurses and attendants on Floor 2'};
+  if(/billing|insurance/i.test(k))return {mod:'f1',who:p=>p.team==='Front desk',text:'the front desk'};
+  if(/room|housekeeping|laundry/i.test(k))return {mod:'w1',who:p=>p.team==='Ward staff',text:'ward staff'};
+  if(/family updates|doctor comm|treatment|therapist/i.test(k))return {mod:'n1',who:p=>p.team==='Nurses',text:'nurses'};
+  if(/rights/i.test(k))return {mod:'rights',who:p=>true,text:'everyone'};
+  return null;}
+const concernsOf=p=>GR?GR.filter(c=>c.owner===p.name||(link(c)&&/safety/i.test(c.category||'')&&link(c).who(p))).length:p.concerns;
+function grAlerts(){const open=GR.filter(c=>c.status!=='Resolved'&&link(c)).slice(0,4);
+  return open.map(c=>{const l=link(c),ids=PEOPLE.filter(l.who).map(p=>p.id).join(',');return `<div class="alert amber"><span><b>${esc(c.id)}</b> ${esc(c.title)} (${esc(c.category||'')}), linked to ${esc(l.text)}. Refresher: ${esc(modName(l.mod))}.</span><button class="btn sm" data-planmod="${l.mod}" data-people="${ids}">Plan a session</button></div>`;}).join('');}
 function alerts(){const out=[];
   S.sess.filter(s=>!s.came&&D(s.when).toDateString()===TODAY.toDateString()).forEach(s=>out.push(`<div class="alert blue"><span><b>Session today at ${D(s.when).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}).toLowerCase()}:</b> ${esc(modName(s.mod))}, ${s.invited.length} invited</span><button class="btn sm pri" data-att="${s.id}">Take attendance</button></div>`));
   const late=PEOPLE.filter(p=>(TODAY-D(p.joined))/86400000>7&&!S.done[p.id].includes('rights')&&isNew(p));
   if(late.length)out.push(`<div class="alert amber"><span><b>${late.length} new joiner${late.length>1?'s':''} past 7 days without Patient rights and dignity:</b> ${late.map(p=>esc(p.name)).join(', ')}</span><button class="btn sm" data-planmod="rights" data-people="${late.map(p=>p.id).join(',')}">Plan induction</button></div>`);
+  if(GR){out.push(grAlerts());return out.join('');}
   out.push(`<div class="alert amber"><span><b>G-0137</b> cost estimate not shared before discharge, linked to the front desk. Refresher: Welcoming a family at admission.</span><button class="btn sm" data-planmod="f1" data-people="p9,p10">Plan a session</button></div>`);
   out.push(`<div class="alert amber"><span><b>G-0145</b> safety concern on Floor 2 at night. Refresher: Calming and safe handling, for the night nurses and the attendant.</span><button class="btn sm" data-planmod="n3" data-people="p2,p4">Plan a session</button></div>`);
   return out.join('');}
 function people(){let L=PEOPLE.filter(p=>S.team==='All'||p.team===S.team);
-  if(S.flt==='late')L=L.filter(p=>stats(p).l>0);if(S.flt==='new')L=L.filter(isNew);if(S.flt==='concern')L=L.filter(p=>p.concerns>0);
+  if(S.flt==='late')L=L.filter(p=>stats(p).l>0);if(S.flt==='new')L=L.filter(isNew);if(S.flt==='concern')L=L.filter(p=>concernsOf(p)>0);
   return `<div class="card"><table><thead><tr><th>Name</th><th>Team and where</th><th>Modules</th><th>Next due</th><th>Concerns in 90 days</th><th></th></tr></thead><tbody>${L.map(p=>{const s=stats(p),nx=nextDue(p);
     return `<tr><td><button class="nm" data-open="${p.id}">${esc(p.name)}</button>${isNew(p)?'<span class="tag">NEW</span>':''}<div class="muted small">${esc(p.role)} · joined ${fmt(D(p.joined))}</div></td><td>${esc(p.team)}<div class="muted small">${esc(p.where)}</div></td>
     <td><div class="bars">${s.ms.map(m=>`<i class="${status(p,m)}"></i>`).join('')}</div><span class="small ${s.l?'late':'muted'}">${s.d} of ${s.n} done${s.l?' · '+s.l+' late':''}</span></td>
     <td>${nx?`<span class="${nx.late?'late':''}">${esc(nx.m.name)}</span><div class="muted small">${nx.late?'Late, was due ':'Due '}${fmt(nx.at)}</div>`:'<span class="ok">Up to date</span>'}</td>
-    <td>${p.concerns?p.concerns:'<span class="muted">0</span>'}</td><td><button class="btn sm" data-addp="${p.id}">Add to a session</button></td></tr>`}).join('')}</tbody></table></div>
+    <td>${concernsOf(p)?concernsOf(p):'<span class="muted">0</span>'}</td><td><button class="btn sm" data-addp="${p.id}">Add to a session</button></td></tr>`}).join('')}</tbody></table></div>
     <div class="muted small">Linked concerns are shown to plan training, not as a mark against the person. Clinical training (BLS, infection control, fire) stays with the nursing head.</div>`;}
 function sessions(){const L=S.sess.filter(s=>S.team==='All'||MOD(s.mod).team===S.team||MOD(s.mod).team==='All').sort((a,b)=>D(b.when)-D(a.when));
   return `<div class="card"><table><thead><tr><th>When</th><th>Module</th><th>For</th><th>People</th><th>Quick check</th><th></th></tr></thead><tbody>${L.map(s=>{const m=MOD(s.mod),c=s.came,came=c?Object.keys(c).length:0,pass=c?Object.values(c).filter(v=>v==='P').length:0;
@@ -148,6 +165,8 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-v],[data-t
 document.addEventListener('change',e=>{if(e.target.id==='flt'){S.flt=e.target.value;render();}else if(e.target.id==='pm'){S.plan.mod=e.target.value;S.plan.ppl=PEOPLE.filter(p=>mods(p).some(x=>x.id===S.plan.mod)&&!S.done[p.id].includes(S.plan.mod)).map(p=>p.id);S.plan.date=$('pd').value;S.plan.time=$('pt').value;S.plan.place=$('pw').value;render();}});
 function $(i){return document.getElementById(i);}
 if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');
+/* linked concerns: read the Grievances list when the shared store is on */
+(function(){function pull(){fetch('/api/config',{cache:'no-store'}).then(r=>r.json()).then(j=>{if(!j||!j.supabase||!j.pxStore)return;const c=j.supabase;return fetch(c.url+'/rest/v1/px_state?select=key,data&key=like.pxg:*',{headers:{apikey:c.key,Authorization:'Bearer '+c.key,'x-tulasi-role':'patient-experience-lead'}}).then(r=>r.ok?r.json():[]).then(rows=>{const L=[];(rows||[]).forEach(x=>{const d=typeof x.data==='string'?JSON.parse(x.data):x.data;if(!d||!d.c)return;const st=d.st||{};L.push({id:d.c.id,title:d.c.title,category:d.c.category,owner:d.c.owner,status:st.status||d.c.status});});if(L.length){GR=L;render();}});}).catch(()=>{});}pull();setInterval(pull,60000);})();
 render();save();
 </script>
 </body>

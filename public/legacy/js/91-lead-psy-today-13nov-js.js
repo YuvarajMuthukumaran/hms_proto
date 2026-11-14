@@ -23,7 +23,9 @@
   const planFreq=p=>{const t=String((PX(p.id).mgmtPsych||{}).therapyPlan||'');const m=t.match(/(\d+)\s*(?:sessions?\s*)?(?:a|per|\/)\s*week/i);return +(LPX(p.id).planFreq)||(m?+m[1]:3);};
   const needDays=p=>Math.max(1,Math.ceil(7/planFreq(p)));
   const hasPlan=p=>{const m=PX(p.id).mgmtPsych||{};return !!(m.therapyPlan||m.signed||LPX(p.id).planFreq);};
-  const away=p=>!!p.dischargeToday;
+  /* on home leave or an outing (saved in the patient's psychologist notes, so every login sees it); the no-session rule skips these patients */
+  const awayOf=p=>{const a=LPX(p.id).away;return a&&a.until>Date.now()?a:null;};
+  const away=p=>!!p.dischargeToday||!!awayOf(p);
   /* the therapy plan sets the frequency (3 a week = flag after 3 days). No plan yet is its own flag from day 7 (the day 7 rule) */
   const noSess=p=>{if(!doc(p)||away(p)||!hasPlan(p))return false;const a=sessAge(p),d=+p.day||0;return a===null?d>=needDays(p):a>=needDays(p);};
   const noPlan=p=>!!doc(p)&&!away(p)&&!hasPlan(p)&&(+p.day||0)>=7;
@@ -61,6 +63,8 @@
       const ts=Date.now()-d*dayMs-(d===0?30*60000:0),mod=therapyOf(p);
       x.sn.notes.push({id:'lps-'+p.id,ts,status:'signed',at:dLabel(ts),by:who,signedBy:who,signedAt:dLabel(ts+20*60000),mod,mins:'40',risk:{a:'no',b:'no',c:'no'},kind:'ind',addenda:[],summaryLine:mod+' session, 40 min. Risk check: all no.'});
     }catch(e){}});
+    /* Yash Arora is on home leave until tomorrow evening (demo) */
+    try{const y=LPX('yash');if(y.away===undefined)y.away={kind:'Home leave',until:Date.now()+30*3600000,by:'Dr. Kunal Sethi',at:atNow()};}catch(e){}
     /* Karan Malhotra's mother raised a concern 4 h 20 m ago (the family concern banner reads the same record) */
     try{const k=LPX('kabir');if(!k.conc)k.conc={at:Date.now()-4*3600000-20*60000,txt:'"Nobody has told us anything this week." Mother (Sunita Malhotra).'};}catch(e){}
     /* supervision notes: Priya 6 days ago, Kiran 9 days ago (amber), Ankit 2 days ago */
@@ -157,11 +161,11 @@
     const rows=list.filter(p=>M.inScope(p)&&keep(p)).map(p=>{
       const ls=sessAge(p),fm=famOf(p),fl=[];if(p.risk)fl.push('High risk');if(planWait(p))fl.push('Plan to sign');if(coWait(p).length)fl.push('Note to co-sign');if(noSess(p))fl.push('No session');if(noPlan(p))fl.push('No therapy plan yet');if((+p.day||0)>=14&&!hasScore(p))fl.push('No score');if(dischSoon(p))fl.push('Discharge this week');
       const dots=Array.from({length:8},(_,i)=>`<i class="lt-d${i<topics(p)?' on':''}"></i>`).join('');
-      const lsTxt=(+p.day||0)<1?'Admitted today':ls===null?'No session yet':ls===0?'Today':ls===1?'Yesterday':ls+' days ago';
+      const aw=awayOf(p),lsTxt=aw?'On '+aw.kind.toLowerCase()+' until '+new Date(aw.until).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):(+p.day||0)<1?'Admitted today':ls===null?'No session yet':ls===0?'Today':ls===1?'Yesterday':ls+' days ago';
       return `<tr><td>${nameCell(p)}<div class="tiny muted">${p.age||''}/${p.sex||''} · ${esc(therapyOf(p))}</div></td><td class="small">${esc(doc(p)||'—')}</td><td class="small" style="${noSess(p)?'color:#b54708;font-weight:700':''}">${lsTxt}</td>
         <td class="small">${esc(fm.name)} <span class="muted">(${esc(String(fm.rel||'').toLowerCase())})</span><div class="tiny muted">${esc(fm.last)}</div>${openGr(p)?'<span class="lt-c r">Concern open</span>':''}${famLate(p)?'<span class="lt-c a">Call overdue</span>':''}<div class="lt-ds" title="Family topics covered">${dots}</div></td>
         <td class="small">${fl.map(x=>`<span class="lt-c ${/risk/i.test(x)?'r':'a'}">${esc(x)}</span>`).join('')||'<span class="muted">On track</span>'}</td>
-        <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="go('#/patient/${p.id}/overview')">Open record</button> <button class="btn sm" onclick="lpAssign('${p.id}')">Change</button></td></tr>`;}).join('');
+        <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="go('#/patient/${p.id}/overview')">Open record</button> <button class="btn sm" onclick="lpAssign('${p.id}')">Change</button> <button class="btn sm" onclick="ltLeave('${p.id}')">${awayOf(p)?'Back from leave':'Leave'}</button></td></tr>`;}).join('');
     return `<table class="lt-tb"><thead><tr><th>Patient</th><th>Psychologist</th><th>Last session</th><th>Family</th><th>Needs attention</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="pad small muted">No patients match.</td></tr>'}</tbody></table>`;
   }
 
@@ -225,6 +229,11 @@
   window.ltAskSend=function(name){const it=window.__ltAskItems||[],pick=[...document.querySelectorAll('.lt-ai input:checked')].map(c=>it[+c.dataset.i]).filter(Boolean);
     if(!pick.length){toast('Tick at least one item');return;}
     sendAsk(name,pick,(($('ltAskNote')||{}).value||'').trim(),'a'+Date.now());closeModal();toast('One message sent to '+name+' with '+pick.length+' item'+(pick.length===1?'':'s'));keepScroll();};
+  window.ltLeave=function(pid){const p=floor().find(x=>x.id===pid);if(!p)return;const a=awayOf(p);
+    if(a){LPX(pid).away=null;toast(p.name+' is back from '+a.kind.toLowerCase()+'. Sessions count again.');keepScroll();return;}
+    const d=new Date(Date.now()+864e5).toISOString().slice(0,10);
+    V3.modal('Leave or outing · '+esc(p.name),'The no-session flag is skipped while the patient is away. It is saved in the record, so every login sees it.',`<label class="field"><span class="lbl">Kind</span><select class="input" id="lvK"><option>Home leave</option><option>Outing</option><option>Other</option></select></label><label class="field" style="margin-top:8px"><span class="lbl">Back by</span><input class="input" id="lvD" type="date" value="${d}"></label>`,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="ltLeaveSave('${pid}')">Save</button>`);};
+  window.ltLeaveSave=function(pid){const k=($('lvK')||{}).value||'Home leave',d=($('lvD')||{}).value;const u=new Date(d+'T18:00:00').getTime();if(!d||isNaN(u)||u<=Date.now()){toast('Pick a date after today');return;}LPX(pid).away={kind:k,until:u,by:signer(),at:atNow()};closeModal();keepScroll();toast('Saved. The no-session flag is skipped until '+new Date(u).toLocaleDateString('en-GB',{day:'numeric',month:'short'})+'.');};
   window.ltCall=pid=>{const p=floor().find(x=>x.id===pid);T().acted[pid]=signer()+' · '+atNow();toast('Call to the treating psychiatrist logged for '+(p||{}).name+'.');keepScroll();};
   window.ltWill=pid=>{try{lpCallFam(pid);}catch(e){}};
   window.ltRemind=()=>{const M=model(),late=M.all.filter(p=>famLate(p)&&!concOf(p)),by={};late.forEach(p=>{const d=doc(p);if(d)(by[d]=by[d]||[]).push({p,i:{k:'famcall',t:'Family call overdue'}});});Object.keys(by).forEach(n=>{if(n!==mineName)sendAsk(n,by[n],'Please make the overdue family calls today.','a'+Date.now()+n[0]);});T().reminded=clock();toast('Reminder sent to '+Object.keys(by).filter(n=>n!==mineName).join(', ')+' with their overdue family calls');keepScroll();};

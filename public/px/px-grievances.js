@@ -65,7 +65,7 @@
             var rt = d.owner ? [d.owner, d.ownerRole || 'Treating team'] : ['Patient experience team', 'Patient experience'];
             var c = { id: nid, type: 'concern', pid: d.pid || '', pname: d.name || '', title: String(d.title || d.desc || 'Logged from the patient record').slice(0, 70), raisedBy: d.by || 'Clinical team', via: 'Patient record', owner: rt[0], ownerRole: rt[1], category: d.cat || 'Other', sla: '6 h left', slaTone: 'grey', logged: d.at || 'just now', status: 'Open', desc: d.desc || d.title || '', src: d.src || 'family' };
             extra.push(c); have[nid] = 1; changed = true; last['pxg:' + nid] = stamp({ c: c, st: null });
-          } else if (k.indexOf('pxo:') === 0) {
+          } else if (k.indexOf('pxo:') === 0 && !/^(h|v)-/.test(id)) {
             if (seenO[k] === t) return; seenO[k] = t;
             var cur = cs[id] || {};
             if (d.fixed) cs[id] = Object.assign({}, cur, { status: 'In progress', stage: 'confirm', fixNote: d.fixNote || '', sla: 'Call the family', slaTone: 'blue', latest: d.fixNote || cur.latest, latestBy: d.by, latestAt: d.at });

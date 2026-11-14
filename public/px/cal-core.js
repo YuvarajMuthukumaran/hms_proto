@@ -72,7 +72,7 @@
   const onShift=(id,d,hour)=>{const s=shift(id,d);if(s.code==='L'||s.code==='O')return false;if(hour==null)return true;const sh=SHIFTS[s.code];return hour>=sh.from&&hour<sh.to;};
   /* ---- events: stored ones, family meetings from stays, training from the Staff training page ---- */
   function trainingEvents(){
-    let T=null;try{T=JSON.parse(localStorage.getItem('px_training_v1')||'null');}catch(e){}
+    let T=null;try{T=JSON.parse(localStorage.getItem('px_training_v2')||'null');}catch(e){}
     const sess=(T&&T.sess)||[{id:'s1',when:todayISO()+'T15:00',mod:'rights',place:'Training room',invited:['p3','p6','p8','p12'],came:null}];
     const MODN={rights:'Patient rights and dignity',listen:'Listening and tone',concern:'Handling a concern',n1:'Talking with families',n2:'Following patient preferences',n3:'Calming and safe handling',c1:'Enquiry and admission calls',c2:'Crisis calls',c3:'Privacy on the phone',f1:'Welcoming a family at admission',f2:'Visitors and privacy',f3:'Upset visitors and DAMA requests',w1:'Respect on the floor'};
     return sess.map(s=>({id:'tr-'+s.id,type:'Staff training',date:s.when.slice(0,10),time:s.when.slice(11,16),owner:'ka',patient:'',floor:'Whole hospital',note:(MODN[s.mod]||s.mod)+' · '+(s.place||'Training room')+' · '+(s.invited||[]).length+' invited'+(s.came?' · attendance saved':''),status:s.came?'done':'planned',auto:'Staff training'}));}
