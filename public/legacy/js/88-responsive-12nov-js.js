@@ -41,10 +41,12 @@
     #view .dpcards{grid-template-columns:1fr!important}
     #view .dph h2{font-size:20px!important}
     #view .dph .row{flex-wrap:wrap}
-    #safeBar{gap:6px;padding:8px 10px}
+    #safeBar{gap:5px;padding:6px 10px}
     #safeBar .sh-n{flex-basis:100%}
     #safeBar .sh-s{display:none}
-    #safeBar .sh-b{flex:1 1 100%;justify-content:center}
+    #safeBar .sh-c{font-size:11px;padding:2px 8px}
+    /* the note button sits on the chip row, so the sticky bar stays short on a phone */
+    #safeBar .sh-b{flex:0 0 auto;margin-left:auto;height:30px;padding:0 12px;font-size:13px}
     /* filter rows, chips and segmented switches wrap or scroll */
     #view .seg,#view .mini-chips,#view .pg-mine,#view .pg-scope,#view .lp-fr,#view .toolbar,#view .ptfil,#view .pd-bar{flex-wrap:wrap;max-width:100%}
     #view .pd-bar .input,#view .toolbar .search{width:100%!important}

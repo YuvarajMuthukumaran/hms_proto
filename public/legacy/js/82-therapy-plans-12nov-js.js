@@ -101,6 +101,7 @@
     const flag=(ok,due)=>ok?'<span class="chip c-green">Done</span>':due?'<span class="chip c-red">Due now</span>':'<span class="chip c-grey">Not yet due</span>';
     const req=[['24-hour call',calls.h24==='done',day>=1],['Day 3 to 4 call',calls.d34psych==='done',day>=3],['Weekly update',!!wk||!!(fam.length&&fam[fam.length-1]),day>=7],['Pre-discharge session',false,false]];
     const contacts=(()=>{try{return JSON.parse(ptRun(pid,()=>JSON.stringify(S.contacts||[])));}catch(e){return [];}})();
+    if(!contacts.length){try{const id=ptIdentity(p);if(id&&id.nr)contacts.push([id.nr,(id.rel||'Family')+' · nominated representative']);}catch(e){}}
     const comm=((px(pid).th||{}).comm||[]).slice(0,4);
     const told=SNO(pid).told;
     const nDone=TOPICS.filter(t=>done[t]).length;

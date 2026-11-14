@@ -27,6 +27,8 @@
     ['Meera Iyer','Surabhi','CBT','Yesterday','Father · yesterday','',[],[]],['Kavya Menon','Surabhi','CBT-E','2 days ago','Husband · 3 days','',[],[]],['Aman Gill','Surabhi','MI','Yesterday','Son · yesterday','',[],[]],
     ['Nikhil Jain','Kiran','Not started (medically unwell)','None','Wife · today','',['Delirium risk: hold sessions'],['new']],['Pooja Bhatt','Priya','Intake booked','None','Sister · admission day','',[],['new']]]
     .map(r=>({n:r[0],doc:r[1],th:r[2],last:r[3],fm:r[4],fam:r[5],fl:r[6],f:r[7]}));
+  /* discharge flags read the same expected discharge date as every other list (no fixed dates) */
+  P.forEach(x=>{x.fl=x.fl.map(f=>{if(!/^Discharge [0-9]+ [A-Za-z]{3}$/.test(f))return f;try{const q=allPts().find(z=>z.name===x.n),d=q&&rmoEx(q)[2];return d&&d!=='Not set'?(d==='Today'?'Ready for discharge today':'Discharge '+d):f;}catch(e){return f;}});});
   const byName=n=>P.find(x=>x.n===n);
   const pts=()=>{try{return allPts();}catch(e){return PTS;}};
   const idOf=n=>{const p=pts().find(x=>x.name===n);return p?p.id:null;};
@@ -70,7 +72,7 @@
     const o2=Object.assign({},o,{list,total:list.length,mh:'Next due',title:'Floor inpatients',where:'Gurgaon · '+(sc==='mine'?'my patients':'all wards'),filters:sw+chips+(typeof floorTabs==='function'?'':''),
       doc:p=>psyOfP(p),psy:p=>docName(p.id),dc:p=>(typeof rmoEx==='function'?rmoEx(p):EX[p.id]||[])[2],go:p=>`#/patient/${p.id}/overview`,count:k=>all.filter(p=>ipdIn(k,p,dis)).length,
       id:p=>{const sx=p.sex||(typeof RMO_FILL!=='undefined'&&(RMO_FILL[p.id]||[])[3])||'',ag=p.age||(typeof RMO_FILL!=='undefined'&&(RMO_FILL[p.id]||[])[4])||'';return `${sx?ag+'/'+sx+' ':''}${String(p.room||'').replace(/^Room\s*/i,'R ')}`;},
-      c6:p=>{const x=protoOf(p.id),f=x?x.fl.filter(t=>!(docKey(p.id)&&/^No psychologist$/.test(t))):[];if(x&&docKey(p.id)&&!x.doc&&!f.length)f.push('Intake call due 24 h');if(x&&x.fam)f.push(x.fam);const pl=L().sign[p.id]?[]:[];return f.length?`<div class="pg-due">${f.map(i=>`<div>${esc(i)}</div>`).join('')}</div>`:'<span class="tiny muted">Nothing due</span>';}});
+      c6:p=>{const x=protoOf(p.id),live=window.lpIssueTexts?lpIssueTexts(p.id):null,ISS=/^(No PHQ-9|No score|No therapy plan|Plan to sign|Plan to sign off|Note [0-9]+ h unsigned|No session|Risk check yes today|Family concern|Family call overdue|Day 3 to 4 call overdue|Weekly update overdue|Concern [0-9])/,f=x?x.fl.filter(t=>!(docKey(p.id)&&/^No psychologist$/.test(t))&&!(live&&ISS.test(t))):[];if(live)f.unshift(...live.filter(t=>!/^No psychologist$/.test(t)));if(x&&docKey(p.id)&&!x.doc&&!f.length)f.push('Intake call due 24 h');if(x&&x.fam&&!live)f.push(x.fam);const pl=L().sign[p.id]?[]:[];return f.length?`<div class="pg-due">${f.map(i=>`<div>${esc(i)}</div>`).join('')}</div>`:'<span class="tiny muted">Nothing due</span>';}});
     return base(o2);
   };
   window.lpSet=function(k,v){L()[k]=v;render();};
@@ -92,9 +94,10 @@
     if(tt&&!v.querySelector('#lpChg')){const row=tt.parentElement;const b=document.createElement('button');b.id='lpChg';b.className='lp-lnk';b.textContent=docKey(r.pid)?'Change psychologist':'Assign psychologist';b.onclick=()=>lpAssign(r.pid);row.appendChild(b);}
     /* open family concern banner */
     const c=L().conc[r.pid]||(r.pid==='kabir'?{at:Date.now()-4*3600000-20*60000,txt:'"Nobody has told us anything this week." Mother (Sunita Malhotra).'}:null);
-    if(c&&!c.closed&&!v.querySelector('#lpConc')){const left=Math.max(0,6*3600000-(Date.now()+((S.au||{}).skip||0)*3600000-c.at)),h=Math.floor(left/3600000),m=Math.floor(left%3600000/60000);
-      const b=document.createElement('section');b.id='lpConc';b.className='fc9';b.style.cssText='margin:0 0 10px';b.innerHTML=`<div class="fc9-t"><span class="fc9-k">OPEN FAMILY CONCERN</span><b>${h} h ${m} m left on the 6 h clock</b><div class="small muted">${esc(c.txt)}</div></div><div class="row" style="gap:8px"><button class="btn pri" onclick="lpCallFam('${r.pid}')">Call family</button></div>`;
-      const tabs=v.querySelector('.subtabs');tabs?tabs.parentNode.insertBefore(b,tabs):v.insertBefore(b,v.firstChild);}
+    let c2=c;if(!c2){try{const g=(ptCtxOf(r.pid).pgriev||[]).find(x=>x.st==='Open');if(g)c2={txt:'"'+g.t+'" · '+(g.via||'Family')+(g.own?' · owner '+g.own:''),sla:g.sla||''};}catch(e){}}
+    if(c2&&!c2.closed&&!v.querySelector('#lpConc')){const c=c2;const left=Math.max(0,6*3600000-(Date.now()+((S.au||{}).skip||0)*3600000-c.at)),h=Math.floor(left/3600000),m=Math.floor(left%3600000/60000);
+      const b=document.createElement('section');b.id='lpConc';b.className='fc9';b.style.cssText='margin:0 0 10px';b.innerHTML=`<div class="fc9-t"><span class="fc9-k">OPEN FAMILY CONCERN</span><b>${c.at?h+' h '+m+' m left':(c.sla||'Open')} on the 6 h clock</b><div class="small muted">${esc(c.txt)}</div></div><div class="row" style="gap:8px"><button class="btn pri" onclick="lpCallFam('${r.pid}')">Call family</button></div>`;
+      const dp=v.querySelector('.dph'),tabs=v.querySelector('.subtabs');dp?dp.parentNode.insertBefore(b,dp):tabs?tabs.parentNode.insertBefore(b,tabs):v.insertBefore(b,v.firstChild);} /* top of the record, above the patient card */
   }
   window.lpCallFam=function(pid){const c=L().conc[pid]=L().conc[pid]||{at:Date.now()-4*3600000,txt:''};c.closed=signer()+' · '+atNow();render();toast('Call logged on the family tab. The concern is with you, closed on the clock.');};
   /* Management plan: lead sign-off */

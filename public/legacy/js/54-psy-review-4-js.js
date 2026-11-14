@@ -198,11 +198,13 @@
     fam:{h:['Date','Family present','Led by','Topics discussed','Agreed actions'],f:['date','who','by','topics','actions'],form:[['date','Date','date'],['who','Family members present','text'],['by','Led by',['Psychologist','Psychiatrist','Psychologist and psychiatrist']],['topics','Topics discussed','area'],['actions','Agreed actions','area']],d:'Sessions between the family and the therapist or psychiatrist.'},
     comm:{h:['Date and time','Type','With','Minutes','Notes','Logged by'],f:['date','type','who','mins','note','by'],form:[['date','Date','date'],['type','Type',['Patient and family call (Tulasi phone)','Treating team and family call','Message to the family','In-person visit']],['who','With','text'],['mins','Minutes','number'],['note','Notes','area']],d:'Every contact between the patient and the family, and between the treating team and the family.'}
   };
-  const thData=()=>{const x=px();if(!x.th)x.th={
+  const thData=()=>{const x=px();if(!x.th)x.th=(S.pid&&S.pid!=='neel')?{ind:[],grp:[],fam:[],comm:[]}:{
     ind:[{date:'23 Oct 2026',by:'Priya Nair',modality:'CBT',mins:'45',note:'Worked on sleep routine and early warning signs.',plan:'Review the sleep diary.'},{date:'20 Oct 2026',by:'Priya Nair',modality:'Supportive therapy',mins:'40',note:'Settling in, anxious about discharge.',plan:'Introduce relaxation.'}],
     grp:[{date:'22 Oct 2026',group:'Relapse prevention group',by:'Priya Nair',took:'Attended',note:'Spoke about triggers.',src:'Daily note'},{date:'19 Oct 2026',group:'Yoga and relaxation',by:'Activity team',took:'Attended',note:'',src:'Daily note'}],
     fam:[{date:'21 Oct 2026',who:'Ananya Bose (sister)',by:'Psychologist and psychiatrist',topics:'Illness, medicine supervision, relapse signs.',actions:'Sister to supervise lithium.'}],
     comm:[{date:'23 Oct 2026, 6:10 pm',type:'Patient and family call (Tulasi phone)',who:'Ananya Bose (sister)',mins:'8',note:'Patient calm, asked about home.',by:'Priya Nair'},{date:'19 Oct 2026, 11:00 am',type:'Treating team and family call',who:'Ananya Bose (sister)',mins:'6',note:'24-hour call.',by:'Dr. Aanya Sharma'}]};return x.th;};
+  /* the lead psychologist's Today reads each patient's family contact log without opening the Therapy tab first */
+  window.psyThSeed=function(pid){const keep=S.pid;try{S.pid=pid;return thData();}finally{S.pid=keep;}};
   const canEdit=k=>S.role==='psychologist'||(S.role==='psychiatrist'&&(k==='fam'||k==='comm'));
   window.psyThTab=function(k){S.thTab=k;render();};
   window.psyThAdd=function(k){

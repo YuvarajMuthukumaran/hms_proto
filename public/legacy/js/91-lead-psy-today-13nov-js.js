@@ -39,7 +39,7 @@
   const dischSoon=p=>{try{const d=new Date(ptCtxOf(p.id).edd||'').getTime();return !!p.dischargeToday||(d&&d-Date.now()<7*dayMs&&d-Date.now()>-dayMs);}catch(e){return !!p.dischargeToday;}};
   const therapyOf=p=>{const d=String(p.dx||'');return /obsess|ocd/i.test(d)?'ERP':/depress/i.test(d)?'CBT, behavioural activation':/psychotic|schizo/i.test(d)?'CBT for psychosis':/alcohol|opioid|substance/i.test(d)?'MI, relapse prevention':/bipolar/i.test(d)?'Supportive, psychoeducation':'Supportive therapy';};
   const topics=p=>{try{const t=(PX(p.id).sn||{}).told||{};return Math.min(8,Object.keys(t).filter(k=>t[k]).length);}catch(e){return 0;}};
-  const famOf=p=>{try{const id=ptIdentity(p);const c=((PX(p.id).th||{}).comm||[])[0];return {name:id.nr,rel:id.rel,last:c?c.date:'no contact logged'};}catch(e){return {name:'',rel:'',last:''};}};
+  const famOf=p=>{try{const id=ptIdentity(p);let th=PX(p.id).th;if(!th&&window.psyThSeed){try{th=psyThSeed(p.id);}catch(e){}}const c=((th||{}).comm||[])[0];return {name:id.nr,rel:id.rel,last:c?c.date:'no contact logged'};}catch(e){return {name:'',rel:'',last:''};}};
   const restDebrief=()=>{try{return (S.rst.eps||[]).filter(e=>e.end&&!e.debrief&&!T().done['rst'+e.id+e.pid]);}catch(e){return [];}};
   const dLabel=ts=>new Date(ts).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+', '+new Date(ts).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});
   const ago=ts=>{const d=Math.floor((Date.now()-ts)/dayMs);return d<=0?'today':d===1?'yesterday':d+' days ago';};
@@ -91,7 +91,7 @@
     return {all,risk,nosess,noplan,sign,noscore,fam,nopsy,mine,disch,inScope,rst};
   }
   const tile=(n,l,s,k,warn)=>`<button class="lt-t${warn&&n?' w':''}" onclick="ltFlt('${k}')"><b>${n}</b><span>${l}</span><i>${s}</i></button>`;
-  function nameCell(p){return `<div><b>${esc(p.name)}</b> <span class="tiny muted">${esc(String(p.room||'').replace(/^Room\s*/,'R '))} · day ${+p.day||0}${p.risk?' · <span style="color:#b42318;font-weight:700">high risk</span>':''}</span><div class="tiny muted">${esc(doc(p)||'No psychologist yet')}</div></div>`;}
+  function nameCell(p,noDoc){return `<div><b>${esc(p.name)}</b> <span class="tiny muted" style="white-space:nowrap">${esc(String(p.room||'').replace(/^Room\s*/,'R '))} · day ${+p.day||0}${p.risk?' · <span style="color:#b42318;font-weight:700">high risk</span>':''}</span>${noDoc?'':`<div class="tiny muted">${esc(doc(p)||'No psychologist yet')}</div>`}</div>`;}
 
   /* ---------------- one row per patient: issues as chips, worst first ---------------- */
   const RANK={risk:1,rst:2,fam:3,famcall:4,nopsy:5,sign:6,cosign:6,nosess:7,noplan:8,noscore:9};
@@ -153,7 +153,7 @@
     const fr=F.map(r=>`<tr><td><b class="lt-k grp">Floor</b></td><td class="small">${esc(r.why)}</td><td style="text-align:right;white-space:nowrap">${r.btn}</td></tr>`).join('');
     const dn=DONE.map(p=>`<tr class="lt-done"><td style="min-width:190px">${nameCell(p)}</td><td><span class="lt-c g">Done</span> <span class="small muted">everything for this patient is handled</span></td><td></td></tr>`).join('');
     if(!P.length&&!F.length&&!DONE.length)return '<div class="pad small muted">Nothing needs you right now.</div>';
-    return `<table class="lt-tb"><tbody>${tr}${dn}${F.length?`<tr><td colspan="3" class="lt-sec">Floor</td></tr>${fr}`:''}</tbody></table>`;
+    return `<table class="lt-tb lt-act"><tbody>${tr}${dn}${F.length?`<tr><td colspan="3" class="lt-sec">Floor</td></tr>${fr}`:''}</tbody></table>`;
   }
   const FILT=[['all','All'],['risk','Risk'],['nosess','No session 3+ days'],['sign','To review'],['noscore','No score 14 d'],['fam','Family waiting'],['disch','Discharge this week']];
   function caseTable(M,list){
@@ -163,11 +163,11 @@
       const ls=sessAge(p),fm=famOf(p),fl=[];if(p.risk)fl.push('High risk');if(planWait(p))fl.push('Plan to sign');if(coWait(p).length)fl.push('Note to co-sign');if(noSess(p))fl.push('No session');if(noPlan(p))fl.push('No therapy plan yet');if((+p.day||0)>=14&&!hasScore(p))fl.push('No score');if(dischSoon(p))fl.push('Discharge this week');
       const dots=Array.from({length:8},(_,i)=>`<i class="lt-d${i<topics(p)?' on':''}"></i>`).join('');
       const aw=awayOf(p),lsTxt=aw?'On '+aw.kind.toLowerCase()+' until '+new Date(aw.until).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):(+p.day||0)<1?'Admitted today':ls===null?'No session yet':ls===0?'Today':ls===1?'Yesterday':ls+' days ago';
-      return `<tr><td>${nameCell(p)}<div class="tiny muted">${ageSex(p)} · ${esc(therapyOf(p))}</div></td><td class="small">${esc(doc(p)||'—')}</td><td class="small" style="${noSess(p)?'color:#b54708;font-weight:700':''}">${lsTxt}</td>
-        <td class="small">${esc(fm.name)} <span class="muted">(${esc(String(fm.rel||'').toLowerCase())})</span><div class="tiny muted">${esc(fm.last)}</div>${openGr(p)?'<span class="lt-c r">Concern open</span>':''}${famLate(p)?'<span class="lt-c a">Call overdue</span>':''}<div class="lt-ds" title="Family topics covered">${dots}</div></td>
-        <td class="small">${fl.map(x=>`<span class="lt-c ${/risk/i.test(x)?'r':'a'}">${esc(x)}</span>`).join('')||'<span class="muted">On track</span>'}</td>
+      return `<tr><td style="min-width:200px">${nameCell(p,1)}<div class="tiny muted">${ageSex(p)} · ${esc(therapyOf(p))}</div></td><td class="small" data-l="Psychologist">${esc(doc(p)||'—')}</td><td class="small" data-l="Last session" style="${noSess(p)?'color:#b54708;font-weight:700':''}">${lsTxt}</td>
+        <td class="small" data-l="Family">${esc(fm.name)} <span class="muted">(${esc(String(fm.rel||'').toLowerCase())})</span><div class="tiny muted">${esc(fm.last)}</div>${openGr(p)?'<span class="lt-c r">Concern open</span>':''}${famLate(p)?'<span class="lt-c a">Call overdue</span>':''}<div class="lt-ds" title="Family topics covered">${dots}</div></td>
+        <td class="small" data-l="Needs attention">${fl.map(x=>`<span class="lt-c ${/risk/i.test(x)?'r':'a'}">${esc(x)}</span>`).join('')||'<span class="muted">On track</span>'}</td>
         <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="go('#/patient/${p.id}/overview')">Open record</button> <button class="btn sm" onclick="lpAssign('${p.id}')">Change</button> <button class="btn sm" onclick="ltLeave('${p.id}')">${awayOf(p)?'Back from leave':'Leave'}</button></td></tr>`;}).join('');
-    return `<table class="lt-tb"><thead><tr><th>Patient</th><th>Psychologist</th><th>Last session</th><th>Family</th><th>Needs attention</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="pad small muted">No patients match.</td></tr>'}</tbody></table>`;
+    return `<table class="lt-tb lt-cl"><thead><tr><th>Patient</th><th>Psychologist</th><th>Last session</th><th>Family</th><th>Needs attention</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="pad small muted">No patients match.</td></tr>'}</tbody></table>`;
   }
 
   /* ---------------- team strip: who is on, caseload, sessions today, what is late, supervision ---------------- */
@@ -221,6 +221,8 @@
     items.forEach(x=>{(byP[x.p.id]=byP[x.p.id]||[]).push(x.i.t);});
     Object.keys(byP).forEach(pid=>{LPX(pid).ask={id:batch,to:name,by,at,ts,note:note||'',items:byP[pid],done:false};T().asked[pid]=clock();});
   }
+  /* the Patients page "Next due" column shows the same issues, in the same words, as Today */
+  window.lpIssueTexts=function(pid){try{const p=floor().find(x=>x.id===pid);return p?issuesOf(p,model()).map(i=>i.t):null;}catch(e){return null;}};
   window.ltAsk=function(pid){const M=model(),p=floor().find(x=>x.id===pid);if(!p)return;const iss=issuesOf(p,M).filter(i=>i.k!=='nopsy');if(!iss.length)return;
     sendAsk(doc(p),iss.map(i=>({p,i})),'', 'a'+Date.now());toast('Message sent to '+doc(p)+'. They see it on their Today.');keepScroll();};
   window.ltAskPsy=function(name){const M=model(),it=itemsFor(name,M);if(!it.length){toast('Nothing open for '+name);return;}
@@ -333,7 +335,10 @@
   .lt-c{display:inline-block;font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 9px;margin:2px 4px 2px 0;background:#fffaeb;color:#b54708}.lt-c.r{background:#fef3f2;color:#b42318}.lt-c.g{background:#ecfdf3;color:#067647}
   .lt-done td{opacity:.6}.lt-ds{display:flex;gap:3px;margin-top:4px}.lt-d{width:8px;height:8px;border-radius:50%;background:#dfe6ef}.lt-d.on{background:#1f9d57}
   #ltSignBtn[disabled]{opacity:.45;cursor:not-allowed}
-  @media(max-width:900px){.lt-ts{grid-template-columns:repeat(2,minmax(0,1fr))}.lt-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.lt-tb{display:block;overflow-x:auto}}`;document.head.appendChild(css);
+  @media(max-width:900px){.lt-ts{grid-template-columns:repeat(2,minmax(0,1fr))}.lt-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.lt-tb{display:block;overflow-x:auto}}
+  @media(max-width:520px){.lt-strip{grid-template-columns:minmax(0,1fr)}.lt-pf .btn{flex:1 1 auto}}
+  /* phones: each Actions row is a card, patient, then the issues, then the buttons (they used to sit off screen to the right) */
+  @media(max-width:700px){.lt-cl,.lt-cl tbody,.lt-cl tr,.lt-cl td{display:block;width:100%;box-sizing:border-box}.lt-cl thead{display:none}.lt-cl tr{padding:10px 12px;border-top:1px solid #eef2f8}.lt-cl td{border:0;padding:3px 0;min-width:0!important;text-align:left!important}.lt-cl td[data-l]::before{content:attr(data-l);display:block;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:#667085}.lt-cl td:last-child{display:flex;flex-wrap:wrap;gap:6px;padding-top:8px;white-space:normal!important}.lt-cl td:last-child .btn{flex:1 1 auto;justify-content:center}.lt-act,.lt-act tbody,.lt-act tr,.lt-act td{display:block;width:100%;box-sizing:border-box}.lt-act tr{padding:10px 12px;border-top:1px solid #eef2f8}.lt-act td{border:0;padding:3px 0;min-width:0!important}.lt-act td:last-child{display:flex;flex-wrap:wrap;gap:6px;padding-top:8px}.lt-act td:last-child .btn{flex:1 1 auto;justify-content:center}.lt-act .lt-sec{padding:10px 12px}}`;document.head.appendChild(css);
   const prev=ROLE.psychologist.myday;
   ROLE.psychologist.myday=function(){return lead()?page():prev.apply(this,arguments);};
 })();
