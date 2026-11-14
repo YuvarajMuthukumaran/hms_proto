@@ -48,9 +48,10 @@ const PER={
   steps:[['Family met at admission',97,95],['Rights explained to patient and rep',82,78],['Met the patient on day 1 or 2',71,66],['Preferences taken',90,88],['Random calls 1 and 2',55,48],['Discharge meeting and feedback',78,76]],
   themes:[['Family updates too general',11,'Weekly update draft added for psychologists.'],['Meals served cold',8,'Kitchen supervisor reviewing the tray order.'],['Room too noisy at night',6,'Night nurses briefed. Housekeeping checks the corridor.']]}};
 const COMPL=[{id:'c1',who:'Sister Rekha',team:'Nurses',words:'She sat with my daughter on the first night. We felt safe leaving her.',by:'S. Iyer, father'},
- {id:'c2',who:'Dr. Ichpreet Singh',team:'Psychiatrist',words:'He called back the same day and explained the plan.',by:'Kiran Rao, brother'},
+ {id:'c2',who:'Dr. Kunal Sethi',team:'Psychiatrist',words:'He called back the same day and explained the plan.',by:'Kiran Rao, brother'},
  {id:'c3',who:'Geeta Devi',team:'Housekeeping',words:'Returned the laundry and said sorry. Thank you.',by:'Vikas Sethi, father'},
  {id:'c4',who:'Priya Nair',team:'Psychologist',words:'The daily updates are very helpful.',by:'Sunita Malhotra, mother'}];
+try{const PN={p1:'Arjun Mehta',p2:'Neel Bose',p3:'Meera Iyer',p4:'Varun Rao',p5:'Kavya Menon',p6:'Rahul Sethi'},M=JSON.parse(localStorage.getItem('px_calls_main_v1')||'{}')||{};Object.keys(M).forEach(pid=>(M[pid]||[]).forEach((l,i)=>{if(l&&l.tag==='compliment')COMPL.unshift({id:'lg-'+pid+'-'+i,who:'Named in the call',team:'Logged by '+(l.who||'Prabh'),words:l.note||'Compliment logged.',by:(PN[pid]||'Family')+(l.d?', '+l.d:'')});}));}catch(e){}
 let S={per:'week',told:{}};try{S.told=JSON.parse(localStorage.getItem('px_told')||'{}');}catch(e){}
 let TR={upToDate:9,total:12,sessions:1,attended:4,passed:3};try{const t=JSON.parse(localStorage.getItem('px_training_sum'));if(t&&t.total)TR=t;}catch(e){}
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');

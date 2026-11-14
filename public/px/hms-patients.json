@@ -31,7 +31,7 @@
    "age": 41,
    "sec": "89",
    "doctor": "Dr. Kunal Sethi",
-   "psych": "Kiran Mehra",
+   "psych": "Priya Nair",
    "nr": "Lakshmi Rao",
    "nrRel": "Mother"
   },
@@ -50,7 +50,8 @@
    "doctor": "Dr. Aanya Sharma",
    "psych": "Priya Nair",
    "nr": "Rajesh Malhotra",
-   "nrRel": "Father"
+   "nrRel": "Father",
+   "noSession": 4
   },
   {
    "id": "sameer",
@@ -65,7 +66,7 @@
    "age": 22,
    "sec": "89",
    "doctor": "Dr. Rohan Mehta",
-   "psych": "Kiran Mehra",
+   "psych": "Priya Nair",
    "nr": "Mitali Das",
    "nrRel": "Mother"
   },
@@ -76,7 +77,7 @@
    "uhid": "2026-27RG6990",
    "room": "Room 213 A",
    "floor": "f2",
-   "day": 26,
+   "day": 27,
    "adm": "2026-10-18",
    "sex": "M",
    "age": 23,
@@ -84,7 +85,9 @@
    "doctor": "Dr. Aanya Sharma",
    "psych": "Priya Nair",
    "nr": "Ananya Bose",
-   "nrRel": "Sister"
+   "nrRel": "Sister",
+   "noSession": 3,
+   "safetyOpen": true
   },
   {
    "id": "rohit",
@@ -116,7 +119,7 @@
    "age": 31,
    "sec": "89",
    "doctor": "Dr. Rohan Mehta",
-   "psych": "Priya Nair",
+   "psych": "Kiran Mehra",
    "nr": "Suresh Kumar",
    "nrRel": "Brother"
   },
@@ -135,7 +138,8 @@
    "doctor": "Dr. Aanya Sharma",
    "psych": "Kiran Mehra",
    "nr": "Anil Roy",
-   "nrRel": "Father"
+   "nrRel": "Father",
+   "noSession": 3
   },
   {
    "id": "meera",
@@ -150,7 +154,7 @@
    "age": 36,
    "sec": "89",
    "doctor": "Dr. Kunal Sethi",
-   "psych": "Priya Nair",
+   "psych": "Surabhi Sengar",
    "nr": "Gopal Iyer",
    "nrRel": "Husband"
   },
@@ -167,7 +171,7 @@
    "age": 24,
    "sec": "89",
    "doctor": "Dr. Kunal Sethi",
-   "psych": "Kiran Mehra",
+   "psych": "Priya Nair",
    "nr": "Farah Qureshi",
    "nrRel": "Mother"
   },
@@ -184,7 +188,7 @@
    "age": 41,
    "sec": "90",
    "doctor": "Dr. Kunal Sethi",
-   "psych": "Priya Nair",
+   "psych": "Kiran Mehra",
    "nr": "Vikram Malhotra",
    "nrRel": "Husband"
   },
@@ -201,7 +205,7 @@
    "age": 19,
    "sec": "89",
    "doctor": "Dr. Kunal Sethi",
-   "psych": "Kiran Mehra",
+   "psych": "Surabhi Sengar",
    "nr": "Lata Menon",
    "nrRel": "Mother"
   },
@@ -218,7 +222,7 @@
    "age": 28,
    "sec": "89",
    "doctor": "Dr. Kunal Sethi",
-   "psych": "",
+   "psych": "Priya Nair",
    "nr": "Harish Bhatt",
    "nrRel": "Father"
   },
@@ -235,7 +239,7 @@
    "age": 45,
    "sec": "89",
    "doctor": "Dr. Kunal Sethi",
-   "psych": "Kiran Mehra",
+   "psych": "Surabhi Sengar",
    "nr": "Gurpreet Gill",
    "nrRel": "Wife"
   },
@@ -252,7 +256,7 @@
    "age": 29,
    "sec": "89",
    "doctor": "Dr. Kunal Sethi",
-   "psych": "Priya Nair",
+   "psych": "Kiran Mehra",
    "nr": "Neha Arora",
    "nrRel": "Sister"
   },
@@ -286,7 +290,7 @@
    "age": 22,
    "sec": "89",
    "doctor": "Dr. Kunal Sethi",
-   "psych": "Priya Nair",
+   "psych": "Kiran Mehra",
    "nr": "Kamal Sethi",
    "nrRel": "Father"
   }

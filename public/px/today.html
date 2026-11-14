@@ -229,10 +229,10 @@ function setState(p){ Object.assign(state,p); render(); }
         ], others: 'Dr. Aanya Sharma: nothing yet' },
       { id: 'km', type: 'Team check', late: true, name: 'Kavya Menon', initials: 'KM', sub: '29/F · Day 9 · Room 313', tags: [],
         items: [
-          { id: 'km1', c: 'amber', text: 'No 8 pm WhatsApp update for 3 days', meta: 'Kiran Mehra' },
+          { id: 'km1', c: 'amber', text: 'No 8 pm WhatsApp update for 3 days', meta: 'Surabhi Sengar' },
           { id: 'km3', c: 'amber', text: 'No psychologist session Sat and Sun (week off, no cover)', meta: 'families raised weekend gaps 2 times this quarter' },
           { id: 'km2', c: 'amber', text: 'Family has stopped replying. Call them within 48 hours.', meta: 'your step', btn: 'Call now' }
-        ], others: 'Kiran Mehra: nothing yet' },
+        ], others: 'Surabhi Sengar: nothing yet' },
       { id: 'kml', type: 'Team check', late: true, name: 'Karan Malhotra', initials: 'KM', sub: '26/M · Day 21 · Room 212 A', tags: [],
         items: [
           { id: 'kc1', c: 'amber', text: 'TODAY line in the daily update copied 5 days running', meta: 'must be patient-specific · Priya Nair' },
@@ -377,7 +377,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.open){setState({open:state.open===t.dataset.open?null:t.dataset.open});return;}
   if(t.dataset.act){setState({open:null,acted:{...state.acted,[t.dataset.act]:t.dataset.m}});return;}
   if(t.dataset.hide){setState({brief:false});return;}
-  if(t.hasAttribute("data-eye")){setState({eye:t.dataset.eye||null,open:null});return;}
+  if(t.hasAttribute("data-eye")){const same=state.eye===t.dataset.eye;setState({eye:same?null:(t.dataset.eye||null),open:null});if(!same)setTimeout(()=>{const p=document.querySelector('[aria-label^="Details for"]');if(p)p.scrollIntoView({block:"center",behavior:"smooth"});},60);return;}
   if(state.open&&!t.closest('.menu')) setState({open:null});
 });
 const TP=[

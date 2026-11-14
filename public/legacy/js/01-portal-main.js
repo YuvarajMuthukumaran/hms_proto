@@ -91,7 +91,8 @@ const isPsy = () => S.role === 'psychiatrist' || S.role === 'lead';
 const isPsych = () => S.role === 'psychologist';
 const isWard = () => S.role === 'nurse' || S.role === 'rmo';
 const __me0 = () => S.role==='nurse' ? {name:'Sister Rekha', short:'Sister Rekha', ini:'SR', title:'Nurse in charge · Male ward'} : S.role==='rmo' ? {name:'Dr. Sameer Khan', short:'Dr. Sameer', ini:'SK', title:'RMO on duty'} : isLead() ? {name:'Dr. Nandini Rao', short:'Dr. Nandini', ini:'NR', title:'Floor lead · Male ward'} : S.role==='psychiatrist' ? {name:'Dr. Aanya Sharma', short:'Dr. Aanya', ini:'AS', title:'Psychiatrist'} : {name:'Priya Nair', short:'Priya', ini:'PN', title:'Psychologist'};
-const PSYCHOF = {arjun:'Priya Nair',varun:'Kiran Mehra',kabir:'Priya Nair',sameer:'Kiran Mehra',neel:'Priya Nair',rohit:'',dev:'Priya Nair',tarun:'Kiran Mehra'};
+/* one treating psychologist per patient for the whole floor (14 Nov 2026): every screen reads this table; the clinical psychologist (Priya Nair) has the first five ward patients, floor lead caseload is Meera, Kavya, Aman */
+const PSYCHOF = {arjun:'Priya Nair',varun:'Priya Nair',kabir:'Priya Nair',sameer:'Priya Nair',neel:'Priya Nair',rohit:'',dev:'Kiran Mehra',tarun:'Kiran Mehra',meera:'Surabhi Sengar',sana:'Priya Nair',ritu:'Kiran Mehra',kavya:'Surabhi Sengar',pooja:'Priya Nair',aman:'Surabhi Sengar',yash:'Kiran Mehra',nikhil:'Kiran Mehra',rahul:'Kiran Mehra'};
 const RTYPE={arjun:'Standard',varun:'Standard',kabir:'Twin sharing',sameer:'Twin sharing',neel:'Deluxe',rohit:'Suite',dev:'Standard',tarun:'Observation'};
 const VIP={rohit:'Suite room · VVIP'};
 const SENIOR={'Dr. Nandini Rao':'Floor lead','Dr. Aanya Sharma':'Senior consultant','Dr. Rohan Mehta':'Consultant','Dr. Kunal Sethi':'Consultant'};

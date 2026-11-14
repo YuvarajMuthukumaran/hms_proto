@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tulasi · Patient Experience · Setting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F6FBFF;font-family:Inter,system-ui,sans-serif;color:#0F172A;font-size:15px}
+button,select,input,textarea{font-family:inherit}button{cursor:pointer}
+.wrap{padding:16px 18px 56px;display:flex;flex-direction:column;gap:14px;max-width:980px}
+h2{margin:0;font-size:22px;font-weight:600}.muted{color:#667085}.small{font-size:13px}
+.btn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-radius:10px;border:1px solid #D6DEE8;background:#fff;color:#0F172A;font-size:14px;font-weight:600}
+.btn.pri{background:#1E6CDB;border-color:#1E6CDB;color:#fff}
+.card{background:#fff;border:1px solid #E3EAF2;border-radius:14px;overflow:hidden}
+.card h3{margin:0;padding:12px 16px;font-size:15px;border-bottom:1px solid #EEF2F7}
+.pad{padding:14px 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600}
+label.f small{font-weight:400;color:#667085}
+.inp{min-height:40px;border:1px solid #D6DEE8;border-radius:10px;padding:0 12px;font-size:14px;background:#fff;width:100%}
+.inp.bad{border-color:#D92D20;background:#FEF3F2}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;display:none;z-index:9}
+iframe{width:100%;border:0;display:block;height:760px;background:#fff}
+.seg{display:inline-flex;border:1px solid #D6DEE8;border-radius:10px;overflow:hidden;background:#fff}.seg button{border:0;background:#fff;height:38px;padding:0 16px;font-size:14px;font-weight:600;color:#344054}.seg button.on{background:#E8F1FE;color:#1E5BB8}
+html.embed body{background:transparent}
+@media(max-width:700px){.wrap{padding:12px 12px 56px}iframe{height:900px}}
+</style></head><body>
+<script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');</script>
+<div class="wrap">
+  <div><h2>Setting</h2><div class="small muted">Everything the team may change without a developer. Saved for everyone (same store as Rounds and Grievances).</div></div>
+  <div class="seg" role="tablist"><button id="t1" class="on" onclick="tab(1)">Time limits</button><button id="t2" onclick="tab(2)">Checklists, topics and owners</button></div>
+  <section class="card" id="p1">
+    <h3>Time limits</h3>
+    <div class="pad">
+      <div class="grid" id="fields"></div>
+      <div class="row" style="margin-top:14px"><button class="btn pri" onclick="save()">Save limits</button><button class="btn" onclick="resetAll()">Back to the team's limits</button><span class="small muted" id="note"></span></div>
+    </div>
+  </section>
+  <section class="card" id="p2" style="display:none">
+    <h3>Checklists, topics and owners</h3>
+    <div class="pad small muted">Room issues (checklist v1), common areas, and what patients can talk about: each line says what it is and who fixes it. Safety lines go to Chandraji now.</div>
+    <iframe id="lists" title="Checklists and owners" src="rounds.html?embed=1&setting=1"></iframe>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+<script src="px-store.js"></script>
+<script>
+var KEY='px_settings_v1';
+var DEF=[
+ ['roomH','Room issue goes to the owning team for','hours',4,1,24,'Rounds: the clock on a room issue (safety issues go to Chandraji at once).'],
+ ['remindH','Remind the grievance owner after','hours',3,1,24,'Grievances: the owner is reminded.'],
+ ['chandraH','Send the grievance to Chandraji after','hours',6,1,48,'Grievances: must be later than the reminder.'],
+ ['safetyMin','Safety alert repeats every','minutes',30,5,120,'Rounds: repeats until Chandraji takes it.'],
+ ['spokenDays','Flag "not spoken to" after','days',4,1,14,'Rounds: a patient the walk has not spoken to.']
+];
+function cur(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){return {};}}
+function draw(){var c=cur();document.getElementById('fields').innerHTML=DEF.map(function(d){return '<label class="f">'+d[1]+' <small>'+d[6]+'</small><div class="row"><input class="inp" style="max-width:110px" id="f_'+d[0]+'" type="number" min="'+d[4]+'" max="'+d[5]+'" value="'+(c[d[0]]||d[3])+'"><span class="muted">'+d[2]+'</span></div></label>';}).join('');}
+function toast(t){var e=document.getElementById('toast');e.textContent=t;e.style.display='block';clearTimeout(window._t);window._t=setTimeout(function(){e.style.display='none';},3200);}
+function save(){
+  var o={},bad=0;
+  DEF.forEach(function(d){var el=document.getElementById('f_'+d[0]),v=+el.value;el.classList.remove('bad');if(!(v>=d[4]&&v<=d[5])||Math.floor(v)!==v){el.classList.add('bad');bad++;}else o[d[0]]=v;});
+  if(bad){toast('Each limit must be a whole number in range.');return;}
+  if(o.chandraH<=o.remindH){document.getElementById('f_chandraH').classList.add('bad');toast('Chandraji is told later than the owner: make it more than the reminder.');return;}
+  try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}
+  document.getElementById('note').textContent='Saved '+new Date().toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'})+'. New clocks use these limits.';toast('Limits saved.');}
+function resetAll(){try{localStorage.setItem(KEY,'{}');}catch(e){}draw();document.getElementById('note').textContent='Back to the team\'s limits.';toast('Back to the team\'s limits.');}
+function tab(n){[1,2].forEach(function(i){document.getElementById('p'+i).style.display=i===n?'':'none';document.getElementById('t'+i).classList.toggle('on',i===n);});}
+draw();
+</script>
+</body></html>

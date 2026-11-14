@@ -21,7 +21,7 @@
     {id:'px',name:'PX Lead',role:'Patient Experience Lead',floor:'Whole hospital'}
   ];
   /* weekly pattern by weekday (0 = Sunday) */
-  const PAT={ka:'OMMMMMO',pr:'MEEEEEO',px:'OMMMMMO'};
+  const PAT={ka:'OMMMMMM',pr:'MMEEEEO',px:'OMMMMMO'};
   /* patients on the floors: the family meetings come from these stays. admit and discharge are days from today. */
   const STAYS=[
     {p:'Sameer Das',room:'213 A',floor:'Floor 2',admit:-6,dis:null,who:'ka'},
@@ -32,7 +32,12 @@
     {p:'Kavya Menon',room:'313',floor:'Floor 3',admit:-1,dis:null,who:'pr'},
     {p:'Rahul Sethi',room:'Suite 305',floor:'Floor 3',admit:-13,dis:0,who:'pr'}
   ];
-  if(window.HMSX){STAYS.forEach(s=>{const h=HMSX.by[s.p];if(h){s.room=HMSX.room(h);s.admit=-HMSX.day(h);}});}
+  /* every patient on the HMS list has a stay: room, day and floor come from the HMS; discharge days are the ones the ward has planned */
+  if(window.HMSX&&window.HMS_PATIENTS){
+    const DIS={rahul:0,dev:0,yash:2,varun:6},SLOTS=['11:00','12:00','13:00','14:00','15:00'];
+    STAYS.length=0;
+    HMS_PATIENTS.patients.forEach((h,i)=>STAYS.push({p:h.name,room:HMSX.room(h),floor:h.floor==='f1'?'Floor 1':h.floor==='f3'?'Floor 3':'Floor 2',admit:-HMSX.day(h),dis:DIS[h.id]!==undefined?DIS[h.id]:null,who:h.floor==='f2'?'ka':'pr',time:SLOTS[i%SLOTS.length]}));
+  }
   /* grievances that a person owns and that are due on a day (demo) */
   const GRV=[{id:'G-0141',who:'ka',due:1,text:'Call the family back (pending close)'},{id:'G-0139',who:'pr',due:3,text:'Check the fix with the family'}];
   const nameOf=id=>(TEAM.find(t=>t.id===id)||{name:id}).name;
@@ -76,8 +81,8 @@
     STAYS.forEach(s=>{
       const a=addDays(t,s.admit);
       const mk=(k,date,time,txt)=>{const id='fm-'+s.p.replace(/\s/g,'')+'-'+k;out.push({id,type:'Family meeting',date,time,owner:s.who,patient:s.p,floor:s.floor,room:s.room,note:txt,status:date<t?'done':'planned',auto:'Stay: '+k});};
-      mk('admission',addDays(a,1),'13:00','Admission family meeting (within 24 h)');
-      mk('week 1',addDays(a,7),'13:00','End of week 1 family meeting');
+      mk('admission',addDays(a,1),s.time||'13:00','Admission family meeting (within 24 h)');
+      mk('week 1',addDays(a,7),s.time||'13:00','End of week 1 family meeting');
       if(s.dis!==null)mk('discharge',addDays(t,s.dis-1),'14:00','Discharge briefing with the family');
     });
     return out;}

@@ -69,7 +69,7 @@ body.phone .side{display:none!important} body.phone .top{padding:12px 14px!impor
 </style><style id="embed-css">html.embed .side,html.embed .rev,html.embed .top,html.embed .bnav{display:none!important}html.embed body{background:transparent}html.embed .app{min-height:0}html.embed main{padding:10px 4px 40px}html.embed .col{width:100%}</style>
 <script src="hms-patients.js"></script>
 <script src="px-store.js"></script>
-<script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');</script>
+<script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');if(/[?&]setting=1/.test(location.search))document.documentElement.classList.add('setmode');</script><style>html.setmode #root{display:none}html.setmode{background:transparent}</style>
 </head><body><div id="root"></div><div id="cm"></div><div id="dr"></div>
 <div class="rev" role="tablist" aria-label="Review views">
   <button data-v="app" class="on">Rounds (proposed)</button>
@@ -115,15 +115,24 @@ const AB=[
 ];
 const ABOUT=AB.map(x=>[x[0],x[1]]);
 const mk=(room,pts,st,extra)=>Object.assign({room,pts:pts.map(n=>typeof n==='string'?{n}:n),st},extra||{});
-const FLOORS={
- 'Floor 2':[mk('201',['Vikram Bhatia'],'done'),mk('202',['Suresh Rao','Ajay Menon'],'done'),mk('203',['Manoj Pillai'],'done'),mk('204',['Harish Gupta','Pradeep Iyer'],'done'),mk('205',[],'done'),mk('206',['Nitin Arora','Anil Kapoor'],'issue'),
-  mk('207',[{n:'Ajay Mehra'}],'todo'),mk('208',[{n:'Kabir Saxena',last:5}],'todo'),mk('209',[],'todo'),mk('210',[{n:'Arjun Mehta',last:4,rec:'Vitals not charted since 8 am'}],'todo'),mk('211',[{n:'Varun Rao'}],'todo'),mk('212',[{n:'Sanjay Nair'}],'todo'),
-  mk('213 A',[{n:'Neel Bose',safety:1},{n:'Sameer Das',rec:'No session logged yesterday'}],'todo'),mk('214',[{n:'Deepak Joshi'}],'todo'),mk('215',[{n:'Tarun Sethi',last:6}],'todo'),mk('216',[],'todo')],
- 'Floor 1':['101','102','103','104','105','106','107','108','109','110'].map((r,i)=>mk(r,i%4===3?[]:['Patient '+r],'todo')),
- 'Floor 3':['301','302','303','304','305','306','307','308','309','310','311','312'].map((r,i)=>mk(r,i%5===4?[]:['Patient '+r],'done'))
-};
+/* the rooms and patients are the HMS roster (public/px/hms-patients.js). Gaps are worked out: no one types them. */
+const SETV=()=>{try{return JSON.parse(localStorage.getItem('px_settings_v1')||'{}')||{};}catch(e){return {};}};
+const LIM={roomH:()=>+SETV().roomH||4,safetyMin:()=>+SETV().safetyMin||30,spokenDays:()=>+SETV().spokenDays||4};
+const SPOKEN_SEED={kabir:5,arjun:4,tarun:6};   /* days since a PX round last spoke to them, before any round is logged here */
+const FLOORS=(function(){
+  const out={'Floor 1':[],'Floor 2':[],'Floor 3':[]},fl={f1:'Floor 1',f2:'Floor 2',f3:'Floor 3'};
+  const H=(window.HMS_PATIENTS&&window.HMS_PATIENTS.patients)||[];
+  const num=r=>parseInt(String(r).replace(/D/g,''),10)||0;
+  H.forEach(h=>{const room=String(h.room).replace(/^(Room|Suite)s+/,(m,w)=>w==='Suite'?'Suite ':'').replace(/s*·.*$/,'').trim();
+    const p={n:h.name,hms:h.id,last:SPOKEN_SEED[h.id]!==undefined?SPOKEN_SEED[h.id]:1};
+    if(h.safetyOpen)p.safety=1;
+    if(h.noSession!=null)p.rec='No session logged for '+h.noSession+' days';
+    out[fl[h.floor]||'Floor 2'].push(mk(room,[p],'todo'));});
+  Object.keys(out).forEach(k=>out[k].sort((a,b)=>num(a.room)-num(b.room)||String(a.room).localeCompare(String(b.room))));
+  return out;
+})();
 Object.keys(FLOORS).forEach(f=>FLOORS[f].push(mk('Common areas',[],f==='Floor 3'?'done':'todo',{common:1})));
-const ISS=[{room:'206',what:'Exhaust fan not working',team:'Maintenance (electrical)',due:'2 h 10 m left',st:'open'}];
+const ISS=[{room:'210',what:'Exhaust fan not working',team:'Maintenance (electrical)',due:'2 h 10 m left',st:'open'}];
 const S={view:'app',fl:'Floor 2',cur:null,r:{},seq:150,showIss:false};
 function set(p){Object.assign(S,p);render();}
 const rooms=()=>FLOORS[S.fl];
@@ -132,7 +141,7 @@ function shell(inner){const sub=(t,b,on)=>`<a href="#" class="${on?'on':''}">${t
  <div class="me"><div class="av" style="width:36px;height:36px;background:#EDE9FE;color:#5B21B6;font-size:13px">PK</div><div style="display:flex;flex-direction:column"><b style="font-size:14px;font-weight:600">Prabh</b><span style="font-size:12px;color:#667085">Patient experience · Gurgaon</span></div></div></nav>
  <div class="col"><header class="top"><h1>Rounds</h1><div style="display:flex;align-items:center;gap:14px"><button class="btn pri" data-call="pick" style="height:38px">+ <span class="lg">Log a call or concern</span><span class="sm">Log</span></button><button class="eye" aria-label="Notifications">${I.bell}</button><div style="display:flex;align-items:center;gap:8px"><div class="av" style="width:32px;height:32px;background:#1E6CDB;color:#fff;font-size:12px">PK</div><span class="nm" style="font-size:14px;font-weight:500">Patient Experience</span></div></div></header>${inner}</div></div><nav class="bnav" aria-label="Menu">${['Today','Patients','Rounds','Grievances','More'].map(t=>`<a href="#" class="${t==='Rounds'?'on':''}">${t}</a>`).join('')}</nav>`;}
 function box(r){const c={done:['#ECFDF3','#ABEFC6','#067647','Done'],issue:['#FFF4D6','#F79009','#93370D','Issue sent'],todo:['#fff','#E3EAF2','#475467','']}[r.st];
- const flags=r.pts.flatMap(p=>[p.safety?'Safety concern open':null,p.last>=4?`${p.n.split(' ')[0]}: not spoken to in ${p.last} days`:null,p.rec?`${p.n.split(' ')[0]}: ${p.rec.toLowerCase()}`:null]).filter(Boolean);
+ const flags=r.pts.flatMap(p=>[p.safety?'Safety concern open':null,p.last>=LIM.spokenDays()?`${p.n.split(' ')[0]}: not spoken to in ${p.last} days`:null,p.rec?`${p.n.split(' ')[0]}: ${p.rec.toLowerCase()}`:null]).filter(Boolean);
  return `<button data-room="${r.room}" style="text-align:left;background:${c[0]};border:1px solid ${c[1]};border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px;min-height:96px">
   <div style="display:flex;justify-content:space-between;width:100%"><b style="font-size:16px">${r.room}</b><span style="font-size:12px;font-weight:600;color:${c[2]}">${c[3]}</span></div>
   <span style="font-size:13px;color:${r.pts.length||r.common?'#1F2937':'#98A2B3'}">${r.common?'Notice board, dining, activity room, nurse station':r.pts.length?r.pts.map(p=>esc(p.n)).join(', '):'Vacant'}</span>
@@ -185,7 +194,7 @@ function cmp(){return `<div class="doc"><div class="eyebrow">ROUNDS</div><h2>Liv
 function render(){document.getElementById('root').innerHTML=S.view==='cmp'?cmp():shell(main());drawer();document.querySelectorAll('.rev button').forEach(b=>{if(b.dataset.v!=='phone')b.classList.toggle('on',b.dataset.v===S.view)});}
 function save(i){const r=rooms()[i];const R=S.r;let g=0,sg=0;
  const items=Object.keys(R).filter(k=>k.startsWith('i:')&&R[k]).map(k=>k.slice(2));
- items.forEach(n=>{const x=TODAY.find(y=>y[0]===n);ISS.unshift({room:r.room,what:n,team:x[1],due:x[2]?'Chandraji told now':'4 h 0 m left',st:'open',safety:x[2]});});
+ items.forEach(n=>{const x=TODAY.find(y=>y[0]===n);ISS.unshift({room:r.room,what:n,team:x[1],due:x[2]?'Chandraji told now':LIM.roomH()+' h 0 m left',st:'open',safety:x[2]});});
  r.pts.forEach(p=>{const ab=R['a:'+p.n];const sp=R['s:'+p.n];const T=AB.find(x=>x[0]===ab);if(ab&&ab!=='Sleep'&&ab!=='Activities'){g++;if(T&&T[4]&&T[4].includes(sp))sg++;}if(R['p:'+p.n]&&R['p:'+p.n]!=='Not available')p.last=0;});
  r.st=items.length?'issue':'done';
  const msg=[`${r.common?'Common areas':'Room '+r.room} saved.`];if(items.length)msg.push(`${items.length} issue${items.length>1?'s':''} sent.`);if(g)msg.push(`${g} grievance${g>1?'s':''} logged${sg?' (1 safety, Chandraji told)':''}.`);toast(msg.join(' '));S.seq+=g;}
@@ -376,10 +385,11 @@ document.addEventListener('change',e=>{ const t=e.target;
   try{window.DAY_ROT=Math.floor(Date.now()/86400000)%6;}catch(e){}
   load();
   /* seed: the one open issue from the prototype gets a real start time; restore room boxes */
-  if(!ST.iss){ST.iss=[{room:'206',what:'Exhaust fan not working',team:'Maintenance (electrical)',st:'open',t0:Date.now()-110*M,lim:4*H,by:'Prabh',id:'RI-001'}];store();}
+  if(!ST.iss){ST.iss=[{room:'210',what:'Exhaust fan not working',team:'Maintenance (electrical)',st:'open',t0:Date.now()-110*M,lim:LIM.roomH()*H,by:'Prabh',id:'RI-001'}];store();}
   function sync(){
-    Object.keys(FLOORS).forEach(f=>FLOORS[f].forEach(r=>{const k=f+'|'+r.room;if(ST.rooms[k])r.st=ST.rooms[k];}));
-    ISS.length=0;ST.iss.forEach(i=>ISS.push(i));ISS.forEach(i=>{i.due=i.safety?('Chandraji told '+hhmm(i.t0)):left(i.t0,i.lim||4*H);});}
+    Object.keys(FLOORS).forEach(f=>FLOORS[f].forEach(r=>{const k=f+'|'+r.room;if(ST.rooms[k])r.st=ST.rooms[k];
+      r.pts.forEach(p=>{const e=(ST.log||[]).filter(x=>x.patient===p.n).map(x=>x.t).sort((a,b)=>b-a)[0];if(e)p.last=Math.floor((Date.now()-e)/86400000);});}));
+    ISS.length=0;ST.iss.forEach(i=>ISS.push(i));ISS.forEach(i=>{i.due=i.safety?('Chandraji told '+hhmm(i.t0)):left(i.t0,i.lim||LIM.roomH()*H);});}
   sync();
   /* ---- entries: grievance / note / request / alert, per patient (read only elsewhere) ---- */
   function nextId(p){S.seq=(S.seq||150)+1;return p+'-'+String(S.seq).padStart(4,'0');}
@@ -409,7 +419,7 @@ document.addEventListener('change',e=>{ const t=e.target;
     const nIss=items.length,bad=R.room==='bad';
     const roomLabel=r.common?'Common areas':'Room '+r.room;
     const mine=[];
-    items.forEach(n=>{const x=TODAY.find(y=>y[0]===n);if(!x)return;mine.push({id:nextId('RI'),room:r.room,what:n,team:x[1],st:'open',t0:Date.now(),lim:4*H,by:'Prabh',safety:!!x[2],fl});});
+    items.forEach(n=>{const x=TODAY.find(y=>y[0]===n);if(!x)return;mine.push({id:nextId('RI'),room:r.room,what:n,team:x[1],st:'open',t0:Date.now(),lim:LIM.roomH()*H,by:'Prabh',safety:!!x[2],fl});});
     /* photo name, if one was added */
     if(R.photo)mine.forEach(m=>m.photo=R.photo);
     out.forEach(e=>{if(e.kind!=='log')addEntry(Object.assign({floor:fl},e));else{ST.log.unshift({t:Date.now(),patient:e.patient,room:e.room,kind:'log',text:e.title,src:'Rounds'});}});
@@ -435,7 +445,7 @@ document.addEventListener('change',e=>{ const t=e.target;
     if(q||!navigator.onLine)h+=`<div style="background:#FFF4D6;border:1px solid #F79009;border-radius:12px;padding:10px 16px;font-size:14px;color:#93370D"><b>${navigator.onLine?q+' saved on this device, sending now':'No signal.'}</b> ${navigator.onLine?'':'Keep going: every room is kept on this device and is sent when the signal is back ('+q+' waiting).'}</div>`;
     return h;}
   main=function(){
-    ST.iss.forEach(i=>{i.due=i.safety?('Chandraji told '+hhmm(i.t0)):left(i.t0,i.lim||4*H);});
+    ST.iss.forEach(i=>{i.due=i.safety?('Chandraji told '+hhmm(i.t0)):left(i.t0,i.lim||LIM.roomH()*H);});
     let h=origMain();
     /* put banners above the floor chips and the buttons for lists and patient entries in the bar */
     h=h.replace('<main>','<main>'+banners());
@@ -476,7 +486,7 @@ document.addEventListener('change',e=>{ const t=e.target;
     else if(d.px==='listsave'){const rg=parseGroups(document.getElementById('lsRG').value),cg=parseGroups(document.getElementById('lsCG').value),ab=parseAB(document.getElementById('lsAB').value);
       if(!rg.length||!cg.length||!ab.length){toast('Each list needs at least one item.');return;}
       const L={RG:rg,CG:cg,AB:ab};applyLists(L);try{localStorage.setItem(LKEY,JSON.stringify(L));}catch(x){}document.getElementById('cm').innerHTML='';render();toast('Lists saved. The next room you open uses them.');}
-    else if(d.px==='listreset'){try{localStorage.removeItem(LKEY);}catch(x){}toast('Back to the team\'s list. Reloading.');setTimeout(()=>location.reload(),600);}
+    else if(d.px==='listreset'){try{localStorage.setItem(LKEY,'null');}catch(x){}toast('Back to the team\'s list. Reloading.');setTimeout(()=>location.reload(),600);}
   },true);
   /* photo: the drawer gets a camera input when something is wrong */
   const origDrawer=drawer;
@@ -487,7 +497,7 @@ document.addEventListener('change',e=>{ const t=e.target;
   /* ---- clocks and repeats ---- */
   function tick(){
     let ch=false;const now=Date.now();
-    ST.saf.forEach(a=>{if(!a.ack&&now-a.last>=30*M){a.n++;a.last=now;ch=true;}});
+    ST.saf.forEach(a=>{if(!a.ack&&now-a.last>=LIM.safetyMin()*M){a.n++;a.last=now;ch=true;}});
     /* a safety grievance repeats the same way until taken */
     ST.ent.forEach(e=>{if(e.kind==='grievance'&&!e.cl&&!e.safety){if(now-e.t0>=3*H&&!e.r3){e.r3=1;ch=true;}if(now-e.t0>=6*H&&!e.r6){e.r6=1;ch=true;}}});
     ST.iss.forEach(i=>{if(i.st==='open'&&!i.safety&&now-i.t0>=2*H&&!i.r2){i.r2=1;ch=true;}});
@@ -501,6 +511,7 @@ document.addEventListener('change',e=>{ const t=e.target;
   window.addEventListener('online',()=>{if(ST.queue.length){const n=ST.queue.length;ST.queue=[];ST.ent.forEach(e=>{e.queued=false;});store();toast(n+' saved while offline: sent now.');}render();});
   /* public feed for Today and Patients */
   window.PXRounds={read:()=>{load();return ST;}};
+  if(document.documentElement.classList.contains('setmode')){const h=document.createElement('div');h.id='setHost';h.style.cssText='padding:4px 2px;display:flex;flex-direction:column;gap:10px;background:#fff';h.innerHTML=listsHtml();document.body.appendChild(h);}
   render();
 })();
 

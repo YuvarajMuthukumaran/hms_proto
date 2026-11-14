@@ -5,6 +5,7 @@
      pxn:<id>  logged from a patient record in the HMS: { name, title, desc, cat, src, by, at, owner }
    Off: nothing is sent or read and the page works on its own data, as before. */
 (function () {
+  window.PXDay = function () { var d = new Date(); return d.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]; };
   var cfg = null, last = {}, seenO = {}, timer = null;
   function rest(path, opt) {
     opt = opt || {};
@@ -16,7 +17,7 @@
     on: function () { return !!cfg; },
     /* next concern number: one more than the largest seen (the seeded ones stop at 142) */
     nid: function (self, k) {
-      var m = 142;
+      var m = 145;
       (self.state.extraConcerns || []).forEach(function (c) { var n = parseInt(String(c.id).replace(/\D/g, ''), 10); if (n > m && n < 100000) m = n; });
       return 'G-0' + (m + 1 + (k || 0));
     },
@@ -36,9 +37,20 @@
       });
       if (rows.length) rest('px_state?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify(rows) }).catch(function () {});
     },
+    /* a concern made somewhere else (a Rounds walk) is saved as a pxg row once, unless the store already has it */
+    known: {}, pulled: false, q: [],
+    addRow: function (c) {
+      if (!c || !c.id) return;
+      if (!cfg || !PXG.pulled) { if (!PXG.q.some(function (x) { return x.id === c.id; })) PXG.q.push(c); return; }
+      if (PXG.known[c.id]) return;
+      PXG.known[c.id] = 1; last['pxg:' + c.id] = stamp({ c: c, st: null });
+      rest('px_state?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify([{ key: 'pxg:' + c.id, data: { c: c, st: null }, updated_at: new Date().toISOString() }]) }).catch(function () { delete PXG.known[c.id]; });
+    },
     pull: function (self) {
       if (!cfg) return;
       rest('px_state?select=key,data&key=like.px*:*').then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) {
+        rows.forEach(function (r) { if (r.key.indexOf('pxg:') === 0) PXG.known[r.key.slice(4)] = 1; });
+        PXG.pulled = true; PXG.q.splice(0).forEach(PXG.addRow);
         var s = self.state, extra = (s.extraConcerns || []).slice(), cs = Object.assign({}, s.concernStatus || {}), changed = false;
         var have = Object.assign({}, PXG.seedIds || {}); extra.forEach(function (c) { have[c.id] = 1; });
         rows.forEach(function (r) {

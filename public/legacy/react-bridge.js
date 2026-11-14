@@ -5,7 +5,7 @@
      read and write a patient's records, hear about renders, new patients and audit entries. */
 (function(){
   const boot=window.__TULASI__||{};
-  const PSYX_SHARED=['mgmtPsych','th','roundPlan','monTables','assignedAssess','sn','tpSign']; /* the parts of psyx that the psychologist writes (see readCtx) */
+  const PSYX_SHARED=['mgmtPsych','th','roundPlan','monTables','assignedAssess','sn','tpSign','lp']; /* the parts of psyx that the psychologist writes (see readCtx) */
   const requested=boot.role||'';
   const lock=boot.viewRole||requested;
   const NAMES={lead:'Floor Coordinator','floor-coordinator':'Floor Coordinator','floor-lead-psychiatrist':'Floor Lead Psychiatrist','floor-lead-psychologist':'Floor Lead Psychologist',psychiatrist:'Psychiatrist','patient-experience-lead':'Patient Experience Lead',psychologist:'Psychologist',nurse:'Nurse',rmo:'RMO on duty'};

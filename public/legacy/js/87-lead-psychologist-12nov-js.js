@@ -9,7 +9,11 @@
   const role=()=>String((window.__TULASI__||{}).role||'');
   const lead=()=>role()==='floor-lead-psychologist'&&S.role==='psychologist';
   const esc=s=>hesc(String(s==null?'':s));
-  const L=()=>S.lp||(S.lp={assign:{},pF:'all',pD:'',scope:'floor',sign:{},back:{},note:{},conc:{},cosign:{},hoFrom:'',calD:''});
+  /* sign, back, note, cosign and conc are stored per patient in psyx.lp (psychologist notes, shared with the other logins); the rest is this screen's own state */
+  const LPX=pid=>{try{const x=psyPx(pid);return x.lp||(x.lp={});}catch(e){return {};}};
+  const lpMap=(k,keyed)=>new Proxy({},{get:(_,id)=>{if(typeof id!=='string')return undefined;if(keyed){const i=id.indexOf(':');return (LPX(id.slice(0,i)).cosign||{})[id.slice(i+1)];}return LPX(id)[k];},set:(_,id,v)=>{if(keyed){const i=id.indexOf(':'),lp=LPX(id.slice(0,i));(lp.cosign=lp.cosign||{})[id.slice(i+1)]=v;}else LPX(id)[k]=v;return true;}});
+  const L=()=>S.lp||(S.lp={assign:{},pF:'all',pD:'',scope:'floor',sign:lpMap('sign'),back:lpMap('back'),note:lpMap('note'),cosign:lpMap('cosign',1),conc:lpMap('conc'),hoFrom:'',calD:''});
+  window.lpState=L;window.lpLPX=LPX;
   /* the team: caseload and leave shown in every pick list */
   const TEAM=[{k:'Kiran',n:'Kiran Mehra',load:7,today:'2 of 4 sessions done today',leave:''},{k:'Priya',n:'Priya Nair',load:6,today:'3 of 5 sessions done today',leave:'on leave 14 to 16 Nov'},{k:'Surabhi',n:'Surabhi Sengar',load:3,today:'1 of 2 sessions done today',leave:'',you:true},{k:'Ankit',n:'Ankit Verma',load:0,today:'assistant psychologist',leave:''}];
   const FULL={Kiran:'Kiran Mehra',Priya:'Priya Nair',Surabhi:'Surabhi Sengar',Ankit:'Ankit Verma'};
@@ -28,7 +32,9 @@
   const idOf=n=>{const p=pts().find(x=>x.name===n);return p?p.id:null;};
   const ptOf=id=>pts().find(x=>x.id===id)||PTS.find(x=>x.id===id);
   const protoOf=id=>{const p=ptOf(id);return p?byName(p.name):null;};
-  const docKey=id=>{const a=L().assign[id];if(a!==undefined)return a;const x=protoOf(id);return x?x.doc:'';};
+  /* one psychologist per patient: the key comes from the same table every other screen reads (alloc.psych, set from PSYCHOF) */
+  const nameKey=n=>{n=String(n||'');return Object.keys(FULL).find(k=>FULL[k]===n)||'';};
+  const docKey=id=>{const a=L().assign[id];if(a!==undefined)return a;let n;try{n=v3().alloc.psych[id];}catch(e){}if(n===undefined)n=(typeof PSYCHOF!=='undefined'&&PSYCHOF[id])||'';return nameKey(n);};
   const docName=id=>FULL[docKey(id)]||'';
   const loadOf=k=>pts().filter(p=>docKey(p.id)===k).length||TEAM.find(t=>t.k===k).load;
   const mineIds=()=>pts().filter(p=>docKey(p.id)==='Surabhi').map(p=>p.id);
@@ -44,7 +50,7 @@
        <div class="small muted" style="margin-top:8px">The intake call (within 24 h) and the first session go on their Today.</div>`,
       `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="lpAssignSave('${pid}')">${cur?'Change':'Assign'}</button>`);};
   window.lpAssignSave=function(pid){const r=document.querySelector('input[name=lpD]:checked');if(!r){toast('Pick a psychologist');return;}
-    const old=docKey(pid);L().assign[pid]=r.value;closeModal();render();
+    const old=docKey(pid);L().assign[pid]=r.value;try{v3().alloc.psych[pid]=FULL[r.value]||'';}catch(e){}try{PSYCHOF[pid]=FULL[r.value]||'';}catch(e){}closeModal();render();
     toast(ptOf(pid).name+' now with '+FULL[r.value]+(old&&old!==r.value?'. '+FULL[old]+' gets a handover note.':'. Intake call added to their Today.'));};
 
   /* ---------------- 132: Patients ---------------- */
@@ -109,7 +115,7 @@
   /* Lead note, Co-sign */
   window.lpNote=function(pid){const cur=L().note[pid];V3.modal('Lead note · '+esc((ptOf(pid)||{}).name),'Guidance for the treating psychologist. It shows on their Today and on the record.',`<textarea class="input" id="lpLn" rows="4">${esc(cur?cur.t:'')}</textarea>`,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="lpNoteSave('${pid}')">Save</button>`);};
   window.lpNoteSave=function(pid){const t=(($('lpLn')||{}).value||'').trim();if(!t){toast('Write the note first');return;}L().note[pid]={t,by:signer(),at:atNow()};closeModal();render();toast('Lead note saved');};
-  window.lpCosign=function(pid,i){pinSign('Co-sign the session note',[['Signing as',signer()]],()=>{L().cosign[pid+':'+i]={by:signer(),at:atNow()};render();toast('Co-signed');});};
+  window.lpCosign=function(pid,nid){pinSign('Co-sign the session note',[['Signing as',signer()],['Role','Psychologist Lead']],()=>{L().cosign[pid+':'+nid]={by:signer(),at:atNow()};render();toast('Co-signed');});};
   /* demo: a session note written by the assistant psychologist, waiting for the lead's co-sign (Aman Gill, from the prototype's review queue) */
   function seedAssistant(nm){
     const id=idOf(nm||'Aman Gill');if(!id)return;const x=psyPx(id);if(x.__asst)return;x.__asst=1;
@@ -125,7 +131,7 @@
     const t=r.tab||'overview',mk=(p,l)=>{const b=document.createElement('button');b.className='btn sm';b.textContent=l;b.onclick=()=>go('#/patient/'+p.id+'/'+t);row.appendChild(b);};
     if(list[i-1])mk(list[i-1],'‹ '+list[i-1].name);if(list[i+1])mk(list[i+1],list[i+1].name+' ›');
   }
-  window.lpSeedAsst=seedAssistant;
+  window.lpSeedAsst=seedAssistant;window.lpTEAM=TEAM;window.lpFULL=FULL;window.lpIdOf=idOf;
   function therapyBits(v,r){
     if(r.tab!=='therapy')return;
     if(!(psyPx(r.pid).__asst)&&(r.pid===idOf('Aman Gill')||r.pid===idOf('Kavya Menon'))){seedAssistant(r.pid===idOf('Kavya Menon')?'Kavya Menon':'Aman Gill');render();return;}
@@ -133,7 +139,7 @@
     if(hd&&!hd.querySelector('#lpLnBtn')){const b=document.createElement('button');b.id='lpLnBtn';b.className='btn sm';b.textContent='Lead note';b.onclick=()=>lpNote(r.pid);hd.appendChild(b);}
     const n=L().note[r.pid];if(n&&!v.querySelector('#lpLnShow')){const d=document.createElement('div');d.id='lpLnShow';d.className='lp-so';d.innerHTML=`<span><b>Lead note</b> · ${esc(n.t)} <span class="tiny muted">· ${esc(n.by)}, ${esc(n.at)}</span></span>`;const card=hd&&hd.closest('section.card');card?card.parentNode.insertBefore(d,card):v.insertBefore(d,v.firstChild);}
     /* sessions written by an assistant psychologist: Co-sign */
-    v.querySelectorAll('.tp-body table tbody tr').forEach((tr,i)=>{if(tr.dataset.lpcs)return;if(!/assistant/i.test(tr.textContent))return;tr.dataset.lpcs='1';const cs=L().cosign[r.pid+':'+i];const last=tr.lastElementChild;if(last)last.insertAdjacentHTML('beforeend',cs?`<span class="lp-ch grn">Co-signed by ${esc(cs.by)}</span>`:`<button class="btn sm pri" onclick="lpCosign('${r.pid}',${i})">Co-sign</button>`);});
+    v.querySelectorAll('.tp-body table tbody tr').forEach(tr=>{if(tr.dataset.lpcs)return;if(!/assistant/i.test(tr.textContent))return;const m=tr.innerHTML.match(/snView('([^']+)')/);if(!m)return;tr.dataset.lpcs='1';const cs=L().cosign[r.pid+':'+m[1]];const last=tr.lastElementChild;if(last)last.insertAdjacentHTML('beforeend',cs?`<span class="lp-ch grn">Co-signed by ${esc(cs.by)}, ${esc(cs.at)}</span>`:`<button class="btn sm pri" onclick="lpCosign('${r.pid}','${m[1]}')">Co-sign</button>`);});
   }
   /* Rounds: the ward order covers the whole floor (all wards in one list), with the psychologist's name under each patient and a Mine only toggle */
   const WARD_ORDER=()=>Object.keys(WARDS).flatMap(w=>WARDS[w].map((p,j)=>({w,j,p})));
@@ -218,6 +224,7 @@
   };
   /* the author sees Updates needed and the Lead note on their Today (clinical psychologist) */
   function authorBits(v){
+    if(typeof window.lpAuthor==='function'){window.lpAuthor(v);return;}
     if(!/^#\/myday/.test(location.hash||'')||v.querySelector('#lpFromLead'))return;
     const items=[];Object.keys(L().back).forEach(id=>{if(L().back[id])items.push(`<div class="small"><b>${esc((ptOf(id)||{}).name)}</b> · plan: updates needed · ${esc(L().back[id])}</div>`);});
     Object.keys(L().note).forEach(id=>{const n=L().note[id];items.push(`<div class="small"><b>${esc((ptOf(id)||{}).name)}</b> · lead note · ${esc(n.t)}</div>`);});
