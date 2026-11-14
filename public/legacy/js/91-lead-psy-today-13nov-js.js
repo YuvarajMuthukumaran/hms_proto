@@ -67,7 +67,7 @@
     /* Yash Arora is on home leave until tomorrow evening (demo) */
     try{const y=LPX('yash');if(y.away===undefined)y.away={kind:'Home leave',until:Date.now()+30*3600000,by:'Dr. Kunal Sethi',at:atNow()};}catch(e){}
     /* Karan Malhotra's mother raised a concern 4 h 20 m ago (the family concern banner reads the same record) */
-    try{const k=LPX('kabir');if(!k.conc)k.conc={at:Date.now()-4*3600000-20*60000,txt:'"Nobody has told us anything this week." Mother (Sunita Malhotra).'};}catch(e){}
+    try{const k=LPX('kabir');if(!k.conc)k.conc={at:Date.now()-4*3600000-20*60000,txt:'"Nobody has told us anything this week." Father (Rajesh Malhotra).'};}catch(e){}
     /* supervision notes: Priya 6 days ago, Kiran 9 days ago (amber), Ankit 2 days ago */
     const sup=L().sup=L().sup||{};
     const SS=[['Priya Nair',6,['neel','kabir'],'Session notes are clear and signed on the same day.','Close family loops within 24 hours.','Review Neel and Karan plans next week.'],['Kiran Mehra',9,['sameer','tarun'],'Good ERP exposure ladder for Sameer.','Write the risk check in every session note.','Bring Tarun to supervision after the restraint review.'],['Ankit Verma',2,['aman','kavya'],'Takes feedback well.','Ask for the lead co-sign the same day.','Observe a family session on Tuesday.']];
