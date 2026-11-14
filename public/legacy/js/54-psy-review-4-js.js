@@ -205,6 +205,10 @@
     comm:[{date:'23 Oct 2026, 6:10 pm',type:'Patient and family call (Tulasi phone)',who:'Ananya Bose (sister)',mins:'8',note:'Patient calm, asked about home.',by:'Priya Nair'},{date:'19 Oct 2026, 11:00 am',type:'Treating team and family call',who:'Ananya Bose (sister)',mins:'6',note:'24-hour call.',by:'Dr. Aanya Sharma'}]};return x.th;};
   /* the lead psychologist's Today reads each patient's family contact log without opening the Therapy tab first */
   window.psyThSeed=function(pid){const keep=S.pid;try{S.pid=pid;return thData();}finally{S.pid=keep;}};
+  /* An earlier version copied Neel's therapy log into every patient who was opened, and that copy was saved. Clear it, once, for everyone except Neel. */
+  const NEELSIG={ind:e=>/^Worked on sleep routine|^Settling in, anxious about discharge/.test(e.note||''),grp:e=>(e.group==='Relapse prevention group'&&e.note==='Spoke about triggers.')||(e.group==='Yoga and relaxation'&&e.by==='Activity team'&&e.date==='19 Oct 2026'),fam:e=>e.who==='Ananya Bose (sister)',comm:e=>e.who==='Ananya Bose (sister)'};
+  const thClean=()=>{try{(typeof allPts==='function'?allPts():PTS).forEach(p=>{if(p.id==='neel')return;const x=psyPx(p.id),th=x&&x.th;if(!th)return;['ind','grp','fam','comm'].forEach(k=>{if(Array.isArray(th[k])&&th[k].some(NEELSIG[k]))th[k]=th[k].filter(e=>!NEELSIG[k](e));});});}catch(e){}};
+  const __r54c=render;render=function(){thClean();return __r54c.apply(this,arguments);};
   const canEdit=k=>S.role==='psychologist'||(S.role==='psychiatrist'&&(k==='fam'||k==='comm'));
   window.psyThTab=function(k){S.thTab=k;render();};
   window.psyThAdd=function(k){

@@ -88,5 +88,7 @@
   render=function(){const r=__r.apply(this,arguments);try{document.body.classList.add('resp');
     /* the Today iframe of the lead psychologist follows the window height */
     const f=document.getElementById('lpToday');if(f){const z=parseFloat(getComputedStyle(document.body).zoom)||1;f.style.height=Math.max(560,Math.round(innerHeight/z-100))+'px';}
+    /* a row of tabs that scrolls sideways on a phone opens with the current tab in view (the last tabs, such as Discharge summary, were off screen) */
+    if(innerWidth<=700)setTimeout(()=>{document.querySelectorAll('#view .on, #view [aria-selected=true]').forEach(e=>{let p=e.parentElement;while(p&&p!==document.body){const cs=getComputedStyle(p);if(/auto|scroll/.test(cs.overflowX)&&p.scrollWidth>p.clientWidth+4){const er=e.getBoundingClientRect(),pr=p.getBoundingClientRect(),key=e.textContent.trim().slice(0,24);if((er.right>pr.right||er.left<pr.left)&&p.dataset.tabAt!==key){p.scrollLeft+=er.left-pr.left-(p.clientWidth-er.width)/2;}p.dataset.tabAt=key;break;}p=p.parentElement;}});},60);
   }catch(e){}return r;};
 })();
