@@ -133,7 +133,10 @@
       row.querySelectorAll('.adh .tiny.muted').forEach(e=>{if(/Ward adherence/.test(e.textContent))e.remove();});
     });
     /* the caption sits right above the percentage and bar column (its left edge is measured from the first row, so it stays under the right words at any width) */
-    const cap=document.createElement('div');cap.className='medcap';cap.innerHTML='<span data-h="slots" title="M morning, A afternoon, N night">Dose times</span><span data-h="meta">Prescription</span><span data-h="adh">Ward adherence</span>';list.insertBefore(cap,list.firstChild);
+    const cap=document.createElement('div');cap.className='medcap';cap.innerHTML='<span data-h="slots" title="M morning, A afternoon, N night">Dose times</span><span data-h="meta">Prescription</span><span data-h="adh">Ward adherence</span>';
+    /* 15 Nov: no medicines yet = no columns to head (the three headings fell on top of each other); say so instead */
+    if(list.querySelector('.medrow'))list.insertBefore(cap,list.firstChild);
+    else if(!list.querySelector('.med-none')){const n=document.createElement('div');n.className='med-none small muted';n.style.cssText='padding:10px 2px 4px';n.textContent='No medicines yet. Add one with Change medicines.';list.appendChild(n);}
     /* move the title row inside the white box, above the column headings */
     const mbox=list.closest('.medbox'),mh=mbox&&mbox.firstElementChild;
     if(mbox&&mh&&mh!==list&&!mh.classList.contains('medhead')){mh.classList.add('medhead');list.insertBefore(mh,list.firstChild);}
