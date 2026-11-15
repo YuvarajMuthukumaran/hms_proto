@@ -1,2 +1,4 @@
 .env*
 *.bak
+*.csv
+tools/invite-links*
