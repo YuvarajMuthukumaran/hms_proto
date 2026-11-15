@@ -25,6 +25,16 @@
     const tx=await r.text();return tx?JSON.parse(tx):null;
   }
   window.regRest=rest;
+  /* every database inpatient, whatever the ward (Daily notes lists them all) */
+  window.realInpatients=()=>{try{return Object.values(WARDS).flat().filter(p=>p.real);}catch(e){return [];}};
+  /* the Transfer and Add psychologist lists come from the staff table (names imported from the old HMS), plus the built-in demo names */
+  async function loadStaff(){
+    try{
+      const st=await rest('staff?select=name,role&active=is.true&order=name');
+      if(typeof TR_TO!=='object'||!TR_TO)return;
+      (st||[]).forEach(s=>{const k=s.role==='psychiatrist'?'psy':s.role==='psychologist'?'psych':null;if(k&&Array.isArray(TR_TO[k])&&!TR_TO[k].includes(s.name))TR_TO[k].push(s.name);});
+    }catch(e){}
+  }
 
   /* 2. admitted patients into the wards */
   const dayOf=d=>{if(!d)return 0;const a=new Date(d+'T00:00:00'),t=new Date();t.setHours(0,0,0,0);return Math.max(0,Math.round((t-a)/864e5));};
@@ -211,4 +221,5 @@
     return out;
   };
   loadAdmitted();
+  loadStaff();
 })();

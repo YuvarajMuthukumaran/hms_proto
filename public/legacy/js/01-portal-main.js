@@ -302,7 +302,7 @@ function coNote(pid){const src=isPsych()?'psy':'psych';const n=CONOTE[src][pid];
   return `<div class="conote ${n[4]==='Higher'?'risk':''}"><div class="row" style="justify-content:space-between;gap:8px"><span class="tiny" style="font-weight:700;color:var(--violet)">Today from ${who}</span><span class="tiny muted">${n[0]}</span></div><div class="row" style="gap:5px;margin:5px 0">${[n[2],n[3],'Risk: '+n[4]].map(x=>`<span class="chip ${x==='Risk: Higher'?'c-red':'c-grey'}" style="font-size:11px">${x}</span>`).join('')}</div><div class="small" style="color:var(--ink-2)">${n[1]}</div><div class="tiny muted" style="margin-top:4px">View only</div></div>`;}
 function eodNotes(){
   const dnPtLabel=p=>p.name+'-'+String(p.room||'').replace(/^Room\s*/i,'');
-  S.eod=S.eod||{}; const L0=isPsych()?PTS.slice(0,5):PTS; const L=L0.slice(); /* ward order, first patient first (3 Nov) */
+  S.eod=S.eod||{}; const L0=(isPsych()?PTS.slice(0,5):PTS).concat(typeof realInpatients==='function'?realInpatients().filter(p=>!PTS.includes(p)):[]); const L=L0.slice(); /* ward order, first patient first (3 Nov) */
   const done=L.filter(p=>(S.eod[p.id]||{}).saved).length, pct=Math.round(done/L.length*100);
   const set=(id,k,v)=>`S.eod['${id}']=S.eod['${id}']||{};S.eod['${id}']['${k}']='${v}';render()`;
   const mseg=(id,k,opts)=>{const cur=(S.eod[id]||{})[k]||[];return `<div class="mini-chips">${opts.map(o=>`<button class="tog ${cur.includes(o)?'on':''}" style="height:28px;font-size:12px" onclick="S.eod['${id}']=S.eod['${id}']||{};const a=S.eod['${id}']['${k}']||[];S.eod['${id}']['${k}']=a.includes('${o}')?a.filter(x=>x!=='${o}'):a.concat('${o}');render()">${o}</button>`).join('')}</div>`;};
@@ -2843,7 +2843,7 @@ function psySave(kind,id){
   if(kind==='dn'){S.dn.line=psyGet('dn',id,'evy')==='Something happened'?psyGet('dn',id,'evl'):'None';saveDaily();toast('Note saved'+al+'. Family update drafted.');return;}
   const p=ptFind(id);S.eod[id].saved=true;S.eodI=0;render();toast('Daily note saved for '+(p?p.name:'this patient')+al);
 }
-const PSY_EOD=()=>{const own=window.__lpOwn&&window.__lpOwn();if(own&&own.length)return own;const L=PTS.slice(0,5);(S.eodExtra||[]).forEach(id=>{const p=PTS.find(x=>x.id===id);if(p&&!L.includes(p))L.push(p);});return L;}; /* ward order, first patient first (3 Nov) */
+const PSY_EOD=()=>{const own=window.__lpOwn&&window.__lpOwn();if(own&&own.length)return own;const L=PTS.slice(0,5);(S.eodExtra||[]).forEach(id=>{const p=PTS.find(x=>x.id===id);if(p&&!L.includes(p))L.push(p);});if(typeof realInpatients==='function')realInpatients().forEach(p=>{if(!L.includes(p))L.push(p);});return L;}; /* ward order, first patient first (3 Nov) */
 function psyEodEdit(id){S.eod[id].saved=false;const pend=PSY_EOD().filter(p=>!(S.eod[p.id]||{}).saved);S.eodI=Math.max(0,pend.findIndex(p=>p.id===id));render();}
 function psyEodPage(){
   S.eod=S.eod||{};const L=PSY_EOD();
