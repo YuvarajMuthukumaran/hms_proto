@@ -2715,7 +2715,7 @@ function eodGroups(p,dnGroup,seg,mseg){
     cell('Any significant event',[ta('line','None, or what happened')]));
   return box(
     cell('Overall behaviour',[
-      f('Behaviour',mseg(id,'overallBeh',['Withdrawn','Overfamiliar','Agitated','Physically aggressive','Verbally aggressive','Self harm']))]),
+      f('Behaviour',mseg(id,'overallBeh',['Settled','Withdrawn','Overfamiliar','Agitated','Physically aggressive','Verbally aggressive','Self harm']))]),
     cell('Mood and consciousness',[
       f('Mood',seg(id,'mood',[['Calm','g'],['Anxious','a'],['Low','a'],['Irritable','a'],['Elated','a'],['Fluctuating','a']])),
       f('Consciousness',seg(id,'cons',[['Alert','g'],['Drowsy','a'],['Confused','a'],['Disoriented','r']]))]),

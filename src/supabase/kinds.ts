@@ -9,7 +9,7 @@ export const CONTEXT_KINDS = {
   consents: ['consents'],
   events: ['events', 'restraints', 'pgriev'],
   prefs: ['diet', 'pf', 'pfAt', 'pfUp', 'prefBy', 'contacts', 'billing', 'famCons'],
-  vitals: ['vit', 'sugar', 'sugarHd', 'adh', 'adhT', 'vc', 'monx', 'nsum'],
+  vitals: ['vit', 'sugar', 'sugarNew', 'sugarHd', 'adh', 'adhT', 'vc', 'monx', 'nsum'],
 } as const satisfies Record<string, readonly string[]>;
 
 export type ContextKind = keyof typeof CONTEXT_KINDS;
