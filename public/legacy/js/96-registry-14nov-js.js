@@ -22,7 +22,7 @@
     opt=opt||{};
     const r=await fetch(c.url+'/rest/v1/'+path,{method:opt.method||'GET',headers:Object.assign({apikey:c.key,Authorization:'Bearer '+c.key,'x-tulasi-role':roleKey(),'Content-Type':'application/json'},opt.prefer?{Prefer:opt.prefer}:{}),body:opt.body?JSON.stringify(opt.body):undefined});
     if(!r.ok)throw new Error('HTTP '+r.status);
-    return r.status===204?null:r.json();
+    const tx=await r.text();return tx?JSON.parse(tx):null;
   }
   window.regRest=rest;
 
