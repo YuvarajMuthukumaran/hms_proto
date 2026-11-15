@@ -54,7 +54,9 @@
       let added=0;const ids=[];
       (rows||[]).forEach(p=>{
         if(Object.values(WARDS).some(a=>a.some(x=>x.id===p.id)))return;
-        const lp=toLegacy(p);WARDS[wardFor(p)].push(lp);added++;ids.push(p.id);
+        const lp=toLegacy(p);WARDS[wardFor(p)].push(lp);
+        /* the lists read EX[id] = [observation, next due, expected discharge]; demo patients have it built in */
+        try{if(typeof EX==='object'&&!EX[p.id])EX[p.id]=['Routine','','Not set'];}catch(e){}added++;ids.push(p.id);
         try{if(p.psychiatrist&&typeof PSYOF==='object')PSYOF[p.id]=p.psychiatrist;if(p.psychologist&&typeof PSYCHOF==='object')PSYCHOF[p.id]=p.psychologist;}catch(e){}
       });
       LOADED=true;

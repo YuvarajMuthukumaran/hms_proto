@@ -10,6 +10,9 @@
   try{Object.values(WARDS).forEach(a=>{for(let i=a.length-1;i>=0;i--)if(!a[i].real)a.splice(i,1);});}catch(e){}
   try{if(Array.isArray(window.PTS_EXTRA))window.PTS_EXTRA.length=0;}catch(e){}
   document.documentElement.classList.add('real-mode');
+  /* one shared login per role: a signature names the role, never a demo person (Dr. Aanya Sharma, Sister Rekha ...) */
+  const ROLE_NAME={psychiatrist:'Psychiatrist',psychologist:'Psychologist',nurse:'Nurse',rmo:'RMO on duty','floor-lead-psychiatrist':'Floor lead psychiatrist','floor-lead-psychologist':'Floor lead psychologist',lead:'Floor coordinator','floor-coordinator':'Floor coordinator'};
+  try{const rk=(window.__TULASI__||{}).role||S.role;window.__realSigner=ROLE_NAME[rk]||'Staff';}catch(e){}
   /* demo seeds kept in state: start them empty so they never load (handover from Dr. Rohan Mehta, psychologist handover, unsigned drafts) */
   try{S.psyHO={list:[]};S.pgHO={list:[]};S.au=S.au||{hr:null,skip:0,notes:{},drafts:null,hist:{},fam:{},grv:[],rem:{},dc:{},sc:{},consent:{}};S.au.drafts=[];}catch(e){}
   /* rows and cards that still name a demo patient: hidden once drawn */
@@ -17,6 +20,9 @@
   const re=new RegExp('\\b('+DEMO.map(n=>n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b');
   function scrub(){
     const v=document.getElementById('view');if(!v)return;
+    /* the inpatient list's subtitle names one ward and an empty count ("Gurgaon · Male ward · undefined"); it lists every ward now */
+    const tw=document.createTreeWalker(v,NodeFilter.SHOW_TEXT);const fix=[];while(tw.nextNode()){if(/Male ward · undefined| · undefined/.test(tw.currentNode.nodeValue))fix.push(tw.currentNode);}
+    fix.forEach(n=>{n.nodeValue=n.nodeValue.replace('Male ward · undefined','all wards').replace(' · undefined','');});
     const to=document.getElementById('hoTo');if(to){[...to.options].forEach(o=>{if(o.value==='Dr. Webber')o.remove();});}
     const real=t=>Object.values(WARDS).some(a=>a.some(p=>t.indexOf(p.name)>=0));
     const hide=el=>{el.style.display='none';el.dataset.realHid='1';};
@@ -45,6 +51,8 @@
   /* the simple Today (nurse, RMO): its job cards also come from the old boards' instructions */
   const demoItem=x=>{const t=[x.who,x.txt].filter(Boolean).join(' ');return re.test(t)&&!onWard(t);};
   if(typeof window.easySimple==='function'){const __es=window.easySimple;window.easySimple=function(o){if(o&&typeof o.items==='function'){const f=o.items;o=Object.assign({},o,{items:function(){const r=f.apply(this,arguments);return Array.isArray(r)?r.filter(x=>!demoItem(x||{})):r;}});}return __es.call(this,o);};}
+  /* the inpatient list read only the first ward (PTS = Male ward): with real patients it lists every ward */
+  if(typeof vInpatients==='function'){const __vi=vInpatients;vInpatients=function(){const keep=PTS.slice();try{const all=Object.values(WARDS).flat();PTS.splice(0,PTS.length,...all);return __vi.apply(this,arguments);}finally{PTS.splice(0,PTS.length,...keep);}};}
   const __r=render;
   render=function(){
     /* New admission: real patients are admitted from the Registry (search the old HMS record, then Admit); the demo front desk list is not used */

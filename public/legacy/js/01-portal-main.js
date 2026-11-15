@@ -106,7 +106,7 @@ function go(h){location.hash=h;}
 function chip(text,c){return `<span class="chip ${c}">${text}</span>`;}
 /* SNDT (signature, name, date, time): every entry says who did it and when */
 const atNow=()=>{const d=new Date();return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+', '+d.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});};
-const signer=()=>{const r=window.__TULASI__&&window.__TULASI__.role;return r==='rmo'?'Dr. Sameer Khan':r==='floor-lead-psychologist'?'Surabhi Sengar':r==='floor-lead-psychiatrist'?'Dr. Nandini Rao':__me0().name;};
+const signer=()=>{if(window.__realSigner)return window.__realSigner;/* real-data mode (99): the role, not a demo name */const r=window.__TULASI__&&window.__TULASI__.role;return r==='rmo'?'Dr. Sameer Khan':r==='floor-lead-psychologist'?'Surabhi Sengar':r==='floor-lead-psychiatrist'?'Dr. Nandini Rao':__me0().name;};
 const whoAt=()=>({by:signer(),at:atNow()});
 const byl=(by,at,verb)=>by?`<span class="byl">${verb?verb+' ':''}${by}${at?' · '+at:''}</span>`:'';
 /* every task marked done records who did it and when */
