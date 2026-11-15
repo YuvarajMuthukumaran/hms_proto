@@ -1524,7 +1524,7 @@ function doTransfer(){
   S.trLog=S.trLog||[];
   S.trLog.unshift({role:r,from,to,eff:$('te').value,reason:$('trs').value,status:$('th').value.trim(),pending:$('tpw').value.trim(),risk:$('trk').value.trim(),fam:$('tfam').checked,by:signer(),at:trStamp()});
   S.team[r]=to;closeModal();render();
-  toast(`Transferred to ${to}. Transfer notes sent; floor lead informed${S.trLog[0].fam?'; family told on WhatsApp':''}.`);}
+  toast(`Transferred to ${to}. Transfer notes sent; floor lead informed${S.trLog[0].fam?'. Tell the family: nothing is sent automatically':''}.`);}
 function trHist(){const L=S.trLog||[];if(!L.length)return '';
   return `<details class="trhist" open><summary><b>Transfers · ${L.length}</b> <span class="tiny muted">Earlier entries stay under each author's name</span></summary>${L.map(t=>`<div class="tritem">
     <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>${TR_ROLE[t.role]}: ${hesc(t.from)} → ${hesc(t.to)}</b> <span class="small muted">· ${hesc(t.reason)} · ${hesc(t.eff.toLowerCase())}</span></span><span class="tiny muted">${hesc(t.at)} · by ${hesc(t.by)}</span></div>

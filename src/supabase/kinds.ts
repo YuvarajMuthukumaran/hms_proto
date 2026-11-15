@@ -5,7 +5,7 @@ import type { RoleKey } from '../roles';
 export const CONTEXT_KINDS = {
   doctor: ['dx', 'section', 'meds', 'medsOff', 'rx', 'labs', 'obs', 'obsBy', 'edd', 'eddShared', 'eddBy', 'historyStatus', 'historyDraft', 'capacityOpen', 'capacityDone', 'reassessDone', 'plansSigned', 'discharge', 'dischargeDrafted', 'draftBy', 'discharged', 'dtype', 'admNo', 'pastAdm', 'team', 'calls', 'dailySaved', 'familySent', 'psyx'],
   // psyxShared = the part of the working notes (psyx) that both the psychologist and the psychiatrist write; see public/legacy/react-bridge.js
-  psychology: ['psychRows', 'therapyNotes', 'dn', 'psyxShared'],
+  psychology: ['psychRows', 'therapyNotes', 'dn', 'psyxShared', 'trLog'],
   consents: ['consents'],
   events: ['events', 'restraints', 'pgriev'],
   prefs: ['diet', 'pf', 'pfAt', 'pfUp', 'prefBy', 'contacts', 'billing', 'famCons'],

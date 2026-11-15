@@ -161,8 +161,10 @@
   async function writeBack(){
     if(!canAdmit()||!LOADED)return;
     for(const a of Object.values(WARDS))for(const p of a){
-      if(!p.real||!PT_CTX[p.id])continue;
+      if(!p.real||!PT_CTX[p.id]||!(window.__ptLoaded||{})[p.id])continue;   // only once this patient's saved records are in
       const c=p.id===S.pid?S:PT_CTX[p.id],t=c.team||{};
+      /* readmission: the database says admitted, so a discharge flag from the previous stay is cleared */
+      if(SENT[p.id]===undefined&&c.discharged){c.discharged=false;c.dischargeDrafted=false;c.dtype='';try{render();}catch(e){}}
       const want={psychiatrist:t.psy||null,psychologist:t.psych||null,discharged:!!c.discharged};
       const key=JSON.stringify(want);
       if(SENT[p.id]===undefined){SENT[p.id]=key;continue;}   // first look: this is what was loaded

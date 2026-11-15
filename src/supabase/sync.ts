@@ -205,6 +205,7 @@ export class RecordSync {
         n++;
       }
       pids.forEach((p) => this.waiting.delete(p));
+      this.bridge.patientsLoaded(pids);
       if (n) this.bridge.rerenderIfIdle();
     } catch (e) {
       // keep them waiting (not saved) and try again shortly, so a blank record never overwrites a saved one

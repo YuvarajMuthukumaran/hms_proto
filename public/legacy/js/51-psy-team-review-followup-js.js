@@ -284,7 +284,7 @@
     S.trLog.unshift({pid,role,from,to,eff,reason,status,pending,risk,fam,by:signer(),at});
     ptRun(pid,function(){S.team=S.team||{};S.team[role]=to;return '';});
     closeModal();render();
-    toast('Transferred to '+to+'. Transfer notes saved; floor lead informed'+(fam?'; family told on WhatsApp.':'; family not told yet.'));
+    toast('Transferred to '+to+'. Transfer notes saved; floor lead informed'+(fam?'. Tell the family: nothing is sent automatically, use Message caregiver.':'; family not told yet.'));
   };
   window.psyReviewTransferPeek=function(pid){
     if(!window.psyHvRecord)return;

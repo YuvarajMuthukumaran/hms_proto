@@ -54,6 +54,8 @@
     hasPatient:pid=>!!ptFind(pid),
     /* patients that joined the wards after the page loaded (database inpatients, 96-registry): their saved records must be loaded before anything is saved */
     patientsAdded:pids=>emit('added',pids),
+    /* the sync tells the old screens when those patients' saved records are in (96-registry starts watching them then) */
+    patientsLoaded:pids=>{window.__ptLoaded=window.__ptLoaded||{};pids.forEach(p=>{window.__ptLoaded[p]=1;});},
     /* records of one patient, by kind, from whichever copy is live */
     read(pid,kind,keys){
       if(kind==='notes')return ((S.eod||{})[pid])||null;

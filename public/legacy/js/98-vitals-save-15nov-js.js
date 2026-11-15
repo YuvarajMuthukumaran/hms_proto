@@ -18,6 +18,8 @@
   };
   /* sugar readings: one list per patient (it was shared by every patient), synced with the vitals record; the reading starts empty */
   try{if(Array.isArray(PT_KEYS)&&PT_KEYS.indexOf('sugarNew')<0)PT_KEYS.push('sugarNew');}catch(e){}
+  /* transfer notes (S.trLog) belong to the patient and are saved with the psychology record, which both the psychiatrist and the psychologist may write */
+  try{if(Array.isArray(PT_KEYS)&&PT_KEYS.indexOf('trLog')<0)PT_KEYS.push('trLog');}catch(e){}
   const __sg=sugarModal;
   sugarModal=function(){
     if(!roleOk()){toast('Sugar readings are recorded by the nurse or the RMO');return;}
