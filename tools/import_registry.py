@@ -25,7 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 def env():
     vals = dict(os.environ)
-    p = os.path.join(HERE, ".env.import")
+    p = os.path.join(HERE, ".env.real" if "--real" in sys.argv else ".env.import")  # --real: the real-patient project
     if os.path.exists(p):
         for line in open(p, encoding="utf-8"):
             if "=" in line and not line.lstrip().startswith("#"):
@@ -173,6 +173,8 @@ def main():
         sys.exit("Refused: this is real patient data. Load it only into a project with real logins and per-user access, "
                  "after written sign-off, then set TULASI_REAL_DATA_OK=yes.")
     url, key = e.get("SUPABASE_URL"), e.get("SUPABASE_SERVICE_ROLE_KEY")
+    if not synthetic and url and "fmattgrlsgnfcvmxndkk" in url:
+        sys.exit("Refused: that is the demo project. Real patients go only to the real project (use --real).")
     if not url or not key:
         sys.exit("Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in tools/.env.import")
     for p in pts:

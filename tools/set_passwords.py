@@ -18,7 +18,7 @@ DEMO_REF = "fmattgrlsgnfcvmxndkk"
 
 def env():
     vals = dict(os.environ)
-    p = os.path.join(HERE, ".env.import")
+    p = os.path.join(HERE, ".env.real" if "--real" in sys.argv else ".env.import")  # --real: the real-patient project
     if os.path.exists(p):
         for line in open(p, encoding="utf-8"):
             if "=" in line and not line.lstrip().startswith("#"):
