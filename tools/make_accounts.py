@@ -1,8 +1,9 @@
 """Create one login per role in a Supabase project and write each role's set-password link to a local file.
 
-    python -I tools/make_accounts.py --email you@gmail.com --site https://tulasi-hms-proto.vercel.app
+    python -I tools/make_accounts.py --site https://tulasi-hms-proto.vercel.app [--real]
 
-Accounts are you+psychiatrist@gmail.com, you+nurse@gmail.com, ... (Gmail delivers all of them to you).
+Accounts are psychiatrist@tulasi-portal.example, nurse@tulasi-portal.example, ... (a reserved domain: no mail).
+Set the password afterwards with tools/set_passwords.py.
 Each account's role is stored in app_metadata.role, which the user cannot change; the database takes the role from it.
 No password is set here: open each link, choose the password on the page. The links go to tools/invite-links.txt
 (git-ignored); they work once and expire, so run the script again for fresh ones.
@@ -57,17 +58,16 @@ def call(url, key, method, path, body=None):
 
 
 def main():
-    base, site = arg("--email"), (arg("--site") or "").rstrip("/")
-    if not base or "@" not in base or not site:
+    site = (arg("--site") or "").rstrip("/")
+    if not site:
         sys.exit(__doc__)
-    user, domain = base.split("@", 1)
     e = env()
     url, key = e.get("SUPABASE_URL"), e.get("SUPABASE_SERVICE_ROLE_KEY")
     if not url or not key:
         sys.exit("Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in tools/.env.import")
     out = []
     for path, role in ROLES:
-        email = f"{user}+{path}@{domain}"
+        email = f"{role}@tulasi-portal.example"  # one login per role; the sign-in page asks only for the password
         redirect = f"{site}/{path}"
         st, res = call(url, key, "POST", "/auth/v1/admin/generate_link", {"type": "invite", "email": email, "redirect_to": redirect})
         kind = "invite"

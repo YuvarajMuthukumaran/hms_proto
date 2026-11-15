@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { loadSupabaseConfig } from '../supabase/config';
-import { getSupabase, accountRole, neededRole, cameForPassword, linkError, signOutEverywhere } from '../supabase/auth';
+import { getSupabase, accountRole, neededRole, cameForPassword, linkError, signOutEverywhere, roleEmail } from '../supabase/auth';
 import { roleLabel, type RoleKey } from '../roles';
 
 type State =
@@ -54,9 +54,9 @@ export function AuthGate({ role, children }: { role: RoleKey; children: ReactNod
     setBusy(true);
     const cfg = await loadSupabaseConfig();
     const sb = getSupabase(cfg!);
-    const { data, error } = await sb.auth.signInWithPassword({ email: String(f.get('email') || '').trim(), password: String(f.get('password') || '') });
+    const { data, error } = await sb.auth.signInWithPassword({ email: roleEmail(need), password: String(f.get('password') || '') });
     setBusy(false);
-    if (error) return setSt({ kind: 'signin', msg: 'Wrong email or password.' });
+    if (error) return setSt({ kind: 'signin', msg: 'Wrong password.' });
     check(data.session);
   }
 
@@ -117,8 +117,9 @@ export function AuthGate({ role, children }: { role: RoleKey; children: ReactNod
     <div style={page}>
       <form style={box} onSubmit={signIn}>
         {head}
-        <label style={{ display: 'block' }}>Email<input style={input} name="email" type="email" autoComplete="username" required /></label>
-        <label style={{ display: 'block', marginTop: 12 }}>Password<input style={input} name="password" type="password" autoComplete="current-password" required /></label>
+        {/* one login per role: the address comes from the role link, so only the password is asked for */}
+        <input type="hidden" name="username" autoComplete="username" value={roleEmail(need)} />
+        <label style={{ display: 'block' }}>Password<input style={input} name="password" type="password" autoComplete="current-password" autoFocus required /></label>
         {st.msg && <div role="alert" style={{ color: '#b42318', marginTop: 12 }}>{st.msg}</div>}
         <button style={btn} disabled={busy}>{busy ? 'Signing in...' : 'Sign in'}</button>
       </form>

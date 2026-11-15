@@ -18,6 +18,9 @@ export function getSupabase(cfg: SupabaseConfig): SupabaseClient {
 /** The role stored on the account (app_metadata.role, set by tools/make_accounts.py; the user cannot change it). */
 export const accountRole = (s: Session | null): string => String((s?.user?.app_metadata as { role?: string } | undefined)?.role ?? '');
 
+/** Each role has one login, named after the role (tools/rename_logins.py); the sign-in page asks only for the password. */
+export const roleEmail = (role: string) => `${role}@tulasi-portal.example`;
+
 /** The account role a link needs: the floor coordinator signs in as `lead`; every other link signs in as itself. */
 export const neededRole = (link: RoleKey): string => (link === 'floor-coordinator' ? 'lead' : link);
 
