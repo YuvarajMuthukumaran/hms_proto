@@ -1,4 +1,5 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { getSupabase } from './auth';
 import type { LegacyBridge, DocRow } from '../legacy/bridge';
 import type { RoleKey } from '../roles';
 import { RECORD_KINDS, canWrite, keysOf, stamp, type RecordKind } from './kinds';
@@ -42,10 +43,8 @@ export class RecordSync {
     private readonly bridge: LegacyBridge,
     private readonly role: RoleKey,
   ) {
-    this.client = createClient(cfg.url, cfg.key, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-      global: { headers: { 'x-tulasi-role': role } },
-    });
+    // the signed-in client (src/supabase/auth.ts): the database takes the role from the login, not from a header
+    this.client = getSupabase(cfg);
   }
 
   async start() {

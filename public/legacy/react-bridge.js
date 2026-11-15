@@ -48,7 +48,7 @@
   const bridge={
     role:()=>S.role,
     signer:()=>(typeof signer==='function'&&signer())||S.role,
-    logout(){location.assign('/');},
+    logout(){try{Object.keys(localStorage).filter(k=>/^sb-.*-auth-token$/.test(k)).forEach(k=>localStorage.removeItem(k));}catch(e){}location.assign('/');},
     /* the patients whose records exist in this browser: opened, generated or loaded */
     pids:()=>[...new Set(Object.keys(PT_CTX).concat([S.pid],Object.keys(S.eod||{}),Object.keys(MAR_ST).map(k=>k.split(':')[0])))].filter(id=>ptFind(id)),
     hasPatient:pid=>!!ptFind(pid),

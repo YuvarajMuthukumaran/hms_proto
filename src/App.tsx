@@ -1,6 +1,7 @@
 import { roleFromLocation } from './roles';
 import { RolePicker } from './components/RolePicker';
 import { LegacyPortal } from './components/LegacyPortal';
+import { AuthGate } from './components/AuthGate';
 
 /** The Patient Experience Lead page is the team's own clickable prototype (public/px-lead-prototype.html), shown exactly as they made it. */
 function PatientExperienceLeadPrototype() {
@@ -14,9 +15,13 @@ function PatientExperienceLeadPrototype() {
 }
 
 /** The path decides the page: each role link opens its selected workspace; anything else shows the picker.
- *  Moving between them is a real page load, so one page never runs two roles. */
+ *  Moving between them is a real page load, so one page never runs two roles. Every role link needs that role's login first. */
 export default function App() {
   const role = roleFromLocation();
-  if (role === 'patient-experience-lead') return <PatientExperienceLeadPrototype />;
-  return role ? <LegacyPortal role={role} /> : <RolePicker />;
+  if (!role) return <RolePicker />;
+  return (
+    <AuthGate role={role}>
+      {role === 'patient-experience-lead' ? <PatientExperienceLeadPrototype /> : <LegacyPortal role={role} />}
+    </AuthGate>
+  );
 }
