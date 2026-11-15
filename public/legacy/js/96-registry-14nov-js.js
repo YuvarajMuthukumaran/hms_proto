@@ -47,9 +47,12 @@
         const lp=toLegacy(p);WARDS[wardFor(p)].push(lp);added++;
         try{if(p.psychiatrist&&typeof PSYOF==='object')PSYOF[p.id]=p.psychiatrist;if(p.psychologist&&typeof PSYCHOF==='object')PSYCHOF[p.id]=p.psychologist;}catch(e){}
       });
+      LOADED=true;
       if(added)render();
-    }catch(e){/* no database: demo data only */}
+      return added;
+    }catch(e){LOADED=true;/* no database: demo data only */return 0;}
   }
+  let LOADED=false;
 
   /* an empty clinical record for a database patient (the demo builds one from Neel's) */
   if(typeof ptMakeCtx==='function'){
@@ -146,7 +149,10 @@
       await rest('patients?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:rec,prefer:'return=minimal'});
       await rest('admissions',{method:'POST',body:{patient_id:id,admitted_at:rec.admitted_at,section:rec.section,floor:rec.floor,room,psychiatrist:rec.psychiatrist,psychologist:rec.psychologist,updated_role:roleKey()},prefer:'return=minimal'});
     }catch(e){toast('Could not admit ('+e.message+'). Only the psychiatrist, RMO or floor coordinator can admit.');return;}
-    closeModal();toast('Admitted by '+signer());await loadAdmitted();go('#/patient/'+id+'/overview');
+    closeModal();
+    try{await loadAdmitted();}catch(e){}
+    toast('Admitted by '+signer());
+    location.hash='#/patient/'+id+'/overview';
   };
 
   /* left rail entry and route */
@@ -170,6 +176,10 @@
   render=function(){
     const out=__r.apply(this,arguments);
     if(/^#\/registry/.test(location.hash||'')){paint();if(R.rows===null&&!R.busy)search();}
+    /* a link straight to a database patient: wait for the ward list instead of saying "not found" */
+    else if(!LOADED&&/^#\/patient\//.test(location.hash||'')){
+      try{const v=$('view');if(v&&/Patient not found/.test(v.innerText))v.innerHTML='<div class="card" style="padding:16px"><div class="small muted">Loading the patient...</div></div>';}catch(e){}
+    }
     return out;
   };
   loadAdmitted();
