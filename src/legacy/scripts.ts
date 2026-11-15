@@ -99,4 +99,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/97-real-clock-15nov-js.js',
   '/legacy/js/98-vitals-save-15nov-js.js',
   '/legacy/js/99-real-mode-15nov-js.js',
+  '/legacy/js/100-old-hms-history-15nov-js.js',
 ];
