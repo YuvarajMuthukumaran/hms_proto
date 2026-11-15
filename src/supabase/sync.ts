@@ -26,6 +26,8 @@ const SAVE_DELAY_MS = 1_200;
 export class RecordSync {
   private readonly client: SupabaseClient;
   private readonly saved = new Map<string, string>(); // "<patient>|<kind>" -> text form last saved or loaded
+  /** database inpatients whose saved records are still loading: nothing of theirs is saved until they arrive */
+  private readonly waiting = new Set<string>();
   private readonly seen = new Map<string, string>(); // same keys -> the server's text we already applied (so a re-save of the same content never redraws the page)
   private since = '';
   private sinceDocs = '';
@@ -56,6 +58,8 @@ export class RecordSync {
           if (data != null) this.saved.set(`${pid}|${kind}`, stamp(data));
         }
       }
+      // database inpatients join the wards after the page loads; until their records are loaded nothing of theirs is saved
+      this.unsubs.push(this.bridge.on('added', (pids) => { pids.forEach((p) => this.waiting.add(p)); void this.pullFor(pids); }));
       await this.pull();
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -134,6 +138,7 @@ export class RecordSync {
     const pending: Array<[string, string]> = [];
     const who = this.bridge.signer();
     for (const pid of this.bridge.pids()) {
+      if (this.waiting.has(pid)) continue;
       for (const kind of RECORD_KINDS) {
         if (!canWrite(this.role, kind)) continue;
         const data = this.read(pid, kind);
@@ -178,6 +183,35 @@ export class RecordSync {
         if (error) throw new Error(`${error.code ?? ''} ${error.message}`.trim());
         docPending.forEach(([k, t]) => this.saved.set(k, t));
       }
+    }
+  }
+
+  /** Loads every saved record of these patients, whatever the time cursor says (they were not on the wards at the first pull). */
+  private async pullFor(pids: string[]) {
+    if (!pids.length) return;
+    for (let i = 0; i < 50 && this.busy; i++) await new Promise((r) => setTimeout(r, 200));
+    this.busy = true;
+    try {
+      const { data: rows, error } = await this.client.from('patient_records').select('patient_id,kind,data,updated_at').in('patient_id', pids);
+      if (error) throw new Error(`${error.code ?? ''} ${error.message}`.trim());
+      let n = 0;
+      for (const r of (rows ?? []) as RecordRow[]) {
+        const key = `${r.patient_id}|${r.kind}`;
+        const text = stamp(r.data);
+        this.bridge.apply(r.patient_id, r.kind, keysOf(r.kind), r.data);
+        this.seen.set(key, text);
+        const now = this.read(r.patient_id, r.kind);
+        this.saved.set(key, now != null ? stamp(now) : text);
+        n++;
+      }
+      pids.forEach((p) => this.waiting.delete(p));
+      if (n) this.bridge.rerenderIfIdle();
+    } catch (e) {
+      // keep them waiting (not saved) and try again shortly, so a blank record never overwrites a saved one
+      console.warn('Supabase sync (new inpatients):', e instanceof Error ? e.message : String(e));
+      window.setTimeout(() => void this.pullFor(pids), 5000);
+    } finally {
+      this.busy = false;
     }
   }
 

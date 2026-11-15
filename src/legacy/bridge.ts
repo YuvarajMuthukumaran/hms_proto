@@ -40,6 +40,9 @@ export interface LegacyBridge {
   on(event: 'render', fn: () => void): () => void;
   on(event: 'patient', fn: (pid: string, ctx: Record<string, unknown>) => void): () => void;
   on(event: 'audit', fn: (e: AuditEntry) => void): () => void;
+  /** patients added to the wards after load (database inpatients); their saved records are fetched again */
+  on(event: 'added', fn: (pids: string[]) => void): () => void;
+  patientsAdded(pids: string[]): void;
 }
 
 declare global {

@@ -34,7 +34,7 @@
   };
 
   /* events for the React side */
-  const subs={render:[],patient:[],audit:[]};
+  const subs={render:[],patient:[],audit:[],added:[]};
   const emit=(k,...a)=>subs[k].forEach(f=>{try{f(...a);}catch(e){console.warn('bridge:',k,e);}});
   const __render=render;
   render=function(){const r=__render.apply(this,arguments);emit('render');return r;};
@@ -52,6 +52,8 @@
     /* the patients whose records exist in this browser: opened, generated or loaded */
     pids:()=>[...new Set(Object.keys(PT_CTX).concat([S.pid],Object.keys(S.eod||{}),Object.keys(MAR_ST).map(k=>k.split(':')[0])))].filter(id=>ptFind(id)),
     hasPatient:pid=>!!ptFind(pid),
+    /* patients that joined the wards after the page loaded (database inpatients, 96-registry): their saved records must be loaded before anything is saved */
+    patientsAdded:pids=>emit('added',pids),
     /* records of one patient, by kind, from whichever copy is live */
     read(pid,kind,keys){
       if(kind==='notes')return ((S.eod||{})[pid])||null;

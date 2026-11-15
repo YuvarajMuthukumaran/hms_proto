@@ -41,14 +41,14 @@
   async function loadAdmitted(){
     try{
       const rows=await rest('patients?status=eq.admitted&select=id,name,sex,age,uhid,room,bed,floor,section,dx,admitted_at,source,psychiatrist,psychologist,mobile,relatives,referral&order=admitted_at.desc&limit=500');
-      let added=0;
+      let added=0;const ids=[];
       (rows||[]).forEach(p=>{
         if(Object.values(WARDS).some(a=>a.some(x=>x.id===p.id)))return;
-        const lp=toLegacy(p);WARDS[wardFor(p)].push(lp);added++;
+        const lp=toLegacy(p);WARDS[wardFor(p)].push(lp);added++;ids.push(p.id);
         try{if(p.psychiatrist&&typeof PSYOF==='object')PSYOF[p.id]=p.psychiatrist;if(p.psychologist&&typeof PSYCHOF==='object')PSYCHOF[p.id]=p.psychologist;}catch(e){}
       });
       LOADED=true;
-      if(added)render();
+      if(added){render();try{window.TulasiBridge&&TulasiBridge.patientsAdded&&TulasiBridge.patientsAdded(ids);}catch(e){}}
       return added;
     }catch(e){LOADED=true;/* no database: demo data only */return 0;}
   }
@@ -154,6 +154,32 @@
     toast('Admitted by '+signer());
     location.hash='#/patient/'+id+'/overview';
   };
+
+  /* 3. a database inpatient's discharge and treating team are written back to the patient list (and the stay in admissions),
+     so every role's ward list and the registry agree. Only the roles that may admit can write these rows. */
+  const SENT={};
+  async function writeBack(){
+    if(!canAdmit()||!LOADED)return;
+    for(const a of Object.values(WARDS))for(const p of a){
+      if(!p.real||!PT_CTX[p.id])continue;
+      const c=p.id===S.pid?S:PT_CTX[p.id],t=c.team||{};
+      const want={psychiatrist:t.psy||null,psychologist:t.psych||null,discharged:!!c.discharged};
+      const key=JSON.stringify(want);
+      if(SENT[p.id]===undefined){SENT[p.id]=key;continue;}   // first look: this is what was loaded
+      if(SENT[p.id]===key)continue;
+      SENT[p.id]=key;
+      try{
+        const today=new Date().toISOString().slice(0,10);
+        const body={psychiatrist:want.psychiatrist,psychologist:want.psychologist};
+        if(want.discharged)body.status='discharged';
+        await rest('patients?id=eq.'+encodeURIComponent(p.id),{method:'PATCH',body,prefer:'return=minimal'});
+        const st={psychiatrist:want.psychiatrist,psychologist:want.psychologist,updated_role:roleKey(),updated_at:new Date().toISOString()};
+        if(want.discharged){st.status='discharged';st.discharged_at=today;}
+        await rest('admissions?patient_id=eq.'+encodeURIComponent(p.id)+'&status=eq.admitted',{method:'PATCH',body:st,prefer:'return=minimal'});
+      }catch(e){delete SENT[p.id];}
+    }
+  }
+  setInterval(()=>{writeBack();},4000);
 
   /* left rail entry and route */
   const RICON='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
