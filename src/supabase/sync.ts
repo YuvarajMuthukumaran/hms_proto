@@ -166,6 +166,8 @@ export class RecordSync {
         if (this.saved.get(`doc|${k}`) === text) return;
         docPending.push([`doc|${k}`, text]);
         const [patientId, formId] = k.split('|');
+        // a form of a patient who is not on the wards here (e.g. a demo patient left in this browser before real-data mode): never sent
+        if (!this.bridge.hasPatient(patientId)) return;
         docRows.push({
           entry_key: k,
           patient_id: patientId,
@@ -195,6 +197,7 @@ export class RecordSync {
       if (error) throw new Error(`${error.code ?? ''} ${error.message}`.trim());
       let n = 0;
       for (const r of (rows ?? []) as RecordRow[]) {
+        if (!this.bridge.hasPatient(r.patient_id)) continue;
         const key = `${r.patient_id}|${r.kind}`;
         const text = stamp(r.data);
         this.bridge.apply(r.patient_id, r.kind, keysOf(r.kind), r.data);
@@ -224,6 +227,8 @@ export class RecordSync {
     let n = 0;
     for (const r of (rows ?? []) as RecordRow[]) {
       this.since = r.updated_at;
+      // a patient not on the wards yet (a database inpatient still loading): skipped here, loaded by pullFor when they join
+      if (!this.bridge.hasPatient(r.patient_id)) continue;
       const key = `${r.patient_id}|${r.kind}`;
       const text = stamp(r.data);
       if (this.saved.get(key) === text || this.seen.get(key) === text) continue;
