@@ -21,8 +21,8 @@
   function scrub(){
     const v=document.getElementById('view');if(!v)return;
     /* the inpatient list's subtitle names one ward and an empty count ("Gurgaon · Male ward · undefined"); it lists every ward now */
-    const tw=document.createTreeWalker(v,NodeFilter.SHOW_TEXT);const fix=[];while(tw.nextNode()){if(/Male ward · undefined| · undefined/.test(tw.currentNode.nodeValue))fix.push(tw.currentNode);}
-    fix.forEach(n=>{n.nodeValue=n.nodeValue.replace('Male ward · undefined','all wards').replace(' · undefined','');});
+    const tw=document.createTreeWalker(v,NodeFilter.SHOW_TEXT);const fix=[];while(tw.nextNode()){if(/patients · Gurgaon · Male ward| · undefined/.test(tw.currentNode.nodeValue))fix.push(tw.currentNode);}
+    fix.forEach(n=>{n.nodeValue=n.nodeValue.replace('Male ward · undefined','all wards').replace('Gurgaon · Male ward','Gurgaon · all wards').replace(' · undefined','');});
     const to=document.getElementById('hoTo');if(to){[...to.options].forEach(o=>{if(o.value==='Dr. Webber')o.remove();});}
     const real=t=>Object.values(WARDS).some(a=>a.some(p=>t.indexOf(p.name)>=0));
     const hide=el=>{el.style.display='none';el.dataset.realHid='1';};
