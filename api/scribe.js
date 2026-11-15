@@ -89,6 +89,8 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return send(405, { ok: false, error: 'Use POST' });
   if (!authorized(req)) return send(401, { ok: false, error: 'Wrong or missing bridge token' });
   if (!env('GROQ_API_KEY')) return send(500, { ok: false, error: 'Set GROQ_API_KEY in Vercel first' });
+  // Real patient data: recordings and notes would go to Groq (US). Off until patient consent and a data agreement are in place (SCRIBE_REAL_OK=true).
+  if (env('TULASI_REAL_DATA') === 'true' && env('SCRIBE_REAL_OK') !== 'true') return send(403, { ok: false, error: 'The AI scribe is off for real patients until consent and a data agreement are in place.' });
   try {
     const raw = await readBody(req);
     const ctype = String(req.headers['content-type'] || 'audio/webm');

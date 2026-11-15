@@ -35,6 +35,7 @@ export function AuthGate({ role, children }: { role: RoleKey; children: ReactNod
     (async () => {
       const cfg = await loadSupabaseConfig();
       if (!cfg) return setSt({ kind: 'open' });
+      (window as unknown as { __TULASI_REAL?: boolean }).__TULASI_REAL = !!cfg.realData;
       const sb = getSupabase(cfg);
       const { data } = await sb.auth.getSession();
       check(data.session);
