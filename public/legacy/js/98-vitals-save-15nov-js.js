@@ -24,6 +24,31 @@
     __sg.apply(this,arguments);
     const i=$('sgV');if(i){i.value='';i.placeholder='e.g. 110';setTimeout(()=>i.focus(),0);}
   };
+
+  /* The doctor's "Vitals and monitoring" table is redrawn from the real readings only. The older chain (blocks 54, 70, 86)
+     filled the 1 pm and 9 pm slots with made-up values near the 9 am one and gave each cell a random nurse's initials.
+     Now: one row per reading, its own time and who took it, the respiratory rate and the NEWS2 worked out from that reading. */
+  const outR={bp:v=>{const m=String(v).match(/^(\d+)\/(\d+)/);return m&&(+m[1]>=140||+m[1]<90||+m[2]>=90);},hr:v=>+v>100||+v<50,t:v=>+v>=100.4||+v<96,o2:v=>+v<95,rr:v=>+v>20||+v<12};
+  const cellV=(v,bad,ini,who)=>!v||v==='—'?'<span class="none">—</span>':`<span class="v${bad?' out':''}">${esc(v)}</span>${ini?`<span class="ini" title="${esc(who||ini)}">${esc(ini)}</span>`:''}`;
+  function honest(){
+    const card=document.querySelector('#view .vm10');if(!card)return;
+    const tb=card.querySelector('table');if(!tb)return;
+    const rows=(Array.isArray(S.vit)?S.vit:(S.pid==='neel'?NEEL_DEF:[])).slice().reverse();
+    const sug=(S.sugarNew||[]);
+    const head='<tr><th>Date</th><th>Time</th><th>Blood pressure<small>mmHg</small></th><th>Pulse<small>bpm</small></th><th>Resp. rate<small>per min</small></th><th>Temperature<small>°F</small></th><th>SpO2<small>%</small></th><th>NEWS2</th><th>Weight<small>kg</small></th><th>Sleep<small>hours</small></th><th>Blood sugar<small>mg/dL</small></th></tr>';
+    const body=rows.map(v=>{
+      const ini=v[8]||'',who=v[9]||'',rr=v[10]||'';
+      let news='—';
+      if(rr&&typeof psyNewsCalc==='function'){try{const m=String(v[1]).match(/^(\d+)/);const c=psyNewsCalc({rr:+rr,spo2:+v[4],o2:false,sbp:m?+m[1]:0,pulse:+v[2],cons:'Alert',temp:Math.round((+v[3]-32)*5/9*10)/10});news=c.total+(c.band?' · '+c.band:'');}catch(e){}}
+      const sg=sug.filter(x=>String(x.at||'').indexOf(v[0])===0).map(x=>esc(x.when)+' '+esc(x.v)).join('<br>');
+      return `<tr class="first"><td class="d">${esc(v[0])}</td><td class="t">${esc(v[7]||'—')}</td><td${outR.bp(v[1])?' class="outc"':''}>${cellV(v[1],outR.bp(v[1]),ini,who)}</td><td>${cellV(v[2],outR.hr(v[2]),ini,who)}</td><td>${cellV(rr,rr&&outR.rr(rr),ini,who)}</td><td>${cellV(v[3],outR.t(v[3]),ini,who)}</td><td>${cellV(v[4],outR.o2(v[4]),ini,who)}</td><td><b>${esc(news)}</b></td><td>${cellV(v[5],0,'','')}</td><td>${cellV(v[6],0,'','')}</td><td class="small">${sg||'<span class="none">—</span>'}</td></tr>`;
+    }).join('');
+    tb.innerHTML='<thead>'+head+'</thead><tbody>'+(body||'<tr><td colspan="11" class="muted small">No readings yet. The nurse or RMO adds them with Add vitals.</td></tr>')+'</tbody>';
+    const note=card.querySelector('.hd .tiny');if(note)note.textContent='One row per reading, with the time and who took it. Out of range in red. NEWS2 is worked out from the reading.';
+  }
+  const __rh=render;
+  render=function(){const out=__rh.apply(this,arguments);try{honest();}catch(e){}return out;};
+  window.__vmHonest=honest;
   window.vitalsSave=function(){
     const g=id=>(($(id)||{}).value||'').trim();
     const bp=g('vsBp'),hr=g('vsHr'),rr=g('vsRr'),t=g('vsT'),o2=g('vsO2'),wt=g('vsWt'),sl=g('vsSl');
