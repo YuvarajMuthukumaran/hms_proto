@@ -192,7 +192,8 @@
     $('title').textContent='Today';
     const M=model(),t=T(),now=new Date(),hr=now.getHours(),gr=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
     const date=now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
-    const all=patientRows(Object.assign({},M,{inScope:()=>true})),fl=FLOORROWS().length,need=all.length;
+    const f0=t.flt;t.flt='all';const all=patientRows(Object.assign({},M,{inScope:()=>true}));t.flt=f0; /* the count at the top and on the Actions tab ignores the filter chips */
+    const fl=FLOORROWS().length,need=all.length;
     const tiles=tile(M.all.length,'On the floor',M.nopsy.length+' without a psychologist','all')+tile(M.risk.length,'Risk not acted on','needs you now','risk',1)+tile(M.nosess.length,'No session 3+ days','against the plan','nosess',1)+tile(M.sign.length,'To review and sign','plans and notes','sign',1)+tile(M.noscore.length,'No score in 14 days','PHQ-9, GAD-7, Y-BOCS','noscore',1)+tile(M.fam.length,'Families waiting','calls and concerns','fam',1);
     const tabs=[['act','Actions',need],['floor','Floor caseload',M.all.length],['mine','My caseload',M.mine.length]].map(x=>`<button class="lt-tab${t.tab===x[0]?' on':''}" onclick="ltTab('${x[0]}')">${x[1]} <span>${x[2]}</span></button>`).join('');
     const sel=`<select class="input lt-sel" onchange="ltWho(this.value)"><option value="">All psychologists</option>${TEAMN.map(n=>`<option ${t.who===n?'selected':''}>${n}</option>`).join('')}</select>`;

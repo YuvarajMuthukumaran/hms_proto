@@ -743,7 +743,7 @@ function compactHeader(){
 }
 function spark(vals,max,label,unit,color){
   const w=280,h=64,px=10,py=10,n=vals.length;
-  const X=i=>px+i*(w-2*px)/(n-1), Y=v=>h-py-(v/max)*(h-2*py);
+  const X=i=>px+i*(w-2*px)/Math.max(n-1,1), Y=v=>h-py-(v/max)*(h-2*py);
   const pts=vals.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
   return `<div class="mini"><div class="row" style="justify-content:space-between"><span class="lbl">${label}</span><strong class="small">${vals[n-1]}${unit} today</strong></div>
     <svg viewBox="0 0 ${w} ${h+14}" width="100%" role="img" aria-label="${label}: ${vals.join(', ')}">
@@ -1273,7 +1273,8 @@ function pVitalsOld(){
 const DAYS6=['18 Oct','19 Oct','20 Oct','21 Oct','22 Oct','23 Oct'];
 function lineChart(title,unit,series,lo,hi,band){
   const w=300,h=120,px=30,py=12,n=series[0].v.length;
-  const X=i=>px+i*(w-px-10)/(n-1),Y=v=>h-py-((v-lo)/(hi-lo))*(h-2*py);
+  if(!n)return `<div class="chartc"><div style="font-weight:600">${title}</div><div class="tiny muted" style="padding:10px 0">No readings yet</div></div>`;
+  const X=i=>px+i*(w-px-10)/Math.max(n-1,1),Y=v=>h-py-((v-lo)/(hi-lo))*(h-2*py);  /* one reading: n-1 is 0, which drew NaN and Infinity */
   const ticks=[lo,(lo+hi)/2,hi];
   const last=series.map(x=>x.v[n-1]).join('/');
   return `<div class="chartc"><div class="row" style="justify-content:space-between"><span style="font-weight:600">${title}</span><span class="small"><strong>${last}</strong> <span class="muted">${unit}</span></span></div>
@@ -1281,11 +1282,12 @@ function lineChart(title,unit,series,lo,hi,band){
     ${band?`<rect x="${px}" y="${Y(band[1])}" width="${w-px-10}" height="${Y(band[0])-Y(band[1])}" fill="#e3f7ea" opacity=".7"/>`:''}
     ${ticks.map(t=>`<line x1="${px}" x2="${w-10}" y1="${Y(t)}" y2="${Y(t)}" stroke="#eef2f6"/><text x="${px-6}" y="${Y(t)+3}" text-anchor="end" font-size="9" fill="#5b6475">${Math.round(t)}</text>`).join('')}
     ${series.map(sr=>`<polyline points="${sr.v.map((v,i)=>X(i)+','+Y(v)).join(' ')}" fill="none" stroke="${sr.c}" stroke-width="2.2" stroke-linejoin="round"/>${sr.v.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="3.2" fill="#fff" stroke="${sr.c}" stroke-width="2"/>`).join('')}`).join('')}
-    ${DAYS6.map((d,i)=>`<text x="${X(i)}" y="${h+12}" text-anchor="middle" font-size="9" fill="#5b6475">${d.split(' ')[0]}</text>`).join('')}
+    ${DAYS6.slice(-Math.min(n,6)).map((d,i)=>`<text x="${X(i)}" y="${h+12}" text-anchor="middle" font-size="9" fill="#5b6475">${d.split(' ')[0]}</text>`).join('')}
   </svg>${series.length>1?`<div class="row tiny" style="gap:12px">${series.map(sr=>`<span class="row" style="gap:4px"><i style="width:10px;height:3px;background:${sr.c};display:inline-block;border-radius:2px"></i>${sr.n}</span>`).join('')}</div>`:''}</div>`;
 }
 function barChart(title,unit,vals,max){
-  const w=300,h=120,px=30,py=12,n=vals.length,bw=(w-px-10)/n*0.55;
+  const w=300,h=120,px=30,py=12,n=vals.length,bw=(w-px-10)/Math.max(n,1)*0.55;
+  if(!n)return `<div class="chartc"><div style="font-weight:600">${title}</div><div class="tiny muted" style="padding:10px 0">No readings yet</div></div>`;
   const X=i=>px+(i+0.5)*(w-px-10)/n,Y=v=>h-py-(v/max)*(h-2*py);
   return `<div class="chartc"><div class="row" style="justify-content:space-between"><span style="font-weight:600">${title}</span><span class="small"><strong>${vals[n-1]}${unit}</strong> <span class="muted">today</span></span></div>
   <svg viewBox="0 0 ${w} ${h+16}" width="100%" role="img" aria-label="${title}">${[0,max/2,max].map(t=>`<line x1="${px}" x2="${w-10}" y1="${Y(t)}" y2="${Y(t)}" stroke="#eef2f6"/><text x="${px-6}" y="${Y(t)+3}" text-anchor="end" font-size="9" fill="#5b6475">${t}</text>`).join('')}
