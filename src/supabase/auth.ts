@@ -27,6 +27,13 @@ export const cameForPassword = (() => {
   return /type=(invite|recovery)/.test(h);
 })();
 
+/** A set-password link that was already used or is older than an hour comes back with an error in the address. */
+export const linkError = (() => {
+  const h = window.location.hash || '';
+  if (!/error_code=|error=/.test(h)) return '';
+  return /expired/.test(h) ? 'This set-password link has expired (they last one hour). Ask for a new one.' : 'This set-password link did not work. Ask for a new one.';
+})();
+
 export async function signOutEverywhere() {
   try {
     await client?.auth.signOut();

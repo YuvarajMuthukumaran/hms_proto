@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { loadSupabaseConfig } from '../supabase/config';
-import { getSupabase, accountRole, neededRole, cameForPassword, signOutEverywhere } from '../supabase/auth';
+import { getSupabase, accountRole, neededRole, cameForPassword, linkError, signOutEverywhere } from '../supabase/auth';
 import { roleLabel, type RoleKey } from '../roles';
 
 type State =
@@ -25,7 +25,7 @@ export function AuthGate({ role, children }: { role: RoleKey; children: ReactNod
 
   const check = (s: Session | null) => {
     if (cameForPassword && s) return setSt({ kind: 'setpw' });
-    if (!s) return setSt({ kind: 'signin' });
+    if (!s) return setSt({ kind: 'signin', msg: linkError || undefined });
     const has = accountRole(s);
     setSt(has === need ? { kind: 'in' } : { kind: 'wrong', has });
   };
