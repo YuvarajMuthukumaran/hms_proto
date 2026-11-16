@@ -216,7 +216,7 @@ function setState(p){ Object.assign(state,p); render(); }
         items: [
           { id: 'rs1', c: 'amber', text: 'Psychologist has not met the family yet', meta: 'needed before your meeting · Barkha' },
           { id: 'rs2', c: 'amber', text: 'Psychologist follow-up date blank on the discharge checklist', meta: 'Barkha · 2nd time this month' },
-          { id: 'rs3', c: 'blue', text: 'Family meeting and feedback interview (form v6)', meta: 'your step', btn: 'Start' }
+          { id: 'rs3', c: 'blue', text: 'Family call and feedback interview (form v6)', meta: 'your step', btn: 'Start' }
         ], others: 'Dr. Madhura Samudra: met the family, 10:00 am' },
       { id: 'vr', type: 'Feedback', late: true, name: 'Varun Rao', initials: 'VR', sub: 'Discharged yesterday · Room 211', tags: ['Detractor'],
         items: [
@@ -410,7 +410,7 @@ if(window.PX_REAL){
     const d=HMSX.day(h);
     TP.push({id:h.id,name:h.name,rep:h.nr,rel:String(h.nrRel).toLowerCase(),ph:h.mobile||'',day:d,room:HMSX.room(h),dr:h.doctor,callN:1,row:'r'+h.id});
     if(d<=1)raw.push({id:'r'+h.id,type:'Admission',late:d>=1,name:h.name,initials:h.ini,sub:h.age+'/'+h.sex+' · Day '+d+' · '+h.room,tags:['New · 24 h'],
-      items:[{id:'fm'+h.id,c:d>=1?'amber':'blue',text:'Family meeting at admission',meta:'rules, visiting hours, contact card and updates · '+h.nr+' ('+String(h.nrRel).toLowerCase()+')'}],others:'Nothing yet'});
+      items:[{id:'fm'+h.id,c:d>=1?'amber':'blue',text:'Family call at admission',meta:'rules, visiting hours, contact card and updates · '+h.nr+' ('+String(h.nrRel).toLowerCase()+')'}],others:'Nothing yet'});
   });
 }
 if(window.HMSX&&!window.PX_REAL)HMSX.fix(TP,(x,h)=>{x.rep=h.nr;x.rel=String(h.nrRel).toLowerCase();x.room=HMSX.room(h);x.day=HMSX.day(h);x.dr=h.doctor;});

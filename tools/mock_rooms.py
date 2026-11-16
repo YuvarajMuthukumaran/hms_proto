@@ -55,7 +55,7 @@ def main():
         g = "F" if r.get("sex") == "F" else "M"
         i = n[g]
         n[g] += 1
-        room = (201 if g == "F" else 101) + i // 2
+        room = (301 if g == "F" else 201) + i // 2
         label = f"{room} {'AB'[i % 2]}{SUFFIX}"
         flags = list(r.get("flags") or [])
         if FLAG not in flags:

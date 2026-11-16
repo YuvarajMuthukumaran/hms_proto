@@ -102,6 +102,7 @@
     f[key]=signer()+' · '+atNow();f.log.unshift({what:key==='c24'?'24 hour call':'Day 3 to 4 call',by:signer(),at:atNow(),note:n});
     if(g){au().grv.push({id:'g'+Date.now(),pid,text:n||'Concern raised on a family call',by:signer(),at:nowMs(),ack:false});}
     closeModal();render();toast(g?'Call saved. The concern is with the Patient Experience lead: they have 6 hours.':'Call saved and ticked');};
+  window.__faApi={famState,au,nowMs};
   const weekDraft=(pid,lang)=>{const p=pt(pid),x=psyPx(pid),sn=(x.sn||{}).notes||[],first=String(p.name).split(' ')[0],plain=window.famPlain||{};
     const topics=[...new Set(sn.flatMap(n=>[].concat(n.topics||[])))].slice(0,3).map(t=>plain[String(t).toLowerCase()]||String(t).toLowerCase());
     const did=topics.length?topics.join(', '):'a talk with the team and daily activities';
