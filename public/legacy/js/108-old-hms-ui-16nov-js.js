@@ -127,7 +127,18 @@
       +`<div style="margin-top:10px">${pdfBtn(r)}</div>`;
   }
 
+  /* Remove old cards injected by 100-old-hms-history-15nov-js.js from the DOM */
+  function killOld(){
+    // old overview card: contains #ohms-box but not #ohms-box2
+    const ob=document.getElementById('ohms-box');
+    if(ob){const c=ob.closest('.card');if(c&&!c.querySelector('#ohms-box2'))c.remove();}
+    // old orders card: contains #ohms-rx but not #ohms-rx2
+    const or=document.getElementById('ohms-rx');
+    if(or){const c=or.closest('.card');if(c&&!c.querySelector('#ohms-rx2'))c.remove();}
+  }
+
   function place(){
+    killOld();
     const e2=document.getElementById('ohms-rx2'),m=document.querySelector('.medbox');
     if(!e2||!m)return;
     const card=e2.closest('.card');
@@ -136,6 +147,7 @@
 
   function fill(pid){
     place();
+    killOld();
     const el=document.getElementById('ohms-box2');
     if(el&&el.getAttribute('data-pid')===pid)el.innerHTML=inner(pid);
     const e2=document.getElementById('ohms-rx2');
@@ -192,5 +204,6 @@
   };
 
   const __rd2=render;
-  render=function(){const x=__rd2.apply(this,arguments);try{place();}catch(e){}return x;};
+  render=function(){const x=__rd2.apply(this,arguments);try{place();killOld();setTimeout(killOld,80);}catch(e){}return x;};
 })();
+
