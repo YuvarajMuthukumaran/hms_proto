@@ -116,7 +116,7 @@
     return {P,total,band};
   }
   window.psyNewsCalc=news; /* used by the QA block (49) for the automatic score */
-  const lastVit=c=>{const r=(c.vit||[]).slice(-1)[0]||[],bp=String(r[1]||'').split('/');return {sbp:+bp[0]||120,pulse:+r[2]||80,temp:r[3]?Math.round((+r[3]-32)*5/9*10)/10:36.8,spo2:+r[4]||98};};
+  const lastVit=c=>{const r=(c.vit||[]).slice(-1)[0]||[],bp=String(r[1]||'').split('/');return {sbp:+bp[0]||120,pulse:+r[2]||80,temp:r[3]?Math.round((+r[3]-32)*5/9*10)/10:36.8,spo2:+r[4]||98,rr:(+r[10]>0?+r[10]:16)};};
   const bandCls=b=>b==='Urgent RMO review'?'red':b==='Inform RMO'?'amber':'';
   const arrow=(a,b)=>a==null||b==null?'':(a>b?' ↑':a<b?' ↓':' →');
   window.psyNewsSave=function(pid){
@@ -145,7 +145,7 @@
       <div class="pad sc-grid">
         <div><div class="lbl">Early warning score (NEWS2)</div>
           <div class="row" style="gap:10px;align-items:baseline;margin:6px 0 8px"><span class="sc-big">${n0?n0.total:'–'}</span>${n0?`<span class="sf"><span class="c ${bandCls(n0.band)}">${n0.band}</span></span><span class="small muted">${arrow(n0.total,N[1]&&N[1].total)} ${hesc(n0.at)}</span>`:'<span class="small muted">No score yet</span>'}</div>
-          <div class="sc-f">${f('nw_rr','Resp. rate',16)}${f('nw_o','SpO₂ %',pv.spo2)}${f('nw_s','Systolic BP',pv.sbp)}${f('nw_p','Pulse',pv.pulse)}
+          <div class="sc-f">${f('nw_rr','Resp. rate',pv.rr)}${f('nw_o','SpO₂ %',pv.spo2)}${f('nw_s','Systolic BP',pv.sbp)}${f('nw_p','Pulse',pv.pulse)}
             <label>Air or oxygen<select class="input" id="nw_a" style="min-height:32px;padding:4px 8px"><option>Air</option><option>Oxygen</option></select></label>
             <label>Consciousness<select class="input" id="nw_c" style="min-height:32px;padding:4px 8px"><option>Alert</option><option>Confusion</option><option>Voice</option><option>Pain</option><option>Unresponsive</option></select></label>${f('nw_t','Temp °C',pv.temp)}
             <label>&nbsp;<button class="btn sm pri" onclick="psyNewsSave('${pid}')">Calculate and save</button></label></div>

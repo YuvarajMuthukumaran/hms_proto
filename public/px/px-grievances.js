@@ -15,10 +15,13 @@
   var stamp = function (v) { return JSON.stringify(v == null ? null : v); };
   var PXG = window.PXG = {
     on: function () { return !!cfg; },
-    /* next concern number: one more than the largest seen (the seeded ones stop at 142) */
+    /* next concern number: one more than the largest seen, in the new ones AND the seeded list (the seeded ones now reach 146;
+       counting only the new ones gave the first new concern the same number as a seeded one) */
     nid: function (self, k) {
-      var m = 145;
-      (self.state.extraConcerns || []).forEach(function (c) { var n = parseInt(String(c.id).replace(/\D/g, ''), 10); if (n > m && n < 100000) m = n; });
+      var m = 146;
+      var scan = function (c) { var n = parseInt(String((c && c.id) || '').replace(/\D/g, ''), 10); if (n > m && n < 100000) m = n; };
+      (self.state.extraConcerns || []).forEach(scan);
+      (PXG.seedList || []).forEach(scan);
       return 'G-0' + (m + 1 + (k || 0));
     },
     /* called on every render: saves what changed */

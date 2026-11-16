@@ -107,7 +107,7 @@
      Not a block of their own: the early warning score is worked out from the latest vitals and shown as one line in Vitals (Treatment Plan)
      and under "Since last round" in Rounds, with a trend arrow. The suicide / self-harm screen is one button on the same line.
      Still waiting on Anu: which withdrawal scale (CIWA) and which scales the doctor can order, like monitoring. */
-  const vitToNews=r=>{const bp=String(r[1]||'').split('/');return psyNewsCalc({rr:16,spo2:+r[4]||98,o2:false,sbp:+bp[0]||120,pulse:+r[2]||80,cons:'Alert',temp:r[3]?Math.round((+r[3]-32)*5/9*10)/10:36.8});};
+  const vitToNews=r=>{const bp=String(r[1]||'').split('/');return psyNewsCalc({rr:(+r[10]>0?+r[10]:16),spo2:+r[4]||98,o2:false,sbp:+bp[0]||120,pulse:+r[2]||80,cons:'Alert',temp:r[3]?Math.round((+r[3]-32)*5/9*10)/10:36.8});};
   const arrow=(a,b)=>a==null||b==null?'':(a>b?' ↑':a<b?' ↓':' →');
   window.psyAutoNews=function(pid){
     /* Neel's own vitals are the table's built-in readings (his record keeps no S.vit), the same ones the Vitals table shows */

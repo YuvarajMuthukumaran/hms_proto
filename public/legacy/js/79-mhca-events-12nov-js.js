@@ -91,11 +91,13 @@
   function dayPrompt(){
     /* the choice belongs to the psychiatrist: the RMO (who borrows this workspace) is never stopped by it, and it never stays on screen after leaving the patient */
     const own=document.getElementById('mhcaPrompt');if(own&&(String((window.__TULASI__||{}).role||'')==='rmo'||!/^#\/patient\//.test(location.hash||'')))own.remove();
+    /* 15 Nov audit: switching straight to another patient left the first patient's choice on screen */
+    {const own2=document.getElementById('mhcaPrompt'),rp=((location.hash||'').match(/^#\/patient\/([^/]+)/)||[])[1];if(own2&&own2.dataset.pid&&rp&&own2.dataset.pid!==rp)own2.remove();}
     if(String((window.__TULASI__||{}).role||'')==='rmo')return;
     if(!doc()||document.getElementById('mhcaPrompt'))return;
     const m=(location.hash||'').match(/^#\/patient\/([^/]+)/);if(!m)return;
     const L=legal(m[1]);if(!L.promptDue)return;
-    const o=document.createElement('div');o.id='mhcaPrompt';o.setAttribute('role','alertdialog');o.setAttribute('aria-modal','true');
+    const o=document.createElement('div');o.id='mhcaPrompt';o.setAttribute('role','alertdialog');o.dataset.pid=L.p.id;o.setAttribute('aria-modal','true');
     o.innerHTML=`<div class="mhp"><h3>Section 89, day ${L.day} of 30 · ${hesc(L.p.name)}</h3><p>The 30 days end in ${L.left} day${L.left===1?'':'s'}. Choose what happens next. This cannot be closed without a choice.</p>
       <button class="btn pri" onclick="mhcaChoose('${L.p.id}','s90')">Apply for Section 90</button><button class="btn pri" onclick="mhcaChoose('${L.p.id}','indep')">Switch to independent admission (Form C)</button><button class="btn pri" onclick="mhcaChoose('${L.p.id}','dc')">Plan discharge</button></div>`;
     document.body.appendChild(o);
