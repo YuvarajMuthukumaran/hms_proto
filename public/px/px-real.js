@@ -13,6 +13,14 @@
       'tbody td:empty{display:none!important}td[data-l]:not([data-l=""])::before{content:attr(data-l);display:block;font-size:11px;font-weight:700;letter-spacing:.04em;color:#667085;margin-bottom:2px}' +
       '.card{overflow-x:visible!important}.tw{overflow-x:visible!important}input,select,textarea,button{max-width:100%}' +
       '.drawer,.modal{width:100%!important;max-width:100%!important}}';
+    /* Grievances: every concern is ONE line, left to right (patient, what they said, owner, status, action); long text is cut with ... (Dr. Anu, 16 Nov) */
+    var gl = document.createElement('style');
+    gl.id = 'px-oneline';
+    gl.textContent = '@media(min-width:701px){.gv-list table.pt td{white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;max-width:300px}' +
+      '.gv-list table.pt td:nth-child(2){max-width:420px}' +
+      '.gv-list table.pt td>div,.gv-list table.pt td>span{display:inline!important;margin:0 8px 0 0}' +
+      '.gv-list table.pt td .muted.small{margin-left:0;font-size:13px}.gv-list table.pt td>div.name{font-weight:700}}';
+    (document.head || document.documentElement).appendChild(gl);
     (document.head || document.documentElement).appendChild(st);
     var label = function () {
       document.querySelectorAll('table').forEach(function (t) {
