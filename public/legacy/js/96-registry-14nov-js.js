@@ -54,7 +54,8 @@
   const WHO={psychiatrist:['Anu Yadav','psychiatrist'],psychologist:['Kiran Kumari','psychologist']};
   const mineOf=(p,role)=>{const w=WHO[role||String((window.__TULASI__||{}).role||'')];if(!w)return true;return (p.doctors_seen||[]).indexOf(w[0])>=0||(p[w[1]]===w[0]&&String(p.admitted_at||'').slice(0,10)>'2026-11-15');};
   window.__psyMine=mineOf;
-  const onlyMine=()=>!!window.__realMode&&!!WHO[String((window.__TULASI__||{}).role||'')];
+  /* the psychiatrist login loads only her patients; the psychologist login loads the whole ward and marks hers (p.mine): Mine = hers, Whole ward = all */
+  const onlyMine=()=>!!window.__realMode&&String((window.__TULASI__||{}).role||'')==='psychiatrist';
   async function loadAdmitted(){
     try{
       const rows=await rest('patients?status=eq.admitted&select=id,name,sex,age,uhid,room,bed,floor,section,dx,admitted_at,source,psychiatrist,psychologist,mobile,relatives,referral,doctors_seen&order=admitted_at.desc&limit=500');
@@ -62,7 +63,7 @@
       (rows||[]).forEach(p=>{
         if(onlyMine()&&!mineOf(p))return;
         if(Object.values(WARDS).some(a=>a.some(x=>x.id===p.id)))return;
-        const lp=toLegacy(p);WARDS[wardFor(p)].push(lp);
+        const lp=toLegacy(p);lp.mine=mineOf(p);WARDS[wardFor(p)].push(lp);
         /* the lists read EX[id] = [observation, next due, expected discharge]; demo patients have it built in */
         try{if(typeof EX==='object'&&!EX[p.id])EX[p.id]=['Routine','','Not set'];}catch(e){}added++;ids.push(p.id);
         try{if(p.psychiatrist&&typeof PSYOF==='object')PSYOF[p.id]=p.psychiatrist;if(p.psychologist&&typeof PSYCHOF==='object')PSYCHOF[p.id]=p.psychologist;}catch(e){}

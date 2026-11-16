@@ -17,7 +17,7 @@ import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FLAG = "mock room"
-SUFFIX = " (temp)"
+SUFFIX = ""   # 16 Nov: the owner asked for no "(temp)" on screen; the flag "mock room" still marks these rooms for --undo
 
 
 def main():

@@ -44,7 +44,7 @@
   const prev={};
   const countFor=label=>{
     try{
-      const my=PSY_EOD().length,all=PTS.length;
+      const my=PSY_EOD().length,all=(window.__realMode&&typeof allPts==='function')?allPts().length:PTS.length;   /* real mode: the whole ward is every ward */
       if(/^(My patients|Mine)$/i.test(label))return my;
       if(/^(Ward patients|Whole ward|All patients)$/i.test(label))return all;
     }catch(e){}

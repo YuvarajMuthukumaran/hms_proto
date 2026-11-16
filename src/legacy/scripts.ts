@@ -103,4 +103,6 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/101-ui-fixes-16nov-js.js',
   '/legacy/js/102-own-login-names-16nov-js.js',
   '/legacy/js/103-today-family-calls-16nov-js.js',
+  '/legacy/js/104-psychologist-mock-16nov-js.js',
+  '/legacy/js/105-psychologist-ward-16nov-js.js',
 ];
