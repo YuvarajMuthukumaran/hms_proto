@@ -2053,7 +2053,7 @@ S.nx=S.nx||{};
 function noteList(id,items){
   return `<div class="nlist">${items.map((n,i)=>{const k=id+'-'+i,open=S.nx[k];return `<div class="nitem ${open?'open':''}">
     <button class="nhead" onclick="S.nx['${k}']=!S.nx['${k}'];render()" aria-expanded="${!!open}"><div class="ndate"><b>${n.d}</b><span>${n.my}</span></div>
-      <div class="nmeta"><div class="row" style="gap:8px">${chip(n.type,n.tc||'c-blue')}<span class="small"><strong>${n.by}</strong> <span class="muted">· ${n.role||''} · ${n.d} ${n.my}${(n.tm||{'Daily note':'6:10 pm','Round note':'10:30 am'}[n.type])?', '+(n.tm||{'Daily note':'6:10 pm','Round note':'10:30 am'}[n.type]):''}</span></span></div><div class="small muted" style="margin-top:3px">${n.sum}</div></div><span class="nchev">${open?'▴':'▾'}</span></button>
+      <div class="nmeta"><div class="row" style="gap:8px">${chip(n.type,n.tc||'c-blue')}<span class="small"><strong>${n.by}</strong> <span class="muted">· ${n.role||''} · ${n.d} ${n.my}${(n.tm||String(n.signed||'').split(', ')[1]||{'Daily note':'6:10 pm','Round note':'10:30 am'}[n.type])?', '+(n.tm||String(n.signed||'').split(', ')[1]||{'Daily note':'6:10 pm','Round note':'10:30 am'}[n.type]):''}</span></span></div><div class="small muted" style="margin-top:3px">${n.sum}</div></div><span class="nchev">${open?'▴':'▾'}</span></button>
     ${open?`<div class="nbody">${secList(n.secs||[['Note',n.sum]])}</div>`:''}</div>`}).join('')}</div>`;
 }
 function secList(secs){return `<ol class="slist">${secs.map(([h,t,alert],i)=>`<li class="${alert?'alert':''}"><span class="sn">${alert?'!':i+1}</span><div><div class="sh">${h}</div><div class="sb">${Array.isArray(t)?`<ul>${t.map(x=>`<li>${x}</li>`).join('')}</ul>`:t}</div></div></li>`).join('')}</ol>`;}

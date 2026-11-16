@@ -61,8 +61,9 @@
   const __cr=confirmRound;
   confirmRound=function(){
     const R=S.rounds||{},note=(R.scribeNote||'').trim();
-    if(!note){toast('The round note is compulsory. Write why you are doing what you are doing. Nothing was saved.');const t=document.querySelector('textarea[oninput*="scribeNote"]');if(t)t.focus();return;}
     const n=(typeof roundCount==='function')?roundCount():0;
+    /* Dr. Anu (meeting audio): no round note is needed when an action is taken, because every action carries its own reason; with no action the note is required */
+    if(!note&&n===0){toast('Write the round note, or make a change with its reason. Nothing was saved.');const t=document.querySelector('textarea[oninput*="scribeNote"]');if(t)t.focus();return;}
     if(n>0&&!R.__why){
       V3.modal('Why these changes?','Every change made in a round needs a reason. It is saved with the round note.',
         `<div class="small muted" style="margin-bottom:6px">${n} change${n===1?'':'s'} pending: medicine, investigation, monitoring, risk or referral.</div><label class="field"><span class="lbl">Rationale</span><textarea class="input" id="pmWhy" rows="4" placeholder="Why are these changes needed?"></textarea></label><div class="small" id="pmWhyE" style="color:var(--red);display:none">Write the reason to save the round.</div>`,
@@ -72,7 +73,7 @@
     const r=__cr.apply(this,arguments);R.__why='';return r;
   };
   window.pmWhySave=function(){const w=((document.getElementById('pmWhy')||{}).value||'').trim();if(!w){const e=document.getElementById('pmWhyE');if(e)e.style.display='block';return;}
-    const R=S.rounds;R.__why=w;R.scribeNote=(R.scribeNote||'').trim()+'\n\nRationale for the changes: '+w;closeModal();
+    const R=S.rounds;R.__why=w;R.scribeNote=((R.scribeNote||'').trim()?(R.scribeNote||'').trim()+'\n\n':'')+'Rationale for the changes: '+w;closeModal();
     try{__cr.call(window);}finally{R.__why='';}
     try{render();}catch(e){}};
   const __rm=rmAdd;
