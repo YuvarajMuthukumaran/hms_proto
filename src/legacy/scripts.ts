@@ -118,4 +118,6 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/117-today-actions-16nov-js.js',
   '/legacy/js/118-strip-autohide-16nov-js.js',
   '/legacy/js/119-font-scale-16nov-js.js',
+  '/legacy/js/120-vitals-buttons-16nov-js.js',
+  '/legacy/js/121-hide-nursing-tasks-16nov-js.js',
 ];
