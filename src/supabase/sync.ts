@@ -32,6 +32,8 @@ export class RecordSync {
   private readonly seen = new Map<string, string>(); // same keys -> the server's text we already applied (so a re-save of the same content never redraws the page)
   private since = '';
   private sinceDocs = '';
+  private sinceGs = '';
+  private gsWarned = false;
   private busy = false;
   private ready = false;
   private saveTimer = 0;
@@ -154,6 +156,8 @@ export class RecordSync {
       pending.forEach(([k, t]) => this.saved.set(k, t));
     }
 
+    await this.pushGlobal();
+
     const docs = canWrite(this.role, 'docs') ? this.bridge.docs() : null;
     if (docs) {
       const keys = new Set([...docs.submissions.map((x) => x.entryKey), ...Object.keys(docs.fills)]);
@@ -185,6 +189,52 @@ export class RecordSync {
         docPending.forEach(([k, t]) => this.saved.set(k, t));
       }
     }
+  }
+
+  /** Whole-hospital state (RMO shift handover, nurse instructions, Rounds seen marks): never stops the patient sync if the table is missing. */
+  private async pushGlobal() {
+    const gs = this.bridge.globalState();
+    if (!gs) return;
+    const rows: Array<{ key: string; data: unknown; updated_role: RoleKey; updated_by: string; updated_at: string }> = [];
+    const pending: Array<[string, string]> = [];
+    for (const [k, v] of Object.entries(gs)) {
+      const text = stamp(v);
+      if (this.saved.get(`gs|${k}`) === text) continue;
+      rows.push({ key: k, data: v, updated_role: this.role, updated_by: this.bridge.signer(), updated_at: new Date().toISOString() });
+      pending.push([`gs|${k}`, text]);
+    }
+    if (!rows.length) return;
+    const { error } = await this.client.from('portal_state').upsert(rows, { onConflict: 'key' });
+    if (error) {
+      if (!this.gsWarned) console.warn('portal_state not saved (run supabase/migrations/20261116000200_portal_state.sql):', error.message);
+      this.gsWarned = true;
+      return;
+    }
+    pending.forEach(([k, t]) => this.saved.set(k, t));
+  }
+
+  private async pullGlobal(): Promise<number> {
+    let q = this.client.from('portal_state').select('key,data,updated_at').order('updated_at', { ascending: true });
+    if (this.sinceGs) q = q.gt('updated_at', this.sinceGs);
+    const { data: rows, error } = await q;
+    if (error) {
+      if (!this.gsWarned) console.warn('portal_state not read (run supabase/migrations/20261116000200_portal_state.sql):', error.message);
+      this.gsWarned = true;
+      return 0;
+    }
+    let n = 0;
+    for (const r of (rows ?? []) as Array<{ key: string; data: unknown; updated_at: string }>) {
+      this.sinceGs = r.updated_at;
+      const k = `gs|${r.key}`;
+      const text = stamp(r.data);
+      if (this.saved.get(k) === text || this.seen.get(k) === text) continue;
+      this.bridge.applyGlobal(r.key, r.data);
+      this.seen.set(k, text);
+      const now = this.bridge.globalState()?.[r.key];
+      this.saved.set(k, now !== undefined ? stamp(now) : text);
+      n++;
+    }
+    return n;
   }
 
   /** Loads every saved record of these patients, whatever the time cursor says (they were not on the wards at the first pull). */
@@ -264,6 +314,7 @@ export class RecordSync {
         this.sinceDocs = d.updated_at;
       });
     }
+    n += await this.pullGlobal();
     return n;
   }
 }

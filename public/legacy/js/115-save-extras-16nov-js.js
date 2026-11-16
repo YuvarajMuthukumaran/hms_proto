@@ -21,7 +21,7 @@
       al:byPid(V.alerts,pid),or:byPid(V.orders,pid),tr:byPid(V.transfers,pid),lb:byPid(V.labs,pid),mv:byPid(V.moves,pid),pd:byPid(V.pending,pid),
       fm:V.family&&V.family[pid],rf:keyed(V.refusals,pid,true),
       rs:((S.rst||{}).eps||[]).filter(e=>e.pid===pid),
-      dn:nonEmpty({d:keyed(S.done,pid),b:keyed(S.doneBy,pid)}),
+      dn:nonEmpty({d:keyed(S.done,pid),b:keyed(S.doneBy,pid),nd:keyed(S.nd,pid,true),nm:keyed(S.nm,pid,true)}),
       ho:((S.psyHO||{}).list||[]).filter(h=>(h.pids||[]).indexOf(pid)>=0),
       hg:((S.pgHO||{}).list||[]).filter(h=>(h.pids||[]).indexOf(pid)>=0)
     };
@@ -38,7 +38,7 @@
     if(x.fm){V.family=V.family||{};V.family[pid]=clone(x.fm);}
     if(x.rf){V.refusals=V.refusals||{};Object.assign(V.refusals,clone(x.rf));}
     if(Array.isArray(x.rs)&&x.rs.length){S.rst=S.rst||{eps:[]};S.rst.eps=S.rst.eps||[];x.rs.forEach(s=>{const i=S.rst.eps.findIndex(e=>e.id===s.id);if(i>=0)S.rst.eps[i]=clone(s);else S.rst.eps.push(clone(s));});}
-    if(x.dn){S.done=S.done||{};S.doneBy=S.doneBy||{};Object.assign(S.done,clone(x.dn.d||{}));Object.assign(S.doneBy,clone(x.dn.b||{}));}
+    if(x.dn){S.done=S.done||{};S.doneBy=S.doneBy||{};Object.assign(S.done,clone(x.dn.d||{}));Object.assign(S.doneBy,clone(x.dn.b||{}));S.nd=S.nd||{};S.nm=S.nm||{};Object.assign(S.nd,clone(x.dn.nd||{}));Object.assign(S.nm,clone(x.dn.nm||{}));}
     const hand=(obj,src)=>{if(Array.isArray(src)&&src.length&&obj&&Array.isArray(obj.list)){src.forEach(s=>{const i=obj.list.findIndex(h=>h.id===s.id);if(i>=0)obj.list[i]=clone(s);else obj.list.push(clone(s));});}};
     hand(S.psyHO,x.ho);hand(S.pgHO,x.hg);
     if(x.au){const au=S.au=S.au||{hr:null,skip:0,notes:{},drafts:null,hist:{},fam:{},grv:[],rem:{},dc:{},sc:{},consent:{}},a=x.au;
@@ -49,5 +49,22 @@
       if(a.es){au.esc=au.esc||{};Object.assign(au.esc,clone(a.es));}}
     /* new ids made in this session must not clash with saved ones */
     try{if(top){V.tlN=Math.max(+V.tlN||0,top);V.alertN=Math.max(+V.alertN||0,top);}}catch(e){}
+  };
+  /* whole-hospital state (saved in portal_state, see supabase/migrations/20261116000200_portal_state.sql) */
+  const day=()=>new Date().toISOString().slice(0,10);
+  window.__gsRead=function(){
+    const o={};
+    try{const sh=S.sh||{};if(sh.signed||sh.accepted||sh.note)o.shift={signed:sh.signed||null,accepted:!!sh.accepted,note:sh.note||''};}catch(e){}
+    try{if(Array.isArray(S.admVerify)&&S.admVerify.length)o.admVerify=clone(S.admVerify);}catch(e){}
+    try{if(Array.isArray(S.nInstr)&&S.nInstr.length)o.nInstr={n:+S.nN||0,items:clone(S.nInstr)};}catch(e){}
+    try{const sn=(S.rounds||{}).seen;if(sn&&Object.keys(sn).length)o['rseen:'+day()]=clone(sn);}catch(e){}
+    return o;
+  };
+  window.__gsApply=function(k,d){
+    if(d==null)return;
+    if(k==='shift'){S.sh=S.sh||{clock:null,signed:null,accepted:false,note:'',adm:null};S.sh.signed=d.signed||null;S.sh.accepted=!!d.accepted;S.sh.note=d.note||'';return;}
+    if(k==='admVerify'&&Array.isArray(d)){S.admVerify=S.admVerify||[];d.forEach(v=>{if(!S.admVerify.some(x=>x.id===v.id))S.admVerify.push(clone(v));});return;}
+    if(k==='nInstr'&&d&&Array.isArray(d.items)){S.nInstr=S.nInstr||[];d.items.forEach(it=>{if(!S.nInstr.some(x=>x[6]===it[6]))S.nInstr.push(clone(it));});S.nN=Math.max(+S.nN||0,+d.n||0);return;}
+    if(k==='rseen:'+day()){S.rounds=S.rounds||{};S.rounds.seen=Object.assign(S.rounds.seen||{},clone(d));}
   };
 })();

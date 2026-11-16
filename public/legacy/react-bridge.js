@@ -106,6 +106,8 @@
       try{localStorage.setItem(CD_KEY,JSON.stringify(CD_DATA));}catch(e){}
       return rows.length;
     },
+    globalState:()=>{try{return window.__gsRead?window.__gsRead():null;}catch(e){return null;}},
+    applyGlobal:(k,d)=>{try{if(window.__gsApply)window.__gsApply(k,d);}catch(e){}},
     rerender:()=>render(),
     /* do not redraw under someone who is typing */
     rerenderIfIdle(){if(!document.querySelector('#view input:focus,#view textarea:focus,#view select:focus'))render();},

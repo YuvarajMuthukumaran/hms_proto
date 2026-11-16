@@ -35,6 +35,9 @@ export interface LegacyBridge {
   apply(pid: string, kind: string, keys: readonly string[], data: unknown): void;
   docs(): DocsSnapshot | null;
   applyDocs(rows: DocRow[]): number;
+  /** whole-hospital state (not tied to a patient), saved in portal_state */
+  globalState(): Record<string, unknown> | null;
+  applyGlobal(key: string, data: unknown): void;
   rerender(): void;
   rerenderIfIdle(): void;
   on(event: 'render', fn: () => void): () => void;
