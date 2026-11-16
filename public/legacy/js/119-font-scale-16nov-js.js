@@ -22,6 +22,10 @@
   #side .nav,#side .sgdd button,#side .sub{font-size:15.5px!important}
   .top .small,.top .tiny{font-size:14px!important}
   #toast,.toast{font-size:15px}
+  .pdk i.grey,.pdk i.gray{background:#98a2b3}.pdk,.pdk b,.pdk span,.pdk em{font-size:14.5px!important}
+  /* Today table (the action panel): bigger, clearer text */
+  #view .pd-t td{font-size:15.5px!important}#view .pd-nm b{font-size:16.5px!important}#view .pd-d span{font-size:15px!important}#view .pd-d .tiny{font-size:13.5px!important}
+  #view .pd-sub{font-size:14.5px!important}#view .pd-ty{font-size:13.5px!important}#view .pd-t th{font-size:13.5px!important}#view .pd-take,#view .pd-det .btn.sm{font-size:14.5px!important}#view .pd-tag{font-size:13px!important}
   @media(max-width:700px){#view .small{font-size:15px!important}#view .tiny{font-size:14px!important}}`;
   document.head.appendChild(c);
 })();

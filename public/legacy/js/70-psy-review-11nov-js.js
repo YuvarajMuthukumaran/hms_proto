@@ -192,6 +192,7 @@
     <span><i class="red"></i>Alert <em>· needs you now</em></span>
     <span><i class="blue"></i>Medicine order <em>· to approve (countersign)</em></span>
     <span><i class="amber"></i>Due or late <em>· overdue notes, reviews, results to check</em></span>
+    <span><i class="grey"></i>Routine <em>· due today, nothing is wrong yet (family call, admission step, MHCA, documentation)</em></span>
     <span><i class="ok"></i>Action taken</span></div>`;
   function dashFix(v){
     const pd=v.querySelector('.pd');

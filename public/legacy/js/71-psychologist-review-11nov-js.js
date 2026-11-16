@@ -237,6 +237,7 @@
     <span><i class="red"></i>Alert <em>· needs you now</em></span>
     <span><i class="blue"></i>Assigned by the doctor <em>· assessments to do</em></span>
     <span><i class="amber"></i>Due or late <em>· overdue notes, reviews, results to check</em></span>
+    <span><i class="grey"></i>Routine <em>· due today, nothing is wrong yet (family call, admission step, MHCA, documentation)</em></span>
     <span><i class="ok"></i>Action taken</span></div>`;
   const tidy=v=>{
     v.querySelectorAll("h3,h4,.lbl,b,span").forEach(e=>{if(e.children.length===0&&e.textContent.trim()==="Round note"){
