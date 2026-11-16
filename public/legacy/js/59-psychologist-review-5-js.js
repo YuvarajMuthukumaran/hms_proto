@@ -49,7 +49,7 @@
     ['Investigation','amber',/\blab\b|\becg\b|result|investigation/i],
     ['MHCA','amber',/capacity|form e|consent|section 8|section 9|mhca/i],
     ['Overdue review','amber',/overdue|not assessed|not reviewed/i],
-    ['Admission','grey',/admission|work-?up|add psychologist|24-?hour/i],
+    ['Admission','grey',/admission|work-?up|add psychologist|24[ -]?hour/i],
     ['Documentation','grey',/note|history|plan|summary|re-?assess|draft|document|sign/i],
     ['Family','grey',/family|call|visit/i]];
   const catOf=t=>{const s=String(t||'');return CAT.find(c=>c[2].test(s))||null;};
