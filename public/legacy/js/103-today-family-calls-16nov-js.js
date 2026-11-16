@@ -7,7 +7,7 @@
 (function(){
   if(String((window.__TULASI__||{}).role||'')!=='psychiatrist')return;
   const s=document.createElement('style');
-  s.textContent='.pd-t col:nth-child(2){width:250px!important}.pd-t col:nth-child(3){width:46%!important}.pd-t col:nth-child(5){width:190px!important}.pd-t td{padding-top:10px!important;padding-bottom:10px!important}.pd-t .pd-nm b{white-space:normal}';
+  s.textContent='.pd-t col:nth-child(2){width:250px!important}.pd-t col:nth-child(3){width:400px!important}.pd-t col:nth-child(5){width:190px!important}.pd-t td{padding-top:10px!important;padding-bottom:10px!important}.pd-t .pd-nm b{white-space:normal}';
   document.head.appendChild(s);
 })();
 (function(){
