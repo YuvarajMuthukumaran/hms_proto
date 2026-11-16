@@ -43,7 +43,15 @@
       +(rx.length>1?`<div class="tiny muted" style="margin-top:6px">${rx.length-1} older prescription${rx.length>2?'s':''} with medicines: see Records from the old HMS on the Stay summary.</div>`:'')
       +link(r.url);
   }
+  /* the old-prescription box sits right under the Current medicines card (it was at the bottom of the page, out of sight) */
+  function place(){
+    const e2=document.getElementById('ohms-rx'),m=document.querySelector('.medbox');
+    if(!e2||!m)return;
+    const card=e2.closest('.card');
+    if(card&&m.nextElementSibling!==card&&m.parentElement)m.parentElement.insertBefore(card,m.nextSibling);
+  }
   function fill(pid){
+    place();
     const el=document.getElementById('ohms-box');
     if(el&&el.getAttribute('data-pid')===pid)el.innerHTML=inner(pid);
     const e2=document.getElementById('ohms-rx');
@@ -69,6 +77,8 @@
       return h+`<div class="card" style="margin-top:12px"><div class="lbl" style="font-weight:700">Records from the old HMS</div><div id="ohms-box" data-pid="${esc(p.id)}">${inner(p.id)}</div></div>`;
     }catch(e){return h;}
   };
+  const __rd=render;
+  render=function(){const x=__rd.apply(this,arguments);try{place();}catch(e){}return x;};
   const __or=pOrders;
   pOrders=function(){
     const h=__or.apply(this,arguments);
