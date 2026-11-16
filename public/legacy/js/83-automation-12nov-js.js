@@ -69,7 +69,7 @@
   /* SOP 3: consultant review at least twice a week; nudge at 4 days, floor lead at 5 days; 5 field template; high risk: risk discussed with family */
   const CR_FIELDS=[['status','Current clinical status'],['effects','Side effects or complications'],['invest','Investigations needed'],['plan','Change in management plan'],['advice','Any other advice']];
   const CR_SEED={arjun:1,varun:4,kabir:2,sameer:5,neel:1,dev:3,tarun:6,rohit:0};
-  const crDays=pid=>{const a=au();a.cr=a.cr||{};const c=a.cr[pid];if(c&&c.at)return Math.floor((nowMs()-c.at)/86400000);return CR_SEED[pid]!==undefined?CR_SEED[pid]+Math.floor((au().skip||0)/24):9;};
+  const crDays=pid=>{const a=au();a.cr=a.cr||{};const c=a.cr[pid];if(c&&c.at)return Math.floor((nowMs()-c.at)/86400000);return CR_SEED[pid]!==undefined?CR_SEED[pid]+Math.floor((au().skip||0)/24):(+((pt(pid)||{}).day)||0);};
   const needRisk=pid=>!!pt(pid).risk&&!((au().rf||{})[pid]);
   const crDue=()=>kind()==='psychiatrist'?PTS.filter(p=>(+p.day||0)>=1&&crDays(p.id)>=4):[];
   const riskDue=()=>kind()==='psychiatrist'?PTS.filter(p=>needRisk(p.id)):[];

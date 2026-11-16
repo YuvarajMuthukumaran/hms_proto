@@ -40,7 +40,7 @@
   const dayOf=d=>{if(!d)return 0;const a=new Date(d+'T00:00:00'),t=new Date();t.setHours(0,0,0,0);return Math.max(0,Math.round((t-a)/864e5));};
   const ini=n=>String(n||'').split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();
   function toLegacy(p){
-    return {id:p.id,age:p.age,sex:p.sex||'',uhid:p.uhid,name:p.name,ini:ini(p.name),room:p.room?('Room '+String(p.room).replace(/^Room\s*/i,'')):(p.bed||'Room ?'),
+    return {id:p.id,age:p.age,sex:p.sex||'',uhid:p.uhid,name:p.name,ini:ini(p.name),room:p.room?('Room '+String(p.room).replace(/^Room\s*/i,'')):(p.bed||'No room yet'),
       day:dayOf(p.admitted_at),sec:p.section||'89',risk:false,dx:p.dx||'Under assessment',real:true,src:p.source,mobile:p.mobile||'',rel0:(p.relatives||[])[0]||null,referral:p.referral||''};
   }
   function wardFor(p){
