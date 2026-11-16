@@ -123,4 +123,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/122-admission-dates-16nov-js.js',
   '/legacy/js/123-hide-new-admission-tag-16nov-js.js',
   '/legacy/js/124-adm-card-style-16nov-js.js',
+  '/legacy/js/125-premorbid-personality-16nov-js.js',
 ];
