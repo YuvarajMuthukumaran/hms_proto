@@ -7,7 +7,7 @@
 (function(){
   if(String((window.__TULASI__||{}).role||'')!=='psychiatrist')return;
   const s=document.createElement('style');
-  s.textContent='.pd-t col:nth-child(1){width:122px!important}.pd-t col:nth-child(2){width:300px!important}.pd-t .pd-nm{flex-wrap:wrap}.pd-t .pd-nm>span,.pd-t .pd-nm .pd-tag{white-space:nowrap!important;flex:0 0 auto}.pd-t col:nth-child(3){width:400px!important}.pd-t col:nth-child(4){width:300px!important}.pd-t col:nth-child(5){width:auto!important}.pd-t td:last-child{text-align:left!important}.pd-t td:last-child .pd-acts{justify-content:flex-start!important}.pd-t td{padding-top:10px!important;padding-bottom:10px!important}.pd-t .pd-nm b{white-space:normal}';
+  s.textContent='.pd-t{width:100%!important;table-layout:fixed!important}.pd-t col:nth-child(1){width:8%!important}.pd-t col:nth-child(2){width:22%!important}.pd-t col:nth-child(3){width:32%!important}.pd-t col:nth-child(4){width:auto!important}.pd-t col:nth-child(5){width:15%!important;min-width:175px}.pd-t td:last-child{padding-right:12px!important}.pd-t .pd-nm{flex-wrap:wrap}.pd-t .pd-nm>span,.pd-t .pd-nm .pd-tag{white-space:nowrap!important;flex:0 0 auto}.pd-t td:last-child{text-align:left!important}.pd-t td:last-child .pd-acts{justify-content:flex-start!important}.pd-t td{padding-top:10px!important;padding-bottom:10px!important}.pd-t .pd-nm b{white-space:normal}';
   document.head.appendChild(s);
   /* the "New admission" tag sits right after the name, not on a line below it */
   const __rt=render;
@@ -48,19 +48,23 @@
   ];
   function paint(){
     if(!/^#\/myday/.test(location.hash||''))return;
-    const body=document.getElementById('dtBody');if(!body||body.dataset.mocked)return;
-    body.dataset.mocked='1';
-    body.querySelectorAll('.pd-ty').forEach(t=>{if(t.textContent==='MHCA')t.classList.remove('amber');});   /* MHCA is grey in the alert-types table */
-    [...body.querySelectorAll('tr')].filter(r=>r.id!=='dtNone'&&r.children.length>=5).forEach((tr,i)=>{
-      const s=SC[i%SC.length];if(!s)return;
+    const body=document.getElementById('dtBody');if(!body)return;
+    [...body.querySelectorAll('tr')].filter(r=>r.id!=='dtNone'&&r.children.length>=5&&!r.dataset.mocked).forEach((tr,i)=>{
+      tr.dataset.mocked='1';
+      const s=SC[i%SC.length];
       const td=tr.children,ty=td[0].querySelector('.pd-ty');
-      if(ty){ty.textContent=s.type;ty.className='pd-ty '+(s.cls==='grey'?'':s.cls);}
-      if(s.edge)tr.className='r-'+s.edge;
+      if(ty){
+        if(s){ty.textContent=s.type;ty.className='pd-ty '+(s.cls==='grey'?'':s.cls);}
+        else if(ty.textContent==='MHCA')ty.classList.remove('amber');   /* MHCA is grey in the alert-types table */
+        ty.dataset.pg='1';   /* the Type column is final: block 59 must not re-derive it from the text */
+      }
+      if(!s)return;
+      if(s.edge)tr.className='r-'+s.edge;else tr.classList.remove('r-amber','r-red','r-blue');
       if(s.line){const d=document.createElement('div');d.className='pd-d';d.innerHTML='<i class="pd-dot '+s.cls+'"></i><span>'+s.line+'</span>';td[2].insertBefore(d,td[2].firstChild);}
       if(s.who)td[3].innerHTML='<div class="pd-d done"><i class="pd-dot ok"></i><span>'+s.who+'</span></div>';
     });
   }
   const __r=render;
-  render=function(){const x=__r.apply(this,arguments);try{paint();}catch(e){}return x;};
+  render=function(){const x=__r.apply(this,arguments);try{paint();}catch(e){}[60,400,1200].forEach(ms=>setTimeout(()=>{try{paint();}catch(e){}},ms));return x;};
   setTimeout(()=>{try{paint();}catch(e){}},300);
 })();
