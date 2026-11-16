@@ -3176,7 +3176,7 @@ function hoCopy(id){
 
 /* ===== scale: floors as headings, density follows the patient count, search, collapse ===== */
 const ORD=n=>n+(['th','st','nd','rd'][(n%100>=11&&n%100<=13)?0:(n%10<4?n%10:0)]);
-const floorNo=p=>{const m=String(p.room).match(/(\d{3})/);return m?(Math.floor(parseInt(m[1],10)/100)||1):1;};
+const floorNo=p=>{const m=String((p||{}).room||'').match(/(\d{3})/);   /* a ward with no patients (the real De-addiction ward) has no first patient */return m?(Math.floor(parseInt(m[1],10)/100)||1):1;};
 const floorName=p=>ORD(floorNo(p))+' floor';
 const wardFloor=k=>floorName(WARDS[k][0]);
 const dens=n=>n>30?'dense':(n>12?'compact':'cozy');
