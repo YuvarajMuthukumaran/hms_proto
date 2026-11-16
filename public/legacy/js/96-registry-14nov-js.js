@@ -48,11 +48,19 @@
     if(p.floor&&WARDS[p.floor])return p.floor;
     return p.sex==='F'?(keys.find(k=>/female/i.test(k))||keys[0]):(keys.find(k=>/^male/i.test(k))||keys[0]);
   }
+  /* 16 Nov 2026: the psychiatrist login is Anu Yadav's and the psychologist login is Kiran Kumari's. Each lists only that person's
+     patients: the ones they saw in the old HMS (doctors_seen), or a patient admitted after the import whose treating psychiatrist or
+     psychologist is them. Every other role still sees every inpatient. */
+  const WHO={psychiatrist:['Anu Yadav','psychiatrist'],psychologist:['Kiran Kumari','psychologist']};
+  const mineOf=(p,role)=>{const w=WHO[role||String((window.__TULASI__||{}).role||'')];if(!w)return true;return (p.doctors_seen||[]).indexOf(w[0])>=0||(p[w[1]]===w[0]&&String(p.admitted_at||'').slice(0,10)>'2026-11-15');};
+  window.__psyMine=mineOf;
+  const onlyMine=()=>!!window.__realMode&&!!WHO[String((window.__TULASI__||{}).role||'')];
   async function loadAdmitted(){
     try{
-      const rows=await rest('patients?status=eq.admitted&select=id,name,sex,age,uhid,room,bed,floor,section,dx,admitted_at,source,psychiatrist,psychologist,mobile,relatives,referral&order=admitted_at.desc&limit=500');
+      const rows=await rest('patients?status=eq.admitted&select=id,name,sex,age,uhid,room,bed,floor,section,dx,admitted_at,source,psychiatrist,psychologist,mobile,relatives,referral,doctors_seen&order=admitted_at.desc&limit=500');
       let added=0;const ids=[];
       (rows||[]).forEach(p=>{
+        if(onlyMine()&&!mineOf(p))return;
         if(Object.values(WARDS).some(a=>a.some(x=>x.id===p.id)))return;
         const lp=toLegacy(p);WARDS[wardFor(p)].push(lp);
         /* the lists read EX[id] = [observation, next due, expected discharge]; demo patients have it built in */

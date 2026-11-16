@@ -101,4 +101,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/99-real-mode-15nov-js.js',
   '/legacy/js/100-old-hms-history-15nov-js.js',
   '/legacy/js/101-ui-fixes-16nov-js.js',
+  '/legacy/js/102-own-login-names-16nov-js.js',
 ];
