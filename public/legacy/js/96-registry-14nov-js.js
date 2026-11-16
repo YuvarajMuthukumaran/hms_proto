@@ -94,7 +94,7 @@
     const __id=ptIdentity;
     ptIdentity=function(p){
       const id=__id.apply(this,arguments);
-      if(p&&p.real){const r=p.rel0;id.nr=r&&r.name?r.name:'Not recorded';id.nrFirst=id.nr.split(' ')[0];id.rel=r&&r.rel?r.rel:'Relative';id.phone=maskPh(p.mobile);}
+      if(p&&p.real){const r=p.rel0;id.nr=r&&r.name?r.name:'Not recorded';id.nrFirst=id.nr.split(' ')[0];id.rel=r&&r.rel?r.rel:'Not recorded';id.phone=maskPh(p.mobile);}
       return id;
     };
   }

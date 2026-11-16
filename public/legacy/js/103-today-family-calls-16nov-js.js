@@ -24,7 +24,7 @@
     let fam=[];
     try{
       fam=tasks().filter(t=>/^fa_/.test(String(t.id))&&!t.late&&String(t.title||'').indexOf(p.name)>=0)
-        .map(t=>({k:'task',lab:['grey',/^24 hour/i.test(String(t.title))?'Admission':'Family'],txt:String(t.title).split(' · ')[0],due:t.due||'Due today',btn:['Call family',"go('"+(t.go||'#/patient/'+p.id+'/prefs')+"')",false]}));
+        .map(t=>({k:'task',lab:['grey',/^24 hour/i.test(String(t.title))?'Admission':'Family'],txt:String(t.title).split(' · ')[0],due:t.due||'Due today',btn:['Call family',(m=>m&&window.faCall?(m[2]==='wk'?"faWeek('"+m[1]+"')":"faCall('"+m[1]+"','"+m[2]+"')"):"go('"+(t.go||'#/patient/'+p.id+'/prefs')+"')")(String(t.id).match(/^fa_(.+?)(c24|c34|wk)$/)),false]}));
     }catch(e){}
     return base.concat(fam);
   };

@@ -719,7 +719,7 @@ function compactHeader(){
       <div class="dpcards">
         ${card(ic.dx,'Primary diagnosis',S.dx,'6A60.0 · ICD-11')}
         ${card(ic.bed,'Admitted',S.admNo>2?'24 Oct, 16:40':'18 Oct, 11:20','Referred by Dr. Aanya Sharma, OPD')}
-        ${card(ic.hist,S.pastAdm.length>1?'Past admissions · latest':'Past admission',S.pastAdm.length?S.pastAdm[0].dates:'None, first admission',S.pastAdm.length?`<div>${S.pastAdm[0].psy}</div><div>${S.pastAdm[0].psych}</div>`:'',S.pastAdm.length?`<button class="lnk" onclick="go('#/patient/neel/past')">View records</button>`:'')}
+        ${card(ic.hist,S.pastAdm.length>1?'Past admissions · latest':'Past admission',S.pastAdm.length?S.pastAdm[0].dates:'None',S.pastAdm.length?`<div>${S.pastAdm[0].psy}</div><div>${S.pastAdm[0].psych}</div>`:'',S.pastAdm.length?`<button class="lnk" onclick="go('#/patient/neel/past')">View records</button>`:'')}
         ${card(ic.user,'Emergency contact','Ananya Bose (Sister)','+91 98XXX XXX21')}
       </div>
       <div class="row dpteam"><span class="lbl">Treating team</span>${tm(ini(S.team.psy),S.team.psy.replace('Dr. ',''),'Psychiatrist','c-blue')}${tm(ini(S.team.psych),S.team.psych,'Psychologist','c-violet')}${isPsy()?`<button class="tpadd" onclick="addPsychModal()">＋ Add psychologist</button>`:''}${isPsy()||isPsych()?`<button class="tpadd" onclick="transferModal()">⇄ Transfer patient</button>`:''}</div>

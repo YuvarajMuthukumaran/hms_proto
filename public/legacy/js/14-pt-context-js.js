@@ -19,7 +19,7 @@ const ptPick=(arr,id,salt)=>arr[ptHash(id+(salt||''))%arr.length];
 const PT_FAMILY={arjun:['Shalini Mehta','Wife'],varun:['Lakshmi Rao','Mother'],kabir:['Rajesh Malhotra','Father'],sameer:['Mitali Das','Mother'],neel:['Ananya Bose','Sister'],rohit:['Meera Kapoor','Wife'],dev:['Suresh Kumar','Brother'],tarun:['Anil Roy','Father'],meera:['Gopal Iyer','Husband'],sana:['Farah Qureshi','Mother'],ritu:['Vikram Malhotra','Husband'],kavya:['Lata Menon','Mother'],pooja:['Harish Bhatt','Father'],aman:['Gurpreet Gill','Wife'],yash:['Neha Arora','Sister'],nikhil:['Sunita Jain','Wife'],rahul:['Kamal Sethi','Father']};
 const PT_FILL={meera:['F',44],sana:['F',27],ritu:['F',36],kavya:['F',19],pooja:['F',32],aman:['M',39],yash:['M',28],nikhil:['M',47],rahul:['M',24]};
 function ptIdentity(p){
-  const i=allPts().indexOf(p),fam=PT_FAMILY[p.id]||['Family member','Relative'],fl=PT_FILL[p.id]||[];
+  const i=allPts().indexOf(p),fam=PT_FAMILY[p.id]||['Family member','Not recorded'],fl=PT_FILL[p.id]||[];
   return {name:p.name,first:p.name.split(' ')[0],ini:p.ini||p.name.split(' ').map(x=>x[0]).join(''),sex:p.sex||fl[0]||'M',age:p.age||fl[1]||30,
     uhid:p.uhid||('2026-27RG'+(7000+i*37)),th:'TH-'+(1040+i),room:p.room,nr:fam[0],nrFirst:fam[0].split(' ')[0],rel:fam[1],
     phone:'+91 9'+String(8000+ptHash(p.id)%1999).padStart(4,'0')+'X XXX'+String(10+ptHash(p.id+'p')%89),adm:ptDay(p.day)};
@@ -168,7 +168,7 @@ pOverview=function(){
       <label class="row tiny" style="gap:6px"><input type="checkbox" ${S.eddShared?'checked':''} ${isPsy()?'':'disabled'} onchange="S.eddShared=this.checked;S.eddShareBy=whoAt();render();toast(this.checked?'Shared with ${id.nr} in the caretaker app':'No longer shown to the family')"> Show to the family</label>
       ${byl(S.eddBy.by,S.eddBy.at,'Set by')}</div>
     ${box('Restraint', S.restraints.length?S.restraints.length+' this stay':'None this stay', S.restraints.length?S.restraints[0].when+' · '+S.restraints[0].reason+' · authorised by '+S.restraints[0].by:'Psychiatrist authorises; nominated representative told within 24 hours', isPsy()?lnk('Authorise restraint','restraintModal()'):'')}
-    ${box('Previous admissions', S.pastAdm.length?S.pastAdm.length+' earlier stay'+(S.pastAdm.length===1?'':'s'):'None, first admission', S.pastAdm.map(x=>'Admission '+x.n+' · '+x.dates).join(' · '), S.pastAdm.length?lnk('Open',go_('past')):'')}
+    ${box('Previous admissions', S.pastAdm.length?S.pastAdm.length+' earlier stay'+(S.pastAdm.length===1?'':'s'):'None', S.pastAdm.map(x=>'Admission '+x.n+' · '+x.dates).join(' · '), S.pastAdm.length?lnk('Open',go_('past')):'')}
   </div>
   ${S.evOpen?eventsCard():''}`;
 };
