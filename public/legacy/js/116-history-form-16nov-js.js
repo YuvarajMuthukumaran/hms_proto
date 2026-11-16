@@ -96,9 +96,10 @@
       return typeof v==='string'&&v.trim()!=='';
     });
   }
+  window.__pmDone=done; /* block 72 asks this before it draws a tick, so an unfinished step never flashes green */
   function ticks(){
     const nav=document.querySelector('#view .hrow11 .hnav, #view .hwrap .hnav');if(!nav)return;
-    nav.querySelectorAll('button').forEach(b=>{const k=((b.getAttribute('onclick')||'').match(/hsec='(\w+)'/)||[])[1];if(!k)return;b.classList.toggle('seen',done(k));});
+    nav.querySelectorAll('button').forEach(b=>{const k=((b.getAttribute('onclick')||'').match(/hsec='(\w+)'/)||[])[1];if(!k)return;b.classList.toggle('seen',done(k)&&k!==(S.hsec||'id'));});
   }
 
   /* ---------- one-line layout ---------- */

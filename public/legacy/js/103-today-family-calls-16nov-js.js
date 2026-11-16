@@ -40,7 +40,7 @@
     null,
     {type:'Documentation',cls:'grey',edge:'',line:'Detailed history due · within 72 h (mock)',who:''},
     {type:'MHCA',cls:'grey',edge:'',line:'Capacity assessment due · weekly, Section 89 (mock)',who:'Psychologist: assessment booked, 2 pm (mock)'},
-    {type:'Medication',cls:'amber',edge:'amber',line:'RMO order to countersign · Olanzapine 10 mg (mock)',who:'Nurse: order entered, 9:10 am (mock)'},
+    {type:'Medication',cls:'blue',edge:'blue',line:'RMO order to countersign · Olanzapine 10 mg (mock)',who:'Nurse: order entered, 9:10 am (mock)'},
     {type:'Clinical event',cls:'amber',edge:'amber',line:'Vitals out of range, managed and handed back (mock)',who:'RMO: reviewed, 9:25 am (mock)'},
     {type:'Investigation',cls:'amber',edge:'amber',line:'Abnormal lab result not yet reviewed (mock)',who:''},
     {type:'Critical',cls:'red',edge:'red',line:'Alert escalated to you (mock)',who:'RMO: escalated, 9:40 am (mock)'},

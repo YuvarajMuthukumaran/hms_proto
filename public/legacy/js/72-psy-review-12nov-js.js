@@ -438,7 +438,7 @@
     if(left)seen[left]=true;
     lastSec=cur;
     btns.forEach((b,i)=>{
-      const k=keys[i],done=!!seen[k]&&k!==cur;
+      const k=keys[i],done=(window.__pmDone?window.__pmDone(k):!!seen[k])&&k!==cur;
       b.classList.toggle('seen',done);
       if(done&&k===left)b.classList.add('pop');
       if(!b.dataset.hnLabel){const sp=b.querySelector('.hn');if(sp)b.dataset.hnLabel=sp.textContent.trim();}
