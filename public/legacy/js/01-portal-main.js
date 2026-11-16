@@ -1101,7 +1101,8 @@ const CONSENT_TYPES=[
  ['lai','Long-acting injection consent','Long-acting injection consent','Patient or NR','lai'],
  ['inj','Injection consent · patient refuses oral medicine','Injection consent','Patient or NR, family member','inj'],
  ['out','Outing consent','Outing consent','Patient and guardian','out'],
- ['rest','Restraint consent','Restraint consent','Family member','rest'],
+ ['chem','Chemical restraint consent (injectables, can be taken in advance)','Chemical restraint consent','Patient or NR','rest'],
+ ['rest','Physical restraint consent (taken at the time of restraint)','Physical restraint consent','Patient or NR','rest'],
  ['cloz','Clozapine consent','Clozapine consent','Patient and relative','cloz'],
  ['ref','Referral consultation consent','Referral consultation consent','Relative','ref']];
 const CN_SIGN=['Patient','Nominated representative','Family member','Relative','Guardian'];

@@ -109,4 +109,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/107-group-family-scribe-button-16nov-js.js',
   '/legacy/js/109-cows-asq-16nov-js.js',
   '/legacy/js/110-age-sex-bold-16nov-js.js',
+  '/legacy/js/111-restraint-consent-16nov-js.js',
 ];

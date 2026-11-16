@@ -46,7 +46,7 @@
     const d=D;
     pinSign('Authorise restraint · '+pt(d.pid).name,[['Type',d.type],['Reason',d.reason],['Tried first',d.tried.join(', ')],['Review in',d.review+' minutes']],()=>{
       const ep={id:'r'+now(),pid:d.pid,type:d.type,reason:d.reason,tried:d.tried,start:now(),reviewMin:d.review,reviewDue:now()+d.review*60000,by:signer(),at:atNow(),checks:[],reauth:[],escL:0,missed:{},end:null,debrief:null,nr:{due:now()+RC.nrHours*3600000,sent:null},mhrb:true};
-      S.rst.eps.push(ep);
+      S.rst.eps.push(ep);try{if(window.rstConsentFor)rstConsentFor(ep);}catch(e){}
       try{S.restraints.push({when:atNow(),reason:d.reason,by:signer(),review:'in '+d.review+' min'});}catch(e){}
       render();toast('Restraint authorised by '+signer()+'. Ward and nominated representative notified. Checks every '+RC.checkMin+' minutes.');
     },'The signature goes on the episode with the time.');
