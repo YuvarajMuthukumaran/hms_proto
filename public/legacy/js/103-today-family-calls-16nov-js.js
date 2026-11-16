@@ -7,8 +7,13 @@
 (function(){
   if(String((window.__TULASI__||{}).role||'')!=='psychiatrist')return;
   const s=document.createElement('style');
-  s.textContent='.pd-t col:nth-child(2){width:250px!important}.pd-t col:nth-child(3){width:400px!important}.pd-t col:nth-child(5){width:190px!important}.pd-t td{padding-top:10px!important;padding-bottom:10px!important}.pd-t .pd-nm b{white-space:normal}';
+  s.textContent='.pd-t col:nth-child(1){width:122px!important}.pd-t col:nth-child(2){width:250px!important}.pd-t col:nth-child(3){width:400px!important}.pd-t col:nth-child(4){width:300px!important}.pd-t col:nth-child(5){width:auto!important}.pd-t td:last-child{text-align:left!important}.pd-t td:last-child .pd-acts{justify-content:flex-start!important}.pd-t td{padding-top:10px!important;padding-bottom:10px!important}.pd-t .pd-nm b{white-space:normal}';
   document.head.appendChild(s);
+  /* the "New admission" tag sits right after the name, not on a line below it */
+  const __rt=render;
+  render=function(){const x=__rt.apply(this,arguments);try{
+    document.querySelectorAll('.pd-t .pd-tags').forEach(t=>{const nm=t.closest('tr')&&t.closest('tr').querySelector('.pd-nm');if(!nm)return;[...t.children].forEach(c=>nm.appendChild(c));t.remove();});
+  }catch(e){}return x;};
 })();
 (function(){
   if(!window.__realMode)return;
