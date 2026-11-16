@@ -56,6 +56,6 @@
   const __r=render;
   render=function(){
     /* New admission: real patients are admitted from the Registry (search the old HMS record, then Admit); the demo front desk list is not used */
-    if(/^#\/admissions/.test(location.hash||'')){location.replace('#/registry');}
+    if(/^#\/admissions/.test(location.hash||'')&&!/^(psychiatrist|rmo|floor-lead-psychiatrist)$/.test(String((window.__TULASI__||{}).role||''))){location.replace('#/registry');}
     const out=__r.apply(this,arguments);try{scrub();}catch(e){}return out;};
 })();

@@ -88,7 +88,7 @@
 
   /* ======================= 114 family updates automation ======================= */
   const FAM_SEED={varun:{c24:false},sameer:{c34:false}};
-  const famState=pid=>{const a=au();if(!a.fam[pid]){const p=pt(pid),d=+p.day||0,s=FAM_SEED[pid]||{};a.fam[pid]={c24:d>=2&&s.c24!==false?'Seeded':'',c34:d>=5&&s.c34!==false?'Seeded':'',weeks:Math.max(0,Math.floor(d/7)-(d>=14&&pid==='kabir'?1:0)),log:[]};}return a.fam[pid];};
+  const famState=pid=>{const a=au(),px=(typeof psyPx==='function')?psyPx(pid):null;if(px&&px.fam){a.fam[pid]=px.fam;return px.fam;}if(!a.fam[pid]){const p=pt(pid),d=+p.day||0,s=FAM_SEED[pid]||{};a.fam[pid]={c24:d>=2&&s.c24!==false?'Seeded':'',c34:d>=5&&s.c34!==false?'Seeded':'',weeks:Math.max(0,Math.floor(d/7)-(d>=14&&pid==='kabir'?1:0)),log:[]};}if(px)px.fam=a.fam[pid];return a.fam[pid];}; /* 16 Nov: kept in the patient's saved working notes (psyx) so a family call log survives a reload and shows on every device */
   const famRows=()=>{const out=[];myPts().forEach(p=>{const d=+p.day||0,f=famState(p.id),k=kind();
     if(k==='psychiatrist'){
       if(!f.c24)out.push({pid:p.id,name:p.name,what:'24 hour call',key:'c24',late:d>=2,due:d>=2?'Overdue':'Due today'});

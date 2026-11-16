@@ -25,6 +25,7 @@
     const tx=await r.text();return tx?JSON.parse(tx):null;
   }
   window.regRest=rest;
+  window.regLoadAdmitted=()=>loadAdmitted();
   /* every database inpatient, whatever the ward (Daily notes lists them all) */
   window.realInpatients=()=>{try{return Object.values(WARDS).flat().filter(p=>p.real);}catch(e){return [];}};
   /* the Transfer and Add psychologist lists come from the staff table (names imported from the old HMS), plus the built-in demo names */
