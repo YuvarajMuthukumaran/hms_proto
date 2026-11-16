@@ -55,7 +55,7 @@
   }
 
   /* ---------------- Treatment Plan: Scores card, NEWS2 on the vitals table, order a scale (card "Rating scales and early warning") ---------------- */
-  const SCALES=[['NEWS2','Early warning score from the vitals'],['C-SSRS screen','Suicide and self-harm screen'],['CIWA-Ar','Alcohol withdrawal (for Dr. Anu to confirm)'],['COWS','Opioid withdrawal (for Dr. Anu to confirm)']];
+  const SCALES=[['NEWS2','Early warning score from the vitals'],['ASQ screen','Suicide screen for every patient (ASQ)'],['C-SSRS screen','Suicide severity, when the ASQ is positive'],['CIWA-Ar','Alcohol withdrawal'],['COWS','Opioid withdrawal']];
   const FREQ=['Every shift','Every 4 hours','Daily','At each re-assessment'];
   window.shScaleOrder=function(pid){
     V3.modal('Order a scale · '+esc((pt(pid)||{}).name),'The nurses see it on their board and record the score at each time.',

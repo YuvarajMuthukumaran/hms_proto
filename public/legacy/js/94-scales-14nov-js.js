@@ -37,6 +37,8 @@
     if(scale==='CIWA-Ar'){const c=(x.ciwa||[])[0];return c?'Last '+c.total+' ('+String(c.band).toLowerCase().replace('rmo','RMO')+'), '+c.at:'No score yet';}
     if(scale==='NEWS2'){const a=window.psyAutoNews&&psyAutoNews(pid);return a?'Last '+a.total+' ('+String(a.band).toLowerCase().replace('rmo','RMO')+'), '+a.date:'No score yet';}
     if(scale==='C-SSRS screen'){const s=(x.suicide||[])[0];return s?'Last: '+s.level.toLowerCase()+', '+s.at:'Not screened';}
+    if(scale==='COWS'){const c=(x.cows||[])[0];return c?'Last '+c.total+' ('+String(c.band).toLowerCase()+'), '+c.at:'No score yet';}
+    if(scale==='ASQ screen'){const c=(x.asq||[])[0];return c?'Last: '+c.result.toLowerCase()+', '+c.at:'Not screened';}
     return 'No form yet';
   }
   function board(v){
