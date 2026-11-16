@@ -96,13 +96,13 @@
   };
   window.pmAdSave=async function(pid){const v=(document.getElementById('pmAd')||{}).value,e=document.getElementById('pmAdE');
     if(!v||v>new Date().toISOString().slice(0,10)){if(e){e.textContent='Pick a date that is not in the future.';e.style.display='block';}return;}
-    try{await window.regRest('patients?id=eq.'+encodeURIComponent(pid),{method:'PATCH',body:{admitted_at:v},prefer:'return=minimal'});}catch(x){if(e){e.textContent='Could not save ('+x.message+').';e.style.display='block';}return;}
-    try{const p=ptFind(pid),t=new Date();t.setHours(0,0,0,0);if(p)p.day=Math.max(0,Math.round((t-new Date(v+'T00:00:00'))/864e5));}catch(x){}
+    try{let fl=null;try{const r=await window.regRest('patients?id=eq.'+encodeURIComponent(pid)+'&select=flags');fl=((r&&r[0]&&r[0].flags)||[]).filter(f=>f!=='admission date estimated');}catch(y){}await window.regRest('patients?id=eq.'+encodeURIComponent(pid),{method:'PATCH',body:fl?{admitted_at:v,flags:fl}:{admitted_at:v},prefer:'return=minimal'});}catch(x){if(e){e.textContent='Could not save ('+x.message+').';e.style.display='block';}return;}
+    try{const p=ptFind(pid),t=new Date();t.setHours(0,0,0,0);if(p){p.day=Math.max(0,Math.round((t-new Date(v+'T00:00:00'))/864e5));p.admEst=false;}}catch(x){}
     closeModal();render();toast('Admission date saved');};
   function admBtn(){
     const m=(location.hash||'').match(/^#\/patient\/([^/]+)/);if(!m)return;let p=null;try{p=ptFind(decodeURIComponent(m[1]));}catch(e){}
     if(!p||!p.real)return;
-    document.querySelectorAll('#view .dpcards > *').forEach(c=>{if(/^\s*admitted/i.test(c.innerText||'')&&!c.querySelector('.pm-ad')){const b=document.createElement('button');b.type='button';b.className='lnk pm-ad';b.style.margin='4px 0 0';b.textContent='Edit admission date';b.onclick=()=>pmAdmDate(p.id);c.appendChild(b);if(p.lastVisit){const d=document.createElement('div');d.className='tiny muted';d.textContent='Last visit in the old HMS: '+new Date(p.lastVisit+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});c.appendChild(d);}}});
+    document.querySelectorAll('#view .dpcards > *').forEach(c=>{if(/^\s*admitted/i.test(c.innerText||'')&&!c.querySelector('.pm-ad')){const b=document.createElement('button');b.type='button';b.className='lnk pm-ad';b.style.margin='4px 0 0';b.textContent='Edit admission date';b.onclick=()=>pmAdmDate(p.id);c.appendChild(b);if(p.admEst){const e=document.createElement('div');e.className='tiny muted';e.textContent='Date estimated from old HMS IPD visits';c.appendChild(e);}if(p.lastVisit){const d=document.createElement('div');d.className='tiny muted';d.textContent='Last visit in the old HMS: '+new Date(p.lastVisit+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});c.appendChild(d);}}});
   }
 
   const __r=render;

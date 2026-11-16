@@ -42,7 +42,7 @@
   const ini=n=>String(n||'').split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();
   function toLegacy(p){
     return {id:p.id,age:p.age,sex:p.sex||'',uhid:p.uhid,name:p.name,ini:ini(p.name),room:p.room?('Room '+String(p.room).replace(/^Room\s*/i,'')):(p.bed||'No room yet'),
-      day:dayOf(p.admitted_at),sec:p.section||'89',risk:false,dx:p.dx||'Under assessment',real:true,src:p.source,mobile:p.mobile||'',rel0:(p.relatives||[])[0]||null,referral:p.referral||'',lastVisit:p.last_visit||''};
+      day:dayOf(p.admitted_at),sec:p.section||'89',risk:false,dx:p.dx||'Under assessment',real:true,src:p.source,mobile:p.mobile||'',rel0:(p.relatives||[])[0]||null,referral:p.referral||'',lastVisit:p.last_visit||'',admEst:(p.flags||[]).indexOf('admission date estimated')>=0};
   }
   function wardFor(p){
     const keys=Object.keys(WARDS);
@@ -59,7 +59,7 @@
   const onlyMine=()=>!!window.__realMode&&String((window.__TULASI__||{}).role||'')==='psychiatrist';
   async function loadAdmitted(){
     try{
-      const rows=await rest('patients?status=eq.admitted&select=id,name,sex,age,uhid,room,bed,floor,section,dx,admitted_at,source,psychiatrist,psychologist,mobile,relatives,referral,doctors_seen,last_visit&order=admitted_at.desc&limit=500');
+      const rows=await rest('patients?status=eq.admitted&select=id,name,sex,age,uhid,room,bed,floor,section,dx,admitted_at,source,psychiatrist,psychologist,mobile,relatives,referral,doctors_seen,last_visit,flags&order=admitted_at.desc&limit=500');
       let added=0;const ids=[];
       (rows||[]).forEach(p=>{
         if(onlyMine()&&!mineOf(p))return;
