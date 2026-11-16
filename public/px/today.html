@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><script src="/auth-shim.js"></script>
+<head><script src="/auth-shim.js"></script><script src="/px/px-real.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tulasi · Patient Experience · Today (proposed)</title>
@@ -185,7 +185,7 @@ document.addEventListener('change',e=>{ const t=e.target;
 </script>
 <script>
 const LIVE_IMG = "";
-const state = { done:{}, acted:{}, open:null, brief:true, view:'today', newG:0 };
+const state = { done:{}, acted:{}, open:null, brief:!window.PX_REAL, view:'today', newG:0 };
 function setState(p){ Object.assign(state,p); render(); }
     const menus = {
       'Safety': [['Call Chandraji and the treating doctor', 'Required today for Safety = Yes'], ['Add incident report number', 'Grievance cannot close without it'], ['Update the family', 'Call first, then write']],
@@ -327,7 +327,7 @@ function shell(inner){
 function today(){
   const done=state.done, acted=state.acted;
   let late=0;
-  if(window.HMSX)HMSX.fix(raw,(r,h)=>{r.sub=h.age+'/'+h.sex+' · Day '+HMSX.day(h)+' · '+h.room;});
+  if(window.HMSX&&!window.PX_REAL)HMSX.fix(raw,(r,h)=>{r.sub=h.age+'/'+h.sex+' · Day '+HMSX.day(h)+' · '+h.room;});
   const rows=raw.map((r,idx)=>{
     const stillLate=r.late&&r.items.some(it=>(it.c==='amber'||it.c==='red')&&!done[it.id]);
     if(stillLate) late++;
@@ -343,13 +343,13 @@ function today(){
       <td style="width:170px;padding:14px 14px 14px 8px"><div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;position:relative"><button class="eye" data-eye="${r.id}" aria-label="View details for ${esc(r.name)}">${I.eye}</button><button class="take" aria-haspopup="menu" data-open="${r.id}">Take Action ▾</button>${menu}</div></td></tr>`;
   }).join('');
   const chip=(l,c,w,k)=>`<a href="#" class="chip" data-chip="${k}" title="${esc(CHIPTIP[k]||'')}">${l} <span style="font-weight:700;color:${w?'#B54708':'#0F172A'}">${c}</span></a>`;
-  const chips=[chip('Late now',late,late>0,'late'),chip('Safety open',1,1,'safety'),chip('Grievances open',5+state.newG,1,'griev'),chip('Discharges today',2,0,'disch'),chip('NPS, last 30 days','+58',0,'nps'),chip('Random calls due',3,0,'calls'),chip('Team calls or updates late',4,1,'team')].join('');
+  const chips=(window.PX_REAL?[chip('Late now',late,late>0,'late'),chip('Admitted now',(window.HMS_PATIENTS.patients||[]).length,0,'x'),chip('New in 24 h',raw.length,0,'x')]:[chip('Late now',late,late>0,'late'),chip('Safety open',1,1,'safety'),chip('Grievances open',5+state.newG,1,'griev'),chip('Discharges today',2,0,'disch'),chip('NPS, last 30 days','+58',0,'nps'),chip('Random calls due',3,0,'calls'),chip('Team calls or updates late',4,1,'team')]).join('');
   const brief=state.brief?`<section class="brief" aria-label="Morning brief"><div style="display:flex;justify-content:space-between;gap:12px"><div style="display:flex;gap:10px"><span class="av" style="width:28px;height:28px;background:#fff;border:1px solid #D5E4FB;color:#1E6CDB">${I.sun}</span><div><div style="font-weight:700">Morning brief</div><div style="font-size:12px;color:#667085">9:00 am · from overnight calls, family updates, feedback and grievances · no clinical notes</div></div></div><button data-hide="1" style="border:0;background:transparent;color:#1E5BB8;font-weight:600;font-size:13px">Hide</button></div>
     <ul><li>1 safety allegation overnight (Room 213 A). It needs Chandraji and an incident report number today.</li><li>Rohit Kapoor's wife wants to take him home (DAMA risk). Rahul Sethi goes home at 3 pm, and his psychologist has not met the family yet.</li><li>Yesterday: 1 detractor (NPS 5) and 3 families with no 8 pm update. Kavya Menon had no psychologist session over the weekend.</li><li>1 compliment: Karan Malhotra's mother thanked Priya Nair for the daily updates. Shared with Priya.</li></ul></section>`:'';
   return shell(`<main>
     <div class="bar"><input class="inp" type="search" placeholder="Type a name" aria-label="Search patients"><div style="display:flex;gap:8px"><button class="btn">${I.plus}Log a grievance</button><button class="btn pri" data-call="pick">${I.phone}Log a family call</button></div></div>
     ${brief}<div class="chips">${chips}</div>
-    <div class="tw"><table><thead><tr><th style="padding-left:18px">TYPE</th><th>PATIENT</th><th>WHAT'S DUE</th><th>ACTION TAKEN BY OTHERS</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="tw"><table><thead><tr><th style="padding-left:18px">TYPE</th><th>PATIENT</th><th>WHAT'S DUE</th><th>ACTION TAKEN BY OTHERS</th><th></th></tr></thead><tbody>${rows||(window.PX_REAL?'<tr><td colspan="5" style="padding:22px;color:#667085">Nothing is due right now. New admissions and the concerns you log will show here.</td></tr>':'')}</tbody></table></div>
     ${(()=>{const e=raw.find(x=>x.id===state.eye);if(!e)return "";return `<div class="tw" style="margin:12px 0;padding:16px 18px" role="region" aria-label="Details for ${esc(e.name)}"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><b style="font-size:16px">${esc(e.name)}</b> <span style="color:#667085;font-size:13px">${esc(e.sub)}</span></div><button class="btn" data-eye="">Close</button></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">${e.items.map(it=>`<div style="display:flex;gap:8px"><i class="dot" style="background:${state.done[it.id]?dotC.ok:dotC[it.c]}"></i><span>${esc(it.text)} <span style="font-size:12px;color:#667085">· ${esc(state.done[it.id]?"done just now":it.meta)}</span></span></div>`).join("")}</div><div style="margin-top:12px;font-size:13px;color:#344054"><b>Action taken by others:</b> ${esc(e.others)}</div></div>`})()}<div class="key" role="note"><b style="font-size:11px;color:#667085;letter-spacing:.05em">KEY</b><span><i class="dot" style="background:#E5484D"></i>Safety or rights concern <em style="color:#667085">· needs you now</em></span><span><i class="dot" style="background:#F5A524"></i>Late <em style="color:#667085">· past its time</em></span><span><i class="dot" style="background:#3B82F6"></i>Due today</span><span><i class="dot" style="background:#12B76A"></i>Action taken</span></div>
   </main>`);
 }
@@ -403,7 +403,17 @@ const TP=[
   {id:'km',name:'Kavya Menon',rep:'Ravi Menon',rel:'husband',ph:'99100 XXX88',day:9,room:'313',dr:'Dr. Alisha Nagar',callN:1,row:'km'},
   {id:'mi',name:'Meera Iyer',rep:'S. Iyer',rel:'father',ph:'98450 XXX09',day:0,room:'310 A',dr:'Dr. Alisha Nagar',callN:1,row:'mi'}];
 window.CM_PATIENTS=TP;
-if(window.HMSX)HMSX.fix(TP,(x,h)=>{x.rep=h.nr;x.rel=String(h.nrRel).toLowerCase();x.room=HMSX.room(h);x.day=HMSX.day(h);x.dr=h.doctor;});
+/* real mode (16 Nov): no demo rows. Each patient admitted in the last 24 h gets the "family meeting at admission" step; the call list is every admitted patient. */
+if(window.PX_REAL){
+  raw.length=0; TP.length=0;
+  (window.HMS_PATIENTS.patients||[]).forEach(h=>{
+    const d=HMSX.day(h);
+    TP.push({id:h.id,name:h.name,rep:h.nr,rel:String(h.nrRel).toLowerCase(),ph:h.mobile||'',day:d,room:HMSX.room(h),dr:h.doctor,callN:1,row:'r'+h.id});
+    if(d<=1)raw.push({id:'r'+h.id,type:'Admission',late:d>=1,name:h.name,initials:h.ini,sub:h.age+'/'+h.sex+' · Day '+d+' · '+h.room,tags:['New · 24 h'],
+      items:[{id:'fm'+h.id,c:d>=1?'amber':'blue',text:'Family meeting at admission',meta:'rules, visiting hours, contact card and updates · '+h.nr+' ('+String(h.nrRel).toLowerCase()+')'}],others:'Nothing yet'});
+  });
+}
+if(window.HMSX&&!window.PX_REAL)HMSX.fix(TP,(x,h)=>{x.rep=h.nr;x.rel=String(h.nrRel).toLowerCase();x.room=HMSX.room(h);x.day=HMSX.day(h);x.dr=h.doctor;});
 window.onCallSaved = r => {
   const p=r.p; const done={...state.done}; if(r.outcome==='Connected'&&p.item) done[p.item]=true;
   const txt = r.outcome!=='Connected' ? 'random call, '+r.outcome.toLowerCase() : r.grievance ? 'random call logged, grievance '+r.grievance.id+' ('+r.grievance.cat+') to '+r.grievance.owner : 'random call logged, no concern';

@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><script src="/auth-shim.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tulasi · Patient Experience · Rounds (proposed)</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>
+<!doctype html><html lang="en"><head><script src="/auth-shim.js"></script><script src="/px/px-real.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tulasi · Patient Experience · Rounds (proposed)</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>
 *{box-sizing:border-box}
 body{margin:0;background:#F6FBFF;font-family:Inter,system-ui,sans-serif;color:#0F172A;font-size:15px}
 a{color:#1E5BB8;text-decoration:none}
@@ -132,7 +132,7 @@ const FLOORS=(function(){
   return out;
 })();
 Object.keys(FLOORS).forEach(f=>FLOORS[f].push(mk('Common areas',[],f==='Floor 3'?'done':'todo',{common:1})));
-const ISS=[{room:'210',what:'Exhaust fan not working',team:'Maintenance (electrical)',due:'2 h 10 m left',st:'open'}];
+const ISS=window.PX_REAL?[]:[{room:'210',what:'Exhaust fan not working',team:'Maintenance (electrical)',due:'2 h 10 m left',st:'open'}];
 const S={view:'app',fl:'Floor 2',cur:null,r:{},seq:150,showIss:false};
 function set(p){Object.assign(S,p);render();}
 const rooms=()=>FLOORS[S.fl];
@@ -385,7 +385,7 @@ document.addEventListener('change',e=>{ const t=e.target;
   try{window.DAY_ROT=Math.floor(Date.now()/86400000)%6;}catch(e){}
   load();
   /* seed: the one open issue from the prototype gets a real start time; restore room boxes */
-  if(!ST.iss){ST.iss=[{room:'210',what:'Exhaust fan not working',team:'Maintenance (electrical)',st:'open',t0:Date.now()-110*M,lim:LIM.roomH()*H,by:'Prabh',id:'RI-001'}];store();}
+  if(!ST.iss){ST.iss=window.PX_REAL?[]:[{room:'210',what:'Exhaust fan not working',team:'Maintenance (electrical)',st:'open',t0:Date.now()-110*M,lim:LIM.roomH()*H,by:'Prabh',id:'RI-001'}];store();}
   function sync(){
     Object.keys(FLOORS).forEach(f=>FLOORS[f].forEach(r=>{const k=f+'|'+r.room;if(ST.rooms[k])r.st=ST.rooms[k];
       r.pts.forEach(p=>{const e=(ST.log||[]).filter(x=>x.patient===p.n).map(x=>x.t).sort((a,b)=>b-a)[0];if(e)p.last=Math.floor((Date.now()-e)/86400000);});}));

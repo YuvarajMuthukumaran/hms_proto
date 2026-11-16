@@ -21,7 +21,7 @@
     {id:'px',name:'PX Lead',role:'Patient Experience Lead',floor:'Whole hospital'}
   ];
   /* weekly pattern by weekday (0 = Sunday) */
-  const PAT={ka:'OMMMMMM',pr:'MMEEEEO',px:'OMMMMMO'};
+  const PAT=window.PX_REAL?{ka:'OMMMMMM',pr:'OMMMMMM',px:'OMMMMMM'}:{ka:'OMMMMMM',pr:'MMEEEEO',px:'OMMMMMO'};   /* real mode (16 Nov): the default is morning shift, Sunday off, until the real roster is entered */
   /* patients on the floors: the family meetings come from these stays. admit and discharge are days from today. */
   const STAYS=[
     {p:'Sameer Das',room:'213 A',floor:'Floor 2',admit:-6,dis:null,who:'ka'},
@@ -39,7 +39,7 @@
     HMS_PATIENTS.patients.forEach((h,i)=>STAYS.push({p:h.name,room:HMSX.room(h),floor:h.floor==='f1'?'Floor 1':h.floor==='f3'?'Floor 3':'Floor 2',admit:-HMSX.day(h),dis:DIS[h.id]!==undefined?DIS[h.id]:null,who:h.floor==='f2'?'ka':'pr',time:SLOTS[i%SLOTS.length]}));
   }
   /* grievances that a person owns and that are due on a day (demo) */
-  const GRV=[{id:'G-0141',who:'ka',due:1,text:'Call the family back (pending close)'},{id:'G-0139',who:'pr',due:3,text:'Check the fix with the family'}];
+  const GRV=window.PX_REAL?[]:[{id:'G-0141',who:'ka',due:1,text:'Call the family back (pending close)'},{id:'G-0139',who:'pr',due:3,text:'Check the fix with the family'}];
   const nameOf=id=>(TEAM.find(t=>t.id===id)||{name:id}).name;
   const idOf=n=>(TEAM.find(t=>t.name===n)||{}).id;
   let S=null;
@@ -48,9 +48,9 @@
     let fri=addDays(t,1);while(parse(fri).getDay()!==5)fri=addDays(fri,1);
     let mon=addDays(t,1);while(parse(mon).getDay()!==1)mon=addDays(mon,1);
     return {
-      leave:[{id:'l1',who:'ka',from:fri,to:fri,type:'Planned leave',cover:'pr'},{id:'l2',who:'px',from:mon,to:mon,type:'Comp off',cover:'pr'}],
+      leave:window.PX_REAL?[]:[{id:'l1',who:'ka',from:fri,to:fri,type:'Planned leave',cover:'pr'},{id:'l2',who:'px',from:mon,to:mon,type:'Comp off',cover:'pr'}],
       shifts:{},
-      events:[
+      events:window.PX_REAL?[]:[
         {id:'e1',type:'Ward visit or floor round',date:addDays(t,5),time:'14:00',owner:'pr',patient:'',floor:'Floor 3',note:'NABH walk-through of the common areas',status:'planned'},
         {id:'e2',type:'VIP visit',date:addDays(t,6),time:'14:00',owner:'ka',patient:'',floor:'Whole hospital',note:'Board member visit, show the Floor 2 activity room',status:'planned'},
         {id:'e3',type:'MHRB or external visit',date:addDays(t,4),time:'11:00',owner:'ka',patient:'',floor:'Whole hospital',note:'Mental Health Review Board visit. Keep the register and consent files ready.',status:'planned'}

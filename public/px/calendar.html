@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><script src="/auth-shim.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tulasi · Patient Experience · Calendar</title>
+<!doctype html><html lang="en"><head><script src="/auth-shim.js"></script><script src="/px/px-real.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tulasi · Patient Experience · Calendar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
@@ -99,7 +99,7 @@ function alerts(){
 function roster(from,n){
   const days=[];for(let i=0;i<n;i++)days.push(C.addDays(from,i));
   const t=C.todayISO();
-  return `<div class="card"><h3><span>Team roster</span><span class="muted small" style="font-weight:400">Tap a day to change a shift or add leave. Demo roster until greytHR is linked.</span></h3><div class="scroll"><table><thead><tr><th>TEAM MEMBER</th>${days.map(d=>`<th class="${d===t?'today':''}">${C.label(d).toUpperCase()}</th>`).join('')}</tr></thead><tbody>${members().map(m=>`<tr><td><div class="who"><b>${esc(m.name)}</b><span class="muted small">${esc(m.role)} · ${esc(m.floor)}</span></div></td>${days.map(d=>{const s=C.shift(m.id,d);
+  return `<div class="card"><h3><span>Team roster</span><span class="muted small" style="font-weight:400">Tap a day to change a shift or add leave. ${window.PX_REAL?'Default roster (morning, Sunday off) until greytHR is linked.':'Demo roster until greytHR is linked.'}</span></h3><div class="scroll"><table><thead><tr><th>TEAM MEMBER</th>${days.map(d=>`<th class="${d===t?'today':''}">${C.label(d).toUpperCase()}</th>`).join('')}</tr></thead><tbody>${members().map(m=>`<tr><td><div class="who"><b>${esc(m.name)}</b><span class="muted small">${esc(m.role)} · ${esc(m.floor)}</span></div></td>${days.map(d=>{const s=C.shift(m.id,d);
     if(s.code==='L')return `<td><button class="cell cL" data-cell="${m.id}|${d}"><b>${esc(s.leave.type)}</b><span>Cover: ${esc(C.nameOf(s.leave.cover)||'not set')}</span></button></td>`;
     const sh=C.SHIFTS[s.code];return `<td><button class="cell c${s.code}" data-cell="${m.id}|${d}"><b>${sh.n}</b><span>${sh.t||'&nbsp;'}</span>${s.code!=='O'?`<span>${esc(m.floor)}</span>`:''}</button></td>`;}).join('')}</tr>`).join('')}</tbody></table></div></div>`;}
 function weekEvents(from){

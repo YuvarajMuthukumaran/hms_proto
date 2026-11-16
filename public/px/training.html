@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><script src="/auth-shim.js"></script>
+<head><script src="/auth-shim.js"></script><script src="/px/px-real.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tulasi · Patient Experience · Staff training</title>
@@ -74,6 +74,7 @@ const PEOPLE=[
 const DONE0={p1:['rights','listen','concern','n1','n2','n3'],p2:['rights','listen','n1'],p3:['listen'],p4:['rights'],p5:['rights','listen','concern','w1'],p6:[],p7:['rights','listen','concern','c1','c2','c3'],p8:['c1'],p9:['rights','listen','concern','f1','f2'],p10:['rights','listen','concern','f1','f2'],p11:['rights','listen','concern','n1','n2','n3'],p12:[]};
 const SESS0=[{id:'s1',when:'2026-11-12T15:00',mod:'rights',place:'Training room',invited:['p3','p6','p8','p12'],came:null},{id:'s2',when:'2026-11-05T11:00',mod:'listen',place:'Floor 2 lounge',invited:['p1','p2','p4','p5'],came:{p1:'P',p2:'P',p4:'R',p5:'P'}}];
 SESS0.forEach(x=>{x.when=shiftD(x.when);});PEOPLE.forEach(p=>{p.joined=shiftD(p.joined);});
+if(window.PX_REAL){PEOPLE.length=0;SESS0.length=0;}   /* real mode (16 Nov): the staff list and sessions are demo; the HR list is not connected yet */
 let S;try{S=JSON.parse(localStorage.getItem(KEY));}catch(e){}
 if(!S||!S.done){S={done:JSON.parse(JSON.stringify(DONE0)),sess:SESS0,view:'people',team:'All',flt:'all',open:null,plan:null,att:null,n:3};}
 S.view='people';S.team='All';S.flt='all';S.open=null;S.plan=null;S.att=null;
@@ -105,6 +106,7 @@ function alerts(){const out=[];
   S.sess.filter(s=>!s.came&&D(s.when).toDateString()===TODAY.toDateString()).forEach(s=>out.push(`<div class="alert blue"><span><b>Session today at ${D(s.when).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}).toLowerCase()}:</b> ${esc(modName(s.mod))}, ${s.invited.length} invited</span><button class="btn sm pri" data-att="${s.id}">Take attendance</button></div>`));
   const late=PEOPLE.filter(p=>(TODAY-D(p.joined))/86400000>7&&!S.done[p.id].includes('rights')&&isNew(p));
   if(late.length)out.push(`<div class="alert amber"><span><b>${late.length} new joiner${late.length>1?'s':''} past 7 days without Patient rights and dignity:</b> ${late.map(p=>esc(p.name)).join(', ')}</span><button class="btn sm" data-planmod="rights" data-people="${late.map(p=>p.id).join(',')}">Plan induction</button></div>`);
+  if(window.PX_REAL){if(GR)out.push(grAlerts());return out.join('');}   /* real mode: no made-up concerns */
   if(GR){out.push(grAlerts());return out.join('');}
   out.push(`<div class="alert amber"><span><b>G-0137</b> cost estimate not shared before discharge, linked to the front desk. Refresher: Welcoming a family at admission.</span><button class="btn sm" data-planmod="f1" data-people="p9,p10">Plan a session</button></div>`);
   out.push(`<div class="alert amber"><span><b>G-0145</b> safety concern on Floor 2 at night. Refresher: Calming and safe handling, for the night nurses and the attendant.</span><button class="btn sm" data-planmod="n3" data-people="p2,p4">Plan a session</button></div>`);
@@ -139,7 +141,7 @@ function drawer(){
     <div class="muted small">Passed updates the person's record. Repeat goes into the next session. Counts go to Reports for NABH training records.</div><button class="btn pri" data-attok="1">Save attendance</button></div></div>`;}
   return '';}
 function render(){const need=PEOPLE.length;document.getElementById('root').innerHTML=`
- <div class="hello"><div><h2>Staff training</h2><div class="muted">Nurses, call centre, front desk and ward staff. Staff list comes from HR. Demo data.</div></div><button class="btn pri" data-planmod="rights" data-people="">Plan a session</button></div>
+ <div class="hello"><div><h2>Staff training</h2><div class="muted">Nurses, call centre, front desk and ward staff. ${window.PX_REAL?'The staff list comes from HR and is not connected yet, so nobody is listed.':'Staff list comes from HR. Demo data.'}</div></div><button class="btn pri" data-planmod="rights" data-people="">Plan a session</button></div>
  ${alerts()}
  <div class="bar"><div class="seg"><button class="${S.view==='people'?'on':''}" data-v="people">People</button><button class="${S.view==='sessions'?'on':''}" data-v="sessions">Sessions</button></div>
   <div class="chips">${['All','Nurses','Call centre','Front desk','Ward staff'].map(t=>`<button class="chip ${S.team===t?'on':''}" data-team="${t}">${t==='All'?'All teams':t}</button>`).join('')}</div>

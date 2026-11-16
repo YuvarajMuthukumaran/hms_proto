@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><script src="/auth-shim.js"></script>
+<head><script src="/auth-shim.js"></script><script src="/px/px-real.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tulasi · Patient Experience · Reports</title>
@@ -47,22 +47,27 @@ const PER={
   tiles:{calls:[26,40,22,40],closed:[34,41,30,40],fb:[19,26,17,25,'NPS +54','NPS +49']},
   steps:[['Family met at admission',97,95],['Rights explained to patient and rep',82,78],['Met the patient on day 1 or 2',71,66],['Preferences taken',90,88],['Random calls 1 and 2',55,48],['Discharge meeting and feedback',78,76]],
   themes:[['Family updates too general',11,'Weekly update draft added for psychologists.'],['Meals served cold',8,'Kitchen supervisor reviewing the tray order.'],['Room too noisy at night',6,'Night nurses briefed. Housekeeping checks the corridor.']]}};
+/* real mode (16 Nov): the demo numbers, themes and compliments are dropped; only what is really logged counts */
+if(window.PX_REAL){const z=P=>{P.tiles.calls=[0,0,0,0];P.tiles.closed=[0,0,0,0];P.tiles.fb=[0,0,0,0,'NPS: no answers yet','NPS: no answers yet'];P.steps=P.steps.map(s=>[s[0],0,0]);P.themes=[];};z(PER.week);z(PER.month);}
+const NPAT=window.PX_REAL?Math.max(1,(window.HMS_PATIENTS.patients||[]).length):34;
 /* random calls this week: counted from the calls logged in Today, Patients, Rounds and the Log button (2 per admitted patient) */
-try{let n=0;const M=JSON.parse(localStorage.getItem('px_calls_main_v1')||'{}')||{};Object.keys(M).forEach(k=>(M[k]||[]).forEach(l=>{if(l&&l.rc)n++;}));(JSON.parse(localStorage.getItem('px_calls_v1')||'[]')||[]).forEach(c=>{if(c&&c.outcome==='Connected')n++;});const T=PER.week.tiles.calls;PER.week.tiles.calls=[n,34,T[2],T[3]];}catch(e){}
+try{let n=0;const M=JSON.parse(localStorage.getItem('px_calls_main_v1')||'{}')||{};Object.keys(M).forEach(k=>(M[k]||[]).forEach(l=>{if(l&&l.rc)n++;}));(JSON.parse(localStorage.getItem('px_calls_v1')||'[]')||[]).forEach(c=>{if(c&&c.outcome==='Connected')n++;});const T=PER.week.tiles.calls;PER.week.tiles.calls=[n,window.PX_REAL?NPAT*2:34,T[2],T[3]];}catch(e){}
 const COMPL=[{id:'c1',who:'Sister Rekha',team:'Nurses',words:'She sat with my daughter on the first night. We felt safe leaving her.',by:'S. Iyer, father'},
  {id:'c2',who:'Dr. Kunal Sethi',team:'Psychiatrist',words:'He called back the same day and explained the plan.',by:'Kiran Rao, brother'},
  {id:'c3',who:'Geeta Devi',team:'Housekeeping',words:'Returned the laundry and said sorry. Thank you.',by:'Vikas Sethi, father'},
  {id:'c4',who:'Priya Nair',team:'Psychologist',words:'The daily updates are very helpful.',by:'Sunita Malhotra, mother'}];
+if(window.PX_REAL)COMPL.length=0;
 try{const PN={p1:'Arjun Mehta',p2:'Neel Bose',p3:'Meera Iyer',p4:'Varun Rao',p5:'Kavya Menon',p6:'Rahul Sethi'},M=JSON.parse(localStorage.getItem('px_calls_main_v1')||'{}')||{};Object.keys(M).forEach(pid=>(M[pid]||[]).forEach((l,i)=>{if(l&&l.tag==='compliment')COMPL.unshift({id:'lg-'+pid+'-'+i,who:'Named in the call',team:'Logged by '+(l.who||'Prabh'),words:l.note||'Compliment logged.',by:(PN[pid]||'Family')+(l.d?', '+l.d:'')});}));}catch(e){}
 /* discharge feedback taken (px_fb_v1, saved by the PX app): x of y, and the NPS from the 0 to 10 answers */
 try{const F=JSON.parse(localStorage.getItem('px_fb_v1')||'null');if(F&&Array.isArray(F.saved)&&F.total){const n=F.saved.length,pro=F.saved.filter(x=>x.nps>=9).length,det=F.saved.filter(x=>x.nps<=6).length,nps=n?Math.round((pro-det)/n*100):0,T=PER.week.tiles.fb;PER.week.tiles.fb=[n,F.total,T[2],T[3],(n?'NPS '+(nps>0?'+':'')+nps:'NPS: no answers yet'),T[5]];}}catch(e){}
 /* steps on time: random calls 1 and 2 = share of admitted patients with two answered calls */
-try{const cnt={};const M=JSON.parse(localStorage.getItem('px_calls_main_v1')||'{}')||{};Object.keys(M).forEach(k=>(M[k]||[]).forEach(l=>{if(l&&l.rc)cnt[k]=(cnt[k]||0)+1;}));(JSON.parse(localStorage.getItem('px_calls_v1')||'[]')||[]).forEach(c=>{if(c&&c.outcome==='Connected')cnt[c.name]=(cnt[c.name]||0)+1;});const two=Object.keys(cnt).filter(k=>cnt[k]>=2).length;const st=PER.week.steps.filter(x=>/Random calls/.test(x[0]))[0];if(st){st[1]=Math.round(two/34*100);}}catch(e){}
+try{const cnt={};const M=JSON.parse(localStorage.getItem('px_calls_main_v1')||'{}')||{};Object.keys(M).forEach(k=>(M[k]||[]).forEach(l=>{if(l&&l.rc)cnt[k]=(cnt[k]||0)+1;}));(JSON.parse(localStorage.getItem('px_calls_v1')||'[]')||[]).forEach(c=>{if(c&&c.outcome==='Connected')cnt[c.name]=(cnt[c.name]||0)+1;});const two=Object.keys(cnt).filter(k=>cnt[k]>=2).length;const st=PER.week.steps.filter(x=>/Random calls/.test(x[0]))[0];if(st){st[1]=Math.round(two/NPAT*100);}}catch(e){}
 /* concerns closed in 6 h: from the Grievances list when the shared store is on */
 (function(){fetch('/api/config',{cache:'no-store'}).then(r=>r.json()).then(j=>{if(!j||!j.supabase||!j.pxStore)return;const c=j.supabase;return fetch(c.url+'/rest/v1/px_state?select=key,data&key=like.pxg:*',{headers:{apikey:c.key,Authorization:'Bearer '+c.key,'x-tulasi-role':'patient-experience-lead'}}).then(r=>r.ok?r.json():[]).then(rows=>{let y=0,x=0;(rows||[]).forEach(r=>{const d=typeof r.data==='string'?JSON.parse(r.data):r.data;if(!d||!d.c)return;const st=d.st||{},status=st.status||d.c.status;if(status!=='Resolved')return;y++;const m=String(st.sla||d.c.sla||'').match(/Closed in ([\d.]+) h/);if(m&&+m[1]<=6)x++;});if(y){const T=PER.week.tiles.closed;PER.week.tiles.closed=[x,y,T[2],T[3]];render();}});}).catch(()=>{});})();
 let S={per:'week',told:{}};try{S.told=JSON.parse(localStorage.getItem('px_told')||'{}');}catch(e){}
-let TR={upToDate:9,total:12,sessions:1,attended:4,passed:3};try{const t=JSON.parse(localStorage.getItem('px_training_sum'));if(t&&t.total)TR=t;}catch(e){}
+let TR=window.PX_REAL?{upToDate:0,total:0,sessions:0,attended:0,passed:0}:{upToDate:9,total:12,sessions:1,attended:4,passed:3};try{const t=JSON.parse(localStorage.getItem('px_training_sum'));if(t&&t.total)TR=t;}catch(e){}
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const pc=(a,b)=>b?Math.round(a/b*100):0;
 const chg=(a,b,unit)=>{const d=a-b;return d===0?'<span class="eq">Same as before</span>':`<span class="${d>0?'up':'dn'}">${d>0?'▲':'▼'} ${Math.abs(d)}${unit||''} ${PER[S.per].vs}</span>`;};
 function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),3000);}
 function csv(){const P=PER[S.per],T=P.tiles;const rows=[['Patient Experience report',P.label,P.dates],[],['Measure','Done','Of','Previous period'],['Random calls done',T.calls[0],T.calls[1],T.calls[2]+' of '+T.calls[3]],['Concerns closed in 6 h',T.closed[0],T.closed[1],T.closed[2]+' of '+T.closed[3]],['Discharge feedback taken',T.fb[0],T.fb[1],T.fb[2]+' of '+T.fb[3]],['Staff training up to date (people)',TR.upToDate,TR.total,''],[],['Step','On time %','Previous %','Target % (90)'],...P.steps.map(s=>[s[0],s[1],s[2],90]),[],['What families keep raising','Count','What is being done'],...P.themes.map(t=>[t[0],t[1],t[2]]),[],['Compliments','Team','Told']].concat(COMPL.map(c=>[c.who,c.team,S.told[c.id]?'Yes':'No']));
@@ -70,12 +75,12 @@ function csv(){const P=PER[S.per],T=P.tiles;const rows=[['Patient Experience rep
 function render(){const P=PER[S.per],T=P.tiles;
  const tile=(l,v,of,sub)=>`<div class="tile"><span class="l">${l}</span><b>${v}${of!=null?' <span class="muted" style="font-size:15px;font-weight:600">of '+of+'</span>':''}</b>${sub}</div>`;
  document.getElementById('root').innerHTML=`
- <div class="hello"><div><h2>Reports</h2><div class="muted">${P.label}, ${P.dates}. Your own work only. Nothing here is typed in.</div><div class="small muted" style="margin-top:4px">Counted from what is logged: random calls, concerns closed (Grievances), discharge feedback, compliments and staff training. The steps-on-time bars other than random calls are demo numbers until the stay steps are logged in the HMS.</div></div>
+ <div class="hello"><div><h2>Reports</h2><div class="muted">${P.label}, ${P.dates}. Your own work only. Nothing here is typed in.</div><div class="small muted" style="margin-top:4px">Counted from what is logged: random calls, concerns closed (Grievances), discharge feedback, compliments and staff training. The steps-on-time bars other than random calls are ${window.PX_REAL?'zero':'demo numbers'} until the stay steps are logged in the HMS.</div></div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><div class="seg"><button class="${S.per==='week'?'on':''}" data-per="week">This week</button><button class="${S.per==='month'?'on':''}" data-per="month">Last month</button></div><button class="btn" data-dl="1">Download for ops review</button></div></div>
  <div class="tiles">
-  ${tile('Random calls done',T.calls[0],T.calls[1],chg(Math.round(T.calls[0]/T.calls[1]*100),Math.round(T.calls[2]/T.calls[3]*100),'%'))}
-  ${tile('Concerns closed in 6 h',T.closed[0],T.closed[1],chg(Math.round(T.closed[0]/T.closed[1]*100),Math.round(T.closed[2]/T.closed[3]*100),'%'))}
-  ${tile('Discharge feedback taken',T.fb[0],T.fb[1],'<span class="small muted">'+T.fb[4]+'</span> '+chg(Math.round(T.fb[0]/T.fb[1]*100),Math.round(T.fb[2]/T.fb[3]*100),'%'))}
+  ${tile('Random calls done',T.calls[0],T.calls[1],chg(pc(T.calls[0],T.calls[1]),pc(T.calls[2],T.calls[3]),'%'))}
+  ${tile('Concerns closed in 6 h',T.closed[0],T.closed[1],chg(pc(T.closed[0],T.closed[1]),pc(T.closed[2],T.closed[3]),'%'))}
+  ${tile('Discharge feedback taken',T.fb[0],T.fb[1],'<span class="small muted">'+T.fb[4]+'</span> '+chg(pc(T.fb[0],T.fb[1]),pc(T.fb[2],T.fb[3]),'%'))}
   ${tile('Staff training up to date',TR.upToDate,TR.total,'<span class="small muted">people · from the Staff training page</span>')}
  </div>
  <section class="card"><div class="hd"><h3>Your steps on time</h3><span class="muted small">Only the steps you own. Ticked from the HMS logs. The line is the 90% target.</span></div>
