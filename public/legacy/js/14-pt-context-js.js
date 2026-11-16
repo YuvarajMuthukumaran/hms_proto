@@ -121,7 +121,7 @@ function ptSwaps(){
     ['<div class="avbig">NB</div>','<div class="avbig">'+id.ini+'</div>'],['23/M R 213 A',id.age+'/'+id.sex+' '+String(p.room||'').replace(/^Room\s*/i,'R ')],['UHID 2026-27RG6990','UHID '+id.uhid],
     ['Room 214 · Bed A','R '+String(p.room||'').replace(/^Room\s*/i,'')],['6A60.0 · ICD-11',set.icd+' · ICD-11'],['18 Oct, 11:20',ptD(id.adm)+', 11:20'],['24 Oct, 16:40',ptD(id.adm)+', 16:40'],
     ["Day 6 of stay","Day "+p.day+" of stay"],['day 6 of 30','day '+p.day+' of 30'],['+91 98XXX XXX21',id.phone],
-    ['Ananya Bose (Sister)',id.nr+' ('+id.rel+')'],['Ananya Bose (sister)',id.nr+' ('+id.rel.toLowerCase()+')'],['Ananya Bose, sister',id.nr+', '+id.rel.toLowerCase()],
+    ['Ananya Bose (Sister)',id.nr+(id.rel==='Not recorded'?'':' ('+id.rel+')')],['Ananya Bose (sister)',id.nr+' ('+id.rel.toLowerCase()+')'],['Ananya Bose, sister',id.nr+', '+id.rel.toLowerCase()],
     ['Calmer today, sleep improved, engaging in groups. Pressured speech at times. Plan: increase olanzapine, check lithium level.',(c.dnHist&&c.dnHist[0]?c.dnHist[0].sum:'Seen on round')+'. Plan: continue '+(c.meds&&c.meds[0]?c.meds[0].name:'current medicines')+'; '+set.labs[0].toLowerCase()+'.'],
     ['Serum lithium level tomorrow morning',set.labs[0]+' tomorrow morning'],
     ['Relapse of bipolar disorder after stopping lithium',set.dx+' (relapse or new episode)'],['Bipolar affective disorder, current episode manic without psychotic symptoms (6A60.0), relapse after stopping lithium.',set.dx+' ('+set.icd+').'],
