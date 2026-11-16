@@ -1,0 +1,16 @@
+/* 14 Nov 2026: lead psychologist block 87: sign, back, note, cosign and concern live in each patient's psychologist notes (psyx.lp), so they travel to the other logins */
+const fs=require('fs'),f='public/legacy/js/87-lead-psychologist-12nov-js.js';let s=fs.readFileSync(f,'utf8');
+function rep(a,b){if(!s.includes(a))throw new Error('not found: '+a.slice(0,70));s=s.split(a).join(b);}
+rep("const L=()=>S.lp||(S.lp={assign:{},pF:'all',pD:'',scope:'floor',sign:{},back:{},note:{},conc:{},cosign:{},hoFrom:'',calD:''});",
+"/* sign, back, note, cosign and conc are stored per patient in psyx.lp (psychologist notes, shared with the other logins); the rest is this screen's own state */\n  const LPX=pid=>{try{const x=psyPx(pid);return x.lp||(x.lp={});}catch(e){return {};}};\n  const lpMap=(k,keyed)=>new Proxy({},{get:(_,id)=>{if(typeof id!=='string')return undefined;if(keyed){const i=id.indexOf(':');return (LPX(id.slice(0,i)).cosign||{})[id.slice(i+1)];}return LPX(id)[k];},set:(_,id,v)=>{if(keyed){const i=id.indexOf(':'),lp=LPX(id.slice(0,i));(lp.cosign=lp.cosign||{})[id.slice(i+1)]=v;}else LPX(id)[k]=v;return true;}});\n  const L=()=>S.lp||(S.lp={assign:{},pF:'all',pD:'',scope:'floor',sign:lpMap('sign'),back:lpMap('back'),note:lpMap('note'),cosign:lpMap('cosign',1),conc:lpMap('conc'),hoFrom:'',calD:''});\n  window.lpState=L;window.lpLPX=LPX;");
+// the old L() line may be repeated in other places? ensure none left
+if(/L=\(\)=>S\.lp\|\|\(S\.lp=\{assign:\{\},pF:'all',pD:'',scope:'floor',sign:\{\}/.test(s))throw new Error('old L left');
+// cosign keyed by note id
+rep("window.lpCosign=function(pid,i){pinSign('Co-sign the session note',[['Signing as',signer()]],()=>{L().cosign[pid+':'+i]={by:signer(),at:atNow()};render();toast('Co-signed');});};",
+"window.lpCosign=function(pid,nid){pinSign('Co-sign the session note',[['Signing as',signer()],['Role','Psychologist Lead']],()=>{L().cosign[pid+':'+nid]={by:signer(),at:atNow()};render();toast('Co-signed');});};");
+rep("v.querySelectorAll('.tp-body table tbody tr').forEach((tr,i)=>{if(tr.dataset.lpcs)return;if(!/assistant/i.test(tr.textContent))return;tr.dataset.lpcs='1';const cs=L().cosign[r.pid+':'+i];const last=tr.lastElementChild;if(last)last.insertAdjacentHTML('beforeend',cs?`<span class=\"lp-ch grn\">Co-signed by ${esc(cs.by)}</span>`:`<button class=\"btn sm pri\" onclick=\"lpCosign('${r.pid}',${i})\">Co-sign</button>`);});",
+"v.querySelectorAll('.tp-body table tbody tr').forEach(tr=>{if(tr.dataset.lpcs)return;if(!/assistant/i.test(tr.textContent))return;const m=tr.innerHTML.match(/snView\('([^']+)'\)/);if(!m)return;tr.dataset.lpcs='1';const cs=L().cosign[r.pid+':'+m[1]];const last=tr.lastElementChild;if(last)last.insertAdjacentHTML('beforeend',cs?`<span class=\"lp-ch grn\">Co-signed by ${esc(cs.by)}, ${esc(cs.at)}</span>`:`<button class=\"btn sm pri\" onclick=\"lpCosign('${r.pid}','${m[1]}')\">Co-sign</button>`);});");
+// authorBits: handled by the Today block (window.lpAuthor)
+rep("function authorBits(v){","function authorBits(v){\n    if(typeof window.lpAuthor==='function'){window.lpAuthor(v);return;}");
+rep("window.lpSeedAsst=seedAssistant;","window.lpSeedAsst=seedAssistant;window.lpTEAM=TEAM;window.lpFULL=FULL;window.lpIdOf=idOf;");
+fs.writeFileSync(f,s);console.log('ok');

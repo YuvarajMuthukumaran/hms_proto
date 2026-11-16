@@ -1,0 +1,5 @@
+const fs=require('fs'),path=require('path');
+function ed(f,pairs){const p=path.join(__dirname,'..','public','legacy','js',f);let s=fs.readFileSync(p,'utf8');const crlf=s.includes('\r\n');s=s.replace(/\r\n/g,'\n');for(const [a,b] of pairs){if(s.split(a).length!==2)throw new Error(f+': '+a.slice(0,70));s=s.split(a).join(b);}if(crlf)s=s.replace(/\n/g,'\r\n');fs.writeFileSync(p,s);new Function(s);}
+ed('26-psy-dashboard-js.js',[['({Vitals:"Clinical event",Late:"Documentation"})','({Vitals:"Clinical event",Late:"Documentation","Overdue review":"Documentation"})']]);
+const p=path.join(__dirname,'..','public','legacy','js','01-portal-main.js');let s=fs.readFileSync(p,'utf8');const L=s.split('\n');const i=L.findIndex(l=>l.indexOf("A('neel','urgent','Elevated pulse after rounds'")>=0);if(i<0)throw new Error('no pulse');
+L[i]='  /* removed 13 Nov (QA 135): a made-up alert. A real one comes from a nurse vitals entry. */';fs.writeFileSync(p,L.join('\n'));new Function(L.join('\n'));console.log('ok');

@@ -1,0 +1,10 @@
+const fs=require('fs'),path=require('path');
+const p=path.join(__dirname,'..','public','legacy','js','72-psy-review-12nov-js.js');let s=fs.readFileSync(p,'utf8');const crlf=s.includes('\r\n');s=s.replace(/\r\n/g,'\n');
+const L=s.split('\n');
+const lines=[208,260,380,421,423,450];
+let n=0;lines.forEach(k=>{const i=k-1;if(L[i].indexOf('psy()')<0)throw new Error('line '+k);L[i]=L[i].split('!psy()').join('!admLook()').split('if(psy())').join('if(admLook())').split('if(psy()&&').join('if(admLook()&&');n++;});
+s=L.join('\n');
+const a="  const psy=()=>S.role==='psychiatrist'&&!/psycholog|patient-experience/.test(realRole());";
+if(s.split(a).length!==2)throw new Error('gate');
+s=s.split(a).join(a+"\n  /* the Admission tab (steps, section strip, capacity look, mental status chips) looks the same for the psychologist (13 Nov, Nikita: copy the psychiatrist's design) */\n  const admLook=()=>psy()||(S.role==='psychologist'&&/psycholog/.test(realRole()));");
+if(crlf)s=s.replace(/\n/g,'\r\n');fs.writeFileSync(p,s);new Function(s);console.log('ok',n);
