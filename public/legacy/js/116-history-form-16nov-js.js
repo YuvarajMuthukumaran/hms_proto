@@ -84,10 +84,10 @@
     });
   }
 
-  /* ---------- completeness: a step is ticked only when every question in it is answered ---------- */
+  /* ---------- a step is ticked once at least one of its questions is answered ---------- */
   function done(k){
     const sec=(typeof HIST!=='undefined'?HIST:[]).find(x=>x.k===k);if(!sec)return false;const s=hf();
-    return sec.f.every(f=>{
+    return sec.f.some(f=>{   /* Yuvaraj, 16 Nov: a step shows its tick once ANY question in it is answered and you move on; nothing answered = no tick */
       const l=f[0],ty=f[1],v=s[l];
       if(ty==='o')return !!(v&&typeof v==='object'&&v.sel&&(v.sel!=='__other'||String(v.free||'').trim()));
       if(ty==='m'||ty==='ap')return Array.isArray(v)&&v.length>0;

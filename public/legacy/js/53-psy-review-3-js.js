@@ -130,7 +130,7 @@
     if(!psy()||(ty!=='o'&&ty!=='m'&&ty!=='ap'))return __fld.apply(this,arguments);
     const i=hfIdx(l),dis=ro?'disabled':'';
     if(ty==='o'){
-      const v=hfGet(l,'o'),inList=op.includes(v.sel),sel=v.sel&&!inList?'__other':v.sel,free=sel==='__other'?(v.free||v.sel):'';
+      const v=hfGet(l,'o'),inList=op.includes(v.sel),sel=v.sel&&!inList?'__other':v.sel,free=sel==='__other'?(v.free||(v.sel==='__other'?'':v.sel)):'';
       return `<div class="hf hf-sel" data-hf="${i}"><span class="lbl">${hesc(l)}</span><div class="hf-row"><select class="input" ${dis} onchange="psyHfOne(${i},this)"><option value="">Select…</option>${op.map(o=>`<option ${sel===o?'selected':''}>${hesc(o)}</option>`).join('')}<option value="__other" ${sel==='__other'?'selected':''}>Other (type it)</option></select>
         <input class="input hfree" ${dis} placeholder="Type here" value="${hesc(free)}" ${sel==='__other'?'':'hidden'} oninput="psyHfFree(${i},this.value)"></div></div>`;
     }
