@@ -64,7 +64,7 @@
         Object.keys(MAR_ST).forEach(k=>{if(k.startsWith(pid+':'))out[k]={st:MAR_ST[k],who:MAR_WHO[k]||null};});
         return Object.keys(out).length?out:null;
       }
-      return bridge.readCtx(ptCtxOf(pid),keys);
+      {const o=bridge.readCtx(ptCtxOf(pid),keys);if(keys.indexOf('xs')>=0){try{o.xs=window.__xsRead?window.__xsRead(pid):undefined;}catch(e){o.xs=undefined;}}return o;}
     },
     /* The psychiatrist's and the psychologist's working notes share one object (psyx). The parts both of them write live in their own
        slice, psyxShared, saved with the psychology records that both roles may write. Everything else in psyx stays a doctor record, so a
@@ -88,6 +88,7 @@
         if(!(k in data))return;
         if(k==='psyxShared'){c.psyx=c.psyx||{};PSYX_SHARED.forEach(s=>{if(data[k]&&s in data[k])c.psyx[s]=data[k][s];});}
         else if(k==='psyx'){const o=Object.assign({},data[k]);PSYX_SHARED.forEach(s=>{delete o[s];});c.psyx=Object.assign(c.psyx||{},o);}
+        else if(k==='xs'){try{if(window.__xsApply)window.__xsApply(pid,data[k]);}catch(e){}}
         else c[k]=data[k];
       });
     },

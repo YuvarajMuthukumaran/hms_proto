@@ -113,4 +113,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/112-psy-meeting-16nov-js.js',
   '/legacy/js/113-scores-in-admission-16nov-js.js',
   '/legacy/js/114-real-new-admission-16nov-js.js',
+  '/legacy/js/115-save-extras-16nov-js.js',
 ];
