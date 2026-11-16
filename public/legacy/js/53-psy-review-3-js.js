@@ -127,7 +127,7 @@
   const __fld=fld;
   fld=function(f,ro){
     const [l,ty,op]=f;
-    if(!psy()||(ty!=='o'&&ty!=='m'&&ty!=='ap'))return __fld.apply(this,arguments);
+    if(!(psy()||S.role==='psychologist')||(ty!=='o'&&ty!=='m'&&ty!=='ap'))return __fld.apply(this,arguments);
     const i=hfIdx(l),dis=ro?'disabled':'';
     if(ty==='o'){
       const v=hfGet(l,'o'),inList=op.includes(v.sel),sel=v.sel&&!inList?'__other':v.sel,free=sel==='__other'?(v.free||(v.sel==='__other'?'':v.sel)):'';

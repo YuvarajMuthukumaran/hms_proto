@@ -9,7 +9,7 @@
    6. Family tree is a small table (relation, age, sex, marital status, education, occupation).
    7. The risk screen under the form is a drop-down that records the result and sets the risk of harm. */
 (function(){
-  const isPsy=()=>String((window.__TULASI__||{}).role||'')==='psychiatrist';
+  const isPsy=()=>/^(psychiatrist|psychologist)$/.test(String((window.__TULASI__||{}).role||''));
   if(!isPsy())return;
   const E=s=>hesc(String(s==null?'':s));
   const today=()=>new Date().toISOString().slice(0,10);
@@ -131,13 +131,13 @@
     });
   }
   const css=document.createElement('style');css.id='pm-history-css';
-  css.textContent=`body.psy-views:not(.psg) .hwrap .hgrid{grid-template-columns:repeat(12,minmax(0,1fr))!important;column-gap:14px!important}
-  body.psy-views:not(.psg) .hwrap .hgrid>.hf{grid-column:span 6}
-  body.psy-views:not(.psg) .hwrap .hgrid>.hf:has(textarea),body.psy-views:not(.psg) .hwrap .hgrid>.hf:has(.mini-chips),body.psy-views:not(.psg) .hwrap .hgrid>.hf:not(.hf-sel):has(input.input),body.psy-views:not(.psg) .hwrap .hgrid>.hf.wide{grid-column:1/-1}
-  body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span="3"]{grid-column:span 3!important}
-  body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span="4"]{grid-column:span 4!important}
-  body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span="6"]{grid-column:span 6!important}
-  body.psy-views:not(.psg) .hwrap .hgrid>.hf.pm-big textarea.input{min-height:190px!important;font-size:15px;line-height:1.5}
+  css.textContent=`body.psy-views:not(.psg) .hwrap .hgrid, body.psg .hwrap .hgrid{grid-template-columns:repeat(12,minmax(0,1fr))!important;column-gap:14px!important}
+  body.psy-views:not(.psg) .hwrap .hgrid>.hf, body.psg .hwrap .hgrid>.hf{grid-column:span 6}
+  body.psy-views:not(.psg) .hwrap .hgrid>.hf:has(textarea),body.psy-views:not(.psg) .hwrap .hgrid>.hf:has(.mini-chips),body.psy-views:not(.psg) .hwrap .hgrid>.hf:not(.hf-sel):has(input.input),body.psy-views:not(.psg) .hwrap .hgrid>.hf.wide, body.psg .hwrap .hgrid>.hf:has(textarea),body.psg .hwrap .hgrid>.hf:has(.mini-chips),body.psg .hwrap .hgrid>.hf:not(.hf-sel):has(input.input),body.psg .hwrap .hgrid>.hf.wide{grid-column:1/-1}
+  body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span="3"], body.psg .hwrap .hgrid>.hf[data-span="3"]{grid-column:span 3!important}
+  body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span="4"], body.psg .hwrap .hgrid>.hf[data-span="4"]{grid-column:span 4!important}
+  body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span="6"], body.psg .hwrap .hgrid>.hf[data-span="6"]{grid-column:span 6!important}
+  body.psy-views:not(.psg) .hwrap .hgrid>.hf.pm-big textarea.input, body.psg .hwrap .hgrid>.hf.pm-big textarea.input{min-height:190px!important;font-size:15px;line-height:1.5}
   /* titles and their grey line sit on one line, left to right (Anu: no wrapping into a narrow column) */
   #view .card>.hd>div:first-child,#view section.card>.hd>div:first-child{flex:1 1 auto;min-width:0}
   #view .card>.hd .small.muted,#view .card>.hd .tiny.muted{max-width:none!important}
@@ -148,7 +148,7 @@
   .pm-tree-r .input{min-height:38px;width:100%}
   .pm-risk{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 14px;border:1px solid #fedf89;background:#fffaeb;border-radius:12px}
   .pm-risk select{min-height:38px;min-width:220px;max-width:100%}
-  @media(max-width:900px){body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span]{grid-column:1/-1!important}.pm-tree-r{grid-template-columns:1fr 1fr}}`;
+  @media(max-width:900px){body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span],body.psg .hwrap .hgrid>.hf[data-span]{grid-column:1/-1!important}.pm-tree-r{grid-template-columns:1fr 1fr}}`;
   document.head.appendChild(css);
 
   /* ---------- risk screen under the form (same two choices as the OPD doctor risk screen: risk of harm, and what it is for) ---------- */
