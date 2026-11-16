@@ -9,8 +9,21 @@
   const CACHE={};   // patient id -> rows | 'none' | 'error'
   const PEND={};
   const fmt=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'No date';
-  const okUrl=u=>/^https:\/\/[a-z0-9.-]*tirupatihms\.in\//i.test(u||'');
-  const link=u=>okUrl(u)?` <a href="${esc(u)}" target="_blank" rel="noopener noreferrer">Open PDF</a>`:'';
+  /* "Open PDF" opens OUR saved copy (private storage bucket old-hms-pdfs, linked by tools/upload_old_pdfs.py), in a new tab, through a
+     5-minute signed link. The old HMS link is not used: it only led to a login page. Rows with no saved copy show no button. */
+  const pdf=r=>{const f=(r.data||{}).file;return f&&/^[a-z]{1,3}\/[0-9]+\.pdf$/.test(f)?` <button class="btn sm" onclick="ohmsPdf('${esc(f)}')">Open PDF</button>`:'';};
+  let CFG;
+  async function cfg(){if(CFG!==undefined)return CFG;try{const r=await fetch('/api/config',{cache:'no-store'});const j=r.ok?await r.json():null;CFG=j&&j.supabase?j.supabase:null;}catch(e){CFG=null;}return CFG;}
+  window.ohmsPdf=async function(path){
+    const tab=window.open('','_blank');   /* opened first, so the browser does not block it */
+    try{
+      const c=await cfg();if(!c)throw new Error('offline');
+      const r=await fetch(c.url+'/storage/v1/object/sign/old-hms-pdfs/'+path,{method:'POST',headers:{apikey:c.key,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:300})});
+      const j=r.ok?await r.json():null;if(!j||!j.signedURL)throw new Error('HTTP '+r.status);
+      const u=c.url+'/storage/v1'+j.signedURL;
+      if(tab)tab.location.href=u;else window.open(u,'_blank');
+    }catch(e){if(tab)tab.close();try{toast('Could not open the PDF. Sign in again and retry.');}catch(x){}}
+  };
 
   function body(rows){
     const by=k=>rows.filter(r=>r.kind===k);
@@ -19,9 +32,9 @@
     const medsOf=r=>((r.data||{}).meds||[]).map(m=>`<div class="tiny">${esc(m.name?(m.name+(m.strength?' '+m.strength:'')):m.line)}${m.schedule?' · '+esc(m.schedule):''}${m.duration?' · '+esc(m.duration):''}</div>`).join('');
     const sec=(t,n,html,open)=>n?`<details ${open?'open':''} style="margin-top:8px"><summary style="cursor:pointer;font-weight:600">${t} (${n})</summary>${html}</details>`:'';
     return (dx?`<div style="margin-top:6px"><div class="tiny muted">Diagnosis written in the old HMS</div><div style="white-space:pre-wrap">${esc(dx.detail)}</div></div>`:'')
-      +sec('Discharge summaries',docs.length,docs.map(r=>line(esc(fmt(r.event_date)),esc([(r.data||{}).reason,(r.data||{}).doctor].filter(Boolean).join(' · ')),link(r.url))).join(''),true)
+      +sec('Discharge summaries',docs.length,docs.map(r=>line(esc(fmt(r.event_date)),esc([(r.data||{}).reason,(r.data||{}).doctor].filter(Boolean).join(' · ')),pdf(r))).join(''),true)
       +sec('Visits',vis.length,vis.map(r=>line(esc(fmt(r.event_date))+' · '+esc(r.title||'Visit'),esc(r.detail||''))).join(''))
-      +sec('Old prescriptions (reference, not on the chart)',rx.length,rx.map(r=>line(esc(fmt(r.event_date)),esc([r.detail,(r.data||{}).doctor].filter(Boolean).join(' · ')),link(r.url),medsOf(r))).join(''),rx.some(r=>((r.data||{}).meds||[]).length));
+      +sec('Old prescriptions (reference, not on the chart)',rx.length,rx.map(r=>line(esc(fmt(r.event_date)),esc([r.detail,(r.data||{}).doctor].filter(Boolean).join(' · ')),pdf(r),medsOf(r))).join(''),rx.some(r=>((r.data||{}).meds||[]).length));
   }
   function inner(pid){
     const c=CACHE[pid];
@@ -41,7 +54,7 @@
     return `<div style="font-weight:600">${esc(fmt(r.event_date))}${r.detail?' · '+esc(r.detail):''}</div>`
       +m.slice(0,14).map(x=>`<div class="small">${esc(x.name?(x.name+(x.strength?' '+x.strength:'')):x.line)}${x.schedule?' · '+esc(x.schedule):''}${x.duration?' · '+esc(x.duration):''}</div>`).join('')
       +(rx.length>1?`<div class="tiny muted" style="margin-top:6px">${rx.length-1} older prescription${rx.length>2?'s':''} with medicines: see Records from the old HMS on the Stay summary.</div>`:'')
-      +link(r.url);
+      +pdf(r);
   }
   /* the old-prescription box sits right under the Current medicines card (it was at the bottom of the page, out of sight) */
   function place(){
