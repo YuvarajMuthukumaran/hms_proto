@@ -37,7 +37,7 @@
   const alertTo=(pid,title,detail,src)=>{try{V3.alert({pid,sev:'urgent',title,detail,src:src||'Rules',by:'System'});}catch(e){}};
 
   /* ============================== 105: MHCA ============================== */
-  const mh=pid=>{const x=px(pid);if(!x.mhca){const p=pt(pid),old=(+p.day||0)>0;x.mhca={ad:old?'Absent':'',adBy:old?'At admission':'',adAt:'',capDone:0,decision:'',nr:old?{rights:{by:'At admission',at:''}}:{},mhrb:{}};}return x.mhca;};
+  const mh=pid=>{const x=px(pid);if(!x.mhca){const p=pt(pid),old=(+p.day||0)>0;x.mhca={ad:old?'Absent':'',adBy:old?'At admission':'',adAt:'',capDone:0,decision:'',nr:old?{rights:{by:'At admission',at:''}}:{},mhrb:{},tasks:(!old&&String(p.sec)==='89')?[{id:'mhrb_adm',text:'MHRB email: involuntary admission (Section 89)',meta:'One email at admission. Treating psychiatrist',due:now()+86400000,done:null}]:[]};}return x.mhca;};
   function legal(pid){
     const p=pt(pid),sec=String(p.sec||''),day=+p.day||0,m=mh(pid);
     const limit=R.mhca.limit89Day,left=sec==='89'?Math.max(0,limit-day):null;
@@ -83,7 +83,7 @@
     const m=mh(pid),label={s90:'Apply for Section 90',indep:'Switch to independent admission (Form C)',dc:'Plan discharge'}[k];
     m.decision=k;m.decisionBy=signer();m.decisionAt=atNow();m.tasks=m.tasks||[];
     const add=(text,meta,days)=>m.tasks.push({id:k+Date.now()+Math.random().toString(36).slice(2,5),text,meta,due:now()+days*86400000,done:null});
-    if(k==='s90'){add('MHRB intimation: Section 90 application','Mental Health Review Board',3);add('NR notice: change of admission type','Within 7 days',7);}
+    if(k==='s90'){add('NR notice: change of admission type','Within 7 days. No MHRB mail for the change (Dr. Anu, 16 Nov; legal team to confirm)',7);}
     if(k==='indep'){add('Form C: independent admission','Patient signs on the tablet',2);add('NR notice: change of admission type','Within 7 days',7);}
     if(k==='dc'){add('Discharge plan: set the expected discharge date','Before day 30',2);}
     const o=document.getElementById('mhcaPrompt');if(o)o.remove();render();toast('Recorded: '+label+'. The follow-up tasks are on Today.');
