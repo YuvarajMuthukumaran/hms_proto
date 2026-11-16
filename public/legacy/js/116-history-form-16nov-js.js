@@ -128,8 +128,6 @@
       const l=labelOf(f),n=Object.keys(sp).find(x=>l.indexOf(x)===0);
       if(n)f.setAttribute('data-span',sp[n]);
       if(big.some(x=>l.indexOf(x)===0))f.classList.add('pm-big');
-      /* Mental status and Physical examination: three choices per line, several-answer ones two per line (24 full-width drop-downs was a very long page) */
-      if((k==='mse'||k==='phy')&&f.classList.contains('hf-sel')&&!n)f.setAttribute('data-span',/add all that apply/i.test(f.textContent)?6:4);
     });
   }
   const css=document.createElement('style');css.id='pm-history-css';
