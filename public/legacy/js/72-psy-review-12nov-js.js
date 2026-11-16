@@ -259,7 +259,7 @@
   const __fldM=fld;
   fld=function(f,ro){
     const [l,ty,op]=f;
-    if(true||!admLook()||S.hsec!=='mse'||(ty!=='o'&&ty!=='m'&&ty!=='ap'))return __fldM.apply(this,arguments); /* 16 Nov: mental status uses the same drop-downs as the other sections (Yuvaraj) */
+    if(!admLook()||S.hsec!=='mse'||(ty!=='o'&&ty!=='m'&&ty!=='ap'))return __fldM.apply(this,arguments);
     const i=mseIdx(l),st=mseStore(),dis=ro?'disabled':'';
     let cur;
     if(ty==='o'){const v=st[l]!==undefined?st[l]:{sel:mseDraft(l)||''};cur=[v&&v.sel!=='__other'?v.sel:(v&&v.free)||''];}

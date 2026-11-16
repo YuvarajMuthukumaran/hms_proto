@@ -128,6 +128,8 @@
       const l=labelOf(f),n=Object.keys(sp).find(x=>l.indexOf(x)===0);
       if(n)f.setAttribute('data-span',sp[n]);
       if(big.some(x=>l.indexOf(x)===0))f.classList.add('pm-big');
+      /* Mental status keeps its tap-to-select chips, two questions per row (a question with many chips takes the whole row) */
+      if(k==='mse'&&f.querySelector('.mini-chips')&&!f.classList.contains('hf-sel'))f.setAttribute('data-span',f.querySelectorAll('.mini-chips .tog').length>9?12:6);
     });
   }
   const css=document.createElement('style');css.id='pm-history-css';
@@ -137,6 +139,7 @@
   body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span="3"], body.psg .hwrap .hgrid>.hf[data-span="3"]{grid-column:span 3!important}
   body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span="4"], body.psg .hwrap .hgrid>.hf[data-span="4"]{grid-column:span 4!important}
   body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span="6"], body.psg .hwrap .hgrid>.hf[data-span="6"]{grid-column:span 6!important}
+  body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span="12"], body.psg .hwrap .hgrid>.hf[data-span="12"]{grid-column:1/-1!important}
   body.psy-views:not(.psg) .hwrap .hgrid>.hf.pm-big textarea.input, body.psg .hwrap .hgrid>.hf.pm-big textarea.input{min-height:190px!important;font-size:15px;line-height:1.5}
   /* titles and their grey line sit on one line, left to right (Anu: no wrapping into a narrow column) */
   #view .card>.hd>div:first-child,#view section.card>.hd>div:first-child{flex:1 1 auto;min-width:0}
