@@ -7,7 +7,7 @@
   document.head.appendChild(css);
   function update(){
     const bar=document.getElementById('safeBar');if(!bar)return;
-    const mn=document.querySelector('#view .dpmain'),hd=mn?(mn.closest('.dph')||mn.closest('.card')||mn):null;
+    const hd=document.querySelector('#view .dpcards')||document.querySelector('#view .dpmain');
     if(!hd){bar.classList.remove('sb-collapsed');return;}
     const top=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--shTop'))||0;
     const r=hd.getBoundingClientRect();
