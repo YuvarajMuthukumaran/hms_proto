@@ -200,7 +200,7 @@
   const __ch=compactHeader;
   compactHeader=function(){
     const h=__ch.apply(this,arguments);if(!psy())return h;
-    return h.replace(/onclick="go\('#\/patient\/[^']*\/orders'\)">Change medicines/,'onclick="psyToChart(\''+(S.pid||'neel')+'\')">Change medicines');
+    return h.replace(/onclick="go\('#\/patient\/[^']*\/orders'\)">(?:Change medicines|Add medicine)/,'onclick="psyToChart(\''+(S.pid||'neel')+'\')">Add medicine');
   };
 
   /* remove one balanced <div ...> block that starts with `open` */

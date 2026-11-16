@@ -29,6 +29,9 @@
   .rx9{display:inline-flex;align-items:center;gap:8px;transition:transform .18s cubic-bezier(.2,.7,.2,1),box-shadow .18s,border-color .18s,background .18s}
   .rx9 svg{transition:transform .25s cubic-bezier(.2,.7,.2,1)}
   .rx9:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(23,92,211,.16);border-color:#9ec0f7;background:#f5f9ff}
+  .rx9.pri{background:var(--blue,#2563eb)!important;border-color:var(--blue,#2563eb)!important;color:#fff!important}
+  .rx9.pri svg{color:#fff!important;stroke:#fff!important}
+  .rx9.pri:hover{background:var(--blue-dk,#1d4ed8)!important;border-color:var(--blue-dk,#1d4ed8)!important;color:#fff!important}
   .rx9:hover svg{transform:rotate(-12deg) scale(1.12)}.rx9:active{transform:translateY(0) scale(.97);box-shadow:none}
   @media (prefers-reduced-motion:reduce){.fc9,.fc9-ic:after,.fc9-k i{animation:none}.rx9,.rx9 svg{transition:none}}
   .pf-row{display:grid;grid-template-columns:96px 170px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 14px;border-top:1px solid var(--line-2);font-size:13px}
@@ -134,10 +137,16 @@
     let h=prevVP.apply(this,arguments);
     if(!psy()||typeof h!=='string')return h;
     h=h.split('View full medication chart').join('Full Rx chart');
+    h=h.split('Change medicines').join('Add medicine');
     {const t0=document.createElement('template');t0.innerHTML=h;let ch=false;
       const ic=p=>'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';
-      t0.content.querySelectorAll('button').forEach(b=>{const x=b.textContent.trim();if(b.classList.contains('rx9')||(x!=='Full Rx chart'&&x!=='Change medicines'))return;
-        b.classList.add('rx9');b.insertAdjacentHTML('afterbegin',x==='Full Rx chart'?ic('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>'):ic('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'));ch=true;});
+      t0.content.querySelectorAll('button').forEach(b=>{
+        let x=b.textContent.trim();
+        if(x==='Change medicines'){b.textContent='Add medicine';x='Add medicine';}
+        if(b.classList.contains('rx9')||(x!=='Full Rx chart'&&x!=='Add medicine'))return;
+        b.classList.add('rx9');
+        if(x==='Add medicine'){b.classList.add('pri');}
+        b.insertAdjacentHTML('afterbegin',x==='Full Rx chart'?ic('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>'):ic('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'));ch=true;});
       /* the Results line uses the same card as the family call: icon, small header chip, one headline, one sub-line, the button on the right */
       const rb=[...t0.content.querySelectorAll('section.card')].find(s=>s.querySelector(':scope > .small > b')&&/^Results$/.test(s.querySelector(':scope > .small > b').textContent.trim())&&/Open results/.test(s.textContent));
       if(rb){

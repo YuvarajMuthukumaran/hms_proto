@@ -136,7 +136,7 @@
     const cap=document.createElement('div');cap.className='medcap';cap.innerHTML='<span data-h="slots" title="M morning, A afternoon, N night">Dose times</span><span data-h="meta">Prescription</span><span data-h="adh">Ward adherence</span>';
     /* 15 Nov: no medicines yet = no columns to head (the three headings fell on top of each other); say so instead */
     if(list.querySelector('.medrow'))list.insertBefore(cap,list.firstChild);
-    else if(!list.querySelector('.med-none')){const n=document.createElement('div');n.className='med-none small muted';n.style.cssText='padding:10px 2px 4px';n.textContent='No medicines yet. Add one with Change medicines.';list.appendChild(n);}
+    else if(!list.querySelector('.med-none')){const n=document.createElement('div');n.className='med-none small muted';n.style.cssText='padding:10px 2px 4px';n.textContent='No medicines yet. Add one with Add medicine.';list.appendChild(n);}
     /* move the title row inside the white box, above the column headings */
     const mbox=list.closest('.medbox'),mh=mbox&&mbox.firstElementChild;
     if(mbox&&mh&&mh!==list&&!mh.classList.contains('medhead')){mh.classList.add('medhead');list.insertBefore(mh,list.firstChild);}

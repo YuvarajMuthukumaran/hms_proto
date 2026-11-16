@@ -12,4 +12,29 @@
    +'dl.reg-kv dd{margin:0!important;font-size:15px;color:#101828;overflow-wrap:anywhere}'
    +'@media(max-width:560px){dl.reg-kv{grid-template-columns:1fr;gap:2px}dl.reg-kv dd{margin-bottom:10px!important}}';
   document.head.appendChild(s);
+
+  /* 16 Nov: "Add medicine" button on Current medicines box must be "Add medicine" (not "Change medicines") and blue (btn pri) */
+  function fixMedbox(){
+    document.querySelectorAll('.medbox').forEach(mb=>{
+      mb.querySelectorAll('button').forEach(b=>{
+        if(/Change medicines|Add medicine/.test(b.textContent)){
+          b.classList.add('pri');
+          if(/Change medicines/.test(b.innerHTML)){
+            b.innerHTML=b.innerHTML.replace(/Change medicines/g,'Add medicine');
+          }
+        }
+      });
+      const mn=mb.querySelector('.med-none');
+      if(mn&&mn.textContent.includes('Change medicines')){
+        mn.textContent=mn.textContent.replace('Change medicines','Add medicine');
+      }
+    });
+  }
+  const __r101=render;
+  render=function(){
+    const x=__r101.apply(this,arguments);
+    try{fixMedbox();}catch(e){}
+    return x;
+  };
+  setTimeout(fixMedbox,200);
 })();

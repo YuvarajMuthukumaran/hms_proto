@@ -213,6 +213,10 @@
     v.querySelectorAll('button[onclick*="psyToChart("]').forEach(b=>{
       if(/^\s*(Change medicines|Add medicine)\s*$/.test(b.textContent.replace(/\s+/g,' '))||/Change medicines|Add medicine/.test(b.textContent)){
         b.setAttribute('onclick',"psyRxOpen({ctx:'orders'})");
+        b.classList.add('pri');
+        if(/Change medicines/.test(b.textContent)){
+          b.innerHTML=b.innerHTML.replace('Change medicines','Add medicine');
+        }
       }
     });
   }

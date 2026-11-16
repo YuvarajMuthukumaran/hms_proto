@@ -107,5 +107,4 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/105-psychologist-ward-16nov-js.js',
   '/legacy/js/106-therapy-scribe-button-16nov-js.js',
   '/legacy/js/107-group-family-scribe-button-16nov-js.js',
-  '/legacy/js/108-old-hms-ui-16nov-js.js',
 ];

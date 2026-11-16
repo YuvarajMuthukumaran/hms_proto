@@ -119,7 +119,7 @@
     if(tx){const card=tx.closest('section.card'),nb=card&&[...card.querySelectorAll('button')].find(b=>/confirmRound/.test(b.getAttribute('onclick')||''));
       if(nb){const row=nb.parentElement,box=card.querySelector('div[style*="flex-direction:column"]');if(box&&row!==box){box.appendChild(row);}}
       const ta=card&&card.querySelector('textarea');if(ta)ta.rows=2;}
-    v.querySelectorAll('.medbox button.btn').forEach(b=>{if(/^Change medicines/.test(b.textContent.trim()))b.remove();});
+    v.querySelectorAll('.medbox button.btn').forEach(b=>{if(/^(?:Change medicines|Add medicine)/.test(b.textContent.trim()))b.remove();});
   };
   const __r=render;
   render=function(){
