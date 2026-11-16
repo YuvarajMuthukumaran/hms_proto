@@ -114,7 +114,7 @@
       const probe=c.events[0]||{owner:c.who,date:c.date,time:'12:00',floor:(TEAM.find(t=>t.id===c.who)||{}).floor};
       c.cover=coverFor(probe);return c;});}
   function summary(c){const a=[];if(c.events.length)a.push(c.events.length+' '+(c.events.every(e=>e.type==='Family meeting')?'family meeting':'event')+(c.events.length>1?'s':''));if(c.grv.length)a.push(c.grv.length+' grievance'+(c.grv.length>1?'s':''));
-    return nameOf(c.who)+(c.kind==='leave'?' on leave ':' off ')+label(c.date).split(' ')[0]+': '+a.join(' and ')+' need cover';}
+    return nameOf(c.who)+(c.kind==='leave'?' on leave ':' off ')+label(c.date).split(' ')[0]+': '+a.join(' and ')+((c.events.length+c.grv.length)>1?' need cover':' needs cover');}
   function onToday(d){d=d||todayISO();return TEAM.map(t=>{const s=shift(t.id,d);return {id:t.id,name:t.name,floor:t.floor,code:s.code,leave:s.leave||null};});}
   /* ---- changes ---- */
   function addEvent(e){S.n++;e.id='e'+S.n+'-'+Date.now().toString(36);e.status='planned';S.events.push(e);save();return e;}
