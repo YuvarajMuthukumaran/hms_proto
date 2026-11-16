@@ -7,10 +7,10 @@
   document.head.appendChild(css);
   function update(){
     const bar=document.getElementById('safeBar');if(!bar)return;
-    const hd=document.querySelector('#view .dph, #view .dpmain');
+    const mn=document.querySelector('#view .dpmain'),hd=mn?(mn.closest('.dph')||mn.closest('.card')||mn):null;
     if(!hd){bar.classList.remove('sb-collapsed');return;}
     const top=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--shTop'))||0;
-    const r=(hd.closest('.dph')||hd).getBoundingClientRect();
+    const r=hd.getBoundingClientRect();
     bar.classList.toggle('sb-collapsed',r.bottom>top+8);
   }
   window.addEventListener('scroll',update,true);window.addEventListener('resize',update);
