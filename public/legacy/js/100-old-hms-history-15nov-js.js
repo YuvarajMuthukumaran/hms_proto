@@ -15,12 +15,13 @@
   function body(rows){
     const by=k=>rows.filter(r=>r.kind===k);
     const dx=by('diagnosis')[0],docs=by('discharge_doc'),vis=by('visit'),rx=by('prescription');
-    const line=(a,b,c)=>`<div class="li"><div class="grow"><div style="font-weight:600">${a}</div>${b?`<div class="tiny muted">${b}</div>`:''}</div>${c||''}</div>`;
+    const line=(a,b,c,x)=>`<div class="li"><div class="grow"><div style="font-weight:600">${a}</div>${b?`<div class="tiny muted">${b}</div>`:''}${x||''}</div>${c||''}</div>`;
+    const medsOf=r=>((r.data||{}).meds||[]).map(m=>`<div class="tiny">${esc(m.name?(m.name+(m.strength?' '+m.strength:'')):m.line)}${m.schedule?' · '+esc(m.schedule):''}${m.duration?' · '+esc(m.duration):''}</div>`).join('');
     const sec=(t,n,html,open)=>n?`<details ${open?'open':''} style="margin-top:8px"><summary style="cursor:pointer;font-weight:600">${t} (${n})</summary>${html}</details>`:'';
     return (dx?`<div style="margin-top:6px"><div class="tiny muted">Diagnosis written in the old HMS</div><div style="white-space:pre-wrap">${esc(dx.detail)}</div></div>`:'')
       +sec('Discharge summaries',docs.length,docs.map(r=>line(esc(fmt(r.event_date)),esc([(r.data||{}).reason,(r.data||{}).doctor].filter(Boolean).join(' · ')),link(r.url))).join(''),true)
       +sec('Visits',vis.length,vis.map(r=>line(esc(fmt(r.event_date))+' · '+esc(r.title||'Visit'),esc(r.detail||''))).join(''))
-      +sec('Prescription records',rx.length,rx.map(r=>line(esc(fmt(r.event_date)),esc([r.detail,(r.data||{}).doctor].filter(Boolean).join(' · ')),link(r.url))).join(''));
+      +sec('Old prescriptions (reference, not on the chart)',rx.length,rx.map(r=>line(esc(fmt(r.event_date)),esc([r.detail,(r.data||{}).doctor].filter(Boolean).join(' · ')),link(r.url),medsOf(r))).join(''),rx.some(r=>((r.data||{}).meds||[]).length));
   }
   function inner(pid){
     const c=CACHE[pid];
@@ -29,9 +30,24 @@
     if(c==='none'||!c.length)return '<div class="tiny muted">No records for this patient in the old HMS data.</div>';
     return body(c);
   }
+  /* Treatment Plan: the newest old prescription that has medicines, as a reference list (the chart itself stays doctor-only) */
+  function brief(pid){
+    const c=CACHE[pid];
+    if(c===undefined)return '<div class="tiny muted">Loading…</div>';
+    if(c==='error')return '<div class="tiny muted">Could not load the old HMS prescriptions. Reload to try again.</div>';
+    const rx=(c==='none'?[]:c).filter(r=>r.kind==='prescription'&&((r.data||{}).meds||[]).length);
+    if(!rx.length)return '<div class="tiny muted">No medicines found in the old HMS prescriptions for this patient.</div>';
+    const r=rx[0],m=(r.data||{}).meds;
+    return `<div style="font-weight:600">${esc(fmt(r.event_date))}${r.detail?' · '+esc(r.detail):''}</div>`
+      +m.slice(0,14).map(x=>`<div class="small">${esc(x.name?(x.name+(x.strength?' '+x.strength:'')):x.line)}${x.schedule?' · '+esc(x.schedule):''}${x.duration?' · '+esc(x.duration):''}</div>`).join('')
+      +(rx.length>1?`<div class="tiny muted" style="margin-top:6px">${rx.length-1} older prescription${rx.length>2?'s':''} with medicines: see Records from the old HMS on the Stay summary.</div>`:'')
+      +link(r.url);
+  }
   function fill(pid){
     const el=document.getElementById('ohms-box');
     if(el&&el.getAttribute('data-pid')===pid)el.innerHTML=inner(pid);
+    const e2=document.getElementById('ohms-rx');
+    if(e2&&e2.getAttribute('data-pid')===pid)e2.innerHTML=brief(pid);
   }
   function fetchFor(pid){
     if(PEND[pid]||CACHE[pid]!==undefined||typeof window.regRest!=='function')return;
@@ -51,6 +67,17 @@
       if(!p||!p.real)return h;
       fetchFor(p.id);
       return h+`<div class="card" style="margin-top:12px"><div class="lbl" style="font-weight:700">Records from the old HMS</div><div id="ohms-box" data-pid="${esc(p.id)}">${inner(p.id)}</div></div>`;
+    }catch(e){return h;}
+  };
+  const __or=pOrders;
+  pOrders=function(){
+    const h=__or.apply(this,arguments);
+    try{
+      if(!ROLES.includes(roleNow()))return h;
+      const p=ptFind(S.pid);
+      if(!p||!p.real)return h;
+      fetchFor(p.id);
+      return h+`<div class="card" style="margin-top:12px"><div class="lbl" style="font-weight:700">From the old HMS: latest prescription (reference only, not on the chart)</div><div id="ohms-rx" data-pid="${esc(p.id)}">${brief(p.id)}</div></div>`;
     }catch(e){return h;}
   };
 })();
