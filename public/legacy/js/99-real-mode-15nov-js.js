@@ -14,7 +14,7 @@
   const ROLE_NAME={psychiatrist:'Psychiatrist',psychologist:'Psychologist',nurse:'Nurse',rmo:'RMO on duty','floor-lead-psychiatrist':'Floor lead psychiatrist','floor-lead-psychologist':'Floor lead psychologist',lead:'Floor coordinator','floor-coordinator':'Floor coordinator'};
   try{const rk=(window.__TULASI__||{}).role||S.role;window.__realSigner=ROLE_NAME[rk]||'Staff';}catch(e){}
   /* demo seeds kept in state: start them empty so they never load (handover from Dr. Rohan Mehta, psychologist handover, unsigned drafts) */
-  try{S.psyHO={list:[]};S.pgHO={list:[]};S.au=S.au||{hr:null,skip:0,notes:{},drafts:null,hist:{},fam:{},grv:[],rem:{},dc:{},sc:{},consent:{}};S.au.drafts=[];}catch(e){}
+  try{S.psyHO={list:[],ui:{to:'',reason:'Going on leave / Transfer',watch:{},sel:{},notes:{}}};S.pgHO={list:[],ui:{to:'',reason:'Going on leave',sel:{},notes:{}}};   /* the Handover pages read .ui: without it they crashed */S.au=S.au||{hr:null,skip:0,notes:{},drafts:null,hist:{},fam:{},grv:[],rem:{},dc:{},sc:{},consent:{}};S.au.drafts=[];}catch(e){}
   /* rows and cards that still name a demo patient: hidden once drawn */
   const DEMO=['Neel Bose','Arjun Mehta','Varun Rao','Karan Malhotra','Sameer Das','Rohit Kapoor','Dev Kumar','Tarun Roy','Kavya Menon','Meera Iyer','Sana Qureshi','Ritu Malhotra','Pooja Bhatt','Aman Gill','Yash Mehta','Nikhil Jain','Rahul Sethi'];
   const re=new RegExp('\\b('+DEMO.map(n=>n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b');
