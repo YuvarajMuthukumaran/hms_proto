@@ -1,3 +1,33 @@
+/* 16 Nov 2026: phone layout for every Patient Experience page (Today, Patients, Rounds, Grievances, Calendar, Staff training, Reports, Setting).
+   Under 700 px wide: tables turn into one card per row with a small label above each value (no sideways scrolling), long lines wrap,
+   nothing is wider than the screen. Desktop and tablet layouts are not touched. */
+(function () {
+  try {
+    var st = document.createElement('style');
+    st.id = 'px-phone';
+    st.textContent = '@media(max-width:700px){html,body{max-width:100%;overflow-x:hidden}' +
+      'span,b,p,div,td,li,a{overflow-wrap:anywhere}span,b{white-space:normal!important}' +
+      'table{min-width:0!important;width:100%!important;display:block}thead{display:none}tbody{display:block}' +
+      'tbody tr{display:block!important;margin:10px 0;padding:10px 12px;border:1px solid #E3EAF2;border-radius:12px;background:#fff}' +
+      'tbody td{display:block!important;width:auto!important;border:0!important;padding:5px 0!important;text-align:left!important}' +
+      'tbody td:empty{display:none!important}td[data-l]:not([data-l=""])::before{content:attr(data-l);display:block;font-size:11px;font-weight:700;letter-spacing:.04em;color:#667085;margin-bottom:2px}' +
+      '.card{overflow-x:visible!important}.tw{overflow-x:visible!important}input,select,textarea,button{max-width:100%}' +
+      '.drawer,.modal{width:100%!important;max-width:100%!important}}';
+    (document.head || document.documentElement).appendChild(st);
+    var label = function () {
+      document.querySelectorAll('table').forEach(function (t) {
+        var hs = Array.prototype.map.call(t.querySelectorAll('thead th'), function (h) { return (h.textContent || '').trim(); });
+        if (!hs.length) return;
+        t.querySelectorAll('tbody tr').forEach(function (r) {
+          Array.prototype.forEach.call(r.children, function (c, i) { if (c.tagName === 'TD' && !c.hasAttribute('data-l')) c.setAttribute('data-l', (hs[i] || '').toLowerCase().replace(/^./, function (m) { return m.toUpperCase(); })); });
+        });
+      });
+    };
+    var timer = 0;
+    var go = function () { clearTimeout(timer); timer = setTimeout(label, 80); };
+    document.addEventListener('DOMContentLoaded', function () { label(); new MutationObserver(go).observe(document.body, { childList: true, subtree: true }); });
+  } catch (e) { /* the page still works at full width */ }
+})();
 /* 16 Nov 2026: Patient Experience on REAL patients.
    Loaded first on every PX page (and in the PX bundle). When the live site is in real-data mode (api/config realData) it
      1. sets window.PX_REAL = true (each page then drops its demo rows: grievances, calls, rounds, calendar, training list);
