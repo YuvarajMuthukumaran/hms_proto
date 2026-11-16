@@ -146,24 +146,31 @@
   .pm-tree-r{display:grid;grid-template-columns:1.1fr .6fr .7fr 1fr 1.2fr 1.2fr auto;gap:8px;margin-bottom:8px}
   .pm-tree-r .input{min-height:38px;width:100%}
   .pm-risk{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 14px;border:1px solid #fedf89;background:#fffaeb;border-radius:12px}
-  .pm-risk select{min-height:38px;min-width:280px;max-width:100%}
+  .pm-risk select{min-height:38px;min-width:220px;max-width:100%}
   @media(max-width:900px){body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span]{grid-column:1/-1!important}.pm-tree-r{grid-template-columns:1fr 1fr}}`;
   document.head.appendChild(css);
 
-  /* ---------- risk screen under the form ---------- */
-  const RISK=[['No suicidal ideation','Low'],['Passive ideation (wishes to be dead)','Low'],['Active ideation, no plan','Moderate'],['Active ideation with a plan or intent','High'],['Recent attempt','High']];
+  /* ---------- risk screen under the form (same two choices as the OPD doctor risk screen: risk of harm, and what it is for) ---------- */
+  const LEVELS=['None','Low','Moderate','High'];
+  const REASONS=['Self-harming thoughts/behaviours','Harm to others','Absconding','Self-neglect','Substance use','Other'];
   function riskBox(){
     document.querySelectorAll('#view .callout.amber').forEach(c=>{
       if(c.dataset.pmRisk||!/Risk screen/.test(c.textContent))return;
-      c.dataset.pmRisk='1';const last=(px().suicide||[])[0];
+      c.dataset.pmRisk='1';const x=px(),last=(x.suicide||[])[0],cur=x.riskLevel||'';
       c.className='pm-risk';
-      c.innerHTML=`<b>Suicide risk today</b><select class="input" onchange="pmRisk(this.value)"><option value="">Select…</option>${RISK.map((r,i)=>`<option value="${i}" ${last&&last.pm===i&&last.date===today()?'selected':''}>${E(r[0])}</option>`).join('')}</select>${last?`<span class="small muted">Last: ${E(last.level.toLowerCase())} risk, ${E(last.at)} by ${E(last.by||'')}</span>`:'<span class="small muted">Sets the risk of harm in the header.</span>'}`;
+      c.innerHTML=`<b>Risk screen</b>
+        <label class="small">Risk of harm <select class="input" id="pmRL"><option value="">Select…</option>${LEVELS.map(l=>`<option ${cur===l?'selected':''}>${l}</option>`).join('')}</select></label>
+        <label class="small">Reason <select class="input" id="pmRR"><option value="">Select…</option>${REASONS.map(l=>`<option ${last&&last.reason===l?'selected':''}>${l}</option>`).join('')}</select></label>
+        <button type="button" class="btn sm pri" onclick="pmRisk()">Save risk screen</button>
+        <span class="small muted">${last?'Last: '+E(String(last.level||'').toLowerCase())+' risk'+(last.reason?', '+E(last.reason):'')+', '+E(last.at)+' by '+E(last.by||''):'Sets the risk of harm in the header.'}</span>`;
     });
   }
-  window.pmRisk=function(v){
-    if(v==='')return;const r=RISK[+v],x=px();x.suicide=x.suicide||[];
-    x.suicide.unshift({at:atNow(),date:today(),by:signer(),ans:[],level:r[1],pm:+v,note:r[0]});x.riskLevel=r[1];
-    render();toast('Risk of harm set to '+r[1].toLowerCase()+' ('+r[0].toLowerCase()+')');
+  window.pmRisk=function(){
+    const l=(document.getElementById('pmRL')||{}).value,r=(document.getElementById('pmRR')||{}).value;
+    if(!l){toast('Pick the risk of harm');return;}if(l!=='None'&&!r){toast('Pick what the risk is for');return;}
+    const x=px();x.suicide=x.suicide||[];
+    x.suicide.unshift({at:atNow(),date:today(),by:signer(),ans:[],level:l==='None'?'Low':l,reason:r||'',note:'Risk screen from the detailed history'});x.riskLevel=l==='None'?'Low':l;
+    render();toast('Risk of harm set to '+(l==='None'?'low':l.toLowerCase()));
   };
 
   /* ---------- Read only: shows what was filled in the form ---------- */
