@@ -7,5 +7,9 @@
    +'.pd-t td .pd-nm>*{min-width:0}'
    +'.pd-t td .pd-nm b{white-space:normal;overflow-wrap:anywhere;word-break:normal;line-height:1.25}'
    +'.pd-t td .pd-nm .av,.pd-t td .pd-nm [class*=av]{flex:0 0 auto}';
+  s.textContent+='dl.reg-kv{display:grid!important;grid-template-columns:120px minmax(0,1fr);gap:10px 18px;margin:0;padding:6px 4px}'
+   +'dl.reg-kv dt{margin:0;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#667085;align-self:start;padding-top:2px}'
+   +'dl.reg-kv dd{margin:0!important;font-size:15px;color:#101828;overflow-wrap:anywhere}'
+   +'@media(max-width:560px){dl.reg-kv{grid-template-columns:1fr;gap:2px}dl.reg-kv dd{margin-bottom:10px!important}}';
   document.head.appendChild(s);
 })();

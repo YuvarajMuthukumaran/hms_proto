@@ -141,7 +141,7 @@
     if(!p)return;
     const rel=(p.relatives||[]).map(r=>r.name+(r.rel?' ('+r.rel+')':'')).join(', ')||'None recorded';
     const ad=p.status==='admitted';
-    V3.modal(esc(p.name),'UHID '+esc((p.uhids||[p.uhid]).join(', ')),`<dl class="kv">
+    V3.modal(esc(p.name),'UHID '+esc((p.uhids||[p.uhid]).join(', ')),`<dl class="kv reg-kv">
       <dt>Age / sex</dt><dd>${esc(p.age==null?'-':p.age)} / ${esc(p.sex||'-')}${p.dob_est?' · born about '+esc(fmtD(p.dob_est)):''}</dd>
       <dt>Mobile</dt><dd>${esc(p.mobile||'No valid number')}</dd><dt>Address</dt><dd>${esc(p.address||'-')}</dd>
       <dt>Relatives</dt><dd>${esc(rel)}</dd><dt>Referral</dt><dd>${esc(p.referral||'-')}</dd>
