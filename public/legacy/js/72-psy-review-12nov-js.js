@@ -203,7 +203,6 @@
     ['Allergies','Recorded once, shown in the header',/^Drug allergies/]
   ];
   const HV={form:'Fill form',aifill:'AI-filled form',ai:'AI summary'};
-  const HHINT={form:'Type the history yourself, section by section.',aifill:'The scribe has filled the form. Check each line before you save.',ai:'A short summary of the history written from what is saved.',read:'What is saved so far. Switch above to change it.'};
   const __adm=pAdmission;
   pAdmission=function(){
     const h=__adm.apply(this,arguments);
@@ -243,7 +242,9 @@
       if(seg&&!t.content.querySelector('.hist-h')){
         const v=S.hview&&HV[S.hview]?S.hview:'read';
         const lab=document.createElement('div');lab.className='hist-h';
-        lab.innerHTML='<b>'+(v==='read'?'Read only':HV[v])+'</b><span>'+hesc(HHINT[v])+'</span>';
+        /* 17 Nov 2026, Trello: the hint line ("What is saved so far. Switch above to change it.", etc.)
+           was just clutter next to the mode tabs -- keep only the bold mode label */
+        lab.innerHTML='<b>'+(v==='read'?'Read only':HV[v])+'</b>';
         seg.parentNode.insertBefore(lab,seg);
       }
     }
