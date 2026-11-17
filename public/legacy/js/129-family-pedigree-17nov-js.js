@@ -45,33 +45,37 @@
     const spouse=rows.find(r=>r.rel==='Spouse');
     const kids=rows.filter(r=>/^(Son|Daughter)$/.test(r.rel||''));
     const others=rows.filter(r=>r.rel==='Other'||!r.rel);
-    const W=Math.max(640,120*(sibs.length+2)+(spouse?140:0)),H=320;
-    const topY=50,midY=160,botY=260;
-    const fatherX=W/2-40,motherX=W/2+40;
+    const H=320,topY=50,midY=160,botY=260,margin=70;
+    /* lay out the sibling row (patient first, then siblings) left to right starting at a fixed
+       margin, THEN the spouse clear of its right edge -- fixes the spouse node overlapping the
+       last sibling when there was more than one (17 Nov 2026, caught while screenshotting) */
+    const sibRow=[{__patient:true}].concat(sibs);
+    const n=sibRow.length,spacing=100,rowW=(n-1)*spacing,startX=margin;
+    const patientX=startX,lastSibX=startX+rowW;
+    const spX=spouse?lastSibX+spacing:0;
+    const groupRight=Math.max(lastSibX,spX)+margin;
+    const W=Math.max(640,groupRight);
+    const midX2=startX+rowW/2,fatherX=midX2-40,motherX=midX2+40;
     let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="max-width:100%">`;
     /* parents + marriage line down to the sibling row */
     svg+=`<line x1="${fatherX}" y1="${topY}" x2="${motherX}" y2="${topY}" stroke="#344054" stroke-width="2"/>`;
-    svg+=`<line x1="${W/2}" y1="${topY}" x2="${W/2}" y2="${midY-26}" stroke="#344054" stroke-width="2"/>`;
+    svg+=`<line x1="${midX2}" y1="${topY}" x2="${midX2}" y2="${midY-26}" stroke="#344054" stroke-width="2"/>`;
     svg+=node(fatherX,topY,'M',affected('Father'),s[FATHER]?'Father':'Father (not filled)');
     svg+=node(motherX,topY,'F',affected('Mother'),s[MOTHER]?'Mother':'Mother (not filled)');
     /* sibling row, patient included, evenly spaced */
-    const sibRow=[{__patient:true}].concat(sibs);
-    const n=sibRow.length,spacing=100,rowW=(n-1)*spacing,startX=W/2-rowW/2;
     svg+=`<line x1="${startX}" y1="${midY-26}" x2="${startX+rowW}" y2="${midY-26}" stroke="#344054" stroke-width="2"/>`;
     sibRow.forEach((r,i)=>{const x=startX+i*spacing;svg+=`<line x1="${x}" y1="${midY-26}" x2="${x}" y2="${midY-22}" stroke="#344054" stroke-width="2"/>`;
       if(r.__patient)svg+=node(x,midY,p.sex,affected('Self')||false,p.name||'Patient',true);
       else svg+=node(x,midY,r.sex,affected(/Brother/.test(r.rel)?'Brother(s)':'Sister(s)'),r.rel+(r.age?' · '+r.age:''));
     });
-    const patientX=startX;
     /* spouse, then children below patient+spouse */
     if(spouse){
-      const spX=patientX+spacing*(n>1?0.7:1.4);
       svg+=`<line x1="${patientX}" y1="${midY}" x2="${spX}" y2="${midY}" stroke="#344054" stroke-width="2"/>`;
       svg+=node(spX,midY,spouse.sex,false,'Spouse'+(spouse.age?' · '+spouse.age:''));
       if(kids.length){
-        const midX=(patientX+spX)/2;
-        svg+=`<line x1="${midX}" y1="${midY}" x2="${midX}" y2="${botY-26}" stroke="#344054" stroke-width="2"/>`;
-        const kw=(kids.length-1)*90,ksx=midX-kw/2;
+        const kidMidX=(patientX+spX)/2;
+        svg+=`<line x1="${kidMidX}" y1="${midY}" x2="${kidMidX}" y2="${botY-26}" stroke="#344054" stroke-width="2"/>`;
+        const kw=(kids.length-1)*90,ksx=kidMidX-kw/2;
         svg+=`<line x1="${ksx}" y1="${botY-26}" x2="${ksx+kw}" y2="${botY-26}" stroke="#344054" stroke-width="2"/>`;
         kids.forEach((r,i)=>{const x=ksx+i*90;svg+=`<line x1="${x}" y1="${botY-26}" x2="${x}" y2="${botY-22}" stroke="#344054" stroke-width="2"/>`;
           svg+=node(x,botY,r.sex,affected(r.rel==='Son'?'Son(s)':'Daughter(s)'),r.rel+(r.age?' · '+r.age:''));});
