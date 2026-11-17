@@ -137,28 +137,15 @@
     x.suicide=x.suicide||[];x.suicide.unshift({at:atNow(),date:today(),by:signer(),ans,level:lvl});x.riskLevel=lvl;
     render();toast('Risk of harm set to '+lvl.toLowerCase()+' from the screen');
   };
-  /* 17 Nov 2026, Trello: on the Admission tab the Scores card asked all six questions again -- the same drop-down
-     (risk of harm, and what it is for) that the Detailed history form already uses (116, "same as the OPD doctor
-     risk screen") replaces it here too. Same x.suicide / x.riskLevel state, so the header and due-daily check are
-     unaffected; the six-question screen (Rounds "Do screen", psySuiOpen) is untouched. */
-  const RISK_LEVELS=['None','Low','Moderate','High'];
-  const RISK_REASONS=['Self-harming thoughts/behaviours','Harm to others','Absconding','Self-neglect','Substance use','Other'];
-  window.psySuiSaveLvl=function(pid){
-    const l=($('suiRL')||{}).value,r=($('suiRR')||{}).value;
-    if(!l){toast('Pick the risk of harm');return;}
-    if(l!=='None'&&!r){toast('Pick what the risk is for');return;}
-    const x=pxOf(pid);
-    x.suicide=x.suicide||[];x.suicide.unshift({at:atNow(),date:today(),by:signer(),ans:[],level:l==='None'?'Low':l,reason:r||''});
-    x.riskLevel=l==='None'?'Low':l;
-    render();toast('Risk of harm set to '+(l==='None'?'low':l.toLowerCase()));
-  };
   function scoresCard(pid){
-    const c=ptCtxOf(pid),x=pxOf(pid),pv=lastVit(c),N=x.news||[],S2=x.suicide||[],p=ptFind(pid);
+    const c=ptCtxOf(pid),pv=lastVit(c),N=pxOf(pid).news||[];
     const f=(id,l,val,extra)=>`<label>${l}<input class="input" id="${id}" type="number" step="any" value="${val}" style="min-height:32px;padding:4px 8px" ${extra||''}></label>`;
-    const n0=N[0],lv=x.riskLevel||(p&&p.risk?'High':'Low');
-    const dueS=(lv==='High'||(p&&p.risk))&&!(S2[0]&&S2[0].date===today());
-    return `<section class="card"><div class="hd"><div><h3>Scores</h3><div class="small muted" style="margin-top:4px">Early warning score from the vitals, and the suicide / self-harm screen. Only scores are shown; no free-text interpretation.</div></div></div>
-      <div class="pad sc-grid">
+    const n0=N[0];
+    /* 17 Nov 2026, Trello: drop the Suicide / self-harm screen half of this card (the Rounds "Do screen"
+       six-question flow already sets the same x.riskLevel; this was one more place doing it and the
+       card said so itself). Only the early warning score stays here. */
+    return `<section class="card"><div class="hd"><div><h3>Scores</h3><div class="small muted" style="margin-top:4px">Early warning score from the vitals. Only scores are shown; no free-text interpretation.</div></div></div>
+      <div class="pad">
         <div><div class="lbl">Early warning score (NEWS2)</div>
           <div class="row" style="gap:10px;align-items:baseline;margin:6px 0 8px"><span class="sc-big">${n0?n0.total:'–'}</span>${n0?`<span class="sf"><span class="c ${bandCls(n0.band)}">${n0.band}</span></span><span class="small muted">${arrow(n0.total,N[1]&&N[1].total)} ${hesc(n0.at)}</span>`:'<span class="small muted">No score yet</span>'}</div>
           <div class="sc-f">${f('nw_rr','Resp. rate',pv.rr)}${f('nw_o','SpO₂ %',pv.spo2)}${f('nw_s','Systolic BP',pv.sbp)}${f('nw_p','Pulse',pv.pulse)}
@@ -167,14 +154,6 @@
             <label>&nbsp;<button class="btn sm pri" onclick="psyNewsSave('${pid}')">Calculate and save</button></label></div>
           <div class="tiny muted" style="margin-top:6px">Routine: below 3 and no single high reading. Inform RMO: 3 to 4, or any single reading at the top band. Urgent RMO review: 5 or more (raised into the escalation chain).</div>
           ${N.length>1?`<div class="small" style="margin-top:8px"><b>Earlier:</b> ${N.slice(1,5).map(e=>e.total+' ('+hesc(e.at.split(',')[0])+')').join(' · ')}</div>`:''}</div>
-        <div><div class="lbl">Suicide / self-harm screen</div>
-          <div class="row" style="gap:10px;align-items:baseline;margin:6px 0 8px"><span class="sc-big" style="font-size:22px">${S2[0]?S2[0].level:'Not screened'}</span>${S2[0]?`<span class="small muted">${hesc(S2[0].at)} · ${hesc(S2[0].by)}${S2[0].reason?' · '+hesc(S2[0].reason):''}</span>`:''}${dueS?'<span class="sf"><span class="c amber">Daily screen due today</span></span>':''}</div>
-          <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
-            <label>Risk of harm<select class="input" id="suiRL" style="min-height:32px;padding:4px 8px"><option value="">Select…</option>${RISK_LEVELS.map(l=>`<option ${S2[0]&&S2[0].level===l?'selected':''}>${l}</option>`).join('')}</select></label>
-            <label>Reason<select class="input" id="suiRR" style="min-height:32px;padding:4px 8px"><option value="">Select…</option>${RISK_REASONS.map(r=>`<option ${S2[0]&&S2[0].reason===r?'selected':''}>${r}</option>`).join('')}</select></label>
-            <button class="btn sm pri" onclick="psySuiSaveLvl('${pid}')">Save screen</button>
-          </div>
-          <div class="tiny muted" style="margin-top:8px">At admission, daily for high-risk patients, and at each re-assessment. The result sets Risk of harm in the header.</div></div>
       </div></section>`;
   }
   window.psyScoresCard=scoresCard;
