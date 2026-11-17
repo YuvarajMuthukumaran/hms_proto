@@ -1,23 +1,26 @@
-/* Psychologist only (10 Nov 2026, team meeting: "this formatting is very bad").
+/* Started psychologist-only (10 Nov 2026, team meeting: "this formatting is very bad"), now for every role
+   (17 Nov 2026, Trello: "not coming the way we discussed" -- the same admission e-sign pop-up is used by the
+   psychiatrist/RMO too, and only the psychologist had gotten the fix).
    Collect e-signature pop-up (Admission forms):
    - the form preview is taller and has a Full screen button (the document matters more than the chrome around it)
-   - the name and the signature box sit in one row, and the signature box is smaller
-   - labels start with capital letters
-   Form editor (Fill in): field labels start with capital letters.
-   Gated by S.role==='psychologist'. */
+   - the name and the signature box sit in one row, smaller and less prominent than the form
+   - the patient details filled into the form (name, age/sex, IP, date, consultant) are bold
+   - labels start with capital letters (psychologist only, as before)
+   Form editor (Fill in): field labels start with capital letters (psychologist only). */
 (function(){
-  const me=()=>S.role==='psychologist';
   const css=document.createElement('style');css.id='psychologist-forms-css';
   css.textContent=`
   body.psg .cdf-lbl::first-letter{text-transform:uppercase}
   body.psg .modal .pg-es .lbl{text-transform:capitalize}
-  .pg-es .es-form{height:min(62vh,640px)!important;max-height:none!important;overflow:auto}
+  .pg-es .es-form{height:min(78vh,820px)!important;max-height:none!important;overflow:auto}
   .pg-es .es-form.pg-fs{position:fixed;inset:12px;z-index:9999;height:auto!important;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 60px rgba(16,24,40,.35);padding:10px}
+  .pg-es .es-form .cdf-f{font-weight:700}
   .pg-fsbtn{display:inline-flex;align-items:center;gap:6px;margin:0 0 8px;border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
   .pg-fsbtn{align-self:flex-start}
   .pg-es.pg-fson #pgFsB{position:fixed;top:22px;right:30px;z-index:10000;background:#175cd3;color:#fff;border-color:#175cd3}
-  .pg-sign-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start;margin-top:8px}
-  .pg-sign-row .ct-pad{width:100%!important;height:96px!important}
+  .pg-sign-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start;margin-top:6px;font-size:13px}
+  .pg-sign-row .lbl{font-size:12px}
+  .pg-sign-row .ct-pad{width:100%!important;height:64px!important}
   @media (max-width:700px){.pg-sign-row{grid-template-columns:1fr}}
   `;
   document.head.appendChild(css);
@@ -39,7 +42,7 @@
   const __eo=window.psyEsignOpen;
   window.psyEsignOpen=function(){
     const r=__eo.apply(this,arguments);
-    if(me())setTimeout(fix,80);
+    setTimeout(fix,80);
     return r;
   };
 })();
