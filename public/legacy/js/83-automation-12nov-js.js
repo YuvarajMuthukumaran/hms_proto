@@ -34,8 +34,9 @@
   const formSigned=(pid,key)=>pid==='neel'?(key==='hist'?S.historyStatus==='signed':!!(S.plansSigned&&S.plansSigned.psy&&S.plansSigned.psych)):!!(psyPx(pid)['signed_'+key]);
   /* one overdue calculation everywhere: Neel's header says 1 day late, so the same number is used here */
   const lateDays=(pid,key,d,due)=>pid==='neel'&&key==='hist'?1:Math.max(1,d-due);
+  /* 17 Nov 2026, Trello: Detailed history is assigned to the psychologist only, not the psychiatrist */
   const dueDates=()=>{const out=[];myPts().forEach(p=>{const d=+p.day||0;
-    [['hist','Detailed history',3,'admission'],['plan','Management plan',7,'therapy']].forEach(k=>{if(formSigned(p.id,k[0])||d>7)return;const left=d>k[2]?-lateDays(p.id,k[0],d,k[2]):k[2]-d;out.push({pid:p.id,key:k[0],label:k[1],left,name:p.name,tab:k[3]});});});return out;};
+    [['hist','Detailed history',3,'admission'],['plan','Management plan',7,'therapy']].forEach(k=>{if((k[0]==='hist'&&kind()!=='psychologist')||formSigned(p.id,k[0])||d>7)return;const left=d>k[2]?-lateDays(p.id,k[0],d,k[2]):k[2]-d;out.push({pid:p.id,key:k[0],label:k[1],left,name:p.name,tab:k[3]});});});return out;};
   function nudgeLevel(){const h=hr();return h>=21?3:h>=18?2:h>=16?1:0;}
   function nnTasks(){const out=[],k=kind();if(!k)return out;
     seedDrafts().filter(d=>d.role===k&&!d.signed).forEach(d=>{const h=hrs(nowMs()-d.at);if(h>=24)out.push({id:'nn_dr_'+d.id,late:true,title:d.title+' unsigned · '+pt(d.pid).name,meta:'Draft is '+h+' h old'+(h>=48?'. Sent to the floor lead':''),due:'Overdue',go:'#/patient/'+d.pid+'/daily'});});

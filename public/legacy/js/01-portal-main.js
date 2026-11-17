@@ -205,7 +205,7 @@ function vJourney(){
 function tasks(){
   const griev = {id:'griev', late:true, title:'Grievance raised · Neel Bose', meta:'Family: updates feel repetitive · patient experience team has it, 5 h left on the 6-hour clock', due:'New grievance', go:'#/patient/neel/griev'};
   const psy = [griev,
-    {id:'hist', late:true, title:'Detailed history · Neel Bose', meta:'72-hour deadline passed, 10:30 · with Priya Nair', due:'Overdue', go:'#/patient/neel/admission'},
+    /* 17 Nov 2026, Trello: Detailed history is assigned to the psychologist only, not the psychiatrist */
     {id:'cap', late:true, title:'Capacity assessment, week 2 · Sameer Das', meta:'Weekly for 30 days under Section 89', due:'Due yesterday', go:'#/patient/neel/forms'},
     {id:'addps', title:'Add psychologist · Rohit Kapoor', meta:'Assigned to you by ward · no psychologist on the team yet', due:'New', chipc:'c-blue', addps:true},
     {id:'workup', title:'Admission workup · Rohit Kapoor', meta:'Admitted 10:30 · Suite 201 · Form C decision pending', due:'New', chipc:'c-blue', go:'#/patient/neel/admission'},
