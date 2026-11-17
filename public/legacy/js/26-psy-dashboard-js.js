@@ -136,8 +136,11 @@
       if(tk[i.key]){const t=tk[i.key];return `<div class="pd-di done"><div class="pd-dh"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span><span class="tiny" style="color:#067647;font-weight:600">Action taken ✓</span></div><div class="pd-dt">${hesc(i.txt)}</div><div class="tiny muted">${hesc(t.by||'')} · ${hesc(t.at||'')}${t.note?' · '+hesc(t.note):''}</div></div>`;}
       /* after any action on one item the window opens again with the rest (Trello "alert page": marking one task must still show the second) */
       const back=`S.__eyePid='${pid}';closeModal();`;
-      /* Review treatment (opens the nursing chart) sits on every medical item: alerts, approvals and results to check. */
-      const rt=`<button class="btn sm ${i.k==='alert'?'pri':''}" onclick="closeModal();psyToChart('${pid}')">Review treatment</button>`,act=i.btn?`<button class="btn sm ${i.k==='order'?'pri':''}" onclick="${back}${i.btn[1]}">${i.btn[0]}</button>`:'';
+      /* Review treatment sits on every medical item: alerts, approvals and results to check. It opens the nursing chart,
+         except a therapy-plan alert (a psychology quality item, not a medication one), which opens the Therapy and
+         family tab so the plan can actually be reviewed and signed off (Trello: should go to the management plan). */
+      const rtGo=/therapy plan/i.test(i.txt)?`go('#/patient/${pid}/therapy')`:`psyToChart('${pid}')`;
+      const rt=`<button class="btn sm ${i.k==='alert'?'pri':''}" onclick="closeModal();${rtGo}">Review treatment</button>`,act=i.btn?`<button class="btn sm ${i.k==='order'?'pri':''}" onclick="${back}${i.btn[1]}">${i.btn[0]}</button>`:'';
       const medical=i.k==='alert'||i.k==='order'||/result/i.test(i.lab[1]);
       const taken=`<button class="btn sm" onclick="closeModal();psyActionTaken('${pid}',${ix})">Log action</button>`;
       const acts=(i.k==='alert'?rt+act:(medical?act+rt:act))+taken;
