@@ -88,7 +88,8 @@
   compactHeader=function(){
     let h=__ch.apply(this,arguments);if(!psy())return h;
     const p=ptFind(S.pid);if(!p)return h;
-    h=h.replace(/<span class="muted" style="font-weight:600">[^<]*<\/span><span class="tiny muted">UHID [^<]*<\/span>/,`<span class="muted" style="font-weight:600">${[psyPatientLine(p),p.uhid?'UHID '+hesc(p.uhid):''].filter(Boolean).join(' · ')}</span>`);
+    /* 17 Nov 2026, Trello: only age/sex is clinically relevant enough to bold here; room and UHID (admin-only) are normal weight. */
+    h=h.replace(/<span class="muted" style="font-weight:600">[^<]*<\/span><span class="tiny muted">UHID [^<]*<\/span>/,`<span class="muted" style="font-weight:600">${hesc(window.psyAgeSex?psyAgeSex(p):'')}</span><span class="tiny muted">${[window.psyRoomLabel?psyRoomLabel(p):p.room,p.uhid?'UHID '+hesc(p.uhid):''].filter(Boolean).join(' · ')}</span>`);
     return h.replace(/<div class="row" style="gap:6px;flex-wrap:nowrap;overflow-x:auto">[\s\S]*?<\/div>(?=\s*<div class="dpcards">)/,psySafety(S.pid)+(S.discharged?'<span class="chip c-green">Discharged</span>':''));
   };
 

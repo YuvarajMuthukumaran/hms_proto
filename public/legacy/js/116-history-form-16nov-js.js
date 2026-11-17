@@ -9,7 +9,8 @@
    6. Family tree is a small table (relation, age, sex, marital status, education, occupation).
    7. The risk screen under the form is a drop-down that records the result and sets the risk of harm.
    8. 17 Nov 2026: "Treated by (present illness)" is Yes / No too (same as the other questions in this step),
-      with the treatment details as free text only when Yes -- it was the odd one out, a multi-select. */
+      with the treatment details as free text only when Yes -- it was the odd one out, a multi-select.
+   9. 17 Nov 2026, Trello: that question's wording was unclear -- renamed "Any treatment for present illness". */
 (function(){
   const isPsy=()=>/^(psychiatrist|psychologist)$/.test(String((window.__TULASI__||{}).role||''));
   if(!isPsy())return;
@@ -25,7 +26,7 @@
     const tx=sec('tx'),per=sec('per');
     if(tx&&!tx.__pm){
       tx.f=[
-        ['Treated by (present illness)','yn'],
+        ['Any treatment for present illness','yn'],
         ['Treatment given (dose, duration, response, side effects)','t'],
         ['Any past psychiatric diagnosis and treatment','yn'],
         ['Any past medical or surgical diagnosis and treatment','yn'],

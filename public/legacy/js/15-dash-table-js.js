@@ -7,7 +7,7 @@ const dtStrip=(t,p)=>String(t||'').replace(/<[^>]+>/g,'').split(' · '+p.name).j
 const dtTitle=t=>String(t.title||'').replace(/<[^>]+>/g,'');
 /* item sources, each returns [{txt, due, tone:'alert'|'late'|'', btn:[label,onclick]|null}] */
 const DT={
-  tasks:(p,T)=>T.filter(t=>dtTitle(t).includes(p.name)).map(t=>({txt:dtStrip(t.title,p),due:t.due||'',tone:t.late?'late':'',overdue:!!t.late,btn:null,go:t.go})),
+  tasks:(p,T)=>T.filter(t=>dtTitle(t).includes(p.name)).map(t=>({txt:dtStrip(t.title,p),due:t.due||'',tone:t.late?'late':'',overdue:!!t.late,btn:null,go:t.go,id:t.id})),
   alerts:p=>V3.openAlerts(a=>a.pid===p.id&&!a.ack).map(a=>({txt:'Alert: '+a.title,due:a.src||'Now',tone:'alert',btn:V3.canAck(a)?['Acknowledge',`V3.ackAlert('${a.id}')`]:null})),
   alertsRaised:p=>V3.openAlerts(a=>a.pid===p.id).map(a=>({txt:'Alert raised: '+a.title,due:a.ack?'Acknowledged by '+(a.ack.by||'RMO'):'Waiting for the RMO',tone:a.ack?'':'alert',btn:null})),
   orders:p=>v3().orders.filter(o=>o.pid===p.id&&!o.cs).map(o=>({txt:'Countersign: '+o.text,due:'By '+o.by,tone:'late',btn:['Countersign',`V3.countersign('${o.id}')`]})),

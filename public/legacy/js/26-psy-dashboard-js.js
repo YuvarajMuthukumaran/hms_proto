@@ -140,10 +140,15 @@
          except a therapy-plan alert (a psychology quality item, not a medication one), which opens the Therapy and
          family tab so the plan can actually be reviewed and signed off (Trello: should go to the management plan). */
       const rtGo=/therapy plan/i.test(i.txt)?`go('#/patient/${pid}/therapy')`:`psyToChart('${pid}')`;
-      const rt=`<button class="btn sm ${i.k==='alert'?'pri':''}" onclick="closeModal();${rtGo}">Review treatment</button>`,act=i.btn?`<button class="btn sm ${i.k==='order'?'pri':''}" onclick="${back}${i.btn[1]}">${i.btn[0]}</button>`:'';
+      const rt=`<button class="btn sm ${i.k==='alert'?'pri':''}" onclick="closeModal();${rtGo}">Review treatment</button>`;
+      /* Trello "Task and Action Button Alignment": no separate generic "Log action" step -- a task/late item's own
+         button (already renamed to the specific action, e.g. "Write the note", "Review the result") marks it done
+         itself when clicked, the same way completing the task turns it green. Alerts and approvals keep their own
+         completion (Mark seen acknowledges the alert; Approve countersigns the order), so they are unchanged. */
+      const markDone=(i.k==='task'||i.k==='late')&&i.id?`S.done['${i.id}']=true;`:'';
+      const act=i.btn?`<button class="btn sm ${i.k==='order'?'pri':''}" onclick="${markDone}${back}${i.btn[1]}">${i.btn[0]}</button>`:'';
       const medical=i.k==='alert'||i.k==='order'||/result/i.test(i.lab[1]);
-      const taken=`<button class="btn sm" onclick="closeModal();psyActionTaken('${pid}',${ix})">Log action</button>`;
-      const acts=(i.k==='alert'?rt+act:(medical?act+rt:act))+taken;
+      const acts=i.k==='alert'?rt+act:(medical?act+rt:act);
       return `<div class="pd-di ${i.k==='alert'?'al':''}"><div class="pd-dh"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span>${i.due?`<span class="tiny">${hesc(i.due)}</span>`:''}</div><div class="pd-dt">${hesc(i.txt)}</div><div class="pd-da">${acts}</div></div>`;}).join('')}</div>`;
     const foot=`<div class="mf"><button class="btn" onclick="closeModal();go('#/patient/${pid}/overview')">Open full record</button><button class="btn" onclick="psyOpenRounds('${pid}')">Open Rounds</button></div>`;
     openModal(`<div class="mh"><div class="pd-who2">${av(m.p.ini,44,m.items.some(i=>i.k==='alert')?'c-red':'c-blue')}<div><h3>${hesc(m.p.name)}</h3><div class="tiny muted">${hesc(sub(m.p))}</div></div></div><button class="x" aria-label="Close" onclick="closeModal()">×</button></div><div class="mb">${body}</div>${foot}`);
@@ -193,8 +198,8 @@
     const actOf=t=>/detailed history|history/i.test(t)?'Open detailed history':/capacity/i.test(t)?'Record capacity review':/mhrb/i.test(t)?'Send MHRB notice':/advance directive/i.test(t)?'Ask about advance directive':/family|caregiver|call/i.test(t)?'Call family':/summary|sign/i.test(t)?'Review and sign':/plan/i.test(t)?'Open management plan':/note/i.test(t)?'Write the note':/result|lab|level|bloods?/i.test(t)?'Review the result':'Open the record';
     DT.tasks(p,T).forEach(i=>{
       const sign=/discharge summary/i.test(i.txt),late=!!i.overdue;
-      items.push({k:late?'late':'task',lab:late?['amber',catOf(i.txt)]:sign?['grey','To sign']:['grey','Today'],txt:i.txt,due:i.due,
-        btn:[sign?'Review and sign':late?actOf(i.txt):'Open',`go('${i.go||'#/patient/'+p.id+'/overview'}')`,false]});
+      items.push({k:late?'late':'task',id:i.id,lab:late?['amber',catOf(i.txt)]:sign?['grey','To sign']:['grey','Today'],txt:i.txt,due:i.due,
+        btn:[sign?'Review and sign':actOf(i.txt),`go('${i.go||'#/patient/'+p.id+'/overview'}')`,false]});
     });
     if(window.psyExtraItems)window.psyExtraItems(p).forEach(i=>items.push(i)); /* results to review, daily observation review */
     const act=items.filter(i=>i.lab[1]!=='Today'); /* routine "Today" items are not shown on the dashboard any more */

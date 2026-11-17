@@ -131,6 +131,12 @@
     const i=hfIdx(l),dis=ro?'disabled':'';
     if(ty==='o'){
       const v=hfGet(l,'o'),inList=op.includes(v.sel),sel=v.sel&&!inList?'__other':v.sel,free=sel==='__other'?(v.free||(v.sel==='__other'?'':v.sel)):'';
+      /* 17 Nov 2026, Trello: a plain Yes/No question is a bubble/toggle, like the "yn" questions elsewhere in this
+         form, not a drop-down -- one tap instead of open, scroll, pick. Everything else with more than two
+         options (scales, grades, lists) keeps the drop-down; only the strict two-option Yes/No shape changes. */
+      if(op.length===2&&op.every(o=>/^(yes|no)$/i.test(o))){
+        return `<div class="hf hf-sel" data-hf="${i}"><span class="lbl">${hesc(l)}</span><div class="mini-chips">${op.map(o=>`<button type="button" class="tog ${sel===o?'on':''}" ${dis} onclick="this.parentNode.querySelectorAll('.tog').forEach(b=>b.classList.remove('on'));this.classList.add('on');psyHfOne(${i},{value:'${hesc(o)}'})">${hesc(o)}</button>`).join('')}</div></div>`;
+      }
       return `<div class="hf hf-sel" data-hf="${i}"><span class="lbl">${hesc(l)}</span><div class="hf-row"><select class="input" ${dis} onchange="psyHfOne(${i},this)"><option value="">Select…</option>${op.map(o=>`<option ${sel===o?'selected':''}>${hesc(o)}</option>`).join('')}<option value="__other" ${sel==='__other'?'selected':''}>Other (type it)</option></select>
         <input class="input hfree" ${dis} placeholder="Type here" value="${hesc(free)}" ${sel==='__other'?'':'hidden'} oninput="psyHfFree(${i},this.value)"></div></div>`;
     }

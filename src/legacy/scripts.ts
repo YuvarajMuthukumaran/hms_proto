@@ -125,4 +125,6 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/124-adm-card-style-16nov-js.js',
   '/legacy/js/125-premorbid-personality-16nov-js.js',
   '/legacy/js/126-cross-role-mgmt-plan-17nov-js.js',
+  '/legacy/js/127-pmp-character-subq-17nov-js.js',
+  '/legacy/js/128-mse-notes-17nov-js.js',
 ];

@@ -1,5 +1,7 @@
 /* 16 Nov 2026, Dr. Anu and Yuvaraj: the scores and screens card (NEWS2, suicide screen, CIWA-Ar, COWS) is shown ONLY in Admission, step 2 (Admission workup).
-   It is removed from every other screen (Treatment Plan, Vitals, Rounds, other admission steps). Same card and same saving; psychiatrist screens only. */
+   It is removed from every other screen (Treatment Plan, Vitals, Rounds, other admission steps). Same card and same saving; psychiatrist screens only.
+   17 Nov 2026, Trello: screening happens before treatment begins, so on this step Scores and screens now sits first, above
+   Admission workup (treatment chart) and Admission documents, instead of last. */
 (function(){
   if(String((window.__TULASI__||{}).role||'')!=='psychiatrist')return;
   function place(){
@@ -13,7 +15,9 @@
     if(step2&&!document.getElementById('pmScores')&&typeof window.psyScoresCard==='function'){
       const t=document.createElement('div');t.innerHTML=window.psyScoresCard(decodeURIComponent(m[1]));const el=t.firstElementChild;if(!el)return;
       const h=el.querySelector('h3');if(h)h.textContent='Scores and screens';
-      el.id='pmScores';el.style.marginTop='12px';v.appendChild(el);
+      el.id='pmScores';el.style.marginBottom='12px';
+      const workup=document.getElementById('workupCard');
+      if(workup&&workup.parentNode===v)v.insertBefore(el,workup);else v.appendChild(el);
     }
   }
   const __r=render;
