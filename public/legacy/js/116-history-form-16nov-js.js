@@ -157,28 +157,16 @@
   @media(max-width:900px){body.psy-views:not(.psg) .hwrap .hgrid>.hf[data-span],body.psg .hwrap .hgrid>.hf[data-span]{grid-column:1/-1!important}.pm-tree-r{grid-template-columns:1fr 1fr}}`;
   document.head.appendChild(css);
 
-  /* ---------- risk screen under the form (same two choices as the OPD doctor risk screen: risk of harm, and what it is for) ---------- */
-  const LEVELS=['None','Low','Moderate','High'];
-  const REASONS=['Self-harming thoughts/behaviours','Harm to others','Absconding','Self-neglect','Substance use','Other'];
+  /* ---------- risk screen under the form ----------
+     17 Nov 2026, Trello: this duplicated the Risk of harm + Reason screen that 29-psy-safety-js.js (113
+     "Scores and screens", Admission step 2) now also has, same x.suicide/x.riskLevel state -- one screen
+     is enough, so just drop this standalone card from under the Detailed history form instead of building it. */
   function riskBox(){
     document.querySelectorAll('#view .callout.amber').forEach(c=>{
-      if(c.dataset.pmRisk||!/Risk screen/.test(c.textContent))return;
-      c.dataset.pmRisk='1';const x=px(),last=(x.suicide||[])[0],cur=x.riskLevel||'';
-      c.className='pm-risk';
-      c.innerHTML=`<b>Risk screen</b>
-        <label class="small">Risk of harm <select class="input" id="pmRL"><option value="">Select…</option>${LEVELS.map(l=>`<option ${cur===l?'selected':''}>${l}</option>`).join('')}</select></label>
-        <label class="small">Reason <select class="input" id="pmRR"><option value="">Select…</option>${REASONS.map(l=>`<option ${last&&last.reason===l?'selected':''}>${l}</option>`).join('')}</select></label>
-        <button type="button" class="btn sm pri" onclick="pmRisk()">Save risk screen</button>
-        <span class="small muted">${last?'Last: '+E(String(last.level||'').toLowerCase())+' risk'+(last.reason?', '+E(last.reason):'')+', '+E(last.at)+' by '+E(last.by||''):'Sets the risk of harm in the header.'}</span>`;
+      if(!/Risk screen/.test(c.textContent))return;
+      c.remove();
     });
   }
-  window.pmRisk=function(){
-    const l=(document.getElementById('pmRL')||{}).value,r=(document.getElementById('pmRR')||{}).value;
-    if(!l){toast('Pick the risk of harm');return;}if(l!=='None'&&!r){toast('Pick what the risk is for');return;}
-    const x=px();x.suicide=x.suicide||[];
-    x.suicide.unshift({at:atNow(),date:today(),by:signer(),ans:[],level:l==='None'?'Low':l,reason:r||'',note:'Risk screen from the detailed history'});x.riskLevel=l==='None'?'Low':l;
-    render();toast('Risk of harm set to '+(l==='None'?'low':l.toLowerCase()));
-  };
 
   /* ---------- Read only: shows what was filled in the form ---------- */
   function readOnly(){

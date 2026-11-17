@@ -132,8 +132,12 @@
   window.psyEye=function(pid){
     const m=MAP[pid];if(!m)return;
     const tk=(window.psyPx&&psyPx(pid).taken)||{};
+    /* a task/late item's own button marks it via S.done (see markDone below), not psyPx(pid).taken --
+       count that too, or this window thinks the item is still open and reopens itself on top of
+       whatever that button just navigated to (e.g. the Call family pop-up), leaving both on screen */
+    const doneOf=i=>!!(tk[i.key]||(i.id&&S.done&&S.done[i.id]));
     const body=`<div class="pd-det">${m.items.map((i,ix)=>{
-      if(tk[i.key]){const t=tk[i.key];return `<div class="pd-di done"><div class="pd-dh"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span><span class="tiny" style="color:#067647;font-weight:600">Action taken ✓</span></div><div class="pd-dt">${hesc(i.txt)}</div><div class="tiny muted">${hesc(t.by||'')} · ${hesc(t.at||'')}${t.note?' · '+hesc(t.note):''}</div></div>`;}
+      if(doneOf(i)){const t=tk[i.key]||{};return `<div class="pd-di done"><div class="pd-dh"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span><span class="tiny" style="color:#067647;font-weight:600">Action taken ✓</span></div><div class="pd-dt">${hesc(i.txt)}</div><div class="tiny muted">${hesc(t.by||'')} · ${hesc(t.at||'')}${t.note?' · '+hesc(t.note):''}</div></div>`;}
       /* after any action on one item the window opens again with the rest (Trello "alert page": marking one task must still show the second) */
       const back=`S.__eyePid='${pid}';closeModal();`;
       /* Review treatment sits on every medical item: alerts, approvals and results to check. It opens the nursing chart,
@@ -184,7 +188,11 @@
   render=function(){
     const out=__rdash.apply(this,arguments);
     const pid=S.__eyePid;
-    if(pid){S.__eyePid=null;setTimeout(()=>{const m=MAP[pid],tk=(window.psyPx&&psyPx(pid).taken)||{};if(m&&m.items.some(i=>!tk[i.key])&&!document.getElementById('scrim').classList.contains('show'))psyEye(pid);},80);}
+    /* 17 Nov 2026, Trello "Call family" pop-up bug: a task's own button (e.g. Call family) marks it via
+       S.done and opens its own screen/pop-up straight away; this reopen must not also reopen the eye
+       window over it, or both end up on screen at once. Only reopen when something is genuinely still
+       unaddressed, and never while some other modal (the one that button just opened) is showing. */
+    if(pid){S.__eyePid=null;setTimeout(()=>{const m=MAP[pid],tk=(window.psyPx&&psyPx(pid).taken)||{},doneOf=i=>!!(tk[i.key]||(i.id&&S.done&&S.done[i.id]));if(m&&m.items.some(i=>!doneOf(i))&&!document.getElementById('scrim').classList.contains('show'))psyEye(pid);},80);}
     return out;
   };
 
