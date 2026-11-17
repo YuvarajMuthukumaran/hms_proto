@@ -1769,7 +1769,14 @@ function fld(f,ro){
 }
 function histForm(){
   const cur=S.hsec||'id'; const sec=HIST.find(x=>x.k===cur); const i=HIST.indexOf(sec);
-  const mine=w=>w==='both'||(w==='psy'?isPsy():isPsych());
+  /* 17 Nov 2026, Trello "Personal history drop down not working": on the Admission tab, the psychologist's
+     own view borrows the psychiatrist's layout by temporarily switching S.role to 'psychiatrist' (56's
+     pAdmission wrapper, asDoctor) so the shared step chrome renders. That masquerade also fooled this
+     who-owns-this-section check, which then told the real psychologist their own Personal history (and
+     Family history, Premorbid personality) was "view only" and disabled the drop-downs. S.role can be
+     masqueraded; window.__TULASI__.role cannot, so section ownership is decided from that instead. */
+  const realRole=String((window.__TULASI__||{}).role||(window.__TULASI__||{}).viewRole||'');
+  const mine=w=>w==='both'||(w==='psy'?/psychiatrist/.test(realRole):/psycholog/.test(realRole));
   const whoChip=w=>w==='both'?chip('Both','c-grey'):w==='psy'?chip('Psychiatrist','c-blue'):chip('Psychologist','c-violet');
   return `<div class="hwrap"><nav class="hnav" aria-label="History sections">${HIST.map((x,j)=>`<button class="${x.k===cur?'on':''}" onclick="S.hsec='${x.k}';render()"><span class="hn">${j+1}</span><span style="flex:1">${x.t}</span>${x.who==='both'?'':`<i class="hw ${x.who}"></i>`}</button>`).join('')}</nav>
     <div class="hbody"><div class="row" style="justify-content:space-between"><h3>${i+1}. ${sec.t}</h3>${whoChip(sec.who)}</div>
