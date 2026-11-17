@@ -69,7 +69,10 @@
     /* Detailed history */
     const hc=[...v.querySelectorAll('section.card')].find(s=>{const h3=s.querySelector('h3');return h3&&/^Detailed history/.test(h3.textContent.trim());});
     if(hc&&!hc.querySelector('[data-lk]')&&histSigned(pid)){
-      hc.querySelectorAll('.seg,.hist-seg,#scrH').forEach(x=>x.remove());
+      /* 17 Nov 2026, Trello: once signed, the mode switcher (.hist-seg) is gone, so the "Read only /
+         What is saved so far. Switch above to change it." label (72) above it is now stale and just
+         repeats the green "Signed and locked" banner below -- drop it along with the switcher */
+      hc.querySelectorAll('.seg,.hist-seg,.hist-h,#scrH').forEach(x=>x.remove());
       [...hc.querySelectorAll('button')].forEach(b=>{if(/^(Save draft|Review and sign|Draft with AI scribe|Fill form|AI-filled form|AI summary)/i.test(b.textContent.trim()))b.remove();});
       const hd=hc.querySelector('.hd');let by='',at='';try{by=S.historySignedBy||'';at=S.historySignedAt||'';}catch(e){}
       if(hd)hd.after(banner(pid,'hist','The detailed history',by,at));
