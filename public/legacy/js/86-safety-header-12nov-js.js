@@ -36,7 +36,8 @@
   #safeBar .sh-c.amber{background:#fffaeb;color:#b54708;border-color:#fedf89}#safeBar .sh-c.red{background:#fef3f2;color:#b42318;border-color:#fecdca}
   #safeBar .sh-s{font-weight:500;color:#667085;font-size:11.5px}#safeBar .sh-nr{cursor:pointer;background:#fff;border-color:#d6dee8}#safeBar .sh-b{height:34px}
   #view .dph .sf{display:none}
-  .lk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 14px 10px;font-size:12.5px;color:#667085}.lk-late{font-weight:700;color:#93370D;background:#FFF4D6;border-radius:999px;padding:2px 10px}.lk-a{flex-basis:100%;border-left:3px solid #1e6cdb;background:#f5f9ff;padding:6px 10px;border-radius:6px;color:#344054}
+  .lk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:0 14px 10px;font-size:12.5px;color:#667085}.lk:empty{display:none}.lk-late{font-weight:700;color:#93370D;background:#FFF4D6;border-radius:999px;padding:2px 10px}.lk-a{flex-basis:100%;border-left:3px solid #1e6cdb;background:#f5f9ff;padding:6px 10px;border-radius:6px;color:#344054}
+  .nitem{position:relative}.lk-add{position:absolute;top:50%;right:44px;transform:translateY(-50%);z-index:2}
   .sh-n2{display:inline-block;min-width:26px;text-align:center;font-weight:800;border-radius:8px;padding:2px 6px;background:#f2f4f7}.sh-n2.amber{background:#fffaeb;color:#b54708}.sh-n2.red{background:#fef3f2;color:#b42318}`;
   document.head.appendChild(css);
   function paint(){
@@ -100,7 +101,11 @@
     its.forEach((it,i)=>{if(it.querySelector('.lk'))return;
       [...it.querySelectorAll('button')].forEach(b=>{if(/^(Edit|Delete|Change)/i.test(b.textContent.trim()))b.remove();});
       const n=same?lastItems[i]:null,key=n?lkKeyOf(n):'dn-'+i,ad=(psyPx(pid).addenda||{})[key]||[],f=document.createElement('div');f.className='lk';
-      f.innerHTML=`<span class="lk-t">Signed and locked. Only an addendum can be added.</span><button class="btn sm" onclick="lkAdd('${pid}','${key}')">Add addendum</button>${n&&n.late?`<span class="lk-late">Late entry: written ${esc(n.signed||'')} for ${esc((n.d||'')+' '+(n.my||''))}</span>`:''}${ad.map(a=>`<div class="lk-a"><b>Addendum</b> by ${esc(a.by)}, ${esc(a.at)}<div>${esc(a.t)}</div></div>`).join('')}`;it.appendChild(f);});
+      f.innerHTML=`${n&&n.late?`<span class="lk-late">Late entry: written ${esc(n.signed||'')} for ${esc((n.d||'')+' '+(n.my||''))}</span>`:''}${ad.map(a=>`<div class="lk-a"><b>Addendum</b> by ${esc(a.by)}, ${esc(a.at)}<div>${esc(a.t)}</div></div>`).join('')}`;it.appendChild(f);
+      /* the add-addendum button sits beside the chevron, on the header row, not inside the <button class="nhead"> (no nested buttons) */
+      const add=document.createElement('button');add.type='button';add.className='btn sm lk-add';add.textContent='Add addendum';
+      add.onclick=e=>{e.stopPropagation();lkAdd(pid,key);};
+      const head=it.querySelector('.nhead');if(head)head.insertAdjacentElement('afterend',add);});
   }
   const __r=render;
   render=function(){const r=__r.apply(this,arguments);try{paint();const v=$('view'),pid=pidNow();if(v&&pid&&kind()==='psychiatrist')scoresPaint(v,pid);if(v&&pid&&kind())lockPaint(v,pid);}catch(e){}return r;};
