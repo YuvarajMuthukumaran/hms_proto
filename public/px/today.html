@@ -73,7 +73,7 @@ td{padding:14px 16px;background:#fff;border-bottom:1px solid #E3EAF2;vertical-al
 <style id="px-resp">@media(max-width:900px){table{min-width:640px}.card{overflow-x:auto}.cols{grid-template-columns:1fr!important}.tiles{grid-template-columns:repeat(2,minmax(0,1fr))!important}.bar{flex-wrap:wrap}.inp{width:100%!important}.ov .dr{width:100%}}@media(max-width:640px){main{padding:8px 6px 32px!important}.md{width:94vw}}</style>
 </head>
 <body>
-<div id="root"></div><div id="cm"></div>
+<div id="root"></div><div id="cm"></div><div id="fi"></div>
 <div class="rev" role="tablist" aria-label="Review views">
   <button data-v="today" class="on">Today (proposed)</button>
   <button data-v="cmp">Live vs proposed</button>
@@ -192,7 +192,7 @@ function setState(p){ Object.assign(state,p); render(); }
       'Grievance': [['Update the family', 'Call and log what you said'], ['Mark resolved', 'Family confirms they are satisfied'], ['Escalate to Chandraji', 'GM Operations']],
       'Discharge': [['Start family meeting', '10 to 15 min: follow-up dates, call centre number'], ['Start feedback interview', 'Form v6, you ask and record'], ['Ask the clinician to fill dates', 'Doctor or psychologist follow-up date']],
       'Feedback': [['Escalate to Chandraji', 'Detractor (NPS 0 to 6), same day'], ['Call the family back', 'Logged in the HMS call log'], ['Log as a grievance', 'If something needs fixing']],
-      'Admission': [['Mark family met', 'Rules, visiting hours, contact card, updates'], ['Take preferences', 'Diet, language, faith, routine, visitors'], ['Call the family', 'Logged in the HMS call log']],
+      'Admission': [['Family intake done', 'Rules, visiting hours, contact card, updates'], ['Took Pt Preferences', 'Diet, language, faith, routine, visitors'], ['Call the family', 'Logged in the HMS call log']],
       'Preferences': [['Take preferences now', 'Opens the preferences form'], ['Share with the ward', 'Nursing and kitchen see it'], ['Call the family', 'If the patient cannot say']],
       'Family call': [['Call and log', 'Opens the call script and notes'], ['Log a concern from the call', 'Becomes a grievance'], ['Reschedule', 'Family asked for another time']],
       'Team check': [['Remind the clinician', 'Sends a reminder in the HMS'], ['Call the family yourself', 'Logged in the HMS call log'], ['Raise with floor lead', 'If it keeps happening']],
@@ -200,6 +200,45 @@ function setState(p){ Object.assign(state,p); render(); }
       'Ward check': [['Start the check', 'Rights, costs, grievance officer, feedback box'], ['Log a missing notice', 'Goes to Admin Manager'], ['Mark done', 'For this month']],
       'Training': [['Mark attendance', 'Who came today'], ['Add a session', 'Topic, floor, date'], ['Send the slides', 'To nurses who missed it']]
     };
+    /* 17 Nov 2026: "Family intake done" (Admission menu) opens this instead of just marking it */
+    const FI = { open: false, rowId: '', pname: '', ans: {} };
+    function fiChip(key, val, cur) { const on = cur === val; return `<button type="button" data-fic="${key}" data-val="${esc(val)}" style="height:32px;padding:0 12px;border-radius:999px;border:1px solid ${on ? '#1E6CDB' : '#D6DEE8'};background:${on ? '#E8F1FE' : '#fff'};color:${on ? '#1E5BB8' : '#344054'};font-size:13px;font-weight:600">${esc(val)}</button>`; }
+    function openFI(rowId, pname) { Object.assign(FI, { open: true, rowId, pname, ans: { met: 'In person', date: new Date().toISOString().slice(0, 10), wa: '', waDate: '', pack: '', packHow: 'Printed copy', sched: '' } }); drawFI(); }
+    function fiCanSave() { const a = FI.ans; return !!(a.date && a.wa && a.pack && a.sched && (a.wa === 'No' || a.waDate) && (a.pack === 'No' || a.packHow)); }
+    function drawFI() {
+      const el = document.getElementById('fi'); if (!el) return;
+      if (!FI.open) { el.innerHTML = ''; return; }
+      const a = FI.ans, canSave = fiCanSave();
+      const field = (label, inner) => `<label style="display:flex;flex-direction:column;gap:6px;font-size:13px">${label}${inner}</label>`;
+      el.innerHTML = `<div style="position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:40;display:flex;align-items:center;justify-content:center;padding:16px" data-ficlose="bg">
+        <div role="dialog" aria-label="Family intake done" style="width:440px;max-width:100%;max-height:88vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(15,23,42,.25);display:flex;flex-direction:column;gap:14px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+            <div><div style="font-size:12px;font-weight:700;letter-spacing:.05em;color:#1D4ED8">FAMILY INTAKE DONE</div><b style="font-size:17px">${esc(FI.pname)}</b></div>
+            <button type="button" data-ficlose="x" aria-label="Close" style="border:0;background:transparent;font-size:22px;color:#667085;line-height:1">×</button>
+          </div>
+          ${field('How family was met', `<select class="inp" style="width:100%" data-fif="met"><option ${a.met === 'In person' ? 'selected' : ''}>In person</option><option ${a.met === 'Phone call' ? 'selected' : ''}>Phone call</option><option ${a.met === 'Video call' ? 'selected' : ''}>Video call</option></select>`)}
+          ${field('Date family met', `<input type="date" class="inp" style="width:100%" data-fif="date" value="${esc(a.date)}">`)}
+          <div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:13px;font-weight:600">WhatsApp group created?</b><div style="display:flex;gap:6px">${fiChip('wa', 'Yes', a.wa)}${fiChip('wa', 'No', a.wa)}</div></div>
+          ${a.wa === 'Yes' ? field('WA group date', `<input type="date" class="inp" style="width:100%" data-fif="waDate" value="${esc(a.waDate)}">`) : ''}
+          <div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:13px;font-weight:600">Info pack shared?</b><div style="display:flex;gap:6px">${fiChip('pack', 'Yes', a.pack)}${fiChip('pack', 'No', a.pack)}</div></div>
+          ${a.pack === 'Yes' ? field('Info pack shared how', `<select class="inp" style="width:100%" data-fif="packHow"><option ${a.packHow === 'Printed copy' ? 'selected' : ''}>Printed copy</option><option ${a.packHow === 'WhatsApp' ? 'selected' : ''}>WhatsApp</option><option ${a.packHow === 'Email' ? 'selected' : ''}>Email</option></select>`) : ''}
+          <div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:13px;font-weight:600">Weekly update schedule explained?</b><div style="display:flex;gap:6px">${fiChip('sched', 'Yes', a.sched)}${fiChip('sched', 'No', a.sched)}</div></div>
+          <div style="display:flex;gap:8px;margin-top:4px"><button type="button" data-fisave="1" class="btn pri" ${canSave ? '' : 'disabled style="opacity:.5;cursor:not-allowed"'}>Save</button><button type="button" data-ficlose="x" class="btn">Cancel</button></div>
+        </div></div>`;
+    }
+    document.addEventListener('click', e => {
+      const t = e.target.closest('[data-fic],[data-ficlose],[data-fisave]'); if (!t) return;
+      if (t.dataset.ficlose) { if (t.dataset.ficlose === 'bg' && e.target !== t) return; FI.open = false; drawFI(); return; }
+      if (t.dataset.fic) { FI.ans[t.dataset.fic] = t.dataset.val; drawFI(); return; }
+      if (t.dataset.fisave && !t.disabled) {
+        const acted = { ...state.acted }; acted[FI.rowId] = 'Family intake done';
+        FI.open = false; drawFI();
+        setState({ acted });
+        toast(`Family intake saved for ${FI.pname}.`);
+      }
+    });
+    document.addEventListener('input', e => { const t = e.target; if (t.dataset.fif) { FI.ans[t.dataset.fif] = t.value; } });
+    document.addEventListener('change', e => { const t = e.target; if (t.dataset.fif) { FI.ans[t.dataset.fif] = t.value; drawFI(); } });
     const raw = [
       { id: 'nb', type: 'Safety', late: true, red: true, name: 'Neel Bose', initials: 'NB', sub: '23/M · Day 6 · Room 213 A', tags: ['Readmission'],
         items: [
@@ -334,7 +373,7 @@ function today(){
     const tcol=r.red&&stillLate?'#B42318':(stillLate?'#B54708':'#475467');
     const a=avC[idx%avC.length];
     const items=r.items.map(it=>{const d=!!done[it.id];return `<div style="display:flex;gap:8px;align-items:flex-start"><i class="dot" style="background:${d?dotC.ok:dotC[it.c]}"></i><div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px"><span style="line-height:1.45;${d?'color:#667085;text-decoration:line-through':'color:#1F2937'}">${esc(it.text)}<span style="font-size:12px;color:#667085"> · ${esc(d?'done just now':it.meta)}</span></span>${it.btn&&!d?(it.call?`<button class="mini" data-call="${it.call}" data-item="${it.id}" data-row="${r.id}">${esc(it.btn)}</button>`:`<button class="mini" data-done="${it.id}">${esc(it.btn)}</button>`):''}</div></div>`}).join('');
-    const menu=state.open===r.id?`<div class="menu" role="menu">${(menus[r.type]||[]).map(m=>`<button role="menuitem" data-act="${r.id}" data-m="${esc(m[0])}"><div style="font-size:14px;font-weight:600">${esc(m[0])}</div><div style="font-size:12px;color:#667085">${esc(m[1])}</div></button>`).join('')}</div>`:'';
+    const menu=state.open===r.id?`<div class="menu" role="menu">${(menus[r.type]||[]).map(m=>`<button role="menuitem" data-act="${r.id}" data-m="${esc(m[0])}" data-actp="${esc(r.name)}"><div style="font-size:14px;font-weight:600">${esc(m[0])}</div><div style="font-size:12px;color:#667085">${esc(m[1])}</div></button>`).join('')}</div>`:'';
     return `<tr>
       <td style="padding-left:18px;width:120px"><span style="font-weight:700;color:${tcol}">${esc(r.type)}</span></td>
       <td style="width:240px"><a href="#" data-pname="${esc(r.name)}" data-ptype="${esc(r.type)}" title="${r.type==='Ward check'?'Open Rounds':r.type==='Training'?'Open Staff training':'Open '+esc(r.name)+' record'}" style="display:flex;gap:10px;color:#0F172A"><span class="av" style="width:38px;height:38px;background:${a[0]};color:${a[1]};font-size:${r.initials.length>2?11:13}px">${esc(r.initials)}</span><span style="display:flex;flex-direction:column;gap:3px"><b style="font-size:15px;font-weight:600">${esc(r.name)}</b><span style="font-size:12px;color:#667085">${esc(r.sub)}</span><span style="display:flex;flex-wrap:wrap;gap:4px">${r.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</span></span></a></td>
@@ -391,7 +430,11 @@ document.addEventListener('click',e=>{
   if(t.dataset.call){ if(t.dataset.call==='pick') openCall(null); else { const pp=TP.find(x=>x.id===t.dataset.call); pp.item=t.dataset.item; pp.row=t.dataset.row; openCall(pp, pp.callN); } return; }
   if(t.dataset.done){setState({done:{...state.done,[t.dataset.done]:true}});return;}
   if(t.dataset.open){setState({open:state.open===t.dataset.open?null:t.dataset.open});return;}
-  if(t.dataset.act){setState({open:null,acted:{...state.acted,[t.dataset.act]:t.dataset.m}});return;}
+  if(t.dataset.act){
+    if(t.dataset.m==='Family intake done'){ setState({open:null}); openFI(t.dataset.act,t.dataset.actp); return; }
+    if(t.dataset.m==='Took Pt Preferences'){ setState({open:null}); if(!navShell('patients',t.dataset.actp)) setState({eye:(raw.find(x=>x.id===t.dataset.act)||{}).id||null}); return; }
+    setState({open:null,acted:{...state.acted,[t.dataset.act]:t.dataset.m}});return;
+  }
   if(t.dataset.hide){setState({brief:false});return;}
   if(t.hasAttribute("data-eye")){const same=state.eye===t.dataset.eye;setState({eye:same?null:(t.dataset.eye||null),open:null});if(!same)setTimeout(()=>{const p=document.querySelector('[aria-label^="Details for"]');if(p)p.scrollIntoView({block:"center",behavior:"smooth"});},60);return;}
   if(state.open&&!t.closest('.menu')) setState({open:null});
