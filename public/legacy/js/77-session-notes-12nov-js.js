@@ -58,7 +58,7 @@
   document.head.appendChild(css);
 
   /* ---------------- state helpers ---------------- */
-  const defGoals=pid=>{const s=sn(pid);if(!s.goals)s.goals=[{t:'Sleep at least 6 hours a night'},{t:'Take part in one group activity a day'},{t:'Talk about worries with the therapist'}];return s.goals;};
+  const defGoals=pid=>{const s=sn(pid);if(!s.goals)s.goals=window.__realMode?[]:[{t:'Sleep at least 6 hours a night'},{t:'Take part in one group activity a day'},{t:'Talk about worries with the therapist'}];return s.goals;};
   window.snS=(k,v)=>{D[k]=v;if(k==='mins'||k==='plan'||k==='hwNew')autoSum();};
   window.snB=(k,v)=>{D.blk[k]=v;autoSum();};
   window.snR=(k,v)=>{D.risk[k]=v;draw();};
@@ -263,9 +263,10 @@
     const n=((px(pid).sn||{}).notes||[]).find(x=>x.status==='signed');
     const hit=[...grid.querySelectorAll('*')].find(e=>e.children.length===0&&/^Psychologist$/.test(e.textContent.trim()));
     if(!hit)return;
+    if(!n)return;   /* 18 Nov 2026, Trello "Remove": no "No signed session note yet." line (the Therapy line beside it already says it) */
     const row=hit.parentElement;
     const line=document.createElement('div');line.className='pr-sn';
-    line.innerHTML=n?`<b>Last session (${esc(n.at.split(',')[0])}):</b> ${esc(n.summaryLine||n.summary)}`:'No signed session note yet.';
+    line.innerHTML=`<b>Last session (${esc(n.at.split(',')[0])}):</b> ${esc(n.summaryLine||n.summary)}`;
     (row.lastElementChild===hit?row:row.lastElementChild).appendChild(line);
   }
   const __r77=render;

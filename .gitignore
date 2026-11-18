@@ -7,3 +7,7 @@ dist
 *.csv
 tools/.env.import
 tools/invite-links*.txt
+
+public/zz-test-seed.js
+
+public/zz-test-seed.js

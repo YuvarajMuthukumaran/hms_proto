@@ -463,12 +463,23 @@ window.onCallSaved = r => {
   const acted={...state.acted}; if(p.row) acted[p.row]=txt;
   setState({done, acted, newG: state.newG + (r.grievance?1:0)});
 };
-/* TDX-CAL: what the Rounds sent (reads the Rounds page's data, same browser). The roster/leave-cover strip (Who is on today, N family meetings need cover) was removed 17 Nov 2026: it showed nonsense counts and Calendar is gone for this role. */
+/* TDX-CAL: who is on today, cover needed, and what the Rounds sent (reads the Calendar and Rounds pages' data, same browser) */
 (function(){
   const __t=today;
   const hh=t=>{const d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
   function strips(){
     let h='';
+    try{
+      const C=window.PXCal;if(C){
+        C.reload();const t=C.todayISO();const on=C.onToday(t);
+        const w=on.filter(x=>x.code==='M'||x.code==='E').map(x=>esc(x.name)+' <span style="color:#667085">('+(x.code==='M'?'morning':'evening')+', '+esc(x.floor)+')</span>').join(' · ');
+        const lv=on.filter(x=>x.code==='L').map(x=>esc(x.name)+' ('+esc(x.leave.type.toLowerCase())+(x.leave.cover?', cover '+esc(C.nameOf(x.leave.cover)):'')+')');
+        const off=on.filter(x=>x.code==='O').map(x=>esc(x.name));
+        h+='<div style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:10px 16px;font-size:14px;display:flex;flex-direction:column;gap:3px"><div><b>Who is on today</b> <span style="color:#667085">· '+esc(C.label(t))+'</span></div><div>'+(w||'No one is on shift.')+'</div>'+(lv.length?'<div style="color:#93370D"><b>On leave:</b> '+lv.join(', ')+'</div>':'')+(off.length?'<div style="color:#667085">Off: '+off.join(', ')+'</div>':'')+'</div>';
+        const cl=C.clashes(t,C.addDays(t,7)).slice(0,3);
+        cl.forEach(c=>{const cv=c.cover.map(C.nameOf);h+='<div style="background:#FEF3F2;border:1px solid #FDA29B;border-radius:12px;padding:10px 16px;font-size:14px"><b style="color:#B42318">'+esc(C.summary(c))+'.</b> '+(cv.length?esc(cv[0])+' is on shift. Open the Calendar and give them these.':'No one else is on shift then.')+'</div>';});
+      }
+    }catch(e){}
     try{
       const R=JSON.parse(localStorage.getItem('px_rounds_v1')||'null');
       if(R){

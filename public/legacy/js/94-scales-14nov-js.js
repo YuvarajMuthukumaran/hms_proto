@@ -8,7 +8,7 @@
   const px=pid=>{try{return psyPx(pid);}catch(e){return {};}};
   const floor=()=>{try{return allPts();}catch(e){return PTS;}};
   function seed(){
-    if(window.__scSeed14)return;window.__scSeed14=1;
+    if(window.__scSeed14||window.__realMode)return;   /* 18 Nov 2026: no made-up scale orders on real patients */window.__scSeed14=1;
     floor().forEach(p=>{try{
       if(!/alcohol/i.test(String(p.dx||''))||!/withdraw/i.test(String(p.dx||'')))return;
       const x=px(p.id);x.scaleOrders=x.scaleOrders||[];

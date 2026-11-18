@@ -242,7 +242,8 @@
   const tidy=v=>{
     v.querySelectorAll("h3,h4,.lbl,b,span").forEach(e=>{if(e.children.length===0&&e.textContent.trim()==="Round note"){
       /* a round note written by a psychiatrist stays "Round note" (Trello 133, item 8): only the psychologist's own notes are Therapy notes */
-      const row=e.closest(".nitem,.li,tr");if(row&&/Dr\.\s[^·]*·\s*Psychiatrist/.test(row.textContent))return;
+      /* 18 Nov 2026: real-data notes are signed with the role ("Psychiatrist"), not "Dr. X · Psychiatrist": they stay "Round note" too */
+      const row=e.closest(".nitem,.li,tr");if(row&&(/Dr\.\s[^·]*·\s*Psychiatrist/.test(row.textContent)||(/\bPsychiatrist\b/.test(row.textContent)&&!/\bPsychologist\b/.test(row.textContent))))return;
       e.textContent="Therapy note";}});
     v.querySelectorAll(".subtab").forEach(t=>{const tn=[...t.childNodes].reverse().find(n=>n.nodeType===3&&/Vitals and medicines/.test(n.nodeValue));if(tn)tn.nodeValue=tn.nodeValue.replace("Vitals and medicines","Treatment Plan");});
   };

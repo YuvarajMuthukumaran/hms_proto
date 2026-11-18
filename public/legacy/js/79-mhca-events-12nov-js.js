@@ -40,8 +40,10 @@
   const mh=pid=>{const x=px(pid);if(!x.mhca){const p=pt(pid),old=(+p.day||0)>0;x.mhca={ad:old?'Absent':'',adBy:old?'At admission':'',adAt:'',capDone:0,decision:'',nr:old?{rights:{by:'At admission',at:''}}:{},mhrb:{},tasks:(!old&&String(p.sec)==='89')?[{id:'mhrb_adm',text:'MHRB email: involuntary admission (Section 89)',meta:'One email at admission. Treating psychiatrist',due:now()+86400000,done:null}]:[]};}return x.mhca;};
   function legal(pid){
     const p=pt(pid),sec=String(p.sec||''),day=+p.day||0,m=mh(pid);
-    const limit=R.mhca.limit89Day,left=sec==='89'?Math.max(0,limit-day):null;
-    const every=R.mhca.captureDays[sec]||0,expected=every?Math.floor(day/every):0,overdue=Math.max(0,expected-(m.capDone||0));
+    const limit=R.mhca.limit89Day,left=sec==='89'?limit-day:null;   /* 18 Nov 2026: below 0 means past the 30 days (it used to stop at 0 and read "day 114 of 30") */
+    /* 18 Nov: a patient who was already in the ward when the portal started has no past reviews to catch up. Counting starts at the portal start (15 Nov); a recorded review restarts it */
+    const every=R.mhca.captureDays[sec]||0,cd=(window.__stayClock?__stayClock(p).clock:day),expected=every?Math.floor(cd/every):0,lastCap=m.capLastAt||0;
+    const overdue=(p.real&&every&&lastCap)?Math.floor((Date.now()-lastCap)/(every*864e5)):Math.max(0,expected-(m.capDone||0));
     return {p,sec,day,left,every,expected,overdue,m,promptDue:sec==='89'&&day>=R.mhca.prompt89Day&&!m.decision};
   }
   window.mhcaLegal=legal;
@@ -53,7 +55,7 @@
     PTS.forEach(p=>{
       const L=legal(p.id),m=L.m;
       if(L.overdue>0)out.push({id:'mhca_cap_'+p.id,late:true,title:'Capacity review · '+p.name,meta:'Section '+L.sec+', every '+L.every+' days. Treating psychiatrist',due:L.overdue+(L.overdue>1?' reviews':' review')+' due',go:'#/patient/'+p.id+'/overview',lead:true,mhca:true});
-      if(L.promptDue)out.push({id:'mhca_d25_'+p.id,late:true,title:'Choose before day 30 · '+p.name,meta:'Section 89, day '+L.day+' of 30: apply for Section 90, switch to independent (Form C) or plan discharge',due:L.left+' days left',go:'#/patient/'+p.id+'/overview',lead:true,mhca:true});
+      if(L.promptDue)out.push({id:'mhca_d25_'+p.id,late:true,title:(L.left>=0?'Choose before day 30 · ':'Past the 30 days · ')+p.name,meta:'Section 89, day '+L.day+(L.left>=0?' of 30':', past the 30 days')+': apply for Section 90, switch to independent (Form C) or plan discharge',due:L.left>=0?L.left+' days left':(-L.left)+' days past 30',go:'#/patient/'+p.id+'/overview',lead:true,mhca:true});
       if(!m.ad&&L.sec)out.push({id:'mhca_ad_'+p.id,late:true,title:'Advance directive not asked · '+p.name,meta:'Required at admission',due:'Required',go:'#/patient/'+p.id+'/overview',lead:true,mhca:true});
       if(L.day<=1&&!m.nr.rights)out.push({id:'mhca_nr_'+p.id,title:'Tell the nominated representative their rights · '+p.name,meta:'At admission',due:'Today',go:'#/patient/'+p.id+'/overview',lead:true,mhca:true});
       (m.tasks||[]).filter(t=>!t.done).forEach(t=>out.push({id:'mhca_t_'+t.id,late:t.due<now(),title:t.text+' · '+p.name,meta:t.meta,due:t.due<now()?'Overdue':'Due '+new Date(t.due).toLocaleDateString('en-GB',{day:'numeric',month:'short'}),go:'#/patient/'+p.id+'/overview',lead:true,mhca:true}));
@@ -73,7 +75,7 @@
 
   window.mhcaAd=function(pid,v){mh(pid).ad=v;mh(pid).adBy=signer();mh(pid).adAt=atNow();render();toast('Advance directive recorded: '+v);};
   window.mhcaCap=function(pid){
-    const done=()=>{const m=mh(pid);m.capDone=(m.capDone||0)+1;m.capLast={by:signer(),at:atNow()};render();toast('Capacity review recorded by '+signer());};
+    const done=()=>{const m=mh(pid);m.capDone=(m.capDone||0)+1;m.capLastAt=Date.now();m.capLast={by:signer(),at:atNow()};render();toast('Capacity review recorded by '+signer());};
     if(typeof pinSign==='function')pinSign('Record the capacity review · '+pt(pid).name,[['Section',legal(pid).sec],['Signing as',signer()]],done);else done();
   };
   window.mhcaNr=function(pid,k){mh(pid).nr[k]={by:signer(),at:atNow()};render();toast('NR notice recorded');};
@@ -98,7 +100,7 @@
     const m=(location.hash||'').match(/^#\/patient\/([^/]+)/);if(!m)return;
     const L=legal(m[1]);if(!L.promptDue)return;
     const o=document.createElement('div');o.id='mhcaPrompt';o.setAttribute('role','alertdialog');o.dataset.pid=L.p.id;o.setAttribute('aria-modal','true');
-    o.innerHTML=`<div class="mhp"><h3>Section 89, day ${L.day} of 30 · ${hesc(L.p.name)}</h3><p>The 30 days end in ${L.left} day${L.left===1?'':'s'}. Choose what happens next. This cannot be closed without a choice.</p>
+    o.innerHTML=`<div class="mhp"><h3>Section 89, day ${L.day}${L.left>=0?' of 30':', past the 30 days'} · ${hesc(L.p.name)}</h3><p>${L.left>=0?'The 30 days end in '+L.left+' day'+(L.left===1?'':'s')+'.':'The 30 days ended '+(-L.left)+' day'+(L.left===-1?'':'s')+' ago.'} Choose what happens next. This cannot be closed without a choice.</p>
       <button class="btn pri" onclick="mhcaChoose('${L.p.id}','s90')">Apply for Section 90</button><button class="btn pri" onclick="mhcaChoose('${L.p.id}','indep')">Switch to independent admission (Form C)</button><button class="btn pri" onclick="mhcaChoose('${L.p.id}','dc')">Plan discharge</button></div>`;
     document.body.appendChild(o);
   }
@@ -118,9 +120,9 @@
     nrKeys.forEach(x=>todo.push({t:x[1],meta:'Nominated representative',done:M.nr[x[0]]&&M.nr[x[0]].at,go:'mhcaNr(\''+id+'\',\''+x[0]+'\')'}));
     (M.tasks||[]).forEach(t=>todo.push({t:t.text,meta:t.meta||'',done:t.done&&t.done.at,go:'mhcaTaskDone(\''+id+'\',\''+t.id+'\')'}));
     const rows=todo.map(r=>'<div class="mh-r'+(r.done?' d':'')+'"><span class="mh-ck">'+(r.done?'✓':'')+'</span><div class="mh-rt"><div>'+hesc(r.t)+'</div>'+(r.meta?'<div class="mh-ts">'+hesc(r.meta)+'</div>':'')+'</div>'+(r.done?'<span class="mh-ts">Done '+hesc(r.done)+'</span>':'<button class="btn sm" onclick="'+r.go+'">Mark done</button>')+'</div>').join('');
-    const pct=L.left!==null?Math.min(100,Math.round(L.day/30*100)):0;
+    const pct=L.left!==null?Math.min(100,Math.max(0,Math.round(L.day/30*100))):0;
     const sec=document.createElement('section');sec.className='card';sec.id='mhcaCard';
-    sec.innerHTML='<div class="hd"><div><h3>Legal status (MHCA)</h3><div class="small muted" style="margin-top:4px">'+hesc(SEC_TXT[L.sec]||'Section '+L.sec)+' · day '+L.day+(L.left!==null?' of 30 · <b style="color:'+(L.left<=5?'#b42318':'#344054')+'">'+L.left+' days left</b>':'')+'</div></div></div>'
+    sec.innerHTML='<div class="hd"><div><h3>Legal status (MHCA)</h3><div class="small muted" style="margin-top:4px">'+hesc(SEC_TXT[L.sec]||'Section '+L.sec)+' · day '+L.day+(L.left!==null?(L.left>=0?' of 30 · <b style="color:'+(L.left<=5?'#b42318':'#344054')+'">'+L.left+' days left</b>':' · <b style="color:#b42318">'+(-L.left)+' days past 30</b>'):'')+'</div></div></div>'
       +(L.left!==null?'<div class="mh-bar'+(L.left<=5?' w':'')+'"><i style="width:'+pct+'%"></i></div>':'')
       +'<div class="pad"><div class="mh-tiles">'+tiles.join('')+'</div>'+(rows?'<div class="mh-sub">To do</div><div class="mh-rows">'+rows+'</div>':'')+'</div>';
     const tabs=v.querySelector('.subtabs'),first=v.querySelector('section.card');/* inside Stay summary, under the tab row (QA 12 Nov) */

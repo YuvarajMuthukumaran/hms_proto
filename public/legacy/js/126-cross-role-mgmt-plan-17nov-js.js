@@ -7,10 +7,13 @@
   const px=()=>psyPx(S.pid);
   const esc=s=>hesc(String(s==null?'':s));
   const PSY_MP=[['dx','Diagnosis'],['goals','Goals of treatment'],['meds','Medicines and why'],['therapy','Therapies planned'],['risk','Risk management'],['mon','Monitoring'],['stay','Expected length of stay'],['dc','Plan for discharge'],['rev','Review date']];
-  const PSYCH_MP=[['formulation','Psychological formulation'],['goals','Goals of therapy'],['therapies','Therapies planned and how often'],['family','Family involvement'],['risk','Risks to watch for'],['review','Review date']];
+  const PSYCH_MP=[['therapyPlan','Therapy plan'],['formulation','Psychological formulation'],['goals','Goals of therapy'],['family','Family involvement'],['risk','Risks to watch for'],['assess','Planned assessments'],['acts','Planned behavioural activations'],['review','Review date']];
   function readOnlyCard(title,sub,fields,m){
-    const rows=fields.filter(([k])=>m&&m[k]).map(([k,l])=>`<div class="box small"><div class="lbl">${esc(l)}</div><div style="margin-top:4px">${esc(m[k])}</div></div>`).join('');
-    if(!rows)return '';
+    m=m||{};
+    const val=v=>Array.isArray(v)?v.join(', '):v;
+    const rows=fields.filter(([k])=>{const v=val(m[k]);return v&&String(v).trim();}).map(([k,l])=>`<div class="box small"><div class="lbl">${esc(l)}</div><div style="margin-top:4px">${esc(val(m[k]))}</div></div>`).join('');
+    /* 18 Nov 2026: the card is always there, so the other role's plan can be found even before it is written */
+    if(!rows)return `<section class="card" style="margin-top:14px"><div class="hd"><div><h3>${title}</h3><div class="small muted" style="margin-top:4px">${sub}</div></div></div><div class="pad"><div class="callout grey small">${/Psychologist/.test(title)?'The psychologist':'The psychiatrist'} has not written a plan for this stay yet.</div></div></section>`;
     const status=m.signed?`Signed by ${esc(m.signed.by)}, ${esc(m.signed.at)}.`:'Not signed yet.';
     return `<section class="card" style="margin-top:14px"><div class="hd"><div><h3>${title}</h3><div class="small muted" style="margin-top:4px">${sub}</div></div></div>
       <div class="pad grid2">${rows}</div>

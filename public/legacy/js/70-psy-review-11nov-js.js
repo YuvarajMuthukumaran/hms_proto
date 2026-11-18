@@ -707,7 +707,8 @@
   const laiPlan=d=>({consent:'Long acting injection consent · '+d,tests:d==='Paliperidone'?[['RFT','This week'],['Lipid profile','This week']]:[['LFT','This week'],['Lipid profile','This week']],
     tasks:['Check the oral '+d.toLowerCase()+' was tolerated before the first injection','Set the date of the next injection'].concat(d==='Olanzapine'?['Watch the patient for 3 hours after each injection (post-injection sedation or delirium)']:[])});
   const PLANS14={
-    'Clozapine':{consent:'Clozapine consent (patient and relative)',tests:[['CBC','Today']],tasks:['Weekly blood count (ANC) for the first 18 weeks','Baseline ECG and weight']},
+    /* 18 Nov 2026, Trello: baseline items together (CBC, ECG, weight), ongoing monitoring together (CBC / ANC); "CBC" not "blood count" */
+    'Clozapine':{consent:'Clozapine consent (patient and relative)',tests:[['CBC','Today'],['ECG','Today']],tasks:['Record the baseline weight','Weekly CBC (ANC) for the first 18 weeks'],groups:[{h:'Baseline, before the first dose',t:[0,1],k:[0]},{h:'Ongoing monitoring',t:[],k:[1]}]},
     'Injection consent':{consent:'Injection consent: in case of emergency and when oral medicines are refused (patient and relative)',tests:[],tasks:['Record every injection given because oral medicines were refused or in an emergency, with the reason']},
     'ECT':{consent:'ECT consent (patient and relative)',tests:[['ECG','Today'],['CBC','Today'],['RFT','Today']],tasks:['Pre-ECT work-up: anaesthetist review','Nil by mouth from midnight before the session']},
     'Ketamine therapy':{consent:'Ketamine treatment consent',tests:[['ECG','Today']],tasks:['Blood pressure and pulse before and after each session','Nothing to eat or drink before each session, as the anaesthetist advises']},
@@ -737,9 +738,9 @@
     openModal(`<div class="mh"><h3>Plan for ${hesc(kind)}</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
       <div class="mb"><div class="small muted">Tick what to create. These are starter tasks; the team will define the full algorithm for each plan later.</div>
         ${P.consent?`<label class="rx-m" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="pl_c" checked><span><b>Take consent</b> · ${hesc(P.consent)}<div class="tiny muted">A request goes to the front desk to take the family's signature.</div></span></label>`:''}
-        ${P.tests.length?`<div class="lbl" style="margin-top:8px">Blood tests and investigations</div>${P.tests.map((t,i)=>`<label class="row small" style="gap:8px;margin:4px 0"><input type="checkbox" id="pl_t${i}" checked>${hesc(t[0])} <span class="muted">· ${hesc(t[1])}</span></label>`).join('')}`:''}
+        ${P.groups?P.groups.map(g=>`<div class="lbl" style="margin-top:8px">${hesc(g.h)}</div>${g.t.map(i=>`<label class="row small" style="gap:8px;margin:4px 0"><input type="checkbox" id="pl_t${i}" checked>${hesc(P.tests[i][0])} <span class="muted">· ${hesc(P.tests[i][1])}</span></label>`).join('')}${g.k.map(i=>`<label class="row small" style="gap:8px;margin:4px 0"><input type="checkbox" id="pl_k${i}" checked>${hesc(P.tasks[i])}</label>`).join('')}`).join(''):`${P.tests.length?`<div class="lbl" style="margin-top:8px">Blood tests and investigations</div>${P.tests.map((t,i)=>`<label class="row small" style="gap:8px;margin:4px 0"><input type="checkbox" id="pl_t${i}" checked>${hesc(t[0])} <span class="muted">· ${hesc(t[1])}</span></label>`).join('')}`:''}
         <div class="lbl" style="margin-top:8px">Tasks for the team</div>
-        ${P.tasks.map((t,i)=>`<label class="row small" style="gap:8px;margin:4px 0"><input type="checkbox" id="pl_k${i}" checked>${hesc(t)}</label>`).join('')}</div>
+        ${P.tasks.map((t,i)=>`<label class="row small" style="gap:8px;margin:4px 0"><input type="checkbox" id="pl_k${i}" checked>${hesc(t)}</label>`).join('')}`}</div>
       <div class="mf"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri big" onclick="psyPlanCreate()">Create tasks</button></div>`);
   };
   window.psyPlanCreate=function(){

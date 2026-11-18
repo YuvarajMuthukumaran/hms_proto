@@ -75,7 +75,7 @@
   function prompts(name){
     const b=baseOf(name).toLowerCase(),out=[];if(!b)return out;
     if(b.startsWith('lithium'))out.push({id:'li',label:'Order serum lithium level (this week), plus kidney (RFT) and thyroid (TSH) tests at baseline',tests:[['Serum lithium','This week'],['RFT','Today'],['TSH','Today']]});
-    if(b.startsWith('clozapine'))out.push({id:'cz',req:true,label:'Blood count (ANC) schedule: weekly for the first 18 weeks. Required before continuing.',tests:[['CBC','Today']]});
+    if(b.startsWith('clozapine'))out.push({id:'cz',req:true,label:'CBC (ANC) schedule: weekly for the first 18 weeks. Required before continuing.',tests:[['CBC','Today']]});
     if(classOf(name)==='antipsychotic')out.push({id:'ap',label:'Metabolic baseline: weight, BMI, sugar and lipids',tests:[['Lipid profile','This week'],['Fasting sugar','This week']],note:'Weigh the patient and record BMI at baseline.'});
     return out;
   }
@@ -264,7 +264,7 @@
 
   /* ---------- Plan for ---------- */
   const PLANS={
-    'Clozapine':{consent:'Clozapine consent (patient and relative)',tests:[['CBC','Today']],tasks:['Weekly blood count (ANC) for the first 18 weeks','Baseline ECG and weight']},
+    'Clozapine':{consent:'Clozapine consent (patient and relative)',tests:[['CBC','Today'],['ECG','Today']],tasks:['Record the baseline weight','Weekly CBC (ANC) for the first 18 weeks']},
     'Ketamine':{consent:'Ketamine treatment consent',tests:[['ECG','Today']],tasks:['Blood pressure and pulse before and after each session','Nothing to eat or drink before each session, as the anaesthetist advises']},
     'ECT':{consent:'ECT consent (patient and relative)',tests:[['ECG','Today'],['CBC','Today'],['RFT','Today']],tasks:['Pre-ECT work-up: anaesthetist review','Nil by mouth from midnight before the session']},
     'Long acting injection':{consent:'Long acting injection consent',tests:[['LFT','This week'],['Lipid profile','This week']],tasks:['Check the oral medicine was tolerated before the first injection','Set the date of the next injection']}};
