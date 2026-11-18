@@ -428,6 +428,7 @@
   /* ---------- 6. Section strip: one line, a tick once you have moved on from a step, current step scrolled into view ---------- */
   const seenStore=()=>{const x=psyPx(S.pid);return x.hseen=x.hseen||{};};
   let lastSec=null,lastPid=null;
+  let centered=null;   /* 18 Nov 2026: the tab row slides to the current step only when the step changes, not on every tap */
   function stripPaint(){
     const nav=document.querySelector('#view .hrow11 .hnav');if(!nav)return;
     const cur=S.hsec||'id',btns=[...nav.querySelectorAll('button')];
@@ -447,7 +448,7 @@
       if(k===cur)b.setAttribute('aria-current','step');
     });
     const on=btns[ci];
-    if(on){const target=on.offsetLeft-(nav.clientWidth-on.offsetWidth)/2;try{nav.scrollTo({left:Math.max(0,target),behavior:'smooth'});}catch(e){nav.scrollLeft=Math.max(0,target);}}
+    if(on&&centered!==S.pid+'|'+cur){centered=S.pid+'|'+cur;const target=on.offsetLeft-(nav.clientWidth-on.offsetWidth)/2;try{nav.scrollTo({left:Math.max(0,target),behavior:'smooth'});}catch(e){nav.scrollLeft=Math.max(0,target);}}
   }
   const __rStrip=render;
   render=function(){const r=__rStrip.apply(this,arguments);if(admLook()){try{stripPaint();}catch(e){}}return r;};

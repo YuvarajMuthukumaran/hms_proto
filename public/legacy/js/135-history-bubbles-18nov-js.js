@@ -19,8 +19,10 @@
     }
   }catch(e){}
 
+  /* Mental status examination: the multi-answer questions are bubbles too, with the same indent */
+  try{const m2=HIST.find(x=>x.k==='mse');if(m2)m2.f.forEach(f=>{if((f[1]==='m'||f[1]==='o')&&Array.isArray(f[2]))CHG.add(f[0]);});}catch(e){}
   /* the bubbles sit a little to the right of the heading so the question and its options read apart */
-  {const c=document.createElement('style');c.textContent='.pm-ob .mini-chips{padding-left:30px;margin-top:8px;gap:8px}.pm-ob{margin-bottom:6px}';document.head.appendChild(c);}
+  {const c=document.createElement('style');c.textContent='.pm-ob .mini-chips{padding-left:30px;margin-top:8px;gap:8px}.pm-ob{margin-bottom:6px}.hwrap .hf>.mini-chips{padding-left:30px;margin-top:8px;gap:8px}';document.head.appendChild(c);}
   const LBL=[];const li=l=>{let i=LBL.indexOf(l);if(i<0){LBL.push(l);i=LBL.length-1;}return i;};
   const __fld=fld;
   fld=function(f,ro){
