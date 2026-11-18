@@ -7,7 +7,8 @@
   if(!/^(psychiatrist|psychologist)$/.test(String((window.__TULASI__||{}).role||'')))return;
   const E=s=>hesc(String(s==null?'':s));
   const hf=()=>{const x=psyPx(S.pid);return x.hf=x.hf||{};};
-  const CHG=new Set(['Socialising with people','Interest in work','Self-confidence','Enthusiasm or optimism','Experiencing pleasure','Appetite','Libido','Sexual functions','Sleep']);
+  const CHG=new Set(['Socialising with people','Interest in work','Self-confidence','Enthusiasm or optimism','Experiencing pleasure','Appetite','Libido','Sexual functions','Sleep',
+    'Social relations','Intellectual activities, hobbies and use of leisure time','Predominant mood','Character: attitude to self','Character: attitude to work and responsibility','Character: interpersonal relationships','Character: standards in moral, religious and health matters','Character: energy, initiative','Fantasy life','Habits',"Examiner's impression"]);
   try{
     const mse=HIST.find(x=>x.k==='mse');
     if(mse&&!mse.__pmPerc){
