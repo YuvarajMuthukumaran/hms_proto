@@ -8,8 +8,8 @@
   const css=document.createElement('style');css.id='pmp-subq-css';
   css.textContent=`
   .hf.pmp-sub{counter-increment:hq 0 hsub 1!important}
-  .hf.pmp-sub-first{counter-reset:hsub 1}
-  .hf.pmp-sub>.lbl:first-child::before{content:counter(hq) counter(hsub,upper-alpha)!important}
+  .hf.pmp-sub-first{counter-reset:hsub 0!important;counter-increment:hq 1 hsub 1!important}
+  .hf.pmp-sub>.lbl:first-child::before{content:counter(hq) counter(hsub,lower-alpha)!important}
   `;
   document.head.appendChild(css);
   function tag(){
