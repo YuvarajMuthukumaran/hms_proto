@@ -45,7 +45,9 @@
       const sg=sug.filter(x=>String(x.at||'').indexOf(v[0])===0).map(x=>esc(x.when)+' '+esc(x.v)).join('<br>');
       return `<tr class="first"><td class="d">${esc(v[0])}</td><td class="t">${esc(v[7]||'—')}</td><td${outR.bp(v[1])?' class="outc"':''}>${cellV(v[1],outR.bp(v[1]),ini,who)}</td><td>${cellV(v[2],outR.hr(v[2]),ini,who)}</td><td>${cellV(rr,rr&&outR.rr(rr),ini,who)}</td><td>${cellV(v[3],outR.t(v[3]),ini,who)}</td><td>${cellV(v[4],outR.o2(v[4]),ini,who)}</td><td><b>${esc(news)}</b></td><td>${cellV(v[5],0,'','')}</td><td>${cellV(v[6],0,'','')}</td><td class="small">${sg||'<span class="none">—</span>'}</td></tr>`;
     }).join('');
-    tb.innerHTML='<thead>'+head+'</thead><tbody>'+(body||'<tr><td colspan="11" class="muted small">No readings yet. The nurse or RMO adds them with Add vitals.</td></tr>')+'</tbody>';
+    /* a sugar reading with no vitals reading on its day still gets its own row */
+    const extra=sug.filter(x=>!rows.some(v=>String(x.at||'').indexOf(v[0])===0)).map(x=>`<tr class="first"><td class="d">${esc(String(x.at||'').split(',')[0])}</td><td class="t">${esc(String(x.at||'').split(',')[1]||'—')}</td><td colspan="8"><span class="none">—</span></td><td>${esc(x.when)} ${esc(x.v)}</td></tr>`).join('');
+    tb.innerHTML='<thead>'+head+'</thead><tbody>'+((body+extra)||'<tr><td colspan="11" class="muted small">No readings yet. The nurse or RMO adds them with Add vitals.</td></tr>')+'</tbody>';
     const note=card.querySelector('.hd .tiny');if(note)note.textContent='One row per reading, with the time and who took it. Out of range in red. NEWS2 is worked out from the reading.';
   }
   const __rh=render;
