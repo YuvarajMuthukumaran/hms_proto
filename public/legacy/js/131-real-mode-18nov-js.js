@@ -26,6 +26,7 @@
 
   /* ---------- 5. Form C is not offered for Section 89 (every login that shows the Admission steps) ---------- */
   function hideFormC(){
+    return;   /* 18 Nov 2026: Form C is shown again for every patient (Yuvaraj) */
     const v=document.getElementById('view');if(!v)return;
     const m=String(location.hash||'').match(/^#\/patient\/([^/?]+)/);if(!m)return;
     let p=null;try{p=ptFind(decodeURIComponent(m[1]));}catch(e){}
