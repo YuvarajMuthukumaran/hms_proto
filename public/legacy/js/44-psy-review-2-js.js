@@ -352,9 +352,7 @@
   /* ---------- Admission workup: Fill form and Read only ----------
      The fields are kept in the patient's own record as you type (no Save button); the last editor and time are shown.
      Neel Bose keeps the workup that was signed on 18 Oct; other patients start empty (they used to show his text by mistake). */
-  /* 18 Nov 2026, Trello "risk of self harm": same options as the OPD doctor panel (risk of harm: None / Low / Moderate / High, and what the risk is for) */
-  const RISKS=['None','Low','Moderate','High'];
-  const RISK_WHY=['Self-harming thoughts/behaviours','Harm to others','Absconding','Self-neglect','Substance use','Other'];
+  const RISKS=['Low','Moderate','High'];
   function wkData(){
     const x=px();
     if(!x.wk){
@@ -364,16 +362,12 @@
     }
     return x.wk;
   }
-  const riskText=w=>(w.others||w.self)?'Harm to others: '+(w.others||'not recorded').toLowerCase()+' · suicide / self-harm: '+(w.self||'not recorded').toLowerCase()+(w.selfWhy?' ('+w.selfWhy.toLowerCase()+')':''):'';
-  window.psyWk=function(k,v){const w=wkData();w[k]=v;w.edited=true;w.by=signer();w.at=atNow();w.signed=false;const e=document.getElementById('wkEdited');if(e)e.textContent='Edited by '+w.by+', '+w.at;
-    /* 18 Nov 2026: the risk picked here sets Risk of harm in the patient header, same as the risk screen */
-    if((k==='self'||k==='selfWhy')&&w.self){const x=px(),lv=w.self==='None'?'Low':w.self;x.suicide=x.suicide||[];const l0=x.suicide[0];if(l0&&l0.wk&&l0.date===new Date().toDateString()){l0.level=lv;l0.reason=w.selfWhy||'';l0.at=atNow();}else x.suicide.unshift({at:atNow(),date:new Date().toDateString(),by:signer(),ans:[],level:lv,reason:w.selfWhy||'',note:'Admission workup',wk:1});x.riskLevel=lv;if(k==='self')render();}};
+  const riskText=w=>(w.others||w.self)?'Harm to others: '+(w.others||'not recorded').toLowerCase()+' · suicide: '+(w.self||'not recorded').toLowerCase():'';
+  window.psyWk=function(k,v){const w=wkData();w[k]=v;w.edited=true;w.by=signer();w.at=atNow();w.signed=false;const e=document.getElementById('wkEdited');if(e)e.textContent='Edited by '+w.by+', '+w.at;};
   window.psyWkInv=function(name,on){const w=wkData();w.inv=(w.inv||[]).filter(i=>i!==name);if(on)w.inv.push(name);psyWk('inv',w.inv);};
-  const WK_ROUTINE_INV=['CBC','LFT','RFT','Lipid profile','HbA1c','Fasting sugar','TSH','ECG','VDRL','HIV','HBsAg','HCV'];   /* 18 Nov 2026: VDRL, HIV, HBsAg and HCV are part of the routine admission investigations */
+  const WK_ROUTINE_INV=['CBC','LFT','RFT','Lipid profile','HbA1c','Fasting sugar','TSH','ECG'];
   window.psyWkRoutine=function(){const w=wkData();w.inv=[...new Set([...(w.inv||[]),...WK_ROUTINE_INV])];psyWk('inv',w.inv);render();toast('Routine admission investigations added');};
   window.psyWkView=function(v){S.wkView=v;render();};
-  /* 18 Nov 2026: any other test is picked from the list (or typed) and added; it used to be a text box that did nothing */
-  window.psyWkAddOther=function(){const i=document.getElementById('wkInvQ'),v=((i&&i.value)||'').trim();if(!v){toast('Type or pick a test first');return;}const w=wkData();if(!(w.inv||[]).includes(v)){w.inv=[...(w.inv||[]),v];psyWk('inv',w.inv);}render();toast(v+' added to the investigations');};
   function workupCard(isPsyUser){
     const w=wkData(),v=S.wkView==='form'?'form':'read',full=!!S.admFull;
     const seg=`<div class="seg" style="align-self:flex-start;min-width:240px"><button class="${v==='read'?'on':''}" onclick="psyWkView('read')">Read only</button><button class="${v==='form'?'on':''}" onclick="psyWkView('form')">Fill form</button></div>`;
@@ -403,11 +397,10 @@
       body=`<div class="pad grid2">
         <label class="field" style="grid-column:1/-1"><span class="lbl">Reason for admission</span><textarea class="input" rows="2" oninput="psyWk('reason',this.value)" placeholder="Why the patient is being admitted, and for how long the symptoms have been there">${hesc(w.reason||'')}</textarea></label>
         <label class="field"><span class="lbl">Risk of harm to others</span>${sel('others',w.others)}</label>
-        <label class="field"><span class="lbl">Risk of suicide / self-harm</span>${sel('self',w.self)}</label>
-        <label class="field"><span class="lbl">What the risk is for</span><select class="input" onchange="psyWk('selfWhy',this.value)"><option value="">Choose…</option>${RISK_WHY.map(r=>`<option ${w.selfWhy===r?'selected':''}>${r}</option>`).join('')}</select></label>
+        <label class="field"><span class="lbl">Risk of suicide</span>${sel('self',w.self)}</label>
         <label class="field" style="grid-column:1/-1"><span class="lbl">Physical examination</span><textarea class="input" rows="2" oninput="psyWk('exam',this.value)" placeholder="Findings, BP, pulse">${hesc(w.exam||'')}</textarea></label>
-        <div class="field" style="grid-column:1/-1"><div class="row" style="justify-content:space-between;gap:8px;margin-bottom:6px"><span class="lbl">Investigations sent</span><button class="btn sm" type="button" onclick="psyWkRoutine()">Add routine investigations</button></div><div class="mini-chips">${INV.concat((w.inv||[]).filter(n=>!INV.includes(n))).map(n=>`<button class="tog ${(w.inv||[]).includes(n)?'on':''}" style="height:30px;font-size:12.5px" onclick="psyWkInv('${n}',!this.classList.contains('on'));this.classList.toggle('on')">${n}</button>`).join('')}</div>
-          <div class="row" style="gap:8px;margin-top:6px"><input class="input" id="wkInvQ" list="wkInvAll" placeholder="Type to search any other test, then press Add" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();psyWkAddOther()}"><datalist id="wkInvAll">${(window.INV_ALL||[]).map(n=>`<option value="${n}">`).join('')}</datalist><button class="btn sm" type="button" onclick="psyWkAddOther()">Add</button></div></div>
+        <div class="field" style="grid-column:1/-1"><div class="row" style="justify-content:space-between;gap:8px;margin-bottom:6px"><span class="lbl">Investigations sent</span><button class="btn sm" type="button" onclick="psyWkRoutine()">Add routine investigations</button></div><div class="mini-chips">${INV.map(n=>`<button class="tog ${(w.inv||[]).includes(n)?'on':''}" style="height:30px;font-size:12.5px" onclick="psyWkInv('${n}',!this.classList.contains('on'));this.classList.toggle('on')">${n}</button>`).join('')}</div>
+          <input class="input" style="margin-top:6px" placeholder="Any other test" value="${hesc(w.invOther||'')}" oninput="psyWk('invOther',this.value)"></div>
         ${alHtml}${injuryBox()}${chartHtml}</div>`;
     }
     return `<section class="card ${full?'adm-full':''}" id="workupCard"><div class="hd"><div><h3>Admission workup</h3><div style="margin-top:4px">${status}</div></div>

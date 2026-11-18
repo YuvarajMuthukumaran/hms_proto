@@ -38,25 +38,18 @@ html.embed body{background:transparent}
 <script>
 /* Only the patient experience team's own work. Doctor and psychologist tables, NPS detail and doctor-owned steps
    belong to a separate management view for Niki and Chandraji. Demo numbers; training numbers come from the Staff training page. */
-/* 18 Nov 2026: the period labels are today's week (Monday to Sunday) and last calendar month */
-const MN3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const WK=(function(){const t=new Date();t.setHours(0,0,0,0);const m=new Date(t);m.setDate(t.getDate()-((t.getDay()+6)%7));const e=new Date(m);e.setDate(m.getDate()+6);return m.getDate()+(m.getMonth()!==e.getMonth()?' '+MN3[m.getMonth()]:'')+' to '+e.getDate()+' '+MN3[e.getMonth()]+' '+e.getFullYear();})();
-const MO=(function(){const t=new Date(),a=new Date(t.getFullYear(),t.getMonth()-1,1),b=new Date(t.getFullYear(),t.getMonth(),0);return '1 to '+b.getDate()+' '+MN3[a.getMonth()]+' '+a.getFullYear();})();
 const PER={
- week:{label:'This week',dates:WK,vs:'vs last week',
+ week:{label:'This week',dates:'9 to 15 Nov 2026',vs:'vs last week',
   tiles:{calls:[7,12,5,12],closed:[9,11,8,11],fb:[5,7,4,7,'NPS +58','NPS +51'],},
   steps:[['Family met at admission',100,100],['Rights explained to patient and rep',86,80],['Met the patient on day 1 or 2',75,70],['Preferences taken',92,90],['Random calls 1 and 2',58,50],['Discharge meeting and feedback',80,75]],
   themes:[['Family updates too general',4,'Psychologist team lead reminded. Nurse session on 8 pm updates planned.'],['Meals served cold',3,'Kitchen supervisor changed the tray order. Checked on the next round.'],['Doctor has not called',2,'Treating psychiatrists reminded. Day 3 to 4 calls now on their Today list.']]},
- month:{label:'Last month',dates:MO,vs:'vs the month before',
+ month:{label:'Last month',dates:'1 to 31 Oct 2026',vs:'vs the month before',
   tiles:{calls:[26,40,22,40],closed:[34,41,30,40],fb:[19,26,17,25,'NPS +54','NPS +49']},
   steps:[['Family met at admission',97,95],['Rights explained to patient and rep',82,78],['Met the patient on day 1 or 2',71,66],['Preferences taken',90,88],['Random calls 1 and 2',55,48],['Discharge meeting and feedback',78,76]],
   themes:[['Family updates too general',11,'Weekly update draft added for psychologists.'],['Meals served cold',8,'Kitchen supervisor reviewing the tray order.'],['Room too noisy at night',6,'Night nurses briefed. Housekeeping checks the corridor.']]}};
 /* real mode (16 Nov): the demo numbers, themes and compliments are dropped; only what is really logged counts */
 if(window.PX_REAL){const z=P=>{P.tiles.calls=[0,0,0,0];P.tiles.closed=[0,0,0,0];P.tiles.fb=[0,0,0,0,'NPS: no answers yet','NPS: no answers yet'];P.steps=P.steps.map(s=>[s[0],0,0]);P.themes=[];};z(PER.week);z(PER.month);}
 const NPAT=window.PX_REAL?Math.max(1,(window.HMS_PATIENTS.patients||[]).length):34;
-/* steps on time, counted from the stay steps marked done on Patients (px_steps_v1): done of the patients the step is already due for. Real mode only. */
-if(window.PX_REAL){try{const DONE=JSON.parse(localStorage.getItem('px_steps_v1')||'{}')||{},PT=(window.HMS_PATIENTS.patients||[]);const IDX={'Family met at admission':[0,0],'Rights explained to patient and rep':[3,0],'Met the patient on day 1 or 2':[4,2],'Preferences taken':[5,2],'Discharge meeting and feedback':[12,99]};
-  PER.week.steps=PER.week.steps.map(s=>{const m=IDX[s[0]];if(!m)return s;const due=PT.filter(p=>(+p.day||0)>=m[1]);const ok=due.filter(p=>DONE[p.id+m[0]]).length;return [s[0],due.length?Math.round(ok/due.length*100):0,0];});}catch(e){}}
 /* random calls this week: counted from the calls logged in Today, Patients, Rounds and the Log button (2 per admitted patient) */
 try{let n=0;const M=JSON.parse(localStorage.getItem('px_calls_main_v1')||'{}')||{};Object.keys(M).forEach(k=>(M[k]||[]).forEach(l=>{if(l&&l.rc)n++;}));(JSON.parse(localStorage.getItem('px_calls_v1')||'[]')||[]).forEach(c=>{if(c&&c.outcome==='Connected')n++;});const T=PER.week.tiles.calls;PER.week.tiles.calls=[n,window.PX_REAL?NPAT*2:34,T[2],T[3]];}catch(e){}
 const COMPL=[{id:'c1',who:'Sister Rekha',team:'Nurses',words:'She sat with my daughter on the first night. We felt safe leaving her.',by:'S. Iyer, father'},
@@ -82,7 +75,7 @@ function csv(){const P=PER[S.per],T=P.tiles;const rows=[['Patient Experience rep
 function render(){const P=PER[S.per],T=P.tiles;
  const tile=(l,v,of,sub)=>`<div class="tile"><span class="l">${l}</span><b>${v}${of!=null?' <span class="muted" style="font-size:15px;font-weight:600">of '+of+'</span>':''}</b>${sub}</div>`;
  document.getElementById('root').innerHTML=`
- <div class="hello"><div><h2>Reports</h2><div class="muted">${P.label}, ${P.dates}. Your own work only. Nothing here is typed in.</div><div class="small muted" style="margin-top:4px">Counted from what is logged: random calls, concerns closed (Grievances), discharge feedback, compliments and staff training. ${window.PX_REAL?'The steps-on-time bars come from the stay steps marked done on Patients.':'The steps-on-time bars other than random calls are demo numbers.'}</div></div>
+ <div class="hello"><div><h2>Reports</h2><div class="muted">${P.label}, ${P.dates}. Your own work only. Nothing here is typed in.</div><div class="small muted" style="margin-top:4px">Counted from what is logged: random calls, concerns closed (Grievances), discharge feedback, compliments and staff training. The steps-on-time bars other than random calls are ${window.PX_REAL?'zero':'demo numbers'} until the stay steps are logged in the HMS.</div></div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><div class="seg"><button class="${S.per==='week'?'on':''}" data-per="week">This week</button><button class="${S.per==='month'?'on':''}" data-per="month">Last month</button></div><button class="btn" data-dl="1">Download for ops review</button></div></div>
  <div class="tiles">
   ${tile('Random calls done',T.calls[0],T.calls[1],chg(pc(T.calls[0],T.calls[1]),pc(T.calls[2],T.calls[3]),'%'))}

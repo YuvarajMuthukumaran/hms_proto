@@ -59,12 +59,11 @@
     const addTag=`<button class="c" style="border:1px dashed var(--line);background:#fff;color:var(--muted)" title="Mark this patient as high risk for something" onclick="psyRiskTags('${pid}')">+ Risk tag</button>`;
     return `<div class="sf" aria-label="Patient safety">${a}<span class="c ${lg[0]}">${hesc(lg[1])}</span>${o}${r}${tg}${addTag}</div>`;
   };
-  const RISK_TAGS=['Self-harm','Absconding','Poor Compliance','Agitation','Sexual Disinhibition','Medical Instability','Legal Case'];   /* 18 Nov 2026: wording from Anu's screenshot */
+  const RISK_TAGS=['Self-harm','Absconding','Poor compliance','Violence','Sexual dysregulation'];
   window.psyRiskTags=function(pid){
-    const OLD={'Poor compliance':'Poor Compliance','Violence':'Agitation','Sexual dysregulation':'Sexual Disinhibition'};
-    const x=pxOf(pid),cur=(x.riskTags||[]).map(t=>OLD[t]||t);
+    const x=pxOf(pid),cur=x.riskTags||[];
     V3.modal('High risk tags · '+hesc(V3.pn(pid)),'Tick what this patient is at high risk of. The tags show in the patient header.',
-      RISK_TAGS.map((t,i)=>`<label class="row" style="gap:10px;margin:8px 0"><input type="checkbox" class="rkt" data-t="${hesc(t)}" ${cur.includes(t)?'checked':''}><b>${hesc(t)}</b></label>`).join(''),
+      RISK_TAGS.map((t,i)=>`<label class="row" style="gap:10px;margin:8px 0"><input type="checkbox" class="rkt" data-t="${hesc(t)}" ${cur.includes(t)?'checked':''}><b>High risk of ${hesc(t.toLowerCase())}</b></label>`).join(''),
       `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="psyRiskTagsSave('${pid}')">Save</button>`);
   };
   window.psyRiskTagsSave=function(pid){

@@ -18,18 +18,13 @@
   const pt=pid=>PTS.find(p=>p.id===pid)||{id:pid,name:pid,day:0,dx:''};
   const myPts=()=>kind()==='psychologist'?PSY_EOD():PTS;
   const hrs=ms=>Math.round(ms/3600000);
-  /* 18 Nov 2026: the same alert is never raised twice for a patient, even when the day count in its title has moved on (113 days / 114 days) or the page was reloaded */
-  const sig=t=>String(t).replace(/\d+/g,'#');
-  const alertOnce=(key,pid,title,detail,src)=>{const a=au();a.esc=a.esc||{};if(a.esc[key])return;a.esc[key]=1;try{if(v3().alerts.some(x=>!x.closed&&x.pid===pid&&sig(x.title)===sig(title)))return;V3.alert({pid,sev:'urgent',title,detail,src:src||'Notes',by:'System'});}catch(e){}};
+  const alertOnce=(key,pid,title,detail,src)=>{const a=au();a.esc=a.esc||{};if(a.esc[key])return;a.esc[key]=1;try{V3.alert({pid,sev:'urgent',title,detail,src:src||'Notes',by:'System'});}catch(e){}};
   const row=(left,right)=>`<div class="row small" style="gap:10px;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #eef1f5"><span>${left}</span><span style="display:flex;gap:6px;align-items:center;flex:none">${right||''}</span></div>`;
   const chipx=(t,c)=>`<span class="au-ch ${c||''}">${hesc(t)}</span>`;
   const route=()=>{const m=String(location.hash||'').match(/^#\/patient\/([^/?]+)\/([^/?]+)/);return m?{pid:m[1],tab:m[2]}:null;};
 
   /* ======================= 113 notes nudges ======================= */
-  /* 18 Nov 2026: a daily note also counts when it is in the patient's saved daily notes for today (S.eod is only this session's memory, so Today asked for a note that the Daily notes page already showed) */
-  const dnToday=pid=>{let ok=false;try{const d=new Date(),day=String(d.getDate()),my=d.toLocaleString('en-GB',{month:'short'})+' '+d.getFullYear();ptRun(pid,()=>{ok=(S.dnHist||DN_HIST).some(n=>n.d===day&&n.my===my&&!n.late);return '';});}catch(e){}return ok;};
-  const clk=p=>window.__stayClock?__stayClock(p).clock:(+(p&&p.day)||0),legacy=p=>window.__stayClock?!!__stayClock(p).legacy:false;
-  const noted=pid=>!!((S.eod||{})[pid]||{}).saved||dnToday(pid)||!!((psyPx(pid).sn||{}).notes||[]).some(n=>n.ts&&new Date(n.ts).toDateString()===new Date().toDateString());
+  const noted=pid=>!!((S.eod||{})[pid]||{}).saved||!!((psyPx(pid).sn||{}).notes||[]).some(n=>n.ts&&new Date(n.ts).toDateString()===new Date().toDateString());
   const seedDrafts=()=>{const a=au();if(!a.drafts){const t=Date.now();a.drafts=[
     {id:'d1',pid:'arjun',title:'Round note',role:'psychiatrist',at:t-30*3600000,signed:null},
     {id:'d2',pid:'neel',title:'Daily note',role:'psychiatrist',at:t-52*3600000,signed:null},
@@ -40,7 +35,7 @@
   /* one overdue calculation everywhere: Neel's header says 1 day late, so the same number is used here */
   const lateDays=(pid,key,d,due)=>pid==='neel'&&key==='hist'?1:Math.max(1,d-due);
   /* 17 Nov 2026, Trello: Detailed history is assigned to the psychologist only, not the psychiatrist */
-  const dueDates=()=>{const out=[];myPts().forEach(p=>{const d=clk(p);
+  const dueDates=()=>{const out=[];myPts().forEach(p=>{const d=+p.day||0;
     [['hist','Detailed history',3,'admission'],['plan','Management plan',7,'therapy']].forEach(k=>{if((k[0]==='hist'&&kind()!=='psychologist')||formSigned(p.id,k[0])||d>7)return;const left=d>k[2]?-lateDays(p.id,k[0],d,k[2]):k[2]-d;out.push({pid:p.id,key:k[0],label:k[1],left,name:p.name,tab:k[3]});});});return out;};
   function nudgeLevel(){const h=hr();return h>=21?3:h>=18?2:h>=16?1:0;}
   function nnTasks(){const out=[],k=kind();if(!k)return out;
@@ -75,7 +70,7 @@
   /* SOP 3: consultant review at least twice a week; nudge at 4 days, floor lead at 5 days; 5 field template; high risk: risk discussed with family */
   const CR_FIELDS=[['status','Current clinical status'],['effects','Side effects or complications'],['invest','Investigations needed'],['plan','Change in management plan'],['advice','Any other advice']];
   const CR_SEED={arjun:1,varun:4,kabir:2,sameer:5,neel:1,dev:3,tarun:6,rohit:0};
-  const crDays=pid=>{const a=au();a.cr=a.cr||{};const c=a.cr[pid];if(c&&c.at)return Math.floor((nowMs()-c.at)/86400000);return CR_SEED[pid]!==undefined?CR_SEED[pid]+Math.floor((au().skip||0)/24):clk(pt(pid)||{});};
+  const crDays=pid=>{const a=au();a.cr=a.cr||{};const c=a.cr[pid];if(c&&c.at)return Math.floor((nowMs()-c.at)/86400000);return CR_SEED[pid]!==undefined?CR_SEED[pid]+Math.floor((au().skip||0)/24):(+((pt(pid)||{}).day)||0);};
   const needRisk=pid=>!!pt(pid).risk&&!((au().rf||{})[pid]);
   const crDue=()=>kind()==='psychiatrist'?PTS.filter(p=>(+p.day||0)>=1&&crDays(p.id)>=4):[];
   const riskDue=()=>kind()==='psychiatrist'?PTS.filter(p=>needRisk(p.id)):[];
@@ -94,12 +89,12 @@
 
   /* ======================= 114 family updates automation ======================= */
   const FAM_SEED={varun:{c24:false},sameer:{c34:false}};
-  const famState=pid=>{const a=au(),px=(typeof psyPx==='function')?psyPx(pid):null;if(px&&px.fam){a.fam[pid]=px.fam;return px.fam;}if(!a.fam[pid]){const p=pt(pid),d=+p.day||0,s=FAM_SEED[pid]||{};a.fam[pid]=p.real?{c24:'',c34:'',weeks:Math.floor(clk(p)/7),log:[]}/* 18 Nov 2026: a real patient's calls are never pre-ticked as done */:{c24:d>=2&&s.c24!==false?'Seeded':'',c34:d>=5&&s.c34!==false?'Seeded':'',weeks:Math.max(0,Math.floor(d/7)-(d>=14&&pid==='kabir'?1:0)),log:[]};}if(px)px.fam=a.fam[pid];return a.fam[pid];}; /* 16 Nov: kept in the patient's saved working notes (psyx) so a family call log survives a reload and shows on every device */
-  const famRows=()=>{const out=[];myPts().forEach(p=>{const d=clk(p),f=famState(p.id),k=kind();if(legacy(p)&&k==='psychiatrist')return; /* 18 Nov: the 24 hour and day 3 to 4 calls are for a new admission, not for a patient who was already in the ward when the portal started */
+  const famState=pid=>{const a=au(),px=(typeof psyPx==='function')?psyPx(pid):null;if(px&&px.fam){a.fam[pid]=px.fam;return px.fam;}if(!a.fam[pid]){const p=pt(pid),d=+p.day||0,s=FAM_SEED[pid]||{};a.fam[pid]={c24:d>=2&&s.c24!==false?'Seeded':'',c34:d>=5&&s.c34!==false?'Seeded':'',weeks:Math.max(0,Math.floor(d/7)-(d>=14&&pid==='kabir'?1:0)),log:[]};}if(px)px.fam=a.fam[pid];return a.fam[pid];}; /* 16 Nov: kept in the patient's saved working notes (psyx) so a family call log survives a reload and shows on every device */
+  const famRows=()=>{const out=[];myPts().forEach(p=>{const d=+p.day||0,f=famState(p.id),k=kind();
     if(k==='psychiatrist'){
       if(!f.c24)out.push({pid:p.id,name:p.name,what:'24 hour call',key:'c24',late:d>=2,due:d>=2?'Overdue':'Due today'});
       if(!f.c34&&d>=3)out.push({pid:p.id,name:p.name,what:'Day 3 to 4 call',key:'c34',late:d>=5,due:d>=5?'Overdue':'Due today'});}
-    else{ if(!f.c34&&d>=3&&!legacy(p))out.push({pid:p.id,name:p.name,what:'Day 3 to 4 call',key:'c34',late:d>=5,due:d>=5?'Overdue':'Due today'});
+    else{ if(!f.c34&&d>=3)out.push({pid:p.id,name:p.name,what:'Day 3 to 4 call',key:'c34',late:d>=5,due:d>=5?'Overdue':'Due today'});
       const wk=Math.floor(d/7);if(wk>f.weeks)out.push({pid:p.id,name:p.name,what:'Week '+wk+' update',key:'wk',late:false,due:'Due this week'});}});return out;};
   const famTasks=()=>famRows().map(r=>({id:'fa_'+r.pid+r.key,late:r.late,title:r.what+' · '+r.name,meta:'Required family contact',due:r.due,go:'#/patient/'+r.pid+'/prefs'}));
   window.faCall=function(pid,key){const p=pt(pid);

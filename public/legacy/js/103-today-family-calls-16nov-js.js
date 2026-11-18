@@ -33,8 +33,7 @@
    every row gets a mock type, a mock event line and a mock "action taken by others" in a repeating pattern. Every mock text ends with "(mock)".
    Nothing is saved or sent: the rows are drawn after the page and the mock lines have no buttons. Set MOCK_TODAY to false (or delete this block) to remove it. */
 (function(){
-  /* 18 Nov 2026, Trello "real data mode still shows demo data": switched off. Real patients show only real items, never a "(mock)" row. */
-  const MOCK_TODAY=false;
+  const MOCK_TODAY=true;
   if(!MOCK_TODAY||!window.__realMode)return;
   if(String((window.__TULASI__||{}).role||'')!=='psychiatrist')return;
   const SC=[

@@ -319,14 +319,13 @@ body.psy-views:not(.psg) #view .ecard .epat>div>div:first-child{font-size:15px!i
 .byl{display:block;font-size:11.5px;font-weight:400;color:var(--muted,#667085);line-height:1.35;margin-top:2px}
 .mar2 th,.mar2 td{min-width:44px;text-align:center}.mar2 .marmed{position:sticky;left:0;z-index:2;background:#fff;min-width:230px;max-width:260px;text-align:left;vertical-align:top}.mar2 th.marmed{background:inherit}.mar2 .martime{position:sticky;left:230px;z-index:2;background:#fff;min-width:70px;white-space:nowrap}.mar-when{font-size:11.5px;line-height:1.4;margin-top:6px}.mar-stop{color:#b42318}.mar-offrow .marmed{background:#fffafa}td.moffc{background:repeating-linear-gradient(135deg,#f2f4f7 0 6px,#e4e7ec 6px 7px)}td.moffc span{font-size:10px;color:#b42318;font-weight:600}.moff-key{display:inline-block;width:14px;height:14px;border-radius:3px;background:repeating-linear-gradient(135deg,#f2f4f7 0 4px,#d0d5dd 4px 5px)}
 .mchart .mscroll{overflow-x:auto;max-width:100%;border-top:1px solid var(--line-2)}
-/* 18 Nov 2026: day columns keep a fixed width and the chart scrolls sideways (fixed table layout squeezed 100+ days into the pop-up and the dates overlapped) */
-.mar4{border-collapse:separate;border-spacing:0;table-layout:auto;width:max-content;min-width:100%;font-size:13px}
+.mar4{border-collapse:separate;border-spacing:0;table-layout:fixed;width:100%;min-width:max-content;font-size:13px}
 .mar4 th,.mar4 td{border-bottom:1px solid var(--line-2);border-right:1px solid var(--line-2);padding:4px;text-align:center;vertical-align:middle;background:#fff}
 .mar4 thead th{background:var(--soft,#f7f9fc);font-size:11px;font-weight:600;color:var(--muted,#667085)}
 .mar4 .mmed{position:sticky;left:0;z-index:3;width:240px;min-width:240px;max-width:240px;text-align:left;vertical-align:top;padding:10px 12px}
 .mar4 .mtime{position:sticky;left:240px;z-index:3;width:58px;min-width:58px;max-width:58px;font-size:12px;color:var(--muted,#667085);white-space:nowrap;box-shadow:4px 0 6px -4px rgba(15,23,42,.18)}
 .mar4 thead .mmed,.mar4 thead .mtime{z-index:4;background:var(--soft,#f7f9fc)}
-.mar4 .mday{width:46px;min-width:46px;max-width:46px;box-sizing:border-box}.mar4 .mmon{text-align:left;padding-left:8px;font-size:11.5px;color:var(--ink,#101828)}.mar4 .mmon span{position:sticky;left:306px;padding-right:6px;white-space:nowrap}
+.mar4 .mday{min-width:46px}.mar4 .mmon{text-align:left;padding-left:8px;font-size:11.5px;color:var(--ink,#101828)}.mar4 .mmon span{position:sticky;left:306px;padding-right:6px;white-space:nowrap}
 .mar4 .mtoday{background:#eef4ff}.mar4 thead .mtoday{color:#1849a9}
 /* bold line between two medicines, normal lines between the frequency rows of one medicine (Trello: nursing chart in Orders and consents) */
 .mar4 tr.mlast td{border-bottom:2px solid #667085}

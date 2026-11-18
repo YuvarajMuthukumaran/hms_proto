@@ -147,6 +147,3 @@
     fix: function (list, m) { list.forEach(function (x) { var h = by[x.name || x.p]; if (h) m(x, h); }); }
   };
 })();
-
-/* 18 Nov 2026: a click inside any PX page closes the shell's notification / search panel */
-document.addEventListener('click',function(){try{if(window.parent!==window)window.parent.postMessage({pxClosePop:1},'*');}catch(e){}},true);

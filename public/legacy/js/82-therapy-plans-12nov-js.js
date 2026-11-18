@@ -20,8 +20,7 @@
   const GROUPS=[['Anxiety and stress group','Tuesday 11:30','Kiran Mehra'],['Relapse prevention group','Thursday 11:30','Kiran Mehra'],['Yoga and relaxation','Friday 3:00 pm','Rahul Verma']];
   const st=()=>{S.tp=S.tp||{seg:'ind',sub:'progress'};return S.tp;};
 
-  /* 18 Nov 2026: a real patient starts with no goals (the three demo goals and their ratings made a plan look started) */
-  const defGoals=pid=>{const s=SNO(pid);if(!s.goals)s.goals=window.__realMode?[]:[{t:'Sleep at least 6 hours a night'},{t:'Take part in one group activity a day'},{t:'Talk about worries with the therapist'}];s.goals.forEach(g=>{if(g.start===undefined)g.start=2;if(g.aim===undefined)g.aim=8;});return s.goals;};
+  const defGoals=pid=>{const s=SNO(pid);if(!s.goals)s.goals=[{t:'Sleep at least 6 hours a night'},{t:'Take part in one group activity a day'},{t:'Talk about worries with the therapist'}];s.goals.forEach(g=>{if(g.start===undefined)g.start=2;if(g.aim===undefined)g.aim=8;});return s.goals;};
   const signed=pid=>(SNO(pid).notes||[]).filter(n=>n.status==='signed').slice().reverse(); /* oldest first */
   const ratings=(pid,i)=>signed(pid).map(n=>({at:n.at,v:(n.goalR||{})[i]})).filter(r=>r.v!==undefined&&r.v!==''&&r.v!==null);
   const nowOf=(pid,i)=>{const r=ratings(pid,i);return r.length?+r[r.length-1].v:defGoals(pid)[i].start;};
@@ -147,10 +146,7 @@
       const sm=hd.querySelector('.small,.muted');if(sm)sm.textContent=sub+(doc()&&s.seg!=='fam'?' · read only for the psychiatrist':'');}
     /* plan sign-off by the Psychologist Lead (quality indicator): "Signed off by ... on ..." or "Awaiting sign-off", nudge after 48 hours */
     const x=px(pid),sg=x.tpSign,lead=/floor-lead-psychologist/.test(String((window.__TULASI__||{}).role||''));
-    /* 18 Nov 2026: "Awaiting sign-off" only starts when the treating psychologist signs the management plan, and counts from that moment */
-    const mpS=(x.mgmtPsych||{}).signed;
-    if(window.__realMode){if(!sg&&!mpS)return;if(!x.tpPlanAt)x.tpPlanAt=(mpS&&mpS.ms)||Date.now();}
-    else if(!x.tpPlanAt)x.tpPlanAt=Date.now()-3*86400000*(pid==='neel'?0:1);
+    if(!x.tpPlanAt)x.tpPlanAt=Date.now()-3*86400000*(pid==='neel'?0:1);
     const hrsWait=Math.floor((Date.now()+((S.au||{}).skip||0)*3600000-x.tpPlanAt)/3600000);
     const so=document.createElement('div');so.className='tp-so '+(sg?'ok':'wait');
     so.innerHTML=sg?`<span>Signed off by <b>${esc(sg.by)}</b>, Psychologist Lead, on ${esc(sg.at)}</span>`:`<span><b>Awaiting sign-off</b> by the Psychologist Lead${hrsWait>=48?' · waiting '+hrsWait+' hours, the lead has been nudged':''}</span>${lead?`<button class="btn sm" onclick="lpBack('${pid}')">Updates needed</button><button class="btn sm pri" onclick="tpSignOff('${pid}')">Sign off the plan</button>`:''}`;

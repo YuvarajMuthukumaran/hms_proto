@@ -163,7 +163,7 @@
       <div class="scroll"><table class="t"><tbody>${rows}${news}</tbody></table></div>
       <div style="padding:12px 20px;border-top:1px solid var(--line-2);display:flex;gap:12px;flex-wrap:wrap;align-items:center"><button class="btn pri" onclick="psyRxOpen({ctx:'rounds'})">Add medicine</button>
         <button class="btn" onclick="prModalityOpen()">Add treatment modality</button>
-        ${window.psyPx?(psyPx(p.id).plans||[]).slice(0,3).map((x,i)=>`<span class="pr-ch">Plan: ${hesc(x.kind)} · ${hesc(String(x.at).split(',')[0])} <button type="button" class="pr-chx" title="Remove this plan tag" aria-label="Remove the plan tag ${hesc(x.kind)}" onclick="psyPlanDel('${p.id}',${i})">×</button></span>`).join(''):''}</div></section>`;
+        ${window.psyPx?(psyPx(p.id).plans||[]).slice(0,3).map(x=>`<span class="pr-ch">Plan: ${hesc(x.kind)} · ${hesc(String(x.at).split(',')[0])}</span>`).join(''):''}</div></section>`;
   }
 
   /* Add Treatment Modality (was "Plan for…"): a window with the options; picking one opens its linked tasks (consent, blood tests) */
