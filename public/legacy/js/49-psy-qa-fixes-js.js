@@ -53,13 +53,15 @@
     const base=__di.apply(this,arguments);
     if(!psy()||S.pid==='neel')return base;
     const p=ptFind(S.pid);if(!p)return base;
-    const id=ptIdentity(p),day=+p.day||0,c=S.calls||{};
-    const add=n=>{const d=new Date(id.adm);d.setDate(d.getDate()+n);return ptD(d);};
+    /* 18 Nov 2026: a patient who was in the ward before the portal started is counted from the portal start (15 Nov), and has no 24 hour call to make */
+    const sc=window.__stayClock?__stayClock(p):{clock:+p.day||0,start:null,legacy:false};
+    const id=ptIdentity(p),day=sc.clock,c=S.calls||{};
+    const add=n=>{const d=new Date(sc.start||id.adm);d.setDate(d.getDate()+n);return ptD(d);};
     const out=[];
     if(S.historyStatus!=='signed'){const late=day-3;out.push(['Detailed history',late>0?late+' day'+(late>1?'s':'')+' late':late===0?'today':'due '+add(3),late>0,'admission']);}
     if(!S.dailySaved)out.push(['Daily note','today',false,'daily']);
-    if(c.h24!=='done')out.push(['24-hour family call',day>=1?'today':'by '+add(1),day>=2,'therapy']);
-    else if(c.d34psy==='due'&&day>=3)out.push(['Day 3 to 4 family call','today',false,'therapy']);
+    if(c.h24!=='done'&&!sc.legacy)out.push(['24-hour family call',day>=1?'today':'by '+add(1),day>=2,'therapy']);
+    else if(c.d34psy==='due'&&day>=3&&!sc.legacy)out.push(['Day 3 to 4 family call','today',false,'therapy']);
     if(!S.capacityDone)out.push(['Capacity assessment',add(7),false,'forms']);
     if(!S.reassessDone)out.push(['Re-assessment',add(7),false,'forms']);
     return out;

@@ -93,7 +93,7 @@
   window.psychMpSign=function(){
     const m=px().mgmtPsych=px().mgmtPsych||{};
     if(!m.goals||!(m.therapyPlan||m.therapies)){toast('Fill in the therapy plan and goals first');return false;}
-    m.signed={by:signer(),at:atNow()};render();toast('Management plan signed by '+signer());return true;
+    m.signed={by:signer(),at:atNow(),ms:Date.now()};render();toast('Management plan signed by '+signer());return true;
   };
   const mpForm=m=>`<div class="row" style="justify-content:flex-end"><button class="btn sm" onclick="pgMpAi()">Draft with AI (speak, then review)</button></div>`+FIELDS.map(([k,l,ty,opt])=>{
     if(ty==='pick'){const a=m[k]||[];return `<div class="field"><span class="lbl" style="font-weight:700">${l}</span><div class="pg-mp-chips">${opt.map(o=>`<label><input type="checkbox" ${a.includes(o)?'checked':''} onchange="psychMpTog('${k}',this.dataset.v,this.checked)" data-v="${hesc(o)}">${hesc(o)}</label>`).join('')}</div></div>`;}

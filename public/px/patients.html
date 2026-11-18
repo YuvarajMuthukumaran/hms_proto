@@ -184,7 +184,9 @@ document.addEventListener('change',e=>{ const t=e.target;
 </script>
 <script>
 const S = { mode:'in', view:'list', pid:'rs', rtab:'summary', filter:'all', sort:'attn', nps:null, ratings:{}, consent:null, done:{}, calls:{}, griev:{} };
-function set(p){ Object.assign(S,p); render(); }
+/* 18 Nov 2026: the stay steps someone marks done are kept (px_steps_v1), so Reports and the next visit see them */
+try{S.done=JSON.parse(localStorage.getItem('px_steps_v1')||'{}')||{};}catch(e){}
+function set(p){ Object.assign(S,p); if(p&&p.done){try{localStorage.setItem('px_steps_v1',JSON.stringify(S.done));}catch(e){}} render(); }
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const DOT = { d:'#12B76A', l:'#F5A524', t:'#3B82F6', u:'#D0D5DD', x:'#E4E7EC' };
 const AV = [['#E8F1FE','#1E5BB8'],['#EDE9FE','#5B21B6'],['#E7F8EF','#067647'],['#FFF1E6','#B54708']];
@@ -234,9 +236,11 @@ const P = [
   });
   P.length=0; out.forEach(x=>P.push(x));
 })();
-P.forEach(p=>{ const o=p.st; const d0=p.day>=1?'d':o[0];
+/* real patients (18 Nov 2026): a step is done only when someone marked it. The status comes from the day count: late once its day is past, due today, or coming up */
+if(window.PX_REAL){const OFFS=[0,0,0,0,2,2,1,3,7,7,7,99,99];P.forEach(p=>{p.st=[...String(p.st||'')].map((c,i)=>{if(i>=OFFS.length)return c;const due=OFFS[i];return p.day>due?'l':(p.day===due?'t':'u');}).join('');});}
+P.forEach(p=>{ const o=p.st; const d0=(p.day>=1&&!window.PX_REAL)?'d':o[0];
   const met = p.day>=3?'d':(p.day>=1?'t':'u');
-  p.st = o[0]+o[1]+(p.id==='rs'?'l':d0)+d0+(p.id==='dk'?'l':met)+o.slice(2); });
+  if(!window.PX_REAL)p.st = o[0]+o[1]+(p.id==='rs'?'l':d0)+d0+(p.id==='dk'?'l':met)+o.slice(2); });
 const I = {
   grid:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>',
   users:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>',
@@ -452,7 +456,8 @@ const CMP=[
 ];
 function cmp(){ return `<div class="doc"><div class="eyebrow">TAB 2 OF 7 · PATIENTS AND THE PATIENT RECORD</div><h2>Live screen vs what we want</h2><p>Use the switcher at the bottom right to click through the proposed Patients list and a patient record. Rahul Sethi shows the full discharge flow.</p>
   <div class="gt"><div style="grid-template-columns:160px 1fr 1.3fr"><span>AREA</span><span>LIVE NOW</span><span>PROPOSED</span></div>${CMP.map(r=>`<div style="grid-template-columns:160px 1fr 1.3fr"><span style="font-weight:600">${r[0]}</span><span style="color:#475569">${esc(r[1])}</span><span class="hl">${esc(r[2])}</span></div>`).join('')}</div></div>`; }
-function render(){ document.getElementById('root').innerHTML = S.view==='list'?list():S.view==='rec'?rec():cmp(); document.querySelectorAll('.rev button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view)); }
+function pxTellCtx(){ try{ var cp=S.view==='rec'?P.find(function(x){return x.id===S.pid;}):null; parent.postMessage({pxCtx:cp?(cp.hmsId||cp.id):''},'*'); }catch(e){} }
+function render(){ pxTellCtx(); document.getElementById('root').innerHTML = S.view==='list'?list():S.view==='rec'?rec():cmp(); document.querySelectorAll('.rev button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view)); }
 document.addEventListener('click',e=>{
   const t=e.target.closest('button,a,input'); if(!t) return;
   if(t.tagName==='A'&&t.getAttribute('href')==='#') e.preventDefault();

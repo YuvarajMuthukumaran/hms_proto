@@ -143,7 +143,7 @@
       /* Review treatment sits on every medical item: alerts, approvals and results to check. It opens the nursing chart,
          except a therapy-plan alert (a psychology quality item, not a medication one), which opens the Therapy and
          family tab so the plan can actually be reviewed and signed off (Trello: should go to the management plan). */
-      const rtGo=/therapy plan/i.test(i.txt)?`go('#/patient/${pid}/therapy')`:`psyToChart('${pid}')`;
+      const rtGo=/therapy plan/i.test(i.txt)?`go('#/patient/${pid}/plans')`:`psyToChart('${pid}')`;   /* 18 Nov 2026: a therapy-plan alert opens the management plan (the psychologist's plan is shown there, read only) */
       const rt=`<button class="btn sm ${i.k==='alert'?'pri':''}" onclick="closeModal();${rtGo}">Review treatment</button>`;
       /* Trello "Task and Action Button Alignment": no separate generic "Log action" step -- a task/late item's own
          button (already renamed to the specific action, e.g. "Write the note", "Review the result") marks it done
@@ -202,12 +202,13 @@
     DT.alerts(p).forEach(i=>items.push({k:'alert',aid:((i.btn&&i.btn[1]||'').match(/'([^']+)'/)||[])[1],lab:['red',(i.due&&i.due!=='Now')?i.due:'Urgent'],txt:i.txt.replace(/^Alert:\s*/,''),due:'',btn:i.btn&&['Mark seen',i.btn[1],false]}));
     DT.orders(p).forEach(i=>{const id=(i.btn[1].match(/'([^']+)'/)||[])[1];items.push({k:'order',oid:id,lab:['blue','Approve'],txt:i.txt.replace(/^Countersign:\s*/,''),due:(window.psyOrderLeft&&psyOrderLeft(id))||i.due,btn:['Approve',`psyApprove('${id}')`,false]});});
     /* clinical category and an action-named button (card 135): never "Late" or "Do it now" */
-    const catOf=t=>/advance directive|mhca|capacity|section 8|section 9|nominated|form c|mhrb|legal/i.test(t)?'MHCA':/family|caregiver|sister|brother|relative/i.test(t)?'Family':/lab|result|level|test|ecg|bloods?|investigation/i.test(t)?'Investigation':/admission|workup|admit/i.test(t)?'Admission':/medicine|order|dose|prescri|countersign/i.test(t)?'Medication':/event|vitals|fall|incident/i.test(t)?'Clinical event':'Documentation';
-    const actOf=t=>/detailed history|history/i.test(t)?'Open detailed history':/capacity/i.test(t)?'Record capacity review':/mhrb/i.test(t)?'Send MHRB notice':/advance directive/i.test(t)?'Ask about advance directive':/family|caregiver|call/i.test(t)?'Call family':/summary|sign/i.test(t)?'Review and sign':/plan/i.test(t)?'Open management plan':/note/i.test(t)?'Write the note':/result|lab|level|bloods?/i.test(t)?'Review the result':'Open the record';
+    const catOf=t=>/advance directive|mhca|capacity|section 8|section 9|nominated|form c|mhrb|legal/i.test(t)?'MHCA':/family|caregiver|sister|brother|relative|\b(24 hour|day 3 to 4) call/i.test(t)?'Family':/lab|result|level|test|ecg|bloods?|investigation/i.test(t)?'Investigation':/admission|workup|admit/i.test(t)?'Admission':/medicine|order|dose|prescri|countersign/i.test(t)?'Medication':/event|vitals|fall|incident/i.test(t)?'Clinical event':'Documentation';
+    const actOf=t=>/past the 30 days|before day 30/i.test(t)?'Choose what happens next':/detailed history|history/i.test(t)?'Open detailed history':/capacity/i.test(t)?'Record capacity review':/mhrb/i.test(t)?'Send MHRB notice':/advance directive/i.test(t)?'Ask about advance directive':/family|caregiver|call/i.test(t)?'Call family':/summary|sign/i.test(t)?'Review and sign':/plan/i.test(t)?'Open management plan':/note/i.test(t)?'Write the note':/result|lab|level|bloods?/i.test(t)?'Review the result':'Open the record';
     DT.tasks(p,T).forEach(i=>{
       const sign=/discharge summary/i.test(i.txt),late=!!i.overdue;
-      items.push({k:late?'late':'task',id:i.id,lab:late?['amber',catOf(i.txt)]:sign?['grey','To sign']:['grey','Today'],txt:i.txt,due:i.due,
-        btn:[sign?'Review and sign':actOf(i.txt),`go('${i.go||'#/patient/'+p.id+'/overview'}')`,false]});
+      items.push({k:late?'late':'task',id:i.id,lab:late?['amber',/^mhca_/.test(String(i.id||''))?'MHCA':catOf(i.txt)]:sign?['grey','To sign']:['grey','Today'],txt:i.txt,due:i.due,
+        /* 18 Nov 2026: an overdue family call opens the call pop-up right here (it used to jump to the patient's preferences tab) */
+        btn:[sign?'Review and sign':actOf(i.txt),((fm)=>fm&&window.faCall?(fm[2]==='wk'?`faWeek('${fm[1]}')`:`faCall('${fm[1]}','${fm[2]}')`):`go('${i.go||'#/patient/'+p.id+'/overview'}')`)(String(i.id||'').match(/^fa_(.+?)(c24|c34|wk)$/)),false]});
     });
     if(window.psyExtraItems)window.psyExtraItems(p).forEach(i=>items.push(i)); /* results to review, daily observation review */
     const act=items.filter(i=>i.lab[1]!=='Today'); /* routine "Today" items are not shown on the dashboard any more */

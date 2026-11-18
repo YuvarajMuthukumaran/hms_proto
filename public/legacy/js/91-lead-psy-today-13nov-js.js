@@ -13,10 +13,14 @@
   const T=()=>{const l=L();return l.td||(l.td={tab:'act',flt:'all',who:'',done:{},acted:{},asked:{},reminded:0,cover:'',grp:'',opened:{},ticks:{},qf:''});};
   const floor=()=>{try{return allPts();}catch(e){return PTS;}};
   const doc=p=>{try{const a=v3().alloc.psych[p.id];if(a)return a;}catch(e){}return (typeof PSYCHOF!=='undefined'&&PSYCHOF[p.id])||'';};
-  const mineName='Surabhi Sengar',dayMs=864e5;
+  /* 18 Nov 2026, real-data mode: the lead's own name is picked once on My caseload (kept in this browser); the team is the psychologists who really have patients; no demo team, leave, roster or groups */
+  const REAL=!!window.__TULASI_REAL||/[?&]realtest=1/.test(location.search);   /* block 99 (which sets __realMode) loads after this one */
+  const mineName=REAL?(()=>{try{return localStorage.getItem('tulasi.lead.name')||'';}catch(e){return '';}})():'Surabhi Sengar',dayMs=864e5;
   const first=n=>String(n||'the psychologist').split(' ')[0];
   const clock=()=>new Date().toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});
-  const TEAMN=['Priya Nair','Kiran Mehra','Surabhi Sengar','Ankit Verma'];
+  const TEAMN=REAL?[]:['Priya Nair','Kiran Mehra','Surabhi Sengar','Ankit Verma'];
+  const fl0=p=>{const m=String(p.room||'').match(/(\d)\d\d/);return m?m[1]:'';};   /* floor = first digit of the room number, once rooms are recorded */
+  const floorList=()=>[...new Set(floor().map(fl0).filter(Boolean))].sort();
   const PX=pid=>{try{return psyPx(pid);}catch(e){return {};}};
   const notesOf=p=>{try{return (PX(p.id).sn||{}).notes||[];}catch(e){return [];}};
   /* days since the last signed session note (individual, group or family); null = none recorded */
@@ -44,13 +48,13 @@
   const dLabel=ts=>new Date(ts).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+', '+new Date(ts).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});
   const ago=ts=>{const d=Math.floor((Date.now()-ts)/dayMs);return d<=0?'today':d===1?'yesterday':d+' days ago';};
   /* demo calendar: Priya Nair is on leave 14 to 16 Nov 2026 */
-  const onLeave=n=>{if(n!=='Priya Nair')return false;const t=Date.now();return t>=new Date(2026,10,14).getTime()&&t<new Date(2026,10,17).getTime();};
+  const onLeave=n=>{if(REAL||n!=='Priya Nair')return false;const t=Date.now();return t>=new Date(2026,10,14).getTime()&&t<new Date(2026,10,17).getTime();};
   const PLANNED={'Kiran Mehra':4,'Priya Nair':5,'Surabhi Sengar':2,'Ankit Verma':3};
 
   /* ---------------- demo seeds (once): waiting plans, last session per patient, plan frequency, concern, supervision ---------------- */
   const LAST={neel:3,sameer:1,varun:0,dev:1,kabir:4,arjun:1,tarun:3,sana:1,rahul:0,yash:1,meera:1,kavya:2,ritu:0};
   function seedAll(){
-    if(window.__lpSeeded14)return;window.__lpSeeded14=1;
+    if(window.__lpSeeded14||REAL)return;window.__lpSeeded14=1;
     const SEED={neel:'Supportive and psychoeducation. Goals: sleep 6 h; one group activity a day.',sameer:'ERP for OCD. Goals: checking from 3 h to under 1 h a day.',varun:'MI and relapse prevention. Goals: no drinking on 2 home leaves.'};
     Object.keys(SEED).forEach(id=>{try{const x=PX(id),p=floor().find(q=>q.id===id);x.mgmtPsych=x.mgmtPsych||{};if(!x.mgmtPsych.signed&&!x.mgmtPsych.seedLp){x.mgmtPsych.seedLp=1;x.mgmtPsych.signed={by:(p&&doc(p))||'Priya Nair',at:'10 Nov 2026, 11:00 am'};x.mgmtPsych.goals=x.mgmtPsych.goals||SEED[id];x.mgmtPsych.therapyPlan=x.mgmtPsych.therapyPlan||SEED[id];}}catch(e){}});
     try{window.lpSeedAsst&&['Aman Gill','Kavya Menon'].forEach(n=>window.lpSeedAsst(n));}catch(e){}
@@ -76,7 +80,9 @@
 
   function model(){
     seedAll();
-    const all=floor(),t=T(),w=t.who;
+    const t=T(),w=t.who,fsel=REAL?t.floor||'':'';
+    const all=fsel?floor().filter(p=>fl0(p)===fsel):floor();
+    if(REAL){const nm=new Set();all.forEach(p=>{const d=doc(p);if(d)nm.add(d);});if(mineName)nm.add(mineName);TEAMN.length=0;[...nm].sort().forEach(n=>TEAMN.push(n));}
     const inScope=p=>!w||doc(p)===w;
     const risk=all.filter(p=>p.risk&&!t.acted[p.id]);
     const nosess=all.filter(noSess);
@@ -85,7 +91,7 @@
     const noscore=all.filter(p=>(+p.day||0)>=14&&!hasScore(p));
     const fam=all.filter(p=>openGr(p)||famLate(p));
     const nopsy=all.filter(p=>!doc(p));
-    const mine=all.filter(p=>doc(p)===mineName);
+    const mine=mineName?all.filter(p=>doc(p)===mineName):[];
     const disch=all.filter(dischSoon);
     const rst={};restDebrief().forEach(e=>{rst[e.pid]=e;});
     return {all,risk,nosess,noplan,sign,noscore,fam,nopsy,mine,disch,inScope,rst};
@@ -132,8 +138,8 @@
     return prim+more;
   }
   const FLOORROWS=()=>{const t=T(),r=[];
-    if(!t.done.grp)r.push({id:'grp',why:'Mindfulness group, Saturday 4 pm has no facilitator',btn:`<button class="btn sm pri" onclick="ltGrp('me')">I will take it</button><button class="btn sm" onclick="ltGrp('move')">Move time</button>`});
-    if(!t.done.leave&&onLeave('Priya Nair'))r.push({id:'leave',why:'Priya Nair on leave 14 to 16 Nov · her patients, groups and family sessions need cover',btn:`<button class="btn sm pri" onclick="ltCover()">Choose cover</button>`});
+    if(!REAL&&!t.done.grp)r.push({id:'grp',why:'Mindfulness group, Saturday 4 pm has no facilitator',btn:`<button class="btn sm pri" onclick="ltGrp('me')">I will take it</button><button class="btn sm" onclick="ltGrp('move')">Move time</button>`});
+    if(!REAL&&!t.done.leave&&onLeave('Priya Nair'))r.push({id:'leave',why:'Priya Nair on leave 14 to 16 Nov · her patients, groups and family sessions need cover',btn:`<button class="btn sm pri" onclick="ltCover()">Choose cover</button>`});
     return r;};
   const openCount=(P,M)=>({n:P.length,fl:FLOORROWS().length});
   /* items still open for one psychologist's patients */
@@ -183,7 +189,7 @@
       const cls=riskN?' r':late?' a':'';
       const askN=itemsFor(n,M).length;
       return `<div class="lt-pc${cls}" role="button" tabindex="0" onclick="ltTeamGo('${n}')"><div class="lt-pn"><b>${esc(you?'You · '+n:n)}</b><span class="lt-st ${leave?'off':'on'}">${leave?'On leave':'On today'}</span></div>
-        <div class="small" title="Sessions done are counted from signed notes. Sessions planned are demo numbers until the calendar is linked.">${n==='Ankit Verma'?'Assistant psychologist':mine.length+' patients'} · ${planned?done+' of '+planned+' sessions today':'no sessions today'}</div>
+        <div class="small" title="Sessions done are counted from signed notes. Sessions planned are demo numbers until the calendar is linked.">${n==='Ankit Verma'?'Assistant psychologist':mine.length+' patients'} · ${planned?done+' of '+planned+' sessions today':(REAL?done+' signed today':'no sessions today')}</div>
         <div class="small ${late?'lt-lt':'muted'}">${late?late+' late: '+Object.keys(parts).map(k=>parts[k]+' '+(parts[k]===1?({families:'family','sessions behind':'session behind','scores missing':'score missing'}[k]||k):k)).join(', '):'Nothing late'}${riskN?` · <b style="color:#b42318">${riskN} risk not acted on</b>`:''}</div>
         <div class="lt-pf">${you?'<span class="tiny muted">Lead</span>':`<span class="tiny ${amb?'lt-amb':'muted'}">${esc(sup)}</span>`}<span>${!you&&askN&&!leave?`<button class="btn sm" onclick="event.stopPropagation();ltAskPsy('${n}')">Ask ${esc(first(n))} (${askN})</button>`:''}${you?'':`<button class="btn sm" onclick="event.stopPropagation();lpSup('${n}')">Supervision</button>`}</span></div></div>`;}).join('')}</div>`;
   }
@@ -194,12 +200,15 @@
     const date=now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
     const f0=t.flt;t.flt='all';const all=patientRows(Object.assign({},M,{inScope:()=>true}));t.flt=f0; /* the count at the top and on the Actions tab ignores the filter chips */
     const fl=FLOORROWS().length,need=all.length;
-    const tiles=tile(M.all.length,'On the floor',M.nopsy.length+' without a psychologist','all')+tile(M.risk.length,'Risk not acted on','needs you now','risk',1)+tile(M.nosess.length,'No session 3+ days','against the plan','nosess',1)+tile(M.sign.length,'To review and sign','plans and notes','sign',1)+tile(M.noscore.length,'No score in 14 days','PHQ-9, GAD-7, Y-BOCS','noscore',1)+tile(M.fam.length,'Families waiting','calls and concerns','fam',1);
+    const tiles=tile(M.all.length,REAL?(t.floor?'On floor '+t.floor:'In the hospital'):'On the floor',M.nopsy.length+' without a psychologist','all')+tile(M.risk.length,'Risk not acted on','needs you now','risk',1)+tile(M.nosess.length,'No session 3+ days','against the plan','nosess',1)+tile(M.sign.length,'To review and sign','plans and notes','sign',1)+tile(M.noscore.length,'No score in 14 days','PHQ-9, GAD-7, Y-BOCS','noscore',1)+tile(M.fam.length,'Families waiting','calls and concerns','fam',1);
     const tabs=[['act','Actions',need],['floor','Floor caseload',M.all.length],['mine','My caseload',M.mine.length]].map(x=>`<button class="lt-tab${t.tab===x[0]?' on':''}" onclick="ltTab('${x[0]}')">${x[1]} <span>${x[2]}</span></button>`).join('');
-    const sel=`<select class="input lt-sel" onchange="ltWho(this.value)"><option value="">All psychologists</option>${TEAMN.map(n=>`<option ${t.who===n?'selected':''}>${n}</option>`).join('')}</select>`;
+    const fls=REAL?floorList():[];
+    const flSel=fls.length>1?`<select class="input lt-sel" style="margin-left:0" aria-label="Floor" onchange="ltFloor(this.value)"><option value="">All floors</option>${fls.map(f=>`<option value="${f}" ${t.floor===f?'selected':''}>Floor ${f}</option>`).join('')}</select>`:'';
+    const sel=flSel+`<select class="input lt-sel" onchange="ltWho(this.value)"><option value="">All psychologists</option>${TEAMN.map(n=>`<option ${t.who===n?'selected':''}>${n}</option>`).join('')}</select>`;
     const chips=`<div class="lt-fl">${FILT.map(f=>`<button class="lt-ch${t.flt===f[0]?' on':''}" onclick="ltSet('${f[0]}')">${f[1]}</button>`).join('')}${sel}</div>`;
-    const body=t.tab==='act'?askBar(M)+chips+actionsBody(M):chips+caseTable(M,t.tab==='mine'?M.mine:M.all);
-    return `<div class="lt"><div class="lt-h"><h2>${gr}, Surabhi</h2><div class="small muted">${esc(date)} · ${need} patient${need===1?'':'s'} need${need===1?'s':''} you${fl?' · '+fl+' floor item'+(fl===1?'':'s'):''}</div></div><div class="lt-ts">${tiles}</div>${strip(M)}<div class="lt-tabs">${tabs}</div><section class="card lt-body">${body}</section></div>`;
+    const iam=REAL&&t.tab==='mine'&&!mineName?`<div class="pad small" style="border-bottom:1px solid #eef2f8"><b>Who are you?</b> Pick your name to see your own patients here. It is kept in this browser.<div style="margin-top:6px"><select class="input" style="max-width:260px" onchange="ltIam(this.value)"><option value="">Choose your name…</option>${[...new Set(floor().map(doc).filter(Boolean).concat((window.__realStaff||[]).filter(s=>s.role==='psychologist').map(s=>s.name)))].sort().map(n=>`<option>${esc(n)}</option>`).join('')}</select></div></div>`:'';
+    const body=t.tab==='act'?askBar(M)+chips+actionsBody(M):iam+chips+caseTable(M,t.tab==='mine'?M.mine:M.all);
+    return `<div class="lt"><div class="lt-h"><h2>${gr}${REAL?'':', Surabhi'}</h2><div class="small muted">${esc(date)} · ${need} patient${need===1?'':'s'} need${need===1?'s':''} you${fl?' · '+fl+' floor item'+(fl===1?'':'s'):''}</div></div><div class="lt-ts">${tiles}</div>${strip(M)}<div class="lt-tabs">${tabs}</div><section class="card lt-body">${body}</section></div>`;
   }
   const keepScroll=()=>{const y=window.scrollY;render();requestAnimationFrame(()=>window.scrollTo(0,y));};
   const mark=(id,txt)=>{T().done[id]=txt+' · '+atNow();keepScroll();};
@@ -207,6 +216,8 @@
   window.ltFlt=k=>{const t=T();if(k==='all')t.tab='floor';else if(k==='disch')t.tab='floor';else t.tab='act';t.flt=k;keepScroll();};
   window.ltSet=k=>{T().flt=k;keepScroll();};
   window.ltWho=v=>{T().who=v;keepScroll();};
+  window.ltFloor=v=>{T().floor=v;keepScroll();};
+  window.ltIam=v=>{if(!v)return;try{localStorage.setItem('tulasi.lead.name',v);}catch(e){}location.reload();};
   window.ltTeamGo=n=>{const t=T();t.tab='floor';t.flt='all';t.who=n;keepScroll();};
   /* open a patient's record on the tab that fits the issue */
   window.ltOpen=function(pid,kind){
@@ -284,8 +295,8 @@
   const WK={'Priya Nair':'DDDDDLL','Kiran Mehra':'DDWDDDD','Ankit Verma':'DDDDDWW','Surabhi Sengar':'DDDDDDW'};
   window.lpTeam=function(){
     const rows=TEAMN.map(n=>{const you=n===mineName,ls=lastSup(n),amb=!you&&(!ls||(Date.now()-ls)>7*dayMs);
-      return `<tr><td><b>${esc(you?'You · '+n:n)}</b><div class="tiny muted">${n==='Ankit Verma'?'Assistant psychologist':'Psychologist'}</div></td>${[...WK[n]].map(c=>`<td style="text-align:center">${c}</td>`).join('')}<td class="small ${amb?'lt-amb':''}">${you?'':ls?'Supervised '+ago(ls):'Not supervised yet'}</td><td style="white-space:nowrap">${you?'':`<button class="btn sm pri" onclick="lpSup('${n}')">Supervision</button> <button class="btn sm" onclick="lpSupHist('${n}')">History</button>`}</td></tr>`;}).join('');
-    V3.modal('Team and leave','D duty · W week off · L leave. Supervision notes are never shown to patients, families or Patient Experience.',`<div style="overflow:auto"><table class="t"><thead><tr><th></th>${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<th>${d}</th>`).join('')}<th>Supervision</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`,'<button class="btn" onclick="closeModal()">Close</button>');
+      return `<tr><td><b>${esc(you?'You · '+n:n)}</b><div class="tiny muted">${n==='Ankit Verma'?'Assistant psychologist':'Psychologist'}</div></td>${[...(WK[n]||(REAL?'-------':'DDDDDDD'))].map(c=>`<td style="text-align:center">${c}</td>`).join('')}<td class="small ${amb?'lt-amb':''}">${you?'':ls?'Supervised '+ago(ls):'Not supervised yet'}</td><td style="white-space:nowrap">${you?'':`<button class="btn sm pri" onclick="lpSup('${n}')">Supervision</button> <button class="btn sm" onclick="lpSupHist('${n}')">History</button>`}</td></tr>`;}).join('');
+    V3.modal('Team and leave',(REAL?'The duty roster and leave are not linked yet (shown as -). ':'D duty · W week off · L leave. ')+'Supervision notes are never shown to patients, families or Patient Experience.',`<div style="overflow:auto"><table class="t"><thead><tr><th></th>${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<th>${d}</th>`).join('')}<th>Supervision</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`,'<button class="btn" onclick="closeModal()">Close</button>');
   };
   window.lpSup=function(name){
     const caseIds=floor().filter(p=>doc(p)===name||notesOf(p).some(n=>String(n.by||'').indexOf(name)===0)).map(p=>p);
@@ -311,7 +322,7 @@
   /* ---------------- the clinical psychologist's Today: what the lead sent (read only) ---------------- */
   window.lpAuthor=function(v){
     if(!/^#\/myday/.test(location.hash||'')||v.querySelector('#lpFromLead'))return;
-    const me=signer(),mine=floor().filter(p=>doc(p)===me),asks={},back=[],notes=[],work={};
+    const me=(REAL&&window.__whoAmI&&window.__whoAmI())||signer(),mine=floor().filter(p=>doc(p)===me),asks={},back=[],notes=[],work={};
     mine.forEach(p=>{const lp=LPX(p.id);
       if(lp.ask&&!lp.ask.done){const a=asks[lp.ask.id]=asks[lp.ask.id]||{a:lp.ask,items:[]};a.items.push({p,t:lp.ask.items});}
       if(lp.back)back.push({p,t:lp.back});if(lp.note&&lp.note.t)notes.push({p,n:lp.note});
