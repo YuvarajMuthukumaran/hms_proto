@@ -19,6 +19,8 @@
     }
   }catch(e){}
 
+  /* the bubbles sit a little to the right of the heading so the question and its options read apart */
+  {const c=document.createElement('style');c.textContent='.pm-ob .mini-chips{padding-left:30px;margin-top:8px;gap:8px}.pm-ob{margin-bottom:6px}';document.head.appendChild(c);}
   const LBL=[];const li=l=>{let i=LBL.indexOf(l);if(i<0){LBL.push(l);i=LBL.length-1;}return i;};
   const __fld=fld;
   fld=function(f,ro){
