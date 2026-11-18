@@ -47,6 +47,14 @@
       if(e.children.length===0&&/^Any treatment for present illness$/.test(e.textContent.trim()))e.textContent='Any treatment for current illness';
     });
   }
+  /* the section tabs at the top of the form stay where they were when you tap an answer (the page is redrawn on every tap and the tab row slid back) */
   const __r=render;
-  render=function(){const o=__r.apply(this,arguments);try{reword();}catch(e){}return o;};
+  render=function(){
+    const n0=document.querySelector('#view .hnav'),sl=n0?n0.scrollLeft:null;
+    /* every scrolled box around the form keeps its position, so tapping an answer does not make the top of the page jump or slide */
+    const keep=[];if(n0){let e=document.getElementById('view');while(e){if(e.scrollTop)keep.push([e,e.scrollTop]);e=e.parentElement;}if(document.scrollingElement&&document.scrollingElement.scrollTop)keep.push([document.scrollingElement,document.scrollingElement.scrollTop]);}
+    const o=__r.apply(this,arguments);
+    if(keep.length){const put=()=>keep.forEach(k=>{try{k[0].style.scrollBehavior='auto';k[0].scrollTop=k[1];}catch(e){}});put();requestAnimationFrame(put);setTimeout(put,60);}
+    try{reword();const n1=document.querySelector('#view .hnav');if(n1&&sl!==null&&n0&&n1!==n0){n1.style.scrollBehavior='auto';n1.scrollLeft=sl;}}catch(e){}
+    return o;};
 })();
