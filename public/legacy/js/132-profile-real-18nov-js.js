@@ -5,15 +5,6 @@
   if(!window.__realMode)return;
   const RELS=['Spouse','Father','Mother','Son','Daughter','Brother','Sister','Other relative','Friend'];
   const px=pid=>{try{return psyPx(pid);}catch(e){return {};}};
-  /* every screen that names the nominated representative reads the relationship recorded here */
-  if(typeof ptIdentity==='function'){
-    const __id=ptIdentity;
-    ptIdentity=function(p){
-      const id=__id.apply(this,arguments);
-      try{if(p&&p.real){const r=(px(p.id)||{}).nrRel;if(r){id.rel=r;}}}catch(e){}
-      return id;
-    };
-  }
   window.nrRelSet=function(pid,v){
     if(!v)return;const x=px(pid);x.nrRel=v;x.nrRelBy=(typeof signer==='function'?signer():'')+' · '+(typeof atNow==='function'?atNow():'');
     render();toast('Relationship recorded: '+v);
@@ -29,7 +20,7 @@
       if(n==='Admitted'){c.dataset.p132='1';val.textContent=val.textContent.replace(/,\s*\d{1,2}[:.]\d{2}(\s*[ap]m)?\s*$/i,'')+(p.admEst?' (estimated)':'');}
       if(n==='Emergency contact'){
         c.dataset.p132='1';
-        const id=ptIdentity(p),have=id.rel&&id.rel!=='Not recorded';
+        const id=ptIdentity(p),r0=(px(pid)||{}).nrRel,have=!!r0||(id.rel&&id.rel!=='Not recorded');if(r0)id.rel=r0;
         const name=String(id.nr||'Not recorded');
         if(name==='Not recorded'){val.textContent='Not recorded';return;}
         if(have){val.textContent=name+' ('+id.rel+')';return;}
