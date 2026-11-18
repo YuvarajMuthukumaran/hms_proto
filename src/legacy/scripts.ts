@@ -131,6 +131,7 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/130-mse-grooming-17nov-js.js',
   '/legacy/js/132-profile-real-18nov-js.js',
   '/legacy/js/133-scales-in-rounds-18nov-js.js',
+  '/legacy/js/134-lead-psy-real-18nov-js.js',
   '/legacy/js/135-history-bubbles-18nov-js.js',
   '/legacy/js/136-clinical-ui-18nov-js.js',
   '/legacy/js/137-discharge-18nov-js.js',
