@@ -14,6 +14,7 @@
   /* ---------- 5. alignment ---------- */
   const css=document.createElement('style');
   css.textContent=`label:has(> input[type=checkbox]),label:has(> input[type=radio]){display:flex;align-items:flex-start;gap:8px}
+  label.row:has(> input[type=checkbox]),label.row:has(> input[type=radio]){flex-wrap:nowrap!important;flex-direction:row!important;align-items:flex-start;gap:8px}
   label > input[type=checkbox],label > input[type=radio]{flex:none;width:auto!important;min-height:0!important;height:auto;margin:3px 0 0}
   .pr-chx{border:0;background:none;cursor:pointer;font:inherit;font-weight:700;color:#667085;padding:0 0 0 4px}.pr-chx:hover{color:#b42318}
   #ssPop{position:fixed;z-index:10050;background:#fff;border:1px solid var(--line,#d6dee8);border-radius:12px;box-shadow:0 14px 40px rgba(15,23,42,.2);padding:6px;display:flex;flex-direction:column;gap:6px;max-width:calc(100vw - 16px)}
