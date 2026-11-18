@@ -145,7 +145,7 @@
     var step2 = (state.ans === 'notgood' || state.ans === 'tell') ? '<div><h4>Step 2 · what is it about?</h4><div class="rv-fl" style="margin-top:6px">' + gAB().map(function (x) { return '<button class="rv-ch ' + (state.topic === x[0] ? 'on' : '') + '" onclick="RV2.topic(\'' + esc(x[0]).replace(/\'/g, "\\'") + '\')">' + esc(x[0]) + '</button>'; }).join('') + '</div>' +
       (T ? '<div class="rv-fl" style="margin-top:8px">' + (T[3] || []).map(function (o) { return '<button class="rv-ch ' + (state.sp === o ? 'on' : '') + '" onclick="RV2.sp(this.dataset.o)" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join('') + '</div><div style="margin-top:6px;font-size:13px;color:#475467"><b>Goes to:</b> ' + esc(state.sp === 'Wants to leave now' ? GOES['Leaving or rights'] : (T[4] && T[4].indexOf(state.sp) >= 0) ? 'Chandraji and the treating doctor · now' : (GOES[T[0]] || T[1])) + '</div>' : '') +
       '<textarea rows="3" id="rvW" placeholder="What they said, in their words" oninput="RV2.words(this.value)">' + esc(state.words) + '</textarea></div>' : '';
-    var scr = window.PX_REAL ? '<div class="small" style="font-size:13px;color:#667085">AI scribe is off for real patients until their consent is recorded.</div>' :
+    var scr =
       '<div class="rv-btns"><button class="rv-b" id="rvRec" onclick="RV2.scribe()">' + (state.scribe && state.scribe.rec ? 'Stop and draft' : 'Start AI scribe') + '</button>' + (state.scribe && state.scribe.draft ? '<button class="rv-b pri" onclick="RV2.useDraft()">Use this</button><button class="rv-b" onclick="RV2.discardDraft()">Discard</button>' : '') + '</div>' +
       (state.scribe && state.scribe.msg ? '<div style="font-size:13px;color:#475467;margin-top:4px">' + esc(state.scribe.msg) + '</div>' : '') +
       '<div style="font-size:12px;color:#667085">Tell the patient before recording. Only text is kept, no audio.</div>';
@@ -193,9 +193,9 @@
         s.mr.ondataavailable = function (e) { chunks.push(e.data); };
         s.mr.onstop = function () {
           stream.getTracks().forEach(function (t) { t.stop(); });
-          var fd = new FormData(); fd.append('audio', new Blob(chunks, { type: 'audio/webm' }), 'round.webm'); fd.append('purpose', 'px-round');
+          var fd = new FormData(); fd.append('audio', new Blob(chunks, { type: 'audio/webm' }), 'round.webm'); fd.append('schema', JSON.stringify({ mode: 'transcript', hint: 'Hindi and English mixed. A short talk with a hospital patient about how they are.' }));
           fetch('/api/scribe', { method: 'POST', body: fd }).then(function (r) { return r.json(); }).then(function (j) {
-            var txt = (j && (j.text || j.note || j.transcript)) || '';
+            var txt = (j && (j.transcript || j.text || j.note)) || '';
             if (!txt) { s.msg = 'The scribe could not draft anything. Type it instead.'; } else { s.draft = txt; s.msg = 'Draft ready. Use this to fill the fields, or Discard.'; }
             draw();
           }).catch(function () { s.msg = 'The AI scribe is not available now. Type it instead.'; draw(); });
