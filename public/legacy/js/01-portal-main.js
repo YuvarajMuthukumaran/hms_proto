@@ -113,8 +113,16 @@ const byl=(by,at,verb)=>by?`<span class="byl">${verb?verb+' ':''}${by}${at?' · 
 S.doneBy={};S.done=new Proxy(S.done,{set(o,k,v){o[k]=v;try{if(v)S.doneBy[k]=whoAt();else delete S.doneBy[k];}catch(e){}return true;},deleteProperty(o,k){delete o[k];delete S.doneBy[k];return true;}});
 function taskBy(t){if(t.by)return t.by;if(t.lead)return 'the HMS, from overdue deadlines';if(/^cn/.test(t.id))return 'consent request';if(t.ref)return 'the referring doctor';return 'the HMS, from the care plan';}
 function av(ini,size,c){return `<div class="avatar ${c||'c-blue'}" style="width:${size}px;height:${size}px;font-size:${Math.round(size/3)}px">${ini}</div>`;}
-function openModal(html){$('modal').innerHTML=html;$('scrim').classList.add('show');const f=$('modal').querySelector('input,select,textarea,button');f&&f.focus();}
-function closeModal(){$('scrim').classList.remove('show');$('modal').style.width='';}
+/* Anu Yadav, 19 Nov 2026: the page behind a pop-up used to still scroll (mouse wheel or touch), which felt broken.
+   The page (body is the scrolling element here, not the window) is frozen in place while a pop-up is open. */
+function openModal(html){
+  document.body.classList.add('modal-open');
+  $('modal').innerHTML=html;$('scrim').classList.add('show');const f=$('modal').querySelector('input,select,textarea,button');f&&f.focus();
+}
+function closeModal(){
+  $('scrim').classList.remove('show');$('modal').style.width='';
+  document.body.classList.remove('modal-open');
+}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 const icon = {
   dash:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>',
