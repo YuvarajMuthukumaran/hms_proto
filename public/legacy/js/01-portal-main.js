@@ -1749,7 +1749,7 @@ const HIST=[
   ['Volition','ap',O('Suggestibility','Echolalia','Ambivalence','Echopraxia','Passivity','Negativism','Automatic obedience')],
   ['Mood, subjective','i'],
   ['Affect, objective','m',O('Normal','Irritable','Anxious','Enraged','Blunted','Fearful','Apathetic','Depressed','Euphoric','Elated','Weeping spells')],
-  ['Affect: appropriate, reactive, related','m',O('Appropriate','Inappropriate','Reactive','Non-reactive')],
+  ['Affect: appropriate, reactive, related','m',O('Appropriate','Inappropriate','Reactive','Non-reactive','Congruent','Not congruent')],
   ['Thought stream','o',O('Normal','Retarded','Accelerated')],
   ['Thought possession','ap',O('Blocking','Broadcasting','Insertion','Withdrawal','Echo','Alienation')],
   ['Formal thought disorder','m',O('Absent','Loosening of association','Illogical thinking','Derailment','Neologisms','Word salad','Overinclusion')],

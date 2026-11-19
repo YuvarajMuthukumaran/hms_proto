@@ -21,7 +21,10 @@
   function hasAnswer(hfEl){
     const sel=hfEl.querySelector('select.input');if(sel)return !!sel.value;
     const tags=hfEl.querySelector('.hf-tags');if(tags)return tags.children.length>0;
-    const tog=hfEl.querySelector('.mini-chips .tog.on');if(tog)return true;
+    /* 19 Nov 2026, Anu Yadav: "Absent" (Formal thought disorder, Hallucinations) means there is nothing to
+       add a note about, so picking only that must not open the box -- any other chip still does */
+    const tog=[...hfEl.querySelectorAll('.mini-chips .tog.on')].some(b=>b.textContent.trim()!=='Absent');
+    if(tog)return true;
     return false;
   }
   function labelOf(hfEl){return ((hfEl.querySelector(':scope>.lbl')||{}).textContent||'').replace(/\s*\(.*?\)\s*$/,'').trim();}
