@@ -74,10 +74,35 @@
     let f=null;try{f=A.famState(pid);}catch(e){}if(!f)return;
     if(f.c24)tick(pid,'c24');if(f.c34)tick(pid,'c34');
   }
+  /* 3. (19 Nov 2026, owner) Sensitisation topics are ticked in the Call family pop-up, under "How long was the call?".
+     They are saved in the patient's family record (psyx.fam, which both the psychiatrist and the psychologist may write). */
+  const TOPICS=['What the illness is','How reassurance feeds it','Responding at home','Medicines','Relapse signs','Stigma','Caregiver self-care','Discharge plan'];
+  const famOf=pid=>{try{return window.__faApi?__faApi.famState(pid):null;}catch(e){return null;}};
+  function addTopics(pid){
+    const m=document.getElementById('modal');if(!m||m.querySelector('#fcTopics'))return;
+    const f=famOf(pid)||{},had=f.topics||{};
+    const html=`<div class="field" id="fcTopicsW"><span class="lbl">Sensitisation topics covered <span class="tiny muted" style="font-weight:400">(tap all that apply)</span></span><div class="pm-b" id="fcTopics">${TOPICS.map(t=>`<button type="button" class="tog" data-t="${E(t)}" onclick="this.classList.toggle('on')" title="${had[t]?'Covered '+E(had[t].at)+' by '+E(had[t].by):'Not covered yet'}">${had[t]?'✓ ':''}${E(t)}</button>`).join('')}</div>
+      <div class="tiny muted" style="margin-top:4px">${Object.keys(had).length} of ${TOPICS.length} covered so far</div></div>`;
+    const dur=m.querySelector('#pmB_dur');const anchor=dur&&dur.closest('.field');
+    if(anchor)anchor.insertAdjacentHTML('afterend',html);
+    else{const n=m.querySelector('#faN'),fld=n&&n.closest('.field');if(fld)fld.insertAdjacentHTML('beforebegin',html);}
+  }
+  function saveTopics(pid,picked){
+    if(!picked.length)return;const f=famOf(pid);if(!f)return;
+    f.topics=f.topics||{};const w={at:atNow(),by:signer()};picked.forEach(t=>{f.topics[t]=w;});
+    if(f.log&&f.log[0]&&!f.log[0].topics)f.log[0].topics=picked.slice();
+    try{V3.log(pid,S.role,'family','Sensitisation topics covered: '+picked.join(', '));}catch(e){}
+  }
   const wrapCall=()=>{
-    if(typeof window.faCall==='function'&&!window.faCall.__dnx){const o=window.faCall;window.faCall=function(pid,k){LAST={pid,k};return o.apply(this,arguments);};window.faCall.__dnx=1;}
+    if(typeof window.faCall==='function'&&!window.faCall.__dnx){const o=window.faCall;window.faCall=function(pid,k){LAST={pid,k};const r=o.apply(this,arguments);try{addTopics(pid);}catch(e){}return r;};window.faCall.__dnx=1;}
     ['pmCallSave','faCallSave'].forEach(n=>{const o=window[n];if(typeof o!=='function'||o.__dnx)return;
-      window[n]=function(){const L=LAST||{pid:arguments[0],k:arguments[1]};const r=o.apply(this,arguments);if(L&&L.pid){sync(L.pid);try{render();}catch(e){}}return r;};window[n].__dnx=1;});
+      window[n]=function(){const L=LAST||{pid:arguments[0],k:arguments[1]};
+        const picked=[...document.querySelectorAll('#fcTopics .tog.on')].map(b=>b.dataset.t);
+        const spoke=n==='faCallSave'||/^Spoke to family$/.test(((document.querySelector('#pmB_out .tog.on')||{}).textContent||'').trim());
+        const f0=L&&L.pid&&famOf(L.pid),n0=f0&&f0.log?f0.log.length:0;
+        const r=o.apply(this,arguments);
+        if(L&&L.pid){const f1=famOf(L.pid);if(spoke&&f1&&f1.log&&f1.log.length>n0)saveTopics(L.pid,picked);sync(L.pid);try{render();}catch(e){}}
+        return r;};window[n].__dnx=1;});
   };
   wrapCall();
 

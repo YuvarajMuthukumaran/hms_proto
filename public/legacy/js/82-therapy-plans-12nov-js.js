@@ -114,9 +114,8 @@
     const told=SNO(pid).told;
     const nDone=TOPICS.filter(t=>done[t]).length;
     const st=r=>r[1]?'<span class="tf-st ok">Done</span>':r[2]?'<span class="tf-st due">Due now</span>':'<span class="tf-st">Not due yet</span>';
-    return `<div class="tf"><section class="tf-c tf-wide"><div class="tf-h"><div><b>Sensitisation topics</b><span>Ticked from the topics marked in each family session</span></div><span class="tf-n"><b>${nDone}</b> of ${TOPICS.length} covered</span></div>
-      <div class="tf-bar"><i style="width:${Math.round(nDone/TOPICS.length*100)}%"></i></div>
-      <div class="tf-topics">${TOPICS.map(t=>'<div class="tf-t'+(done[t]?' on':'')+'"><span class="tf-ck">'+(done[t]?'✓':'')+'</span><div><div>'+t+'</div>'+(done[t]?'<small>'+esc(done[t].at)+(done[t].who?' · '+esc(done[t].who):'')+'</small>':'')+'</div></div>').join('')}</div></section>
+    /* 19 Nov 2026 (owner): the Sensitisation topics card is gone from here; topics are ticked in the Call family pop-up (block 140) */
+    return `<div class="tf">
       <section class="tf-c"><div class="tf-h"><div><b>Required contact</b><span>Set at admission, ticks itself when logged</span></div></div>${req.map(r=>'<div class="tf-r"><span>'+r[0]+'</span>'+st(r)+'</div>').join('')}</section>
       <section class="tf-c"><div class="tf-h"><div><b>Calls and WhatsApp</b><span>Through the Tulasi number</span></div></div>${comm.length?comm.map(c=>'<div class="tf-r"><span>'+esc(c.type)+' · '+esc(c.who)+'</span><span class="tf-d">'+esc(c.date)+'</span></div>').join(''):'<div class="tf-e">No contact logged yet.</div>'}</section>
       <section class="tf-c"><div class="tf-h"><div><b>Who may be told what</b><span>Family members and what each may hear</span></div></div>${contacts.map(c=>'<div class="tf-r"><span><b>'+esc(c[0])+'</b> <small>'+esc(String(c[1]).split(' · ')[0])+'</small></span><select class="input" style="max-width:190px;min-height:34px" onchange="tpTold(\''+pid+'\',\''+esc(c[0]).replace(/'/g,'')+'\',this.value)">'+['Everything','Clinical updates only','Billing only','Nothing'].map(o=>'<option '+((told[c[0]]||(/Not for now/.test(c[2]||'')?'Nothing':'Everything'))===o?'selected':'')+'>'+o+'</option>').join('')+'</select></div>').join('')||'<div class="tf-e">No family contacts yet.</div>'}</section>
