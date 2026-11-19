@@ -1,0 +1,9 @@
+/* 19 Nov 2026 (owner): Patient Experience patient tabs use the psychiatrist's pill format, each with an icon. */
+const ic=p=>`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto">${p}</svg>`;
+const ICONS={summary:'<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 10h6M9 14h6"/>',family:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',prefs:'<path d="M6 3v7M6 14v7M12 3v3M12 10v11M18 3v11M18 18v3M3 10h6M9 6h6M15 14h6"/>',griev:'<path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/>',rounds:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',dis:'<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>',past:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>'};
+require('./rep.cjs')('public/px/patients.html',[
+["${TABS.map(([k,l])=>`<button role=\"tab\" data-t=\"${k}\" style=\"border:0;background:transparent;padding:10px 14px;font-size:14px;font-weight:600;white-space:nowrap;color:${S.rtab===k?'#1E5BB8':'#475467'};border-bottom:2px solid ${S.rtab===k?'#1E6CDB':'transparent'}\">${l}",
+ "${TABS.map(([k,l])=>`<button role=\"tab\" data-t=\"${k}\" style=\"display:inline-flex;align-items:center;gap:7px;border:1px solid ${S.rtab===k?'#0F172A':'#D6E4F7'};background:${S.rtab===k?'#0F172A':'#fff'};padding:8px 15px;border-radius:99px;font-size:14px;font-weight:600;white-space:nowrap;color:${S.rtab===k?'#fff':'#344054'}\">${TABICON[k]||''}${l}"],
+["<div role=\"tablist\" style=\"display:flex;gap:4px;border-bottom:1px solid #E3EAF2;overflow-x:auto\">","<div role=\"tablist\" style=\"display:flex;gap:8px;padding:2px 0 4px;overflow-x:auto\">"],
+["  const TABS=[['summary','Stay summary']","  const TABICON="+JSON.stringify(Object.fromEntries(Object.entries(ICONS).map(([k,v])=>[k,ic(v)])))+";\n  const TABS=[['summary','Stay summary']"],
+]);
