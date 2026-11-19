@@ -11,7 +11,7 @@
   const pt=pid=>PTS.concat(typeof PTS_F!=='undefined'?PTS_F:[],typeof PTS_D!=='undefined'?PTS_D:[]).find(p=>p.id===pid);
   const pidNow=()=>{const m=String(location.hash||'').match(/^#\/patient\/([^/?]+)/);if(m)return decodeURIComponent(m[1]);if(/^#\/(rounds|notes)/.test(location.hash||''))return S.focusPid||'';return '';};
   const esc=s=>hesc(String(s==null?'':s));
-  function bar(pid){
+  function bar(pid,withName){
     const p=pt(pid);if(!p)return '';const x=(window.psyPx&&psyPx(pid))||{},day=+p.day||0,sec=String(p.sec||'');
     const left=sec==='89'?30-day:null;   /* 18 Nov 2026: below 0 means past the 30 days */
     const legal=sec?`<span class="sh-c ${left!==null&&left<0?'red':left!==null&&left<=5?'amber':''}">Section ${esc(sec)}${sec==='89'?(left>=0?' · day '+day+' of 30 · '+left+' days left':' · day '+day+' · '+(-left)+' days past 30'):' · day '+day}</span>`:'';
@@ -25,7 +25,11 @@
     const al=x.allergy&&x.allergy.list&&x.allergy.list.length?`<span class="sh-c">Allergy: ${x.allergy.list.map(a=>esc(a.drug)).join(', ')}</span>`:'';
     let rf=[];try{rf=(typeof RMO_FILL!=='undefined'&&RMO_FILL[p.id])||[];}catch(e){}const sx=p.sex||rf[3]||'',ag=p.age||rf[4]||'';
     const btn=kind()==='psychologist'?`<button class="btn pri sh-b" onclick="shNote('${pid}')">Session note</button>`:`<button class="btn pri sh-b" onclick="shNote('${pid}')">Round note</button>`;
-    return `<div class="sh-n"><b>${esc(p.name)}</b><span class="sh-s2">${ag?esc(ag)+(sx?'/'+esc(sx):''):''} · UHID ${esc(p.uhid||(()=>{try{return ptIdentity(p).uhid;}catch(e){return '';}})())} · ${esc(p.room||'')}</span></div>${legal}${obsC}${risk}${al}<button class="sh-c sh-nr" onclick="shCall('${pid}')">NR · Call</button><span style="flex:1"></span>${btn}`;
+    /* 19 Nov 2026, Anu Yadav: on the patient's own page the name is already shown right above (the .dph header
+       card), so a second copy of it here just duplicated it -- withName=false drops it and the rest of this
+       strip is placed right under that name instead of floating as its own bar (see paint()). */
+    const nameBlock=withName===false?'':`<div class="sh-n"><b>${esc(p.name)}</b><span class="sh-s2">${ag?esc(ag)+(sx?'/'+esc(sx):''):''} · UHID ${esc(p.uhid||(()=>{try{return ptIdentity(p).uhid;}catch(e){return '';}})())} · ${esc(p.room||'')}</span></div>`;
+    return `${nameBlock}${legal}${obsC}${risk}${al}<button class="sh-c sh-nr" onclick="shCall('${pid}')">NR · Call</button><span style="flex:1"></span>${btn}`;
   }
   window.shNote=function(pid){S.pid=pid;if(kind()==='psychologist'){try{pgTherapyModal(pid);}catch(e){go('#/patient/'+pid+'/therapy');}}else{try{psyOpenRounds(pid);}catch(e){go('#/rounds');}setTimeout(()=>{const n=document.getElementById('prNote');if(n&&String(location.hash).split('?')[0]==='#/rounds'){n.scrollIntoView({block:'center',behavior:'smooth'});n.focus();}},120);}};
   window.shCall=function(pid){const b=[...document.querySelectorAll('#view button')].find(x=>/^Call caregiver$/.test(x.textContent.trim()));if(b)b.click();else toast('Calling the nominated representative through the HMS (demo)');};
@@ -35,6 +39,7 @@
   #safeBar .sh-c{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:650;border-radius:99px;padding:4px 11px;background:#f2f4f7;color:#344054;border:1px solid transparent}
   #safeBar .sh-c.amber{background:#fffaeb;color:#b54708;border-color:#fedf89}#safeBar .sh-c.red{background:#fef3f2;color:#b42318;border-color:#fecdca}
   #safeBar .sh-s{font-weight:500;color:#667085;font-size:11.5px}#safeBar .sh-nr{cursor:pointer;background:#fff;border-color:#d6dee8}#safeBar .sh-b{height:34px}
+  #safeBar.sb-inline{position:static;top:auto;z-index:auto;background:none;border:0;border-radius:0;box-shadow:none;padding:6px 0 0;margin:0}
   #view .dph .sf{display:none}
   .lk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:0 14px 10px;font-size:12.5px;color:#667085}.lk:empty{display:none}.lk-late{font-weight:700;color:#93370D;background:#FFF4D6;border-radius:999px;padding:2px 10px}.lk-a{flex-basis:100%;border-left:3px solid #1e6cdb;background:#f5f9ff;padding:6px 10px;border-radius:6px;color:#344054}
   .nitem{position:relative}.lk-add{position:absolute;top:50%;right:44px;transform:translateY(-50%);z-index:2}
@@ -44,10 +49,15 @@
     const v=$('view'),k=kind();if(!v||!k)return;const pid=pidNow();
     const old=v.querySelector('#safeBar');
     if(!pid||!pt(pid)){if(old)old.remove();return;}
-    const kk=k+S.rmoFloor+((window.psyPx&&psyPx(pid).riskLevel)||'');
-    if(!old||old.dataset.pid!==pid||old.dataset.k!==kk){if(old)old.remove();const el=document.createElement('div');el.id='safeBar';el.dataset.pid=pid;el.dataset.k=kk;el.innerHTML=bar(pid);
-      const top=document.querySelector('.top');const tp=top&&getComputedStyle(top).position;document.documentElement.style.setProperty('--shTop',(tp==='sticky'||tp==='fixed')?(top.getBoundingClientRect().height)+'px':'0px');
-      const root=v.querySelector('.ws-mid')||v;root.insertBefore(el,root.firstChild);}
+    /* the .dph card's name row (only present on the patient's own page): when it is there, the tags sit right
+       under the name instead of in a floating bar of their own (Anu Yadav, 19 Nov 2026) */
+    const nameRow=v.querySelector('.dph .row');
+    const kk=k+S.rmoFloor+((window.psyPx&&psyPx(pid).riskLevel)||'')+(nameRow?'|n':'');
+    if(!old||old.dataset.pid!==pid||old.dataset.k!==kk){if(old)old.remove();const el=document.createElement('div');el.id='safeBar';el.dataset.pid=pid;el.dataset.k=kk;
+      if(nameRow){el.classList.add('sb-inline');el.innerHTML=bar(pid,false);nameRow.insertAdjacentElement('afterend',el);}
+      else{el.innerHTML=bar(pid,true);
+        const top=document.querySelector('.top');const tp=top&&getComputedStyle(top).position;document.documentElement.style.setProperty('--shTop',(tp==='sticky'||tp==='fixed')?(top.getBoundingClientRect().height)+'px':'0px');
+        const root=v.querySelector('.ws-mid')||v;root.insertBefore(el,root.firstChild);}}
     /* the orange event strip only belongs on Stay summary; on the other tabs it is noise (psychologist, like the psychiatrist) */
     if(k==='psychologist'&&location.hash.indexOf('/overview')<0)v.querySelectorAll('.callout.row').forEach(c=>{if(/reported by/.test(c.textContent))c.remove();});
     /* the old big primary button, and tags that say nothing */
