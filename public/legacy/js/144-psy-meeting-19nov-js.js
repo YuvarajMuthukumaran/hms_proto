@@ -27,7 +27,7 @@
     'body.psy-myday #view .pd-t td::before,body.psy-myday #view .pd-t td:first-child::before{background:none!important;box-shadow:none!important}'+
     'body.psy-myday #view .pd-t tr.r-red td,body.psy-myday #view .pd-t tr.r-amber td{background:#fff}'+
     'body.psy-myday #view .pd-t col:nth-child(2){width:25%}body.psy-myday #view .pd-t col:nth-child(3){width:37%}body.psy-myday #view .pd-t col:nth-child(4){width:auto}body.psy-myday #view .pd-t col:nth-child(5){width:200px}'+
-    'body.psy-myday #view .pd-t th:nth-child(2){width:24%!important}body.psy-myday #view .pd-t th:nth-child(3){width:36%!important}body.psy-myday #view .pd-t th:nth-child(4){width:auto!important}body.psy-myday #view .pd-t th:nth-child(5){width:190px!important}'+
+    'body.psy-myday #view .pd-t th:nth-child(2){width:22%!important}body.psy-myday #view .pd-t th:nth-child(3){width:27%!important}body.psy-myday #view .pd-t th:nth-child(4){width:auto!important}body.psy-myday #view .pd-t th:nth-child(5){width:190px!important}'+
     'body.psy-myday #view .pd-t td:nth-child(3) .pg-dt b{font-size:15px}'+
     /* 6. daily notes: numbered, spaced */
     'body.pgx #view .pn-main{counter-reset:pnq}body.pgx #view .pn-q{counter-increment:pnq;margin-left:12px;margin-bottom:6px}'+
@@ -60,8 +60,8 @@
       mv(hr);t.querySelectorAll('tbody tr[data-dt]').forEach(mv);mv(t.querySelector('colgroup'));
     }
     /* widths on the header cells themselves (the table is fixed layout): Patient 24%, Due today 36%, Ongoing interventions the rest, buttons 190px */
-    ['','24%','36%','auto','190px'].forEach((w,i)=>{const th=hr.children[i];if(th&&w)th.style.setProperty('width',w,'important');});
-    t.querySelectorAll('colgroup col').forEach((c,i)=>{const w=['','24%','36%','auto','190px'][i];if(w)c.style.setProperty('width',w,'important');});
+    ['','22%','27%','auto','190px'].forEach((w,i)=>{const th=hr.children[i];if(th&&w)th.style.setProperty('width',w,'important');});
+    t.querySelectorAll('colgroup col').forEach((c,i)=>{const w=['','22%','27%','auto','190px'][i];if(w)c.style.setProperty('width',w,'important');});
   }
   function eyes(){
     document.querySelectorAll('#view .pd-eye').forEach(b=>{
