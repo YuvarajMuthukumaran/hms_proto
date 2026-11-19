@@ -106,8 +106,10 @@
   const famTasks=()=>famRows().map(r=>({id:'fa_'+r.pid+r.key,late:r.late,title:r.what+' · '+r.name,meta:'Required family contact',due:r.due,go:'#/patient/'+r.pid+'/prefs'}));
   window.faCall=function(pid,key){const p=pt(pid);
     V3.modal('Call '+hesc(p.name)+"'s family",'Logged in the HMS. This ticks the required call.',`<div class="small muted" style="margin-bottom:8px">Required: ${key==='c24'?'24 hour call':'day 3 to 4 call'}</div><label class="field"><span class="lbl">What was said</span><textarea class="input" id="faN" rows="4" placeholder="In a few words"></textarea></label><label class="row" style="gap:8px;margin-top:8px"><input type="checkbox" id="faG"> <span>There is a concern. Raise it as a grievance (6 hour clock)</span></label>`,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="faCallSave('${pid}','${key}')">Save call</button>`);};
-  window.faCallSave=function(pid,key){const n=(($('faN')||{}).value||'').trim(),g=!!($('faG')||{}).checked,f=famState(pid);
-    f[key]=signer()+' · '+atNow();f.log.unshift({what:key==='c24'?'24 hour call':'Day 3 to 4 call',by:signer(),at:atNow(),note:n});
+  window.faCallSave=function(pid,key){const n=(($('faN')||{}).value||'').trim(),g=!!($('faG')||{}).checked,f=famState(pid),what=key==='c24'?'24 hour call':'Day 3 to 4 call';
+    f[key]=signer()+' · '+atNow();f.log.unshift({what,by:signer(),at:atNow(),note:n});
+    /* 19 Nov 2026: the call was kept here (famState) but never written to the patient's own record, so it looked unsaved there */
+    V3.log(pid,S.role,'family',what+(n?': '+n:''));
     if(g){au().grv.push({id:'g'+Date.now(),pid,text:n||'Concern raised on a family call',by:signer(),at:nowMs(),ack:false});}
     closeModal();render();toast(g?'Call saved. The concern is with the Patient Experience lead: they have 6 hours.':'Call saved and ticked');};
   window.__faApi={famState,au,nowMs};
@@ -117,7 +119,7 @@
     return lang==='hi'?`नमस्ते। इस हफ़्ते ${first} ने नियमित दिनचर्या का पालन किया और ${topics.length?'हमारी टीम के साथ बातचीत में हिस्सा लिया':'गतिविधियों में हिस्सा लिया'}। खाना और नींद में धीरे-धीरे सुधार दिख रहा है। अगले हफ़्ते भी यही दिनचर्या जारी रहेगी। कोई सवाल हो तो हमें बताइए।`:`Hello. This week ${first} followed the daily routine and took part in ${did}. Eating and sleep are slowly settling. Next week the same routine continues. Please tell us if you have any questions.`;};
   window.faWeek=function(pid,lang){lang=lang||'en';const p=pt(pid);
     V3.modal('Weekly update · '+hesc(p.name),'Drafted from this week\'s notes. No clinical details. Approve in one tap.',`<div class="row" style="gap:6px;margin-bottom:8px"><button class="au-t ${lang==='en'?'on':''}" onclick="faWeek('${pid}','en')">English</button><button class="au-t ${lang==='hi'?'on':''}" onclick="faWeek('${pid}','hi')">हिन्दी</button><span class="au-ch">AI draft</span></div><textarea class="input" id="faW" rows="6">${hesc(weekDraft(pid,lang))}</textarea>`,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="faWeekOk('${pid}')">Approve and mark sent</button>`);};
-  window.faWeekOk=function(pid){const f=famState(pid);f.weeks=Math.floor((+pt(pid).day||0)/7);f.log.unshift({what:'Weekly update',by:signer(),at:atNow(),note:(($('faW')||{}).value||'')});closeModal();render();toast('Approved. The family update is marked sent.');};
+  window.faWeekOk=function(pid){const f=famState(pid),note=(($('faW')||{}).value||'');f.weeks=Math.floor((+pt(pid).day||0)/7);f.log.unshift({what:'Weekly update',by:signer(),at:atNow(),note});V3.log(pid,S.role,'family','Weekly update sent to family: '+note);closeModal();render();toast('Approved. The family update is marked sent.');};
   window.faAck=function(id){const g=au().grv.find(x=>x.id===id);if(g){g.ack=true;render();}};
   function famEscalate(){au().grv.forEach(g=>{if(!g.ack&&nowMs()-g.at>=6*3600000)alertOnce('g'+g.id,g.pid,'Family concern untouched for 6 hours · '+pt(g.pid).name,g.text,'Patient experience lead');});}
   const sessTomorrow=()=>{const t=new Date(Date.now()+86400000+(au().skip||0)*0),ds=t.toISOString().slice(0,10);const L=((S.pgc||{}).extra||[]).filter(e=>e.kind==='fam'&&e.date===ds).map(e=>({id:e.id,pid:e.pid,label:e.label,at:(e.h||10)+':'+String(e.m||0).padStart(2,'0')}));

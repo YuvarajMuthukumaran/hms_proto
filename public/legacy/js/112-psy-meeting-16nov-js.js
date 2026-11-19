@@ -52,6 +52,9 @@
     const note=[FC.out,FC.dur,txt].filter(Boolean).join(' · ');
     f.log=f.log||[];f.log.unshift({what:spoke?what:what+' (attempt)',by:signer(),at:atNow(),note});
     if(spoke)f[FC.key]=signer()+' · '+atNow();
+    /* 19 Nov 2026: this call was kept in the dashboard's own family state (famState) but never written to the
+       patient's own record (V3.log), which is what the patient file actually shows -- it looked unsaved there */
+    V3.log(FC.pid,S.role,'family',(spoke?what:what+' (attempt)')+(note?': '+note:''));
     if(conc)A.au().grv.push({id:'g'+Date.now(),pid:FC.pid,text:conc,by:signer(),at:A.nowMs(),ack:false});
     FC=null;closeModal();render();
     toast(conc?'Call saved. The concern is with the Patient Experience lead: they have 6 hours.':spoke?'Call saved and ticked':'Attempt saved. The call is still due.');

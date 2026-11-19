@@ -5,7 +5,9 @@
      read and write a patient's records, hear about renders, new patients and audit entries. */
 (function(){
   const boot=window.__TULASI__||{};
-  const PSYX_SHARED=['mgmtPsych','th','roundPlan','monTables','assignedAssess','sn','tpSign','lp','hf']; /* the parts of psyx that the psychologist writes (see readCtx) */
+  const PSYX_SHARED=['mgmtPsych','th','roundPlan','monTables','assignedAssess','sn','tpSign','lp','hf','fam']; /* the parts of psyx that the psychologist writes (see readCtx).
+    fam (family call log and due-call ticks) added 19 Nov 2026: the psychologist also logs family calls, but 'doctor' kind is
+    psychiatrist/lead/RMO only, so a psychologist's call was silently dropped at save -- it never reached the saved record. */
   const requested=boot.role||'';
   const lock=boot.viewRole||requested;
   const NAMES={lead:'Floor Coordinator','floor-coordinator':'Floor Coordinator','floor-lead-psychiatrist':'Floor Lead Psychiatrist','floor-lead-psychologist':'Floor Lead Psychologist',psychiatrist:'Psychiatrist','patient-experience-lead':'Patient Experience Lead',psychologist:'Psychologist',nurse:'Nurse',rmo:'RMO on duty'};
