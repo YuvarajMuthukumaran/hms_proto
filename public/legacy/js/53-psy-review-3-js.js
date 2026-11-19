@@ -61,7 +61,7 @@
       const tt=((p.querySelector('h3')||{}).textContent||'').trim();
       if(tt==='Lab reports'){
         const sub=p.querySelector('.psy-tx-head .small.muted');if(sub)sub.remove();
-        const btn=p.querySelector('.psy-tx-head button');if(btn){btn.className='btn pri sm';btn.textContent='+ Upload lab report';}
+        const btn=p.querySelector('.psy-tx-head button');if(btn){btn.className='btn pri sm';btn.textContent='Upload lab report';}
         const body=p.querySelector('.psy-tx-body');if(body)body.innerHTML=labList();
         ch=true;
       }else if(tt==='Requests and permissions'){p.insertAdjacentHTML('beforeend',reqLog());ch=true;}
