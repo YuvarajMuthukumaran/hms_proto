@@ -15,8 +15,11 @@
     const p=pt(pid);if(!p)return '';const x=(window.psyPx&&psyPx(pid))||{},day=+p.day||0,sec=String(p.sec||'');
     const left=sec==='89'?30-day:null;   /* 18 Nov 2026: below 0 means past the 30 days */
     const legal=sec?`<span class="sh-c ${left!==null&&left<0?'red':left!==null&&left<=5?'amber':''}">Section ${esc(sec)}${sec==='89'?(left>=0?' · day '+day+' of 30 · '+left+' days left':' · day '+day+' · '+(-left)+' days past 30'):' · day '+day}</span>`:'';
-    const obs=(pid==='neel'&&S.obs)||(typeof EX!=='undefined'&&(EX[pid]||[])[0])||'Routine';
-    const doc=(typeof PSYOF!=='undefined'&&PSYOF[pid])||'the treating psychiatrist';
+    /* 19 Nov 2026, Trello "safety header: observation level mismatch": read the patient's own saved level (what the Observation level
+       drop-down writes), not the seed list, so the header and the drop-down always say the same */
+    let oc={};try{oc=(typeof ptCtxOf==='function'&&ptCtxOf(pid))||{};}catch(e){}
+    const obs=oc.obs||(pid==='neel'&&S.obs)||(typeof EX!=='undefined'&&(EX[pid]||[])[0])||'Routine';
+    const doc=(oc.obs&&oc.obsBy&&oc.obsBy.by)||(typeof PSYOF!=='undefined'&&PSYOF[pid])||'the treating psychiatrist';
     const obsC=`<span class="sh-c" title="Set by ${esc(doc)} · review by today 6:00 pm">${esc(obs)}<span class="sh-s">set by ${esc(String(doc).replace(/^Dr\.\s*/,'Dr. '))} · review by 6 pm</span></span>`;
     const tags=(x.riskTags||[]).map(t=>`<span class="sh-c red">${esc(t)}</span>`).join('');
     /* the level comes from the suicide / self-harm screen when one was done (card "Rating scales"), otherwise from the record */
