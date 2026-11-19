@@ -103,7 +103,7 @@
     const __sw2=ptSwaps;
     ptSwaps=function(){
       const out=__sw2.apply(this,arguments);
-      try{const p=ptFind(S.pid);if(p&&p.real){out.unshift(['Referred by Dr. Aanya Sharma, OPD',p.referral?'Referred by '+p.referral:'Referral not recorded'],['Second episode. Stopped lithium 4 months ago. Symptoms rose after a work deadline; family noticed spending and anger at home.','Not recorded yet.']);}}catch(e){}
+      try{const p=ptFind(S.pid);if(p&&p.real){out.unshift(['Referred by Dr. Aanya Sharma, OPD',p.referral?'Referred by '+p.referral:'No referral recorded in the old HMS'],['Second episode. Stopped lithium 4 months ago. Symptoms rose after a work deadline; family noticed spending and anger at home.','Not recorded yet.']);}}catch(e){}
       return out;
     };
   }

@@ -107,7 +107,7 @@
   function admBtn(){
     const m=(location.hash||'').match(/^#\/patient\/([^/]+)/);if(!m)return;let p=null;try{p=ptFind(decodeURIComponent(m[1]));}catch(e){}
     if(!p||!p.real)return;
-    document.querySelectorAll('#view .dpcards > *').forEach(c=>{if(/^\s*admitted/i.test(c.innerText||'')&&!c.dataset.pmAdDone){c.dataset.pmAdDone='1';if(p.admEst){const e=document.createElement('div');e.className='tiny muted';e.textContent='Date estimated from old HMS IPD visits';c.appendChild(e);}if(p.lastVisit){const d=document.createElement('div');d.className='tiny muted';d.textContent='Last visit in the old HMS: '+new Date(p.lastVisit+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});c.appendChild(d);}}});
+    document.querySelectorAll('#view .dpcards > *').forEach(c=>{if(/^\s*admitted/i.test(c.innerText||'')&&!c.dataset.pmAdDone){c.dataset.pmAdDone='1';if(p.admEst){const e=document.createElement('div');e.className='tiny muted';e.textContent='Date estimated from old HMS IPD visits';c.appendChild(e);}if(p.lastVisit){const d=document.createElement('div');d.className='tiny muted';d.textContent='Not this admission: last seen as an outpatient in the old HMS, '+new Date(p.lastVisit+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});c.appendChild(d);}}});
   }
 
   const __r=render;
