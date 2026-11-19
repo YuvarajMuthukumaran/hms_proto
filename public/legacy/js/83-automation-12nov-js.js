@@ -52,7 +52,9 @@
     riskDue().forEach(p=>out.push({id:'rk_'+p.id,late:false,title:'Risk not yet discussed with family · '+p.name,meta:'High risk patient: log the family risk discussion',due:'Due',go:'#/patient/'+p.id+'/overview'}));return out;}
   function nnEscalate(){const k=kind();if(!k)return;crEscalate();
     seedDrafts().forEach(d=>{if(!d.signed&&hrs(nowMs()-d.at)>=48)alertOnce('dr'+d.id,d.pid,'Unsigned note for 48 hours · '+pt(d.pid).name,d.title+' by '+(d.role==='psychiatrist'?'the psychiatrist':'the psychologist')+' is still unsigned.','Floor lead');});
-    if(nudgeLevel()>=3)PTS.filter(p=>(+p.day||0)>=1&&!noted(p.id)).forEach(p=>alertOnce('dn'+p.id+new Date().toDateString(),p.id,'Daily note not written by 9 pm · '+p.name,'Sent to the floor lead.','Floor lead'));}
+    /* each day this fires fresh (Trello: two days' alerts looked identical) -- the date goes in the title so
+       a floor lead looking at several unacknowledged days can tell them apart. */
+    if(nudgeLevel()>=3)PTS.filter(p=>(+p.day||0)>=1&&!noted(p.id)).forEach(p=>alertOnce('dn'+p.id+new Date().toDateString(),p.id,'Daily note not written by 9 pm, on '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+' · '+p.name,'Sent to the floor lead.','Floor lead'));}
   window.nnSign=function(id){const d=seedDrafts().find(x=>x.id===id);if(!d)return;
     pinSign('Sign the '+d.title.toLowerCase()+' · '+pt(d.pid).name,[['Signing as',signer()]],()=>{d.signed={by:signer(),at:atNow()};render();toast('Signed. It is now locked; only an addendum can be added.');});};
   window.nnAddendum=function(id){const d=seedDrafts().find(x=>x.id===id);if(!d)return;
