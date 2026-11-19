@@ -223,7 +223,7 @@
     const act=items.filter(i=>i.lab[1]!=='Today'); /* routine "Today" items are not shown on the dashboard any more */
     act.forEach((i,ix)=>{i.key=i.k+':'+i.txt;
       /* Take Action lists "Vitals done" / "Ondansetron done" (no Mark seen); other items keep their own button (Open, Do it now, Review and sign) */
-      if(i.k==='alert')i.btn=['I have seen',"psyItemDone('"+p.id+"',"+ix+")",false];
+      if(i.k==='alert')i.btn=null;
     });
     const tk=(window.psyPx&&psyPx(p.id).taken)||{},rem=act.filter(i=>!tk[i.key]),doneL=act.filter(i=>tk[i.key]);
     const allTaken=act.length>0&&!rem.length,view=rem.length?rem:act; /* chips, colour and order follow what is still open */

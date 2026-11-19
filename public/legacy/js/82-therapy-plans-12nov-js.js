@@ -76,7 +76,7 @@
   function group(pid){
     const th=(px(pid).th||{}).grp||[],mine=SNO(pid).grp;
     const hash=[...pid].reduce((a,c)=>a+c.charCodeAt(0),0);
-    const strip=name=>{const L=mine.concat(th).filter(r=>(r.group||'')===name).slice(0,5).map(r=>/Refus/.test(r.took||'')?'x':/part/i.test(r.took||'')?'p':'a');while(L.length<5){const k=(hash+L.length+name.length)%5;L.push(k===0?'p':k===1?'x':'a');}return L;};
+    const strip=name=>{const L=mine.concat(th).filter(r=>(r.group||'')===name).slice(0,5).map(r=>/Refus|not attend/i.test(r.took||'')?'x':/part/i.test(r.took||'')?'p':'a');while(L.length<5){const k=(hash+L.length+name.length)%5;L.push(k===0?'p':k===1?'x':'a');}return L;};
     const line=name=>{const r=mine.concat(th).find(x=>(x.group||'')===name&&(x.note||x.pp));return r?(r.note||r.pp):'Joined in quietly.';};
     const all=GROUPS.map(g=>({g,st:strip(g[0])})),att=all.reduce((n,x)=>n+x.st.filter(c=>c==='a').length,0),tot=all.length*5;
     const lab={a:'Attended',p:'Part of it',x:'Refused'};
@@ -84,7 +84,10 @@
       <div class="tg-grid">${all.map(x=>{const n=x.st.filter(c=>c==='a').length;return `<article class="tg-c"><div class="tg-h"><div><b>${x.g[0]}</b><span>Led by ${x.g[2]}</span></div><span class="tg-when">${x.g[1]}</span></div>
         <div class="tg-att"><div class="tg-pips" role="img" aria-label="Last 5 sessions: ${x.st.map(c=>lab[c]).join(', ')}">${x.st.map((c,i)=>'<i class="'+c+'" title="Session '+(i+1)+' of the last 5: '+lab[c]+'"></i>').join('')}</div><span class="tg-n"><b>${n}</b> of 5</span></div>
         <blockquote class="tg-q">${esc(line(x.g[0]))}</blockquote></article>`;}).join('')}</div>
-      <div class="tiny muted" style="margin-top:10px">Groups are run from the group roster: one note for the room, one line for each patient.</div>`;
+      ${(()=>{/* 19 Nov 2026: every attendance marked on the Group sessions page (or logged here), newest first */
+        const L=mine.concat(th);if(!L.length)return '<div class="small muted" style="margin-top:12px">No group attendance marked yet. The psychologist marks it on the Group sessions page.</div>';
+        return `<div class="tp-h" style="margin-top:14px">Attendance log</div><div class="scroll"><table><thead><tr><th>Date</th><th>Group</th><th>Took part</th><th>Marked by</th><th>Note</th></tr></thead><tbody>${L.map(r=>`<tr><td>${esc(r.date||'')}</td><td>${esc(r.group||'')}</td><td>${esc(r.took||'')}</td><td>${esc(r.by||'')}</td><td>${esc(r.note||'')}</td></tr>`).join('')}</tbody></table></div>`;})()}
+      <div class="tiny muted" style="margin-top:10px">Groups are run from the Group sessions page: pick the session, mark who attended, and it shows here.</div>`;
   }
   window.tpAttend=function(pid){
     V3.modal('Log attendance · '+esc(pat(pid).name),'One line for this patient.',`<div class="grid2"><label class="field"><span class="lbl">Group</span><select class="input" id="taG">${GROUPS.map(g=>`<option>${g[0]}</option>`).join('')}</select></label><label class="field"><span class="lbl">How he took part</span><select class="input" id="taT"><option>Attended</option><option>Attended in part</option><option>Refused</option></select></label></div><label class="field"><span class="lbl">One line</span><input class="input" id="taN" placeholder="e.g. spoke once, stayed to the end"></label>`,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="tpAttendSave('${pid}')">Save</button>`);
@@ -97,17 +100,21 @@
   function family(pid){
     const fam=signed(pid).filter(n=>n.mod==='Family therapy'),done={};
     fam.forEach(n=>{(n.blk&&n.blk.topics||[]).forEach(t=>{done[t]={at:(n.at||'').split(',')[0],who:n.blk.who||'',und:n.blk.und||''};});});
+    /* 19 Nov 2026: topics ticked in a family session logged in the Family sessions table count too (structured, not read from free text) */
+    (((px(pid).th||{}).fam)||[]).forEach(r=>{(r.tlist||[]).forEach(t=>{if(!done[t])done[t]={at:r.date||'',who:r.who||'',und:''};});});
     const calls=(()=>{try{return JSON.parse(ptRun(pid,()=>JSON.stringify(S.calls||{})));}catch(e){return {};}})();
     const p=pat(pid),day=+p.day||0,wk=fam[fam.length-1]&&(Date.now()-(fam[fam.length-1].ts||0)<7*D1);
     const flag=(ok,due)=>ok?'<span class="chip c-green">Done</span>':due?'<span class="chip c-red">Due now</span>':'<span class="chip c-grey">Not yet due</span>';
-    const req=[['24-hour call',calls.h24==='done',day>=1],['Day 3 to 4 call',calls.d34psych==='done',day>=3],['Weekly update',!!wk||!!(fam.length&&fam[fam.length-1]),day>=7],['Pre-discharge session',false,false]];
+    /* 19 Nov 2026: a call logged from Call family (dashboard or patient page, either clinician) ticks the required call here too */
+    const fs=(()=>{try{return window.__faApi?(__faApi.famState(pid)||{}):{};}catch(e){return {};}})();
+    const req=[['24-hour call',calls.h24==='done'||!!fs.c24,day>=1],['Day 3 to 4 call',calls.d34psych==='done'||calls.d34psy==='done'||!!fs.c34,day>=3],['Weekly update',!!wk||!!(fam.length&&fam[fam.length-1]),day>=7],['Pre-discharge session',false,false]];
     const contacts=(()=>{try{return JSON.parse(ptRun(pid,()=>JSON.stringify(S.contacts||[])));}catch(e){return [];}})();
     if(!contacts.length){try{const id=ptIdentity(p);if(id&&id.nr)contacts.push([id.nr,(id.rel||'Family')+' · nominated representative']);}catch(e){}}
     const comm=((px(pid).th||{}).comm||[]).slice(0,4);
     const told=SNO(pid).told;
     const nDone=TOPICS.filter(t=>done[t]).length;
     const st=r=>r[1]?'<span class="tf-st ok">Done</span>':r[2]?'<span class="tf-st due">Due now</span>':'<span class="tf-st">Not due yet</span>';
-    return `<div class="tf"><section class="tf-c tf-wide"><div class="tf-h"><div><b>Sensitisation topics</b><span>Ticked when a signed family session covers them</span></div><span class="tf-n"><b>${nDone}</b> of ${TOPICS.length} covered</span></div>
+    return `<div class="tf"><section class="tf-c tf-wide"><div class="tf-h"><div><b>Sensitisation topics</b><span>Ticked from the topics marked in each family session</span></div><span class="tf-n"><b>${nDone}</b> of ${TOPICS.length} covered</span></div>
       <div class="tf-bar"><i style="width:${Math.round(nDone/TOPICS.length*100)}%"></i></div>
       <div class="tf-topics">${TOPICS.map(t=>'<div class="tf-t'+(done[t]?' on':'')+'"><span class="tf-ck">'+(done[t]?'✓':'')+'</span><div><div>'+t+'</div>'+(done[t]?'<small>'+esc(done[t].at)+(done[t].who?' · '+esc(done[t].who):'')+'</small>':'')+'</div></div>').join('')}</div></section>
       <section class="tf-c"><div class="tf-h"><div><b>Required contact</b><span>Set at admission, ticks itself when logged</span></div></div>${req.map(r=>'<div class="tf-r"><span>'+r[0]+'</span>'+st(r)+'</div>').join('')}</section>
@@ -130,8 +137,8 @@
     const seg=['ind','grp','fam'].map(k=>`<button class="tp-s ${s.seg===k?'on':''}" onclick="tpSeg('${k}')">${{ind:'Individual',grp:'Group',fam:'Family'}[k]}</button>`).join('');
     let inner='';
     if(s.seg==='ind'){
-      const sub=['progress','sessions','homework'].map(k=>`<button class="tp-t ${s.sub===k?'on':''}" onclick="tpSub('${k}')">${{progress:'Progress',sessions:'Sessions',homework:'Homework'}[k]}</button>`).join('');
-      inner=`<div class="tp-tabs">${sub}</div>${s.sub==='progress'?progress(pid):s.sub==='sessions'?sessions(pid):hwGrid(pid)}`;
+      const sub=['progress','sessions'].map(k=>`<button class="tp-t ${s.sub===k?'on':''}" onclick="tpSub('${k}')">${{progress:'Progress',sessions:'Sessions',homework:'Homework'}[k]}</button>`).join('');
+      inner=`<div class="tp-tabs">${sub}</div>${s.sub==='progress'?progress(pid):s.sub==='sessions'?sessions(pid):progress(pid)}`;
     }else inner=s.seg==='grp'?group(pid):family(pid);
     const nb=document.createElement('div');nb.className='tp-body';nb.innerHTML=`<div class="tp-segs">${seg}</div>${inner}`;
     body.replaceWith(nb);

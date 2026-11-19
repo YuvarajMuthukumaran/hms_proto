@@ -137,4 +137,9 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/136-clinical-ui-18nov-js.js',
   '/legacy/js/137-discharge-18nov-js.js',
   '/legacy/js/138-icd11-diagnosis-19nov-js.js',
+  '/legacy/js/139-discharge-rework-19nov-js.js',
+  '/legacy/js/140-dn-alert-family-call-19nov-js.js',
+  '/legacy/js/141-admission-capacity-rounds-19nov-js.js',
+  '/legacy/js/142-vitals-slots-monitoring-19nov-js.js',
+  '/legacy/js/143-group-sessions-19nov-js.js',
 ];

@@ -27,7 +27,7 @@
     'Motivational interviewing':[['stage','Stage of change','chips',['Precontemplation','Contemplation','Preparation','Action','Maintenance']],['imp','Importance 0 to 10',N10],['conf','Confidence 0 to 10',N10],['trig','Triggers','a'],['ct','Change talk heard','a']],
     'Relapse prevention':[['trig','Triggers','a'],['ews','Early warning signs','a'],['cope','Coping plan','a'],['sup','Support contacts','a']],
     'Psychoeducation / supportive':[['topic','Topic','multi',['Illness','Medicines','Sleep','Warning signs','Coping','Stress']],['und','Understood (teach-back)','yn3']],
-    'Family therapy':[['who','Who attended','t'],['purpose','Purpose','multi',['Education','Conflict','Discharge planning']],['topics','Topics covered','multi',['What the illness is','How reassurance feeds it','Responding at home','Medicines','Relapse signs','Stigma','Caregiver self-care','Discharge plan']],['und','Understood (teach-back)','yn3'],['conc','Family concerns','a'],['act','Agreed actions','a'],['own','Owner of the actions','t'],['grv','Raise a grievance','check']],
+    'Family therapy':[['who','Who attended','t'],['purpose','Purpose','multi',['Education','Conflict','Discharge planning']],['topics','Topics covered','multi',['What the illness is','How reassurance feeds it','Responding at home','Medicines','Relapse signs','Stigma','Caregiver self-care','Discharge plan']],['tnote','Other topics or details discussed (free text)','a'],['und','Understood (teach-back)','yn3'],['conc','Family concerns','a'],['act','Agreed actions','a'],['own','Owner of the actions','t'],['grv','Raise a grievance','check']],
     'Group':[['gt','Group type','chips',['Anxiety and stress group','Relapse prevention group','Social skills group','Yoga and relaxation','Psychoeducation group']],['ros','Attendance','roster'],['gn','Group note','a'],['pp','One line for this patient','t']]
   };
   const DEFMOD={ind:'CBT',grp:'Group',fam:'Family therapy'};
@@ -146,7 +146,7 @@
     const plan=`<div class="sn-g"><label class="field"><span class="lbl">Plan for next time</span><input class="input" value="${esc(D.plan||'')}" oninput="snS('plan',this.value)"></label><div class="sn-g"><label class="field"><span class="lbl">Next session date</span><input class="input" type="date" value="${esc(D.next||'')}" onchange="snS('next',this.value)"></label><label class="field"><span class="lbl">Time</span><input class="input" type="time" value="${esc(D.nextT||'10:00')}" onchange="snS('nextT',this.value)"></label></div></div><div class="tiny muted">A next session date books it on the Calendar and caseload.</div>`;
     const sum=`<label class="field"><span class="lbl">One line for the psychiatrist (shows on Rounds)</span><textarea class="input" id="snSum" rows="2" oninput="snSumTouch(this.value)">${esc(D.summary||'')}</textarea></label>`;
     const sec=(t,sub,h)=>`<section class="sn-sec"><div class="sn-sh">${t}${sub?` <small>${sub}</small>`:''}</div><div class="sn-sb">${h}</div></section>`;
-    return sec('Session','Filled in for you',hdr)+sec('Risk check','Required. Any yes starts a short C-SSRS',risk)+sec('Check-in','',checkin)+sec('Therapy',D.mod,modSel+block)+sec('Goals','Rate each for today, 0 to 10',goalsH)+sec('Homework','',hw)+sec('Plan','',plan)+sec('Summary','Drafted from what you filled in. Edit it',sum);
+    return sec('Session','Filled in for you',hdr)+sec('Risk check','Required. Any yes starts a short C-SSRS',risk)+sec('Check-in','',checkin)+sec('Therapy',D.mod,modSel+block)+sec('Goals','Rate each for today, 0 to 10',goalsH)+sec('Plan','',plan)+sec('Summary','Drafted from what you filled in. Edit it',sum);
   }
   window.snKind=v=>{KIND={Individual:'ind',Group:'grp',Family:'fam'}[v];if(!D.modTouched)D.mod=DEFMOD[KIND];D.blk={};draw();};
   window.snMood=v=>{D.mood=D.mood===v?null:v;autoSum();draw();};
@@ -193,7 +193,7 @@
       try{psyTherapyPage();}catch(e){}
       const x=px(PID);if(x.th&&x.th.ind){
         if(KIND==='ind')x.th.ind.unshift(r);
-        else if(KIND==='fam'&&x.th.fam)x.th.fam.unshift({date:r.date,who:D.blk.who||'',by:signer(),topics:(D.blk.purpose||[]).join(', '),actions:D.blk.act||''});
+        else if(KIND==='fam'&&x.th.fam)x.th.fam.unshift({date:r.date,who:D.blk.who||'',by:signer(),topics:[].concat(D.blk.topics||[]).join(', ')+(D.blk.tnote?((D.blk.topics||[]).length?'; ':'')+D.blk.tnote:''),tlist:[].concat(D.blk.topics||[]),actions:D.blk.act||''});
         else if(KIND==='grp'&&x.th.grp)x.th.grp.unshift({date:r.date,group:D.blk.gt||'Group',by:signer(),took:'Attended',note:D.blk.pp||D.blk.gn||'',src:'Session note'});
       }
       if(D.mod==='ERP for OCD'&&D.blk.yb)s.ybocs=new Date().toISOString().slice(0,10);

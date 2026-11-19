@@ -129,7 +129,7 @@
   #iniCard .ic-flag{margin-top:8px;font-size:12px;font-weight:600;color:#b42318}
   #iniCard .ic-ft{margin-top:10px;font-size:12px;color:#667085}
   @media (prefers-reduced-motion:reduce){#iniCard{transition:none}}
-  /* Treatment Management Plan: order log, done and not done */
+  /* Orders and Consents: order log, done and not done */
   .tl10{border:1px solid var(--line,#e4e7ec);border-radius:12px;padding:12px 14px;margin-top:10px;background:#fff}
   .tl10.done{border-color:#abefc6;background:#f6fef9}.tl10.none{background:#fcfcfd}
   .tl10-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}.tl10-h b{font-size:14.5px}
@@ -364,7 +364,7 @@
       <div class="pad small muted">Filled once when the patient is admitted. Switch to Fill form to change it.</div></section>`;
   };
 
-  /* ---------- 7. Treatment Management Plan: no consents list (they are in Admission forms), and a log that shows done and not done ---------- */
+  /* ---------- 7. Orders and Consents: no consents list (they are in Admission forms), and a log that shows done and not done ---------- */
   function tmpLog(p){
     const body=p.querySelector('.psy-tx-body');if(!body)return;
     const old=body.querySelector('.tm9-log');if(!old||old.dataset.l10)return;
@@ -555,7 +555,7 @@
           if(window.pgUpgradeFilters)v.querySelectorAll('.psy-dn-filter-row').forEach(window.pgUpgradeFilters);
           dashFix(v);medButtons(v);if(S.admSec==='formc')formCTable(v);
           therapyBtns(v);pxIcons(v);
-          v.querySelectorAll('.psy-tx-panel').forEach(p=>{if(/^Treatment Management Plan/.test(((p.querySelector('h3')||{}).textContent||'').trim()))tmpLog(p);});
+          v.querySelectorAll('.psy-tx-panel').forEach(p=>{if(/^Orders and Consents/.test(((p.querySelector('h3')||{}).textContent||'').trim()))tmpLog(p);});
         }
       }else if(S.role==='psychologist'){
         /* the psychologist's Patient Experience page gets the same icons as the psychiatrist's */

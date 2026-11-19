@@ -29,7 +29,7 @@
        card), so a second copy of it here just duplicated it -- withName=false drops it and the rest of this
        strip is placed right under that name instead of floating as its own bar (see paint()). */
     const nameBlock=withName===false?'':`<div class="sh-n"><b>${esc(p.name)}</b><span class="sh-s2">${ag?esc(ag)+(sx?'/'+esc(sx):''):''} · UHID ${esc(p.uhid||(()=>{try{return ptIdentity(p).uhid;}catch(e){return '';}})())} · ${esc(p.room||'')}</span></div>`;
-    return `${nameBlock}${legal}${obsC}${risk}${al}<button class="sh-c sh-nr" onclick="shCall('${pid}')">NR · Call</button><span style="flex:1"></span>${btn}`;
+    return `${nameBlock}${legal}${obsC}${risk}${al}<span style="flex:1"></span>${btn}`;
   }
   window.shNote=function(pid){S.pid=pid;if(kind()==='psychologist'){try{pgTherapyModal(pid);}catch(e){go('#/patient/'+pid+'/therapy');}}else{try{psyOpenRounds(pid);}catch(e){go('#/rounds');}setTimeout(()=>{const n=document.getElementById('prNote');if(n&&String(location.hash).split('?')[0]==='#/rounds'){n.scrollIntoView({block:'center',behavior:'smooth'});n.focus();}},120);}};
   window.shCall=function(pid){const b=[...document.querySelectorAll('#view button')].find(x=>/^Call caregiver$/.test(x.textContent.trim()));if(b)b.click();else toast('Calling the nominated representative through the HMS (demo)');};
@@ -69,7 +69,7 @@
   const SCALES=[['NEWS2','Early warning score from the vitals'],['ASQ screen','Suicide screen for every patient (ASQ)'],['C-SSRS screen','Suicide severity, when the ASQ is positive'],['CIWA-Ar','Alcohol withdrawal'],['COWS','Opioid withdrawal']];
   const FREQ=['Every shift','Every 4 hours','Daily','At each re-assessment'];
   window.shScaleOrder=function(pid){
-    V3.modal('Order a scale · '+esc((pt(pid)||{}).name),'The nurses see it on their board and record the score at each time.',
+    V3.modal('Order monitoring · '+esc((pt(pid)||{}).name),'The nurses see it on their board and record the score at each time.',
       `<label class="field"><span class="lbl">Scale</span><select class="input" id="soS">${SCALES.map(x=>`<option value="${x[0]}">${x[0]} · ${esc(x[1])}</option>`).join('')}</select></label><label class="field"><span class="lbl">How often</span><select class="input" id="soF">${FREQ.map(f=>`<option>${f}</option>`).join('')}</select></label>`,
       `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="shScaleSave('${pid}')">Order</button>`);};
   window.shScaleSave=function(pid){const x=psyPx(pid);x.scaleOrders=x.scaleOrders||[];x.scaleOrders.unshift({scale:$('soS').value,freq:$('soF').value,by:signer(),at:atNow()});closeModal();render();toast($('soS')?'Scale ordered':'Scale ordered');};
@@ -93,7 +93,7 @@
           tb.querySelector('tbody').insertAdjacentHTML('afterbegin',`<tr><td style="font-weight:600">${V3.day&&V3.day(v.t)!==0?esc(V3.stamp(v.t)):'Today'}</td><td>${esc(V3.hm?V3.hm(v.t):V3.stamp(v.t))}</td><td>${v.sbp}/${v.dbp}</td><td>${v.hr}</td><td>${v.temp}</td><td>${v.spo2}</td><td>—</td><td>—</td><td>—</td><td>${v.rr}</td><td><span class="sh-n2 ${n.band==='Urgent RMO review'?'red':n.band==='Inform RMO'?'amber':''}" title="${esc(n.band)} · recorded by ${esc(v.by||'')}">${n.total}</span></td></tr>`);});}catch(e){}}
     /* Order a scale button in the monitoring card */
     const mh=[...v.querySelectorAll('h3')].find(x=>/^Other monitoring/.test(x.textContent.trim())),mc=mh&&mh.closest('section.psy-tx-panel,section.card');
-    if(mc&&!mc.querySelector('[data-sc]')){const hd=mc.querySelector('.hd,.psy-tx-head'),b=document.createElement('button');b.className='btn sm';b.dataset.sc='1';b.textContent='Order a scale';b.onclick=()=>shScaleOrder(pid);if(hd)hd.appendChild(b);}
+    if(mc&&!mc.querySelector('[data-sc]')){const hd=mc.querySelector('.hd,.psy-tx-head'),b=document.createElement('button');b.className='btn sm';b.dataset.sc='1';b.textContent='Order monitoring';b.onclick=()=>shScaleOrder(pid);if(hd)hd.appendChild(b);}
     if(mc){const old=mc.querySelector('#scList');if(old)old.remove();const so=(psyPx(pid).scaleOrders||[]);if(so.length){const d=document.createElement('div');d.id='scList';d.className='pad small';d.innerHTML='<div class="lbl">Scales ordered</div>'+so.map(o=>`<div>${esc(o.scale)} · ${esc(o.freq)} <span class="tiny muted">· ${esc(o.by)}, ${esc(o.at)}</span></div>`).join('');mc.appendChild(d);}}
   }
 

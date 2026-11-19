@@ -1,7 +1,7 @@
 /* Psychiatrist only (9 Nov 2026, evening review, Granola notes "Dashboard UI Fixes" ... "Psychologist Portal").
    1. Vitals and monitoring: no Early warning score, no Monitoring orders; one white bordered table per monitored parameter (date by time slot,
       value with the nurse's initials), horizontal scroll, date-range filter and newest/oldest sort on every table.
-   2. Treatment Management Plan (was Requests and permissions + Consents): MECT, Ketamine therapy, DTMS, Outing or leave, Restraint,
+   2. Orders and Consents (was Requests and permissions + Consents): MECT, Ketamine therapy, DTMS, Outing or leave, Restraint,
       Clozapine consent, Long-acting injection consent. Each opens a step-by-step pop-up (save and next, a role per step) and every order is
       kept in a log table: ordered by, date, tasks done.
    3. Therapy Plans: Individual Therapy, Group Therapy, Family Sessions, Family Communication (four sub-tabs, a log table each).
@@ -132,7 +132,7 @@
     if(first)body.insertBefore(h,first);else body.appendChild(h);
   }
 
-  /* ---------------- 2. Treatment Management Plan ---------------- */
+  /* ---------------- 2. Orders and Consents ---------------- */
   const TMP={
     mect:{t:'MECT',d:'Electroconvulsive therapy with anaesthesia',steps:[['Consent for MECT','Psychiatrist'],['Anaesthesia fitness','RMO'],['Blood work','RMO'],['Mini-Mental State Exam (MMSE)','Psychologist'],['Physical examination and ECG','RMO'],['Schedule the first session','Psychiatrist']]},
     ket:{t:'Ketamine therapy',d:'Consent, checks and session plan',steps:[['Consent for ketamine','Psychiatrist'],['Physical exam and BP','RMO'],['Blood work','RMO'],['Baseline rating scale','Psychologist'],['Schedule the sessions','Psychiatrist']]},
@@ -180,10 +180,10 @@
       <div class="scroll"><table class="lt9"><thead><tr><th>Order</th><th>Ordered by</th><th>Date</th><th>Tasks done</th><th></th></tr></thead><tbody>${O.length?O.map(o=>`<tr><td><b>${hesc(TMP[o.key].t)}</b></td><td>${hesc(o.by)}</td><td>${hesc(o.at)}</td><td>${doneN(o)} of ${o.steps.length}</td><td style="text-align:right"><button class="btn sm" onclick="psyTmOpen('${o.id}',${Math.max(0,o.steps.findIndex(s=>!s.done))})">Open</button></td></tr>`).join(''):'<tr><td colspan="5" class="muted small">Nothing ordered yet.</td></tr>'}</tbody></table></div></section>`;
   }
   function rebuildTmp(p,R){
-    const h=p.querySelector('h3');if(h)h.textContent='Treatment Management Plan';
+    const h=p.querySelector('h3');if(h)h.textContent='Orders and Consents';
     const sub=p.querySelector('.psy-tx-head .small.muted');if(sub)sub.textContent='Orders, consents and permissions for treatments, outings and restraint.';
     p.querySelectorAll('.rq9').forEach(e=>e.remove());const body=p.querySelector('.psy-tx-body');if(body)body.innerHTML=tmpBody();
-    const tab=[...R.querySelectorAll('.psy-tx-tab')].find(t=>/Requests and permissions/.test(t.textContent));if(tab)tab.textContent='Treatment Management Plan';
+    const tab=[...R.querySelectorAll('.psy-tx-tab')].find(t=>/Requests and permissions/.test(t.textContent));if(tab)tab.textContent='Orders and Consents';
     /* the Consents tab is part of this tab now */
     const ct=[...R.querySelectorAll('.psy-tx-tab')].find(t=>/^Consents/.test(t.textContent.trim())),cp=[...R.querySelectorAll('.psy-tx-panel')].find(q=>/^Consents/.test(((q.querySelector('h3')||{}).textContent||'').trim()));
     if(cp&&body){const cb=cp.querySelector('.psy-tx-body');if(cb)body.insertAdjacentHTML('beforeend','<div class="lbl" style="margin:16px 0 8px">Consents</div>'+cb.innerHTML);cp.remove();}
@@ -258,7 +258,7 @@
     R.querySelectorAll('.psy-tx-panel').forEach(p=>{
       const tt=((p.querySelector('h3')||{}).textContent||'').trim();
       if(/^Vitals and monitoring/.test(tt)){rebuildVitals(p);ch=true;}
-      else if(tt==='Requests and permissions'||tt==='Treatment Management Plan'){rebuildTmp(p,R);ch=true;}
+      else if(tt==='Requests and permissions'||tt==='Orders and Consents'){rebuildTmp(p,R);ch=true;}
     });
     return ch?t.innerHTML:h;
   };
