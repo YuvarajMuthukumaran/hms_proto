@@ -136,7 +136,8 @@
     const cap=document.createElement('div');cap.className='medcap';cap.innerHTML='<span data-h="slots" title="M morning, A afternoon, N night">Dose times</span><span data-h="meta">Prescription</span><span data-h="adh">Ward adherence</span>';
     /* 15 Nov: no medicines yet = no columns to head (the three headings fell on top of each other); say so instead */
     if(list.querySelector('.medrow'))list.insertBefore(cap,list.firstChild);
-    else if(!list.querySelector('.med-none')){const n=document.createElement('div');n.className='med-none small muted';n.style.cssText='padding:10px 2px 4px';n.textContent='No medicines yet. Add one with Add medicine.';list.appendChild(n);}
+    /* 19 Nov 2026 (owner): the empty state is a padded, dashed panel; it only mentions Add medicine when that button is on screen */
+    else if(!list.querySelector('.med-none')){const can=/^(psychiatrist|floor-lead-psychiatrist|rmo)$/.test(String((window.__TULASI__||{}).role||''));const n=document.createElement('div');n.className='med-none';n.style.cssText='margin:10px 0 4px;padding:18px 16px;border:1px dashed #d0d5dd;border-radius:12px;background:#fcfcfd;text-align:center;color:#667085;font-size:14px;line-height:1.5';n.innerHTML='<b style="display:block;color:#344054;font-weight:600">No medicines yet</b>'+(can?'Press Add medicine to prescribe the first one.':'Medicines prescribed by the psychiatrist will show here.');list.appendChild(n);}
     /* move the title row inside the white box, above the column headings */
     const mbox=list.closest('.medbox'),mh=mbox&&mbox.firstElementChild;
     if(mbox&&mh&&mh!==list&&!mh.classList.contains('medhead')){mh.classList.add('medhead');list.insertBefore(mh,list.firstChild);}
