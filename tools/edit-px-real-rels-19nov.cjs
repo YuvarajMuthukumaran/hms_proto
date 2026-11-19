@@ -1,0 +1,3 @@
+/* 19 Nov 2026: real patients carry their relatives (name, relation, phone) so the random-call pop-up can show both family contacts. */
+require('./rep.cjs')('public/px/px-real.js',[["      mobile: p.mobile || '', real: true","      rels: (p.relatives || []).map(function (r) { return { name: r.name || '', rel: r.rel || r.relation || 'Relative', phone: r.mobile || r.phone || '' }; }).filter(function (r) { return r.name; }),\n      mobile: p.mobile || '', real: true"],
+["relatives: [{ name: 'Test Relative', rel: 'Mother' }] });","relatives: [{ name: 'Test Relative', rel: 'Mother' }, { name: 'Second Relative', rel: 'Brother' }] });"]]);

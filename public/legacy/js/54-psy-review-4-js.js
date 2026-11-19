@@ -233,7 +233,7 @@
   pTherapy=function(){return psy()?therapyPage():__pTh.apply(this,arguments);};
 
   /* ---------------- 4. Management Plan tab ---------------- */
-  const MP=[['dx','Diagnosis'],['goals','Goals of treatment'],['meds','Medicines and why'],['therapy','Therapies planned'],['risk','Risk management'],['mon','Monitoring'],['stay','Expected length of stay'],['dc','Plan for discharge'],['rev','Review date']];
+  const MP=[['dx','Diagnosis'],['goals','Goals of treatment'],['exp','Expectation from treatment'],['meds','Medicines and why'],['therapy','Therapies planned'],['risk','Risk management'],['mon','Monitoring'],['stay','Expected length of stay'],['dc','Plan for discharge'],['rev','Review date']];
   window.psyMpSet=function(k,v){const m=px().mgmt=px().mgmt||{};m[k]=v;};
   window.psyMpSign=function(){const m=px().mgmt=px().mgmt||{};if(!m.dx||!m.goals){toast('Fill in the diagnosis and goals first');return;}m.signed={by:signer(),at:atNow()};render();toast('Management plan signed by '+signer());};
   window.psyMpAdd=function(){const m=px().mgmt||{};const t=prompt?'':'';V3.modal('Add addendum','The signed plan does not change. The addendum shows your name and time under it.','<textarea class="input" id="mp9_a" rows="3"></textarea>','<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="psyMpAddSave()">Save addendum</button>');};

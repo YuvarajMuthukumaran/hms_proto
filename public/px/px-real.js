@@ -88,6 +88,7 @@
       ward: p.floor || '', day: d, adm: p.admitted_at ? String(p.admitted_at).slice(0, 10) : '', sec: p.section || '89',
       doctor: p.psychiatrist || 'Not assigned yet', psych: p.psychologist || '',
       nr: p.nominated_rep || rel.name || 'Not recorded', nrRel: p.nominated_rel || rel.rel || 'Relative',
+      rels: (p.relatives || []).map(function (r) { return { name: r.name || '', rel: r.rel || r.relation || 'Relative', phone: r.mobile || r.phone || '' }; }).filter(function (r) { return r.name; }),
       mobile: p.mobile || '', real: true
     };
   }
@@ -97,7 +98,7 @@
     patients = n.map(function (nm, i) {
       return fromRow({ id: 'rt' + i, name: nm, sex: i % 2 ? 'F' : 'M', age: 30 + i, uhid: 'TEST-' + i, room: i < 3 ? String(100 + i) : '', floor: i % 2 ? 'Female ward' : 'Male ward',
         admitted_at: new Date(Date.now() - i * 864e5).toISOString().slice(0, 10), psychiatrist: 'Test Psychiatrist', psychologist: 'Test Psychologist',
-        relatives: [{ name: 'Test Relative', rel: 'Mother' }] });
+        relatives: [{ name: 'Test Relative', rel: 'Mother' }, { name: 'Second Relative', rel: 'Brother' }] });
     });
     if (emptyTest) patients = [];
     window.PX_REAL = true;

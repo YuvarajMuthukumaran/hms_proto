@@ -347,7 +347,7 @@
   window.addEventListener('scroll',hideIni,true);
 
   /* ---------- 6. Management Plan: filled once at admission, so it opens read only ---------- */
-  const MP=[['dx','Diagnosis'],['goals','Goals of treatment'],['meds','Medicines and why'],['therapy','Therapies planned'],['risk','Risk management'],['mon','Monitoring'],['stay','Expected length of stay'],['dc','Plan for discharge'],['rev','Review date']];
+  const MP=[['dx','Diagnosis'],['goals','Goals of treatment'],['exp','Expectation from treatment'],['meds','Medicines and why'],['therapy','Therapies planned'],['risk','Risk management'],['mon','Monitoring'],['stay','Expected length of stay'],['dc','Plan for discharge'],['rev','Review date']];
   window.psyMpView=function(v){S.mpView=v;render();};
   const __pl=pPlans;
   pPlans=function(){

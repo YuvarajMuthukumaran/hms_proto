@@ -25,11 +25,14 @@
     ['family','Ongoing family interventions','area'],
     ['consider','Any specific consideration related to calls, meetings, legal aspects, insurance or privileges','area'],
     ['future','Future directions of the treatment plan','area'],
-    ['comm','Communication to family and patient (combined session of both psychologists)','area']
+    ['comm','Communication to the family and patient about this handover','toggle']
   ];
   const j=v=>Array.isArray(v)?v.join('; '):String(v==null?'':v);
   const fmtRow=r=>r.area+': '+r.iv+' · '+(r.done||0)+' of '+(r.req||'?')+' sessions'+(r.when?' ('+r.when+')':'')+(r.out&&r.out!=='—'?'. Outcome: '+r.out:'.');
 
+  /* 19 Nov: chief complaints and reason for admission come from the history / admission form; expectation from the management plan */
+  const hfv2=(pid,re)=>{try{const h=(window.psyPx?psyPx(pid):{}).hf||{};const k=Object.keys(h).find(x=>re.test(x));const v=k?h[k]:'';return typeof v==='string'?v.trim():(v&&v.sel?v.sel:'');}catch(e){return '';}};
+  const mpExpect=pid=>{try{const x=window.psyPx?psyPx(pid):{};return String((x.mgmtPsych||{}).expect||(x.mgmt||{}).exp||'').trim();}catch(e){return '';}};
   /* what the record already says, per field */
   function auto(pid){
     const p=ptFind(pid);if(!p)return null;
@@ -44,9 +47,9 @@
     const left=rows.filter(r=>(+r.done||0)<(+r.req||0)).map(r=>r.area+': '+((+r.req)-(+r.done))+' more session'+(((+r.req)-(+r.done))===1?'':'s'));
     return {p,f:{
       dx:p.dx||c.dx||'',ddx:hr(/^Differential/i)||(window.psyRecordDdx?(psyRecordDdx(pid).text||''):''),
-      cc:hr(/^Chief complaints/i),
-      reason:pid==='neel'?'Manic symptoms, overspending, irritability for 3 weeks':((p.dx||c.dx)?'Admitted with '+String(p.dx||c.dx).toLowerCase()+' (Section '+(c.section||p.sec)+')':''),
-      expect:'',
+      cc:hr(/^Chief complaints/i)||hfv2(pid,/^Chief complaints/i),
+      reason:hfv2(pid,/^Reason for admission|^Presenting complaints/i)||(pid==='neel'?'Manic symptoms, overspending, irritability for 3 weeks':((p.dx||c.dx)?'Admitted with '+String(p.dx||c.dx).toLowerCase()+' (Section '+(c.section||p.sec)+')':'')),
+      expect:mpExpect(pid),
       psychopath:'', /* 12 Nov QA: the doctor writes this, it is not pre-filled */
       interv:rows.map(fmtRow).join('\n'),
       family:L([fam.join('\n'),call]),
@@ -62,13 +65,15 @@
   const nl2br=t=>hesc(t||'').replace(/\n/g,'<br>');
   const mypts=()=>{try{return PSY_EOD();}catch(e){return PTS;}};
 
+  const toggleHtml=(pid,k,v)=>`<div class="seg hn-tog" role="group">${['Done','Not done'].map(o=>`<button type="button" class="${v===o?'on':''}" onclick="pgHnTog('${pid}','${k}','${o}',this)">${o}</button>`).join('')}</div>`;
+  window.pgHnTog=function(pid,k,v,el){pgHnSet(pid,k,v);const g=el.parentNode;g.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===el));const f=g.closest('.hn-f'),t=f&&f.querySelector('.hn-tag');if(t)t.remove();};
   function notePage(pid,vals,ro,o){
     o=o||{};const p=ptFind(pid),a=auto(pid)||{f:{}};
     const tag=(k,v)=>{if(ro)return '';if(!String(v||'').trim())return '<span class="hn-tag add">To add</span>';return v===(a.f[k]||'')?'<span class="hn-tag rec">From the record</span>':'';};
     const fld=([k,label,ty])=>{
       const v=vals[k]||'';
       const body=ro?`<div class="hn-ro">${v.trim()?nl2br(v):'<span class="muted">Nothing written</span>'}</div>`
-        :(ty==='line'?`<input class="input" value="${hesc(v)}" oninput="pgHnSet('${pid}','${k}',this.value)">`
+        :(ty==='toggle'?toggleHtml(pid,k,v):ty==='line'?`<input class="input" value="${hesc(v)}" oninput="pgHnSet('${pid}','${k}',this.value)">`
         :`<textarea class="input" rows="${Math.max(2,Math.min(7,String(v).split('\n').length+1))}" ${k==='future'||k==='comm'||k==='expect'?'placeholder="Write here"':''} oninput="pgHnSet('${pid}','${k}',this.value)">${hesc(v)}</textarea>`);
       return `<div class="hn-f ${ty==='line'?'half':''}"><div class="lbl">${hesc(label)} ${tag(k,v)}</div>${body}</div>`;
     };

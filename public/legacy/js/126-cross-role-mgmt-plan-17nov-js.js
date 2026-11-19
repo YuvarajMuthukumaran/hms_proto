@@ -6,8 +6,8 @@
 (function(){
   const px=()=>psyPx(S.pid);
   const esc=s=>hesc(String(s==null?'':s));
-  const PSY_MP=[['dx','Diagnosis'],['goals','Goals of treatment'],['meds','Medicines and why'],['therapy','Therapies planned'],['risk','Risk management'],['mon','Monitoring'],['stay','Expected length of stay'],['dc','Plan for discharge'],['rev','Review date']];
-  const PSYCH_MP=[['therapyPlan','Therapy plan'],['formulation','Psychological formulation'],['goals','Goals of therapy'],['family','Family involvement'],['risk','Risks to watch for'],['assess','Planned assessments'],['acts','Planned behavioural activations'],['review','Review date']];
+  const PSY_MP=[['dx','Diagnosis'],['goals','Goals of treatment'],['exp','Expectation from treatment'],['meds','Medicines and why'],['therapy','Therapies planned'],['risk','Risk management'],['mon','Monitoring'],['stay','Expected length of stay'],['dc','Plan for discharge'],['rev','Review date']];
+  const PSYCH_MP=[['therapyPlan','Therapy plan'],['formulation','Psychological formulation'],['goals','Goals of therapy'],['expect','Expectation from treatment'],['family','Family involvement'],['risk','Risks to watch for'],['assess','Planned assessments'],['acts','Planned behavioural activations'],['review','Review date']];
   function readOnlyCard(title,sub,fields,m){
     m=m||{};
     const val=v=>Array.isArray(v)?v.join(', '):v;

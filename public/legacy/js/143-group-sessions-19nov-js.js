@@ -13,7 +13,10 @@
   const G={type:TYPES[0],other:'',date:iso(new Date()),by:'',note:'',q:'',marks:{},lines:{}};
   const ICON='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M15 15c2.8 0 5 2 5 5"/></svg>';
   const on=()=>/^#\/groups/.test(String(location.hash||''));
-  const pts=()=>{let L=[];try{L=allPts();}catch(e){}if(!L||!L.length){try{L=[].concat(...Object.values(WARDS));}catch(e){L=[];}}const seen={};return L.filter(p=>p&&p.id&&!seen[p.id]&&(seen[p.id]=1));};
+  const pts=()=>{let L=[];try{L=allPts();}catch(e){}if(!L||!L.length){try{L=[].concat(...Object.values(WARDS));}catch(e){L=[];}}const seen={};return L.filter(p=>p&&p.id&&!seen[p.id]&&(seen[p.id]=1)).slice(0,90);};
+  /* 19 Nov (meeting): attendance by floor, 1st De-addiction, 2nd Male ward, 3rd Female ward; at most 90 patients (only people admitted now) */
+  const FLN=[['1st floor','De-addiction ward'],['2nd floor','Male ward'],['3rd floor','Female ward']];
+  const floorIdx=w=>/female/i.test(w||'')?2:/de-?addict/i.test(w||'')?0:1;
   const wardOf=pid=>{try{return Object.keys(WARDS).find(k=>WARDS[k].some(p=>p.id===pid))||'';}catch(e){return '';}};
   const sno=pid=>{const x=psyPx(pid);if(!x.sn)x.sn={ladder:[],notes:[],goals:null,relapse:null,ybocs:'',planned:8};x.sn.grp=x.sn.grp||[];return x.sn;};
 
@@ -33,9 +36,11 @@
     if(!G.by)G.by=signer();
     const q=G.q.trim().toLowerCase(),L=pts().filter(p=>!q||(p.name||'').toLowerCase().includes(q)||String(p.room||'').toLowerCase().includes(q));
     const nMark=Object.keys(G.marks).length;
-    const rows=L.map(p=>{const m=G.marks[p.id]||'';return `<tr><td><b>${E(p.name)}</b><div class="tiny muted">${E(p.room||'')}${wardOf(p.id)?' · '+E(wardOf(p.id)):''}</div></td>
+    const rowHtml=p=>{const m=G.marks[p.id]||'';return `<tr><td><b>${E(p.name)}</b><div class="tiny muted">${E(p.room||'')}${wardOf(p.id)?' · '+E(wardOf(p.id)):''}</div></td>
       <td><div class="seg gs-seg" role="group" aria-label="Attendance for ${E(p.name)}">${TOOK.map(t=>`<button type="button" class="${m===t[0]?'on':''}" aria-pressed="${m===t[0]}" onclick="gsMark('${E(p.id)}','${t[0]}')">${t[1]}</button>`).join('')}</div></td>
-      <td><input class="input" style="min-height:36px" placeholder="One line (optional)" value="${E(G.lines[p.id]||'')}" oninput="gsLine('${E(p.id)}',this.value)"></td></tr>`;}).join('');
+      <td><input class="input" style="min-height:36px" placeholder="One line (optional)" value="${E(G.lines[p.id]||'')}" oninput="gsLine('${E(p.id)}',this.value)"></td></tr>`;};
+    const rows=FLN.map((f,i)=>{const g=L.filter(p=>floorIdx(wardOf(p.id))===i);if(q&&!g.length)return '';const mk=g.filter(p=>G.marks[p.id]).length;
+      return `<tr><td colspan="3" style="background:#f8fafc"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>${f[0]}</b> <span class="small muted">${f[1]} · ${mk} of ${g.length} marked</span></span><button class="btn sm" onclick="gsAll(${i})">Mark all attended</button></div></td></tr>`+(g.map(rowHtml).join('')||'<tr><td colspan="3" class="small muted">Nobody on this floor.</td></tr>');}).join('');
     const rc=recent();
     return `<nav class="crumb"><a href="#/myday">Inpatients</a> / <strong>Group sessions</strong></nav>
       <div class="row" style="justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px"><div><h2 style="font-size:26px">Group sessions</h2><div class="muted" style="margin-top:4px">Pick the session, mark who attended. It shows in each patient's Therapy Plans under Group.</div></div></div>
@@ -55,7 +60,7 @@
   window.gsSet=function(k,v,quiet,keepFocus){G[k]=v;if(quiet)return;if(keepFocus){const pos=document.activeElement&&document.activeElement.selectionStart;paint();const i=[...document.querySelectorAll('#view input')].find(x=>/Search name/.test(x.placeholder));if(i){i.focus();try{i.setSelectionRange(pos,pos);}catch(e){}}return;}paint();};
   window.gsMark=function(pid,t){if(G.marks[pid]===t)delete G.marks[pid];else G.marks[pid]=t;paint();};
   window.gsLine=function(pid,v){G.lines[pid]=v;};
-  window.gsAll=function(){pts().forEach(p=>{if(!G.marks[p.id])G.marks[p.id]='Attended';});paint();};
+  window.gsAll=function(i){pts().forEach(p=>{if((i===undefined||floorIdx(wardOf(p.id))===i)&&!G.marks[p.id])G.marks[p.id]='Attended';});paint();};
   window.gsClear=function(){G.marks={};G.lines={};paint();};
   window.gsSave=function(){
     const err=t=>{const e=document.getElementById('gsErr');if(e){e.textContent=t;e.style.display='inline';}};

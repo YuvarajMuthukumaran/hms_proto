@@ -31,18 +31,30 @@
     return P().filter(function (p) { var vip = !!c.vvip[p.id]; return a.who === 'all' || (a.who === 'vvip' ? vip : !vip); });
   };
   var seenIn = function (D, p, r) { return D.v[p.id] && D.v[p.id][r]; };
+  /* 19 Nov: a full ward has ONE round a day per patient (thirds by floor and room, about 30 at a time), not everyone every morning. */
+  var split = function () { return P().length > 30; };
+  var slotCache = { key: '', m: {} };
+  var slotOf = function (p) {
+    var L = P(), key = L.length + ':' + (L[0] ? L[0].id : '') + ':' + (L[L.length - 1] ? L[L.length - 1].id : '');
+    if (slotCache.key !== key) {
+      var S2 = L.slice().sort(function (a, b) { return String(a.floor || '').localeCompare(String(b.floor || '')) || String(a.room || '').localeCompare(String(b.room || ''), undefined, { numeric: true }) || String(a.name).localeCompare(String(b.name)); });
+      slotCache = { key: key, m: {} };
+      S2.forEach(function (x, i) { slotCache.m[x.id] = ['M', 'A', 'E'][Math.min(2, Math.floor(i * 3 / S2.length))]; });
+    }
+    return slotCache.m[p.id] || 'M';
+  };
   /* who is on which round, and why */
   function why(p, r, D) {
     var c = cfg(), out = [], v = D.v[p.id] || {}, vip = !!c.vvip[p.id], fl = D.flags[p.id];
     var openFlag = fl && fl.open;
     var home = function (n) { if (!p.edd) return false; var d = new Date(); d.setHours(0, 0, 0, 0); return p.edd === new Date(d.getTime() + n * 864e5).toISOString().slice(0, 10); };
-    if (r === 'M') out.push(vip ? 'VVIP' : 'Allocated to you');
+    if (split() ? slotOf(p) === r : r === 'M') out.push(vip ? 'VVIP' : 'Allocated to you');
     if (r === 'A') {
       if (+p.day <= 2) out.push('New admission, day ' + p.day);
       if (v.M && (v.M.a === 'notgood' || v.M.a === 'tell')) out.push('Flagged this morning');
       else if (openFlag) out.push('Flagged earlier, not closed');
       if (v.M && v.M.a === 'na') out.push('Not available this morning');
-      if (!v.M && passed('M')) out.push('Missed this morning');
+      if (!v.M && passed('M') && (!split() || slotOf(p) === 'M')) out.push('Missed this morning');
       if (home(0)) out.push('Going home today');
       if (vip) out.push('VVIP');
     }
@@ -145,11 +157,10 @@
     var step2 = (state.ans === 'notgood' || state.ans === 'tell') ? '<div><h4>Step 2 · what is it about?</h4><div class="rv-fl" style="margin-top:6px">' + gAB().map(function (x) { return '<button class="rv-ch ' + (state.topic === x[0] ? 'on' : '') + '" onclick="RV2.topic(\'' + esc(x[0]).replace(/\'/g, "\\'") + '\')">' + esc(x[0]) + '</button>'; }).join('') + '</div>' +
       (T ? '<div class="rv-fl" style="margin-top:8px">' + (T[3] || []).map(function (o) { return '<button class="rv-ch ' + (state.sp === o ? 'on' : '') + '" onclick="RV2.sp(this.dataset.o)" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join('') + '</div><div style="margin-top:6px;font-size:13px;color:#475467"><b>Goes to:</b> ' + esc(state.sp === 'Wants to leave now' ? GOES['Leaving or rights'] : (T[4] && T[4].indexOf(state.sp) >= 0) ? 'Chandraji and the treating doctor · now' : (GOES[T[0]] || T[1])) + '</div>' : '') +
       '<textarea rows="3" id="rvW" placeholder="What they said, in their words" oninput="RV2.words(this.value)">' + esc(state.words) + '</textarea></div>' : '';
-    var scr =
-      '<div class="rv-btns"><button class="rv-b" id="rvRec" onclick="RV2.scribe()">' + (state.scribe && state.scribe.rec ? 'Stop and draft' : 'Start AI scribe') + '</button>' + (state.scribe && state.scribe.draft ? '<button class="rv-b pri" onclick="RV2.useDraft()">Use this</button><button class="rv-b" onclick="RV2.discardDraft()">Discard</button>' : '') + '</div>' +
-      (state.scribe && state.scribe.msg ? '<div style="font-size:13px;color:#475467;margin-top:4px">' + esc(state.scribe.msg) + '</div>' : '') +
-      '<div style="font-size:12px;color:#667085">Tell the patient before recording. Only text is kept, no audio.</div>';
-    var roomSel = '<div><button class="rv-b" onclick="RV2.roomToggle()">' + (state.roomOpen ? 'Hide room issue' : 'Report a room issue (optional)') + '</button>' + (state.roomOpen ? '<select id="rvRoom" onchange="RV2.room(this.value)" style="margin-top:8px"><option value="">Choose the issue…</option>' + gTODAY().map(function (x) { return '<option value="' + esc(x[0]) + '"' + (state.room === x[0] ? ' selected' : '') + '>' + (x[2] ? '[Safety] ' : '') + esc(x[0]) + ' → ' + esc(x[1]) + '</option>'; }).join('') + '</select>' : '') + '</div>';
+    var dr = state.drafts && state.drafts[p.id];
+    var scr = dr ? '<div style="background:#F2F7FF;border:1px solid #D5E4FB;border-radius:10px;padding:8px 10px;font-size:13px"><b>AI scribe draft</b><div style="margin:4px 0">' + esc(dr) + '</div><div class="rv-btns"><button class="rv-b pri" onclick="RV2.useDraft()">Use this</button><button class="rv-b" onclick="RV2.discardDraft()">Discard</button></div></div>'
+      : (SR.on ? '<div style="font-size:12px;color:#B42318">● The round scribe is listening to this patient.</div>' : '');
+    var roomSel = '<div style="border:2px solid #F79009;background:#FFFAEB;border-radius:12px;padding:10px"><button class="rv-b" style="width:100%;background:#F79009;border-color:#F79009;color:#fff;font-size:15px;padding:12px" onclick="RV2.roomToggle()">' + (state.roomOpen ? 'Hide the issue list' : '⚠ Report an issue (room, food, noise, safety)') + '</button>' + (state.roomOpen ? '<select id="rvRoom" onchange="RV2.room(this.value)" style="margin-top:10px;height:46px;font-size:15px;border:2px solid #F79009"><option value="">Choose the issue…</option>' + gTODAY().map(function (x) { return '<option value="' + esc(x[0]) + '"' + (state.room === x[0] ? ' selected' : '') + '>' + (x[2] ? '[Safety] ' : '') + esc(x[0]) + ' → ' + esc(x[1]) + '</option>'; }).join('') + '</select>' : '') + '</div>';
     return '<aside class="rv-pan" id="rvPan"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b style="font-size:17px">' + esc(p.name) + '</b>' + tagsOf(p).map(function (t) { return '<span class="rv-tag ' + (t === 'New' ? 'n' : '') + '">' + t + '</span>'; }).join('') + '<div style="font-size:13px;color:#667085">Room ' + esc(String(p.room || '').replace(/^Room\s*/, '')) + ' · day ' + (+p.day) + ' · ' + esc(p.doctor || '') + '</div></div><button class="rv-b" onclick="RV2.close()" aria-label="Close">×</button></div>' +
       '<div class="rv-btns"><button class="rv-b" onclick="RV2.record()">Open record</button><button class="rv-b" onclick="RV2.vvip()">' + (c.vvip[p.id] ? 'Remove VVIP' : 'Mark VVIP') + '</button></div>' +
       '<div><h4>Why on this round</h4><div style="font-size:14px">' + esc(why(p, r, D).join(' · ') || 'Allocated to you') + '</div>' + (earlier ? '<div style="margin-top:6px">' + earlier + '</div>' : '') + '</div>' +
@@ -163,10 +174,40 @@
     return '<div class="app"><div class="col"><main class="rv">' +
       '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><div><h2 style="margin:0">Rounds</h2><div style="font-size:13px;color:#667085">' + new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · ' + mineOf().length + ' patients are yours</div></div>' +
       '<label style="font-size:13px;color:#475467">Doing the round: <select onchange="RV2.me(this.value)" style="border:1px solid #D6DEE8;border-radius:8px;padding:5px 8px;font:inherit">' + who.map(function (a) { return '<option ' + (a.name === cur ? 'selected' : '') + '>' + esc(a.name) + '</option>'; }).join('') + '</select></label></div>' +
-      cards(D) + '<div class="rv-fl">' + [['to', 'To see'], ['seen', 'Seen'], ['flag', 'Flagged'], ['all', 'Everyone on this round']].map(function (f) { return '<button class="rv-ch ' + (state.v === f[0] ? 'on' : '') + '" onclick="RV2.filter(\'' + f[0] + '\')">' + f[1] + '</button>'; }).join('') + '<input type="text" placeholder="Search name or room" oninput="RV2.q(this.value)" value="' + esc(state.q || '') + '" style="border:1px solid #D6DEE8;border-radius:99px;padding:5px 12px;font:inherit;margin-left:auto"></div>' +
+      scribeBar() + cards(D) + '<div class="rv-fl">' + [['to', 'To see'], ['seen', 'Seen'], ['flag', 'Flagged'], ['all', 'Everyone on this round']].map(function (f) { return '<button class="rv-ch ' + (state.v === f[0] ? 'on' : '') + '" onclick="RV2.filter(\'' + f[0] + '\')">' + f[1] + '</button>'; }).join('') + '<input type="text" placeholder="Search name or room" oninput="RV2.q(this.value)" value="' + esc(state.q || '') + '" style="border:1px solid #D6DEE8;border-radius:99px;padding:5px 12px;font:inherit;margin-left:auto"></div>' +
       '<div class="rv-main"><div class="rv-list" id="rvList">' + rows(D) + '</div>' + panel(D) + '</div></main></div></div>';
   }
   function draw() { var root = $('root'); if (!root) return; var keep = ($('rvW') || {}).value; root.innerHTML = view(); if ($('rvW') && keep != null) $('rvW').value = keep; }
+  /* 19 Nov: one AI scribe for the whole round. Start it once; it records continuously, and each time you open another patient (or save) the part for the
+     previous patient is sent to the scribe and comes back as a draft on THAT patient. Nothing is filled in until "Use this". */
+  var SR = { on: false, stream: null, mr: null, msg: '', busy: 0 };
+  function scribeBar() {
+    return '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:' + (SR.on ? '#FEF3F2' : '#F2F7FF') + ';border:2px solid ' + (SR.on ? '#F04438' : '#1E6CDB') + ';border-radius:14px;padding:12px 16px">' +
+      '<button class="rv-b pri" style="font-size:16px;padding:12px 22px;' + (SR.on ? 'background:#D92D20;border-color:#D92D20' : '') + '" onclick="RV2.scribe()">' + (SR.on ? '■ Stop the round scribe' : '● Start AI scribe for this round') + '</button>' +
+      '<div style="flex:1;min-width:220px;font-size:13px;color:#344054"><b>AI scribe</b>: start it once and it listens for the whole round. Open each patient as you go; the words are drafted for that patient and you check them, then press Use this.' +
+      (SR.msg ? '<div style="margin-top:4px;color:#475467">' + esc(SR.msg) + '</div>' : '') + '<div style="font-size:12px;color:#667085;margin-top:2px">Tell patients before recording. Only text is kept, no audio.</div></div></div>';
+  }
+  function srSeg() {
+    if (!SR.on || !SR.stream) return;
+    var pid = state.sel || '', chunks = [];
+    try {
+      var mr = new MediaRecorder(SR.stream);
+      mr.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+      mr.onstop = function () { if (pid && chunks.length) srSend(pid, chunks); };
+      mr.start(); SR.mr = mr;
+    } catch (e) {}
+  }
+  function srCut() { try { if (SR.mr && SR.mr.state !== 'inactive') SR.mr.stop(); } catch (e) {} SR.mr = null; }
+  function srSend(pid, chunks) {
+    var fd = new FormData(); fd.append('audio', new Blob(chunks, { type: 'audio/webm' }), 'round.webm');
+    fd.append('schema', JSON.stringify({ mode: 'transcript', hint: 'Hindi and English mixed. A short talk with a hospital patient about how they are.' }));
+    SR.busy++;
+    fetch('/api/scribe', { method: 'POST', body: fd }).then(function (r) { return r.json(); }).then(function (j) {
+      SR.busy--; var txt = (j && (j.transcript || j.text || j.note)) || '';
+      if (txt) { state.drafts = state.drafts || {}; state.drafts[pid] = txt; SR.msg = 'A draft is ready. Open that patient and press Use this.'; } else SR.msg = 'The scribe could not draft one part. Type it instead.';
+      draw();
+    }).catch(function () { SR.busy--; SR.msg = 'The AI scribe is not available now. Type it instead.'; draw(); });
+  }
   var RV2 = window.RV2 = {
     round: function (r) { state.round = r; state.sel = ''; draw(); }, filter: function (f) { state.v = f; draw(); }, q: function (v) { state.q = v; var D = day(); $('rvList').innerHTML = rows(D); },
     open: function (id) { state.sel = id; state.ans = ''; state.topic = ''; state.sp = ''; state.words = ''; state.room = ''; state.roomOpen = false; state.scribe = null; draw(); },
@@ -203,8 +244,15 @@
         s.mr.start(); draw();
       }).catch(function () { s.msg = 'Allow the microphone to record.'; draw(); });
     },
-    useDraft: function () { var s = state.scribe || {}; if (!s.draft) return; state.words = s.draft; if (!state.ans) state.ans = 'tell'; s.draft = ''; s.msg = 'Filled in. You can edit everything.'; draw(); },
-    discardDraft: function () { var s = state.scribe || {}; s.draft = ''; s.msg = 'Draft discarded.'; draw(); }
+    useDraft: function () { var d = (state.drafts || {})[state.sel]; if (!d) return; state.words = d; if (!state.ans) state.ans = 'tell'; delete state.drafts[state.sel]; draw(); },
+    discardDraft: function () { if (state.drafts) delete state.drafts[state.sel]; draw(); }
+  };
+  /* the round scribe follows the patient you open */
+  ['open', 'save', 'close', 'round'].forEach(function (k) { var o = RV2[k]; RV2[k] = function () { srCut(); var r = o.apply(this, arguments); srSeg(); return r; }; });
+  RV2.scribe = function () {
+    if (SR.on) { srCut(); SR.on = false; try { SR.stream.getTracks().forEach(function (x) { x.stop(); }); } catch (e) {} SR.stream = null; SR.msg = 'Stopped. Drafts appear on each patient.'; draw(); return; }
+    if (!navigator.mediaDevices || !window.MediaRecorder) { SR.msg = 'This device cannot record.'; draw(); return; }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (s) { SR.stream = s; SR.on = true; SR.msg = 'Recording the round. Open a patient to start their part.'; srSeg(); draw(); }).catch(function () { SR.msg = 'Allow the microphone to record.'; draw(); });
   };
 
   /* ---------- Setting: times, allocation, backup person, VVIP ---------- */

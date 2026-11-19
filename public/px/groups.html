@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head><script src="/auth-shim.js"></script><script src="/px/px-real.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tulasi · Patient Experience · Group sessions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F6FBFF;font-family:Inter,system-ui,sans-serif;color:#0F172A;font-size:14.5px}
+button,input,select,textarea{font-family:inherit}button{cursor:pointer}
+main{padding:14px 16px 56px;display:flex;flex-direction:column;gap:14px}
+h2{margin:0;font-size:21px}.muted{color:#667085}.small{font-size:12.5px}
+.card{background:#fff;border:1px solid #E3EAF2;border-radius:14px;padding:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:12.5px;font-weight:600;color:#475467}
+input[type=text],input[type=date],select{height:38px;border:1px solid #D6DEE8;border-radius:10px;padding:0 10px;font-size:14px;background:#fff}
+.btn{height:36px;display:inline-flex;align-items:center;padding:0 14px;border-radius:10px;border:1px solid #D6DEE8;background:#fff;font-size:13.5px;font-weight:600;color:#0F172A}
+.btn.pri{background:#1E6CDB;border-color:#1E6CDB;color:#fff}.btn.sm{height:30px;padding:0 10px;font-size:12.5px}
+.fl{border:1px solid #E3EAF2;border-radius:12px;overflow:hidden;background:#fff}
+.fh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;background:#F8FAFC;border-bottom:1px solid #E3EAF2}
+.fh b{font-size:15px}
+.row{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,2fr) minmax(0,1.2fr);gap:10px;align-items:center;padding:9px 14px;border-top:1px solid #EEF2F6}
+.row:first-of-type{border-top:0}
+.seg{display:flex;gap:4px;flex-wrap:wrap}.seg button{border:1px solid #D6DEE8;background:#fff;border-radius:99px;padding:5px 11px;font-size:12.5px;font-weight:600;color:#344054}
+.seg button.on{background:#E8F1FE;border-color:#1E6CDB;color:#1E5BB8}.seg button.on.x{background:#FEF3F2;border-color:#F04438;color:#B42318}
+.note{height:32px;border:1px solid #E3EAF2;border-radius:8px;padding:0 8px;font-size:13px;width:100%}
+table{width:100%;border-collapse:collapse}th{font-size:11.5px;letter-spacing:.04em;color:#667085;text-align:left;padding:8px 12px;border-bottom:1px solid #E3EAF2;text-transform:uppercase}td{padding:9px 12px;border-bottom:1px solid #EEF2F6;font-size:13.5px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;border-radius:10px;padding:10px 16px;font-size:13.5px;z-index:80}
+html.embed body{background:transparent}
+@media(max-width:700px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main id="root"></main>
+<script src="hms-patients.js"></script>
+<script src="px-store.js"></script>
+<script>
+/* 19 Nov 2026 (meeting): Group sessions for Patient Experience. Same idea as the psychologist's Group sessions page: pick the session, tick who took part,
+   but sorted by floor (1st, 2nd, 3rd) so one person can run it ward by ward. Not for the RMO. Saved in px_groups_v1 (shared like every px_ key).
+   At most 90 patients are listed: only the people admitted now. */
+if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');
+const KEY='px_groups_v1',LIMIT=90;
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const FLOORS=[['f1','1st floor','De-addiction ward'],['f2','2nd floor','Male ward'],['f3','3rd floor','Female ward']];
+const TYPES=['Anxiety and stress group','CRT (cognitive remediation)','Relaxation and breathing','Psychoeducation group','Social skills group','Art, music or yoga','Other group'];
+const P=((window.HMS_PATIENTS&&window.HMS_PATIENTS.patients)||[]).slice(0,LIMIT);
+const ST=[['A','Attended'],['P','Part of it'],['R','Refused'],['N','Did not attend']];
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+let H=[];try{H=JSON.parse(localStorage.getItem(KEY)||'[]')||[];}catch(e){}
+let F={type:TYPES[0],date:today(),by:'',topic:'',open:{f1:true,f2:true,f3:true},att:{},note:{},q:''};
+function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),3000);}
+const floorOf=p=>FLOORS.some(f=>f[0]===p.floor)?p.floor:'f2';
+function render(){
+  const q=F.q.toLowerCase(),marked=Object.keys(F.att).length;
+  const sec=FLOORS.map(f=>{
+    const L=P.filter(p=>floorOf(p)===f[0]&&(!q||(p.name+' '+p.room).toLowerCase().includes(q))),m=L.filter(p=>F.att[p.id]).length;
+    return `<section class="fl"><div class="fh"><div><b>${f[1]}</b> <span class="muted small">${f[2]} · ${m} of ${L.length} marked</span></div><div style="display:flex;gap:6px"><button class="btn sm" data-all="${f[0]}">Mark all attended</button><button class="btn sm" data-tog="${f[0]}">${F.open[f[0]]?'Hide':'Show'}</button></div></div>`+
+    (F.open[f[0]]?(L.length?L.map(p=>`<div class="row"><div><b>${esc(p.name)}</b><div class="muted small">Room ${esc(String(p.room||'').replace(/^Room\s*/,''))}</div></div><div class="seg">${ST.map(s=>`<button data-a="${p.id}|${s[0]}" class="${F.att[p.id]===s[0]?'on':''}${F.att[p.id]===s[0]&&(s[0]==='R'||s[0]==='N')?' x':''}">${s[1]}</button>`).join('')}</div><input class="note" data-n="${p.id}" placeholder="One line (optional)" value="${esc(F.note[p.id]||'')}"></div>`).join(''):'<div class="row muted">Nobody on this floor.</div>'):'')+`</section>`;}).join('');
+  const recent=H.slice().reverse().slice(0,10).map(h=>`<tr><td>${esc(h.date)}</td><td>${esc(h.type)}${h.topic?'<div class="muted small">'+esc(h.topic)+'</div>':''}</td><td>${esc(h.by||'')}</td><td>${h.counts.map(c=>esc(c[0])+': '+c[1]).join(' · ')}</td></tr>`).join('');
+  document.getElementById('root').innerHTML=`<div><h2>Group sessions</h2><div class="muted">Pick the session, then mark who took part floor by floor. Only patients admitted now are listed (up to ${LIMIT}).</div></div>
+  <div class="card"><div class="grid"><div class="field"><label>Session type</label><select id="g_t">${TYPES.map(t=>`<option ${F.type===t?'selected':''}>${esc(t)}</option>`).join('')}</select></div>
+  <div class="field"><label>Date</label><input type="date" id="g_d" value="${esc(F.date)}"></div>
+  <div class="field"><label>Led by</label><input type="text" id="g_b" value="${esc(F.by)}" placeholder="Name"></div>
+  <div class="field"><label>Topic or note for the room (optional)</label><input type="text" id="g_o" value="${esc(F.topic)}" placeholder="e.g. Triggers and coping plans"></div></div></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><b>Attendance · ${marked} of ${P.length} marked</b><div style="display:flex;gap:8px;flex-wrap:wrap"><input type="text" id="g_q" placeholder="Search name or room" value="${esc(F.q)}"><button class="btn" data-clear="1">Clear</button><button class="btn pri" data-save="1">Save session</button></div></div>
+  ${P.length?sec:'<div class="card muted">No admitted patients to list yet.</div>'}
+  <div class="card" style="padding:0;overflow:auto"><div style="padding:12px 14px"><b>Recent sessions</b></div>${recent?`<table><thead><tr><th>Date</th><th>Session</th><th>Led by</th><th>Attended by floor</th></tr></thead><tbody>${recent}</tbody></table>`:'<div class="muted" style="padding:0 14px 14px">No session saved yet.</div>'}</div>`;
+  const q2=document.getElementById('g_q');if(q2&&F.q){q2.focus();q2.setSelectionRange(F.q.length,F.q.length);}
+}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a],[data-all],[data-tog],[data-clear],[data-save]');if(!t)return;const d=t.dataset;
+  if(d.a){const [id,v]=d.a.split('|');if(F.att[id]===v)delete F.att[id];else F.att[id]=v;}
+  else if(d.all){P.filter(p=>floorOf(p)===d.all).forEach(p=>{F.att[p.id]='A';});}
+  else if(d.tog){F.open[d.tog]=!F.open[d.tog];}
+  else if(d.clear){F.att={};F.note={};}
+  else if(d.save){if(!Object.keys(F.att).length){toast('Mark at least one patient first');return;}
+    const counts=FLOORS.map(f=>[f[1],P.filter(p=>floorOf(p)===f[0]&&(F.att[p.id]==='A'||F.att[p.id]==='P')).length]);
+    H.push({date:F.date,type:F.type,topic:F.topic,by:F.by,counts,att:F.att,note:F.note});try{localStorage.setItem(KEY,JSON.stringify(H));}catch(e){}
+    F.att={};F.note={};F.topic='';toast('Session saved.');}
+  render();});
+document.addEventListener('input',e=>{const t=e.target;if(t.id==='g_q'){F.q=t.value;render();}else if(t.dataset&&t.dataset.n){F.note[t.dataset.n]=t.value;}else if(t.id==='g_b')F.by=t.value;else if(t.id==='g_o')F.topic=t.value;});
+document.addEventListener('change',e=>{const t=e.target;if(t.id==='g_t')F.type=t.value;else if(t.id==='g_d')F.date=t.value;});
+render();
+</script>
+</body>
+</html>
