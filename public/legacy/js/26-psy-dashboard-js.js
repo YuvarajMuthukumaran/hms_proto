@@ -140,11 +140,20 @@
       if(doneOf(i)){const t=tk[i.key]||{};return `<div class="pd-di done"><div class="pd-dh"><span class="pd-chip ${i.lab[0]}">${hesc(i.lab[1])}</span><span class="tiny" style="color:#067647;font-weight:600">Action taken ✓</span></div><div class="pd-dt">${hesc(i.txt)}</div><div class="tiny muted">${hesc(t.by||'')} · ${hesc(t.at||'')}${t.note?' · '+hesc(t.note):''}</div></div>`;}
       /* after any action on one item the window opens again with the rest (Trello "alert page": marking one task must still show the second) */
       const back=`S.__eyePid='${pid}';closeModal();`;
-      /* Review treatment sits on every medical item: alerts, approvals and results to check. It opens the nursing chart,
-         except a therapy-plan alert (a psychology quality item, not a medication one), which opens the Therapy and
-         family tab so the plan can actually be reviewed and signed off (Trello: should go to the management plan). */
-      const rtGo=/therapy plan/i.test(i.txt)?`go('#/patient/${pid}/plans')`:`psyToChart('${pid}')`;   /* 18 Nov 2026: a therapy-plan alert opens the management plan (the psychologist's plan is shown there, read only) */
-      const rt=`<button class="btn sm ${i.k==='alert'?'pri':''}" onclick="closeModal();${rtGo}">Review treatment</button>`;
+      /* 19 Nov 2026 (owner: action buttons must name the actual task, not a one-size-fits-all "Review treatment"
+         on every medical item). Orders and lab/result checks are genuinely about the treatment, so they keep that
+         label; an alert is named for what it is actually about (a note not written, a call not made, a review not
+         done), and opens the page that task is done on instead of always the nursing chart. */
+      const rtFor=t=>/daily note|progress note|end of day/i.test(t)?['Take daily notes',`go('#/patient/${pid}/daily')`]
+        :/unsigned note/i.test(t)?['Open the note',`go('#/patient/${pid}/daily')`]
+        :/therapy plan/i.test(t)?['Open management plan',`go('#/patient/${pid}/plans')`]
+        :/consultant review/i.test(t)?['Open rounds',`psyOpenRounds('${pid}')`]
+        :/restraint/i.test(t)?['Review restraint record',`psyToChart('${pid}')`]
+        :/not acknowledged|result|lab|level|critical value/i.test(t)?['Review the result',`psyToChart('${pid}')`]
+        :/follow-up/i.test(t)?['Review follow-up',`psyToChart('${pid}')`]
+        :['Review treatment',`psyToChart('${pid}')`];
+      const [rtLabel,rtGo]=i.k==='alert'?rtFor(i.txt):['Review treatment',/therapy plan/i.test(i.txt)?`go('#/patient/${pid}/plans')`:`psyToChart('${pid}')`];
+      const rt=`<button class="btn sm ${i.k==='alert'?'pri':''}" onclick="closeModal();${rtGo}">${rtLabel}</button>`;
       /* Trello "Task and Action Button Alignment": no separate generic "Log action" step -- a task/late item's own
          button (already renamed to the specific action, e.g. "Write the note", "Review the result") marks it done
          itself when clicked, the same way completing the task turns it green. Alerts and approvals keep their own
