@@ -26,8 +26,9 @@
     'body.psy-myday #view .pd-t td:nth-child(2){border-left:1px solid var(--line);border-top-left-radius:16px;border-bottom-left-radius:16px;padding-left:18px;position:relative}'+
     'body.psy-myday #view .pd-t td::before,body.psy-myday #view .pd-t td:first-child::before{background:none!important;box-shadow:none!important}'+
     'body.psy-myday #view .pd-t tr.r-red td,body.psy-myday #view .pd-t tr.r-amber td{background:#fff}'+
-    'body.psy-myday #view .pd-t col:nth-child(2){width:260px}body.psy-myday #view .pd-t col:nth-child(3){width:23%}body.psy-myday #view .pd-t col:nth-child(4){width:40%}body.psy-myday #view .pd-t col:nth-child(5){width:150px}'+
-    'body.psy-myday #view .pd-t td:nth-child(4) .pg-dt b{font-size:15px}'+
+    'body.psy-myday #view .pd-t col:nth-child(2){width:25%}body.psy-myday #view .pd-t col:nth-child(3){width:37%}body.psy-myday #view .pd-t col:nth-child(4){width:auto}body.psy-myday #view .pd-t col:nth-child(5){width:200px}'+
+    'body.psy-myday #view .pd-t th:nth-child(2){width:24%!important}body.psy-myday #view .pd-t th:nth-child(3){width:36%!important}body.psy-myday #view .pd-t th:nth-child(4){width:auto!important}body.psy-myday #view .pd-t th:nth-child(5){width:190px!important}'+
+    'body.psy-myday #view .pd-t td:nth-child(3) .pg-dt b{font-size:15px}'+
     /* 6. daily notes: numbered, spaced */
     'body.pgx #view .pn-main{counter-reset:pnq}body.pgx #view .pn-q{counter-increment:pnq;margin-left:12px;margin-bottom:6px}'+
     'body.pgx #view .pn-ql::before{content:counter(pnq) ". ";font-weight:800;color:#175cd3}body.pgx #view .pn-os{margin-top:8px;gap:8px}'+
@@ -50,6 +51,18 @@
       <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn sm" onclick="closeModal();pgNoteModal('${pid}')">Write daily note</button><button class="btn sm" onclick="closeModal();pgTherapyModal('${pid}')">Plan a therapy session</button><button class="btn sm" onclick="closeModal();pgMpModal('${pid}')">Management plan</button><button class="btn sm" onclick="closeModal();psyOpenRounds('${pid}')">Open Rounds</button></div>`;
     V3.modal(E(p.name||'Patient'),E(sub||'What is due for this patient'),body,`<button class="btn" onclick="closeModal()">Close</button><button class="btn" onclick="closeModal();go('#/patient/${pid}/overview')">Open full record</button>`);
   };
+  /* Due today comes second, straight after Patient (Type is hidden, so the 4th cell moves before the 3rd) */
+  function reorder(){
+    const t=document.querySelector('#view table.pd-t');if(!t)return;
+    const hr=t.querySelector('thead tr');if(!hr||hr.children.length<5)return;
+    if(/^Due today/i.test((hr.children[3].textContent||'').trim())){
+      const mv=p=>{if(p&&p.children.length>=5)p.insertBefore(p.children[3],p.children[2]);};
+      mv(hr);t.querySelectorAll('tbody tr[data-dt]').forEach(mv);mv(t.querySelector('colgroup'));
+    }
+    /* widths on the header cells themselves (the table is fixed layout): Patient 24%, Due today 36%, Ongoing interventions the rest, buttons 190px */
+    ['','24%','36%','auto','190px'].forEach((w,i)=>{const th=hr.children[i];if(th&&w)th.style.setProperty('width',w,'important');});
+    t.querySelectorAll('colgroup col').forEach((c,i)=>{const w=['','24%','36%','auto','190px'][i];if(w)c.style.setProperty('width',w,'important');});
+  }
   function eyes(){
     document.querySelectorAll('#view .pd-eye').forEach(b=>{
       const m=(b.getAttribute('onclick')||'').match(/#\/patient\/([^\/']+)\//);if(!m||b.dataset.pe)return;
@@ -92,7 +105,7 @@
     if(psg){
       document.body.classList.add('pgx');
       document.body.classList.toggle('psy-myday',/^#\/myday/.test(location.hash||''));
-      if(/^#\/myday/.test(location.hash||''))eyes();
+      if(/^#\/myday/.test(location.hash||'')){reorder();eyes();}
     }
     if(psg||psy)rounds();
   }
