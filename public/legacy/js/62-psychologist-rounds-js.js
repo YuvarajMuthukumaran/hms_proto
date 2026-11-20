@@ -82,11 +82,12 @@
     (c.events||[]).filter(e=>!e.ack).forEach(e=>{
       const serious=/seizure|self-harm|abscond|chok|emergency/i.test(e.type||'')||/major|serious/i.test(e.sev||'');
       add(serious?'Critical':/adverse drug/i.test(e.type||'')?'Medication':'Clinical event',(e.type||'Event'),e.when||'');});
-    if(!c.capacityDone)add('MHCA','Capacity assessment',(c.section==='90'?'fortnightly':'weekly')+' (Section '+(c.section||'89')+')');
+    /* 20 Nov 2026 (owner): the capacity assessment is the psychiatrist's, so it no longer shows in the psychologist's due list */
     if(p.day<=1)add('Admission','Admission workup and add psychologist','first 24 hours');
     if(c.calls&&c.calls.h24!=='done')add('Admission','24-hour family call','');
     if(c.calls&&c.calls.d34psych==='due')add('Family','Day 3 to 4 family call','');
-    try{if(!((S.eod||{})[pid]||{}).saved)add('Documentation','Daily note','today');}catch(e){}
+    /* one daily-note line only: an open "Daily note not written" alert already says it (the same item was listed twice) */
+    try{if(!((S.eod||{})[pid]||{}).saved&&!L.some(i=>/daily note/i.test(i.txt)))add('Documentation','Daily note','today');}catch(e){}
     try{if(c.historyStatus&&c.historyStatus!=='signed')add('Documentation','Detailed history',c.historyStatus==='overdue'?'overdue':'within 72 h');}catch(e){}
     try{if(!((psyPx(pid).mgmtPsych)||{}).signed)add('Documentation','Management plan',p.day>7?'overdue':'this week');}catch(e){}
     return L.sort((a,b)=>RANK.indexOf(a.cat)-RANK.indexOf(b.cat));

@@ -152,4 +152,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/151-form-choice-names-20nov-js.js',
   '/legacy/js/152-eye-popups-20nov-js.js',
   '/legacy/js/153-psy-rounds-tab-20nov-js.js',
+  '/legacy/js/154-psy-due-consistent-20nov-js.js',
 ];
