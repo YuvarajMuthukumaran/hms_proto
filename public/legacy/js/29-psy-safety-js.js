@@ -140,7 +140,7 @@
   };
   function scoresCard(pid){
     const c=ptCtxOf(pid),pv=lastVit(c),N=pxOf(pid).news||[];
-    const f=(id,l,val,extra)=>`<label>${l}<input class="input" id="${id}" type="number" step="any" value="${val}" style="min-height:32px;padding:4px 8px" ${extra||''}></label>`;
+    const f=(id,l,val,extra)=>`<label>${l}<input class="input" id="${id}" type="number" step="any" value="" style="min-height:32px;padding:4px 8px" ${extra||''}></label>`;
     const n0=N[0];
     /* 17 Nov 2026, Trello: drop the Suicide / self-harm screen half of this card (the Rounds "Do screen"
        six-question flow already sets the same x.riskLevel; this was one more place doing it and the

@@ -131,8 +131,8 @@
   function cards(D) {
     var c = cfg();
     return '<div class="rv-cards">' + ROUNDS.map(function (r) {
-      var L = listFor(r[0], D), seen = L.filter(function (x) { return statusOf(D, x.p, r[0]) !== 'to'; }).length, pc = L.length ? Math.round(seen / L.length * 100) : 0;
-      return '<button class="rv-card ' + (state.round === r[0] ? 'on' : '') + '" onclick="RV2.round(\'' + r[0] + '\')"><b>' + r[1] + '</b> <span class="t">' + esc((c.times[r[0]] || '').replace('-', ' to ')) + '</span><div>' + seen + ' of ' + L.length + ' seen</div><div class="rv-bar"><i style="width:' + pc + '%"></i></div></button>';
+      var L0 = listFor(r[0], D), L = split() ? L0.filter(function (x) { return slotOf(x.p) === r[0]; }) : L0, extra = L0.length - L.length, seen = L.filter(function (x) { return statusOf(D, x.p, r[0]) !== 'to'; }).length, pc = L.length ? Math.round(seen / L.length * 100) : 0;
+      return '<button class="rv-card ' + (state.round === r[0] ? 'on' : '') + '" onclick="RV2.round(\'' + r[0] + '\')"><b>' + r[1] + '</b> <span class="t">' + esc((c.times[r[0]] || '').replace('-', ' to ')) + '</span><div>' + seen + ' of ' + L.length + ' seen' + (extra > 0 ? ' <span style="color:#B54708">· +' + extra + ' to follow up</span>' : '') + '</div><div class="rv-bar"><i style="width:' + pc + '%"></i></div></button>';
     }).join('') + '</div>';
   }
   function rows(D) {
@@ -182,10 +182,10 @@
      previous patient is sent to the scribe and comes back as a draft on THAT patient. Nothing is filled in until "Use this". */
   var SR = { on: false, stream: null, mr: null, msg: '', busy: 0 };
   function scribeBar() {
-    return '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:' + (SR.on ? '#FEF3F2' : '#F2F7FF') + ';border:2px solid ' + (SR.on ? '#F04438' : '#1E6CDB') + ';border-radius:14px;padding:12px 16px">' +
-      '<button class="rv-b pri" style="font-size:16px;padding:12px 22px;' + (SR.on ? 'background:#D92D20;border-color:#D92D20' : '') + '" onclick="RV2.scribe()">' + (SR.on ? '■ Stop the round scribe' : '● Start AI scribe for this round') + '</button>' +
-      '<div style="flex:1;min-width:220px;font-size:13px;color:#344054"><b>AI scribe</b>: start it once and it listens for the whole round. Open each patient as you go; the words are drafted for that patient and you check them, then press Use this.' +
-      (SR.msg ? '<div style="margin-top:4px;color:#475467">' + esc(SR.msg) + '</div>' : '') + '<div style="font-size:12px;color:#667085;margin-top:2px">Tell patients before recording. Only text is kept, no audio.</div></div></div>';
+    return '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:' + (SR.on ? '#FEF3F2' : '#fff') + ';border:1px solid ' + (SR.on ? '#FDA29B' : '#D6DEE8') + ';border-radius:12px;padding:10px 14px">' +
+      '<button class="rv-b pri" style="font-size:14px;padding:9px 16px;white-space:nowrap;' + (SR.on ? 'background:#D92D20;border-color:#D92D20' : '') + '" onclick="RV2.scribe()">' + (SR.on ? '■ Stop the round scribe' : '● Start AI scribe') + '</button>' +
+      '<div style="flex:1;min-width:220px;font-size:13px;color:#475467">' + (SR.on ? '<b style="color:#B42318">Listening to the round.</b> Open each patient as you go; the words are drafted for that patient.' : '<b style="color:#101828">AI scribe for this round.</b> Start it once, open each patient as you go, then check the draft and press Use this.') +
+      (SR.msg ? '<div style="margin-top:3px">' + esc(SR.msg) + '</div>' : '') + '<div style="font-size:12px;color:#667085;margin-top:2px">Tell patients before recording. Only text is kept, no audio.</div></div></div>';
   }
   function srSeg() {
     if (!SR.on || !SR.stream) return;
