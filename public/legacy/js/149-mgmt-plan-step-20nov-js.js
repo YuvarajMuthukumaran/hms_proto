@@ -1,10 +1,12 @@
-/* 20 Nov 2026 (owner, screenshot). Psychiatrist and floor lead psychiatrist only.
+/* 20 Nov 2026 (owner, screenshot). Psychiatrist and floor lead psychiatrist; the same for psychologist and floor lead psychologist (owner, later 20 Nov:
+   their own plan, psyx.mgmtPsych, opens at Step 5).
    The Management Plan is no longer its own patient tab: it is Step 5 of Admission, right after Step 4 Detailed history,
    and Form C (independent admission) becomes Step 6. Choosing Step 5 shows the management plan inside the Admission tab.
    Old links to #/patient/<id>/plans (dashboards, Discharge "Open management plan") open Admission at Step 5. */
 (function(){
   const ROLE=String((window.__TULASI__||{}).role||'');
-  if(!/^(psychiatrist|floor-lead-psychiatrist)$/.test(ROLE))return;
+  if(!/^(psychiatrist|floor-lead-psychiatrist|psychologist|floor-lead-psychologist)$/.test(ROLE))return;
+  const PSG=/psycholog/.test(ROLE);
   const E=s=>hesc(String(s==null?'':s));
   const pidNow=()=>{const m=String(location.hash||'').match(/^#\/patient\/([^/?]+)/);return m?decodeURIComponent(m[1]):'';};
 
@@ -15,7 +17,7 @@
   function status(pid){
     let x={};try{x=psyPx(pid)||{};}catch(e){}
     /* the psychiatrist's plan record (block 54: psyMpSign sets mgmt.signed) */
-    const mp=x.mgmt||{},signed=!!mp.signed;
+    const mp=(PSG?x.mgmtPsych:x.mgmt)||{},signed=!!mp.signed;
     const started=signed||Object.keys(mp).some(k=>k!=='signed'&&k!=='add'&&mp[k]&&String(mp[k]).trim());
     return signed?['done','✓','Signed'+(mp.signed&&mp.signed.at?' '+String(mp.signed.at).split(',')[0]:'')]:started?['warn','5','In progress']:['','5','Not started'];
   }
