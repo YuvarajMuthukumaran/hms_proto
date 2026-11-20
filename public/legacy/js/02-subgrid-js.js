@@ -53,7 +53,8 @@
       return {h: m && m[1], full: (b.childNodes[0] && b.childNodes[0].textContent || b.textContent).trim(), on: b.classList.contains('on')};
     }).filter(x => x.h);
     subs.forEach(b => b.remove());
-    const inIpd = nav.classList.contains('on');
+    const inIpd = nav.classList.contains('on') || /^#\/groups/.test(location.hash||''); /* Group sessions (psychologist) lives inside Inpatients: keep it open */
+    if(inIpd) nav.classList.add('on');
     LAST = L;
     const onPatient = /^#\/patient\//.test(location.hash);
     const cur = groupOf((location.hash||'#/myday').slice(2).split('/')[0]);

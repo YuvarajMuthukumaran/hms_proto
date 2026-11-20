@@ -150,4 +150,6 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/149-mgmt-plan-step-20nov-js.js',
   '/legacy/js/150-owner-fixes-20nov-js.js',
   '/legacy/js/151-form-choice-names-20nov-js.js',
+  '/legacy/js/152-eye-popups-20nov-js.js',
+  '/legacy/js/153-psy-rounds-tab-20nov-js.js',
 ];
