@@ -13,7 +13,9 @@
 (function(){
   const ROLE=String((window.__TULASI__||{}).role||'');
   const DOC=/^(psychiatrist|floor-lead-psychiatrist)$/.test(ROLE),PSYL=/^(psychologist|floor-lead-psychologist)$/.test(ROLE);
-  if(!DOC&&!PSYL)return;
+  /* 20 Nov 2026 (owner): the RMO on duty also gets the fillable forms, e-signature and Open Form (not the psychiatrist-only tabs or Edit history) */
+  const RMO=ROLE==='rmo';
+  if(!DOC&&!PSYL&&!RMO)return;
   const E=s=>hesc(String(s==null?'':s));
   const Q=s=>String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const route=()=>{const m=String(location.hash||'').match(/^#\/patient\/([^/?]+)(?:\/([^/?]+))?/);return m?{pid:decodeURIComponent(m[1]),sub:m[2]||''}:{pid:'',sub:''};};
@@ -334,7 +336,7 @@
     const o=__r.apply(this,arguments);
     try{wrapEsign();capWrap();roundWrap();}catch(e){}
     try{const {pid,sub}=route();const v=document.getElementById('view');
-      if(pid&&v){tabs(v,pid,sub);if(sub==='admission'){openFormButtons(v,pid);histEditBtn(v,pid);}}}catch(e){}
+      if(pid&&v){tabs(v,pid,sub);if(sub==='admission'){openFormButtons(v,pid);if(DOC||PSYL)histEditBtn(v,pid);}}}catch(e){}
     return o;
   };
 })();

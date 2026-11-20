@@ -6,7 +6,7 @@
       under Open Form, and written into the form's own "Relation with the patient" blank when that blank is still empty. */
 (function(){
   const ROLE=String((window.__TULASI__||{}).role||'');
-  if(!/^(psychiatrist|floor-lead-psychiatrist|psychologist|floor-lead-psychologist)$/.test(ROLE))return;
+  if(!/^(psychiatrist|floor-lead-psychiatrist|psychologist|floor-lead-psychologist|rmo)$/.test(ROLE))return;
   const E=s=>hesc(String(s==null?'':s));
   const RELS=['Father','Mother','Spouse','Son','Daughter','Brother','Sister','Guardian','Nominated representative','Other relative','Friend'];
 

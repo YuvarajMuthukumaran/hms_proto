@@ -5,7 +5,7 @@
    Old links to #/patient/<id>/plans (dashboards, Discharge "Open management plan") open Admission at Step 5. */
 (function(){
   const ROLE=String((window.__TULASI__||{}).role||'');
-  if(!/^(psychiatrist|floor-lead-psychiatrist|psychologist|floor-lead-psychologist)$/.test(ROLE))return;
+  if(!/^(psychiatrist|floor-lead-psychiatrist|psychologist|floor-lead-psychologist|rmo)$/.test(ROLE))return;
   const PSG=/psycholog/.test(ROLE);
   const E=s=>hesc(String(s==null?'':s));
   const pidNow=()=>{const m=String(location.hash||'').match(/^#\/patient\/([^/?]+)/);return m?decodeURIComponent(m[1]):'';};

@@ -9,7 +9,7 @@
       two columns, and the boxes are the same size and colour. */
 (function(){
   const ROLE=String((window.__TULASI__||{}).role||'');
-  const CLIN=/^(psychiatrist|floor-lead-psychiatrist|psychologist|floor-lead-psychologist)$/.test(ROLE);
+  const CLIN=/^(psychiatrist|floor-lead-psychiatrist|psychologist|floor-lead-psychologist|rmo)$/.test(ROLE);
   const PSG=/^(psychologist|floor-lead-psychologist)$/.test(ROLE);
   const nameOf=pid=>{try{return String((ptFind(pid)||{}).name||'').trim();}catch(e){return '';}};
   const strip=(t,nm)=>{t=String(t||'');if(!nm)return t;const s=' · '+nm;return t.endsWith(s)?t.slice(0,-s.length):t;};
