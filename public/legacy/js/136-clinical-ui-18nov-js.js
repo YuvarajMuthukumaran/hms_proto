@@ -127,7 +127,7 @@
       const m=(b.getAttribute('onclick')||'').match(/psyAllergy\('([^']+)'\)/);if(!m)return;
       const has=(()=>{try{const a=psyPx(m[1]).allergy;return !!a;}catch(e){return false;}})();
       b.textContent=has?'Edit':'Record allergies';
-      if(!has){const n=document.createElement('button');n.type='button';n.className='btn sm';n.style.marginLeft='6px';n.textContent='No known allergies';n.onclick=()=>psyNkda(m[1]);n.style.marginLeft='0';const w=document.createElement('span');w.style.cssText='display:inline-flex;gap:8px;flex-wrap:wrap;align-items:center';b.parentNode.insertBefore(w,b);w.appendChild(b);w.appendChild(n);}
+      if(!has){const n=document.createElement('button');n.type='button';n.className='btn sm';n.style.marginLeft='6px';n.textContent='No known allergies';n.onclick=()=>psyNkda(m[1]);b.insertAdjacentElement('afterend',n);}
     });
     /* the pop-up lists allergies only; "no known allergies" is the button outside */
     const al=document.getElementById('al_n');if(al&&!al.dataset.nk){al.dataset.nk='1';const l=al.closest('label');if(l)l.remove();}
