@@ -23,6 +23,18 @@
   document.head.appendChild(css);
 
   /* ---------- 1. OPD record button ---------- */
+  /* 20 Nov 2026 (owner, screenshot): psychiatrist's Round note is the 5th button of that column, styled like the others */
+  function roundButton(){
+    if(!/^(psychiatrist|floor-lead-psychiatrist)$/.test(ROLE))return;
+    const hd=document.querySelector('#view .dph');if(!hd)return;
+    const col=hd.querySelector('.dpact');if(!col)return;
+    const b=[...hd.querySelectorAll('button')].find(x=>/^Round note$/i.test((x.textContent||'').trim()));if(!b)return;
+    if(b.parentElement===col&&b.dataset.m20)return;
+    b.dataset.m20='1';b.className='btn soft m20-rn';
+    if(!b.querySelector('svg'))b.insertAdjacentHTML('afterbegin','<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> ');
+    const btns=[...col.querySelectorAll(':scope > button')];
+    const last=btns[btns.length-1];if(last)last.after(b);else col.insertBefore(b,col.firstChild);
+  }
   function opdButton(){
     const hd=document.querySelector('#view .dph');if(!hd)return;
     const b=hd.querySelector('.acr-opd'),col=hd.querySelector('.dpact');if(!b||!col)return;
@@ -105,6 +117,6 @@
   wrapOpen();wrapSave();wrapView();
 
   const __r=render;
-  render=function(){const o=__r.apply(this,arguments);try{wrapOpen();wrapSave();wrapView();opdButton();}catch(e){}return o;};
-  try{opdButton();}catch(e){}
+  render=function(){const o=__r.apply(this,arguments);try{wrapOpen();wrapSave();wrapView();opdButton();roundButton();}catch(e){}return o;};
+  try{opdButton();roundButton();}catch(e){}
 })();
