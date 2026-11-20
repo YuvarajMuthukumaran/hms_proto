@@ -4,7 +4,9 @@
    - no empty tags: nothing is shown for "no allergy", "not recorded" or "none"
    - colours: red only for risk, amber only for overdue or missing
    - the main button is "Round note" for the psychiatrist and "Session note" for the psychologist
-   Prototype: the observation "set by" and "review by" are demo values. */
+   Prototype: the observation "set by" and "review by" are demo values.
+   20 Nov 2026 (owner): the observation chip shows just the level (e.g. "Routine"); who set it and the review time
+   are still in the tooltip on hover, not printed on the bar itself. */
 (function(){
   const role=()=>String((window.__TULASI__||{}).role||'');
   const kind=()=>{const r=role();if(S.role==='psychologist'||/psycholog/.test(r))return 'psychologist';if(S.role==='psychiatrist'&&!/patient-experience|rmo/.test(r))return 'psychiatrist';return '';};
@@ -20,7 +22,7 @@
     let oc={};try{oc=(typeof ptCtxOf==='function'&&ptCtxOf(pid))||{};}catch(e){}
     const obs=oc.obs||(pid==='neel'&&S.obs)||(typeof EX!=='undefined'&&(EX[pid]||[])[0])||'Routine';
     const doc=(oc.obs&&oc.obsBy&&oc.obsBy.by)||(typeof PSYOF!=='undefined'&&PSYOF[pid])||'the treating psychiatrist';
-    const obsC=`<span class="sh-c" title="Set by ${esc(doc)} · review by today 6:00 pm">${esc(obs)}<span class="sh-s">set by ${esc(String(doc).replace(/^Dr\.\s*/,'Dr. '))} · review by 6 pm</span></span>`;
+    const obsC=`<span class="sh-c" title="Set by ${esc(doc)} · review by today 6:00 pm">${esc(obs)}</span>`;
     const tags=(x.riskTags||[]).map(t=>`<span class="sh-c red">${esc(t)}</span>`).join('');
     /* the level comes from the suicide / self-harm screen when one was done (card "Rating scales"), otherwise from the record */
     const lvl=x.riskLevel||(p.risk?'High':'');

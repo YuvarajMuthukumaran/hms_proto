@@ -1,6 +1,7 @@
 /* 19 Nov 2026, Trello (Anu, meeting 19 Nov). Admission forms, capacity, rounds, OPD. Psychiatrist and psychologist screens.
    1. Collect e-signature: bigger text, no PIN box (the drawn signature is the signature; the prototype PIN is filled in behind it).
-      Form C and Form E: the blanks on the form pages can be filled or ticked right there, before signing.
+      Every admission form (not just Form C and Form E) has its blanks fillable or tickable right there, before signing,
+      for any form id with page/field metadata in CDF_FORMS (20 Nov 2026, owner).
    2. A signed admission form shows "Open Form" (the form, with the signature) instead of "Collect e-signature".
    3. Detailed history: "Edit history" on the signed history reopens it (it must be signed again; the reopening is kept as an addendum).
    4. Capacity assessment (psychiatrist): it is recurring. A "Capacity assessment" tab lists every assessment with date, doctor, capacity
@@ -34,7 +35,7 @@
 
   /* ================= 1. e-signature window ================= */
   function editableForm(fid){
-    if(!/^form-[ce]$/.test(fid))return;
+    if(!CDF_FORMS||!CDF_FORMS[fid])return;
     const box=document.querySelector('#modal .es-form > div');if(!box)return;
     CD_DATA=cdLoad();
     const it=cdItems(S.pid).find(i=>i.form&&i.form.id===fid),meta=CDF_FORMS&&CDF_FORMS[fid];if(!it||!meta)return;
