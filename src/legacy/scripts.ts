@@ -143,4 +143,8 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/142-vitals-slots-monitoring-19nov-js.js',
   '/legacy/js/143-group-sessions-19nov-js.js',
   '/legacy/js/144-psy-meeting-19nov-js.js',
+  '/legacy/js/145-opd-esign-20nov-js.js',
+  '/legacy/js/146-discharge-tabs-20nov-js.js',
+  '/legacy/js/147-therapy-notes-20nov-js.js',
+  '/legacy/js/148-scribe-page-fill-20nov-js.js',
 ];

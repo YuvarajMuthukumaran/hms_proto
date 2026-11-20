@@ -47,6 +47,30 @@ async function transcribeOnce(blob, ext, hint, language) {
   return String(tr.text || '').trim();
 }
 
+// 20 Nov 2026 (meeting): the transcript the clinician sees must be English even when the conversation was in Hindi.
+// Whisper's translation endpoint hears Hindi, English or both and always writes English.
+const EN_PROMPT = 'Tulasi Healthcare psychiatric hospital. Doctor, nurse (Sister, Brother), RMO, psychologist, patient and family. Medicines such as olanzapine, lithium, lorazepam. Write clear English.';
+async function translateOnce(blob, ext, hint) {
+  const fd = new FormData();
+  fd.append('file', blob, 'recording.' + ext);
+  fd.append('model', 'whisper-large-v3');
+  fd.append('response_format', 'json');
+  fd.append('temperature', '0');
+  fd.append('prompt', EN_PROMPT + ' ' + (hint || ''));
+  const tr = await groq('/audio/translations', { method: 'POST', body: fd });
+  return String(tr.text || '').trim();
+}
+
+// any answer still in Devanagari is translated to English before it is returned (the portal is written in English only)
+const DEVANAGARI = /[ऀ-ॿ]/;
+async function inEnglish(obj) {
+  if (!DEVANAGARI.test(JSON.stringify(obj || {}))) return obj;
+  try {
+    const d = await writeJson('You translate a JSON object for a hospital record. Translate every string value into clear clinical English (Hindi and Hinglish into English). Keep the keys, the structure, and any value that is already English exactly as it is. Reply with the JSON object only.', JSON.stringify(obj));
+    return d && typeof d === 'object' ? d : obj;
+  } catch (e) { return obj; }
+}
+
 async function transcribe(blob, ext, hint) {
   const [hi, en] = await Promise.all([
     transcribeOnce(blob, ext, hint, 'hi').catch(() => ''),
@@ -102,8 +126,10 @@ module.exports = async (req, res) => {
       if (schema.mode === 'transcript') { // words only (therapy session transcript); the audio is dropped right after
         if (!audio || audio.size < 2000) return send(400, { ok: false, error: 'The recording is empty. Check the microphone and try again.' });
         const ext = extOf(audio.type || 'audio/webm');
-        let text = await transcribeOnce(audio, ext, schema.hint, 'hi').catch(() => '');
+        // English words on screen: translated by Whisper (Hindi, English or mixed in), English transcription as the fallback
+        let text = await translateOnce(audio, ext, schema.hint).catch(() => '');
         if (!text) text = await transcribeOnce(audio, ext, schema.hint, 'en').catch(() => '');
+        if (text && DEVANAGARI.test(text)) text = String((await inEnglish({ text })).text || text);
         if (!text) return send(422, { ok: false, error: 'No speech was heard in the recording.' });
         console.log(JSON.stringify({ kind: 'scribe-transcript', bytes: audio.size, words: text.split(/\s+/).length }));
         return send(200, { ok: true, mode: 'transcript', transcript: text });
@@ -114,7 +140,7 @@ module.exports = async (req, res) => {
       const transcript = await transcribe(audio, extOf(audio.type || 'audio/webm'), schema.hint);
       if (!transcript) return send(422, { ok: false, error: 'No speech was heard in the recording.' });
       const d = await writeJson(FORM_SYSTEM, formMsg({ form: schema.form, context: schema.context, fields, transcript }));
-      const values = cleanValues(fields, d.values);
+      const values = cleanValues(fields, (await inEnglish({ values: d.values || {} })).values);
       console.log(JSON.stringify({ kind: 'scribe-form', form: schema.form || '', bytes: audio.size, filled: Object.keys(values).length, of: fields.length }));
       return send(200, { ok: true, mode: 'form', transcript, values, unclear: arr(d.unclear).map(String) });
     }
@@ -124,7 +150,20 @@ module.exports = async (req, res) => {
       let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { return send(400, { ok: false, error: 'Bad JSON' }); }
       const transcript = String(b.transcript || '').trim();
       if (transcript.length < 20) return send(400, { ok: false, error: 'There is no text to work from.' });
-      const d = await writeJson(OUTPUTS_SYSTEM, JSON.stringify({ patient: b.patient || '', diagnosis: b.dx || '', medicines: arr(b.meds), who: b.who || 'clinician', transcript: transcript.slice(0, 12000) }));
+      // 20 Nov 2026: fill the fields of the page the clinician is on (and only that page), from one transcript
+      if (b.mode === 'fill') {
+        const fields = arr(b.fields).filter(f => f && f.key && /^(one|text)$/.test(f.type)).slice(0, 80)
+          .map(f => ({ key: String(f.key), label: String(f.label || '').slice(0, 160), type: f.type, options: f.type === 'one' ? arr(f.options).map(String).slice(0, 40) : undefined }));
+        if (!fields.length) return send(400, { ok: false, error: 'There is nothing to fill on this page.' });
+        const d = await writeJson(FORM_SYSTEM, formMsg({ form: b.form, context: b.context, fields, transcript: transcript.slice(0, 12000) }));
+        const values = cleanValues(fields, (await inEnglish({ values: d.values || {} })).values);
+        console.log(JSON.stringify({ kind: 'scribe-fill', form: String(b.form || '').slice(0, 60), words: transcript.split(/\s+/).length, filled: Object.keys(values).length, of: fields.length }));
+        return send(200, { ok: true, mode: 'fill', values, unclear: arr(d.unclear).map(String) });
+      }
+      const d0 = await writeJson(OUTPUTS_SYSTEM, JSON.stringify({ patient: b.patient || '', diagnosis: b.dx || '', medicines: arr(b.meds), who: b.who || 'clinician', transcript: transcript.slice(0, 12000) }));
+      // everything shown to the clinician is English (risk words keep the words as heard, so they are left out of the translation)
+      const en = await inEnglish({ note: String(d0.note || ''), summaryLine: String(d0.summaryLine || ''), familyEn: String(d0.familyEn || ''), icd11: arr(d0.icd11), unclear: arr(d0.unclear) });
+      const d = Object.assign({}, d0, en, { familyHi: '' });
       console.log(JSON.stringify({ kind: 'scribe-outputs', words: transcript.split(/\s+/).length }));
       return send(200, {
         ok: true, mode: 'outputs',
@@ -141,7 +180,8 @@ module.exports = async (req, res) => {
     const meds = (q.get('meds') || '').split('|').map(s => s.trim()).filter(Boolean);
     const transcript = await transcribe(new Blob([raw], { type }), extOf(type), 'Ward round. Medicines: ' + (meds.join(', ') || 'olanzapine, lithium, lorazepam'));
     if (!transcript) return send(422, { ok: false, error: 'No speech was heard in the recording.' });
-    const d = await writeJson(SYSTEM, userMsg({ patient: q.get('patient'), dx: q.get('dx'), meds, transcript }));
+    const r0 = await writeJson(SYSTEM, userMsg({ patient: q.get('patient'), dx: q.get('dx'), meds, transcript }));
+    const d = Object.assign({}, r0, await inEnglish({ note: String(r0.note || ''), medChanges: arr(r0.medChanges), todos: arr(r0.todos), unclear: arr(r0.unclear) }));
     send(200, {
       ok: true, mode: 'round', transcript,
       note: String(d.note || ''), risk: String(d.risk || 'Not discussed'),

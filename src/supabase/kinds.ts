@@ -7,7 +7,7 @@ export const CONTEXT_KINDS = {
   // psyxShared = the part of the working notes (psyx) that both the psychologist and the psychiatrist write; see public/legacy/react-bridge.js
   psychology: ['psychRows', 'therapyNotes', 'dn', 'dnHist', 'dnY', 'scribeDaily', 'psyxShared', 'trLog'],
   consents: ['consents'],
-  events: ['events', 'restraints', 'pgriev', 'xs'],
+  events: ['events', 'restraints', 'pgriev', 'xs', 'dcRole'],
   prefs: ['diet', 'pf', 'pfAt', 'pfUp', 'prefBy', 'contacts', 'billing', 'famCons'],
   vitals: ['vit', 'sugar', 'sugarNew', 'sugarHd', 'adh', 'adhT', 'vc', 'monx', 'nsum'],
 } as const satisfies Record<string, readonly string[]>;
