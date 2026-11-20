@@ -84,7 +84,7 @@
   }
   const wrapOpen=()=>{
     const o=window.psyEsignOpen;if(typeof o!=='function'||o.__m20)return;
-    window.psyEsignOpen=function(){const r=o.apply(this,arguments);[150,320,600].forEach(t=>setTimeout(()=>{try{layout();}catch(e){}},t));return r;};
+    window.psyEsignOpen=function(){pinPid();const r=o.apply(this,arguments);[150,320,600].forEach(t=>setTimeout(()=>{try{layout();}catch(e){}},t));return r;};
     window.psyEsignOpen.__m20=1;window.psyEsignOpen.__acr=1;
   };
   const wrapSave=()=>{
@@ -94,7 +94,7 @@
       const rel=relVal(),err=document.getElementById('m20RelE');
       if(relSel&&!rel){if(err)err.style.display='block';return;}
       if(err)err.style.display='none';
-      const pid=S.pid;let before=null;try{before=(psyPx(pid).consent||{})[fid]||null;}catch(e){}
+      pinPid();const pid=S.pid;let before=null;try{before=(psyPx(pid).consent||{})[fid]||null;}catch(e){}
       const r=s.apply(this,arguments);
       try{
         const c=(psyPx(pid).consent||{})[fid];
@@ -105,6 +105,9 @@
           if(it){const v=cdfVals(it.entryKey);if(v.__esign)v.__esign.rel=rel;
             const meta=(typeof CDF_FORMS!=='undefined'&&CDF_FORMS[fid])||null;
             if(meta)meta.pages.forEach(pg=>pg.fields.forEach(f=>{if(/^Relation (with|of)/i.test(String(f.label||'').trim())&&!v[f.id])v[f.id]=rel;}));
+            /* forms without a signature blank: the signer's name on the Name line under the signature */
+            const hasSig=meta&&meta.pages.some(pg=>pg.fields.some(f=>/signature/i.test(String(f.label||''))));
+            const sp=!hasSig&&nameSpot(meta);if(sp&&!v[sp.f.id]&&c.by)v[sp.f.id]=c.by;
             S.cdEntryKey=it.entryKey;cdfTouch(it.entryKey);}
         }
       }catch(e){}
@@ -112,11 +115,39 @@
     };
     window.psyEsignSave.__m20=1;window.psyEsignSave.__acr=1;
   };
+  /* 20 Nov 2026 (owner, "sign still not added inside form", e.g. High risk informed consent): some forms have no blank whose printed
+     label says "Signature" (only "Signature of Guardian" printed above a Name line), so block 141 had nowhere to draw it. For those the
+     signature goes just above the form's Name line for the signer, and that Name line gets the signer's name when it is empty. */
+  const routePid=()=>{const m=String(location.hash||'').match(/^#\/patient\/([^/?]+)/);return m?decodeURIComponent(m[1]):'';};
+  /* the open patient: S.pid can be left on another patient by background work, so it is set back to the page's patient first */
+  const pinPid=()=>{const rp=routePid();try{if(rp&&S.pid!==rp&&typeof ptUse==='function')ptUse(rp);}catch(e){}};
+  function nameSpot(meta){
+    if(!meta)return null;
+    const NAME=/^(Name|For Guardian|Name of (the )?(Guardian|Nominated Representative|accompanying person|accompanied person|the Family Member|Family Member))\b/i;
+    for(let i=meta.pages.length-1;i>=0;i--){
+      const fs=meta.pages[i].fields.filter(f=>f.kind!=='choice'&&f.kind!=='check'&&NAME.test(String(f.label||'').trim())&&!/patient/i.test(f.label||''));
+      if(fs.length)return {i,f:fs.sort((a,b)=>b.y-a.y)[0]};
+    }
+    return null;
+  }
+  function drawOnForm(fid){
+    const m=document.getElementById('modal');if(!m||m.querySelector('.acr-onform'))return;
+    const pid=routePid()||S.pid;let c=(psyPx(pid).consent||{})[fid]||null;
+    if(!c||!c.sig){try{const it=cdItems(pid).find(i=>i.form&&i.form.id===fid);const e=it&&cdfVals(it.entryKey).__esign;if(e&&e.sig)c=e;}catch(e){}}
+    if(!c||!c.sig)return;
+    const sp=nameSpot(CDF_FORMS&&CDF_FORMS[fid]);if(!sp)return;
+    const pg=m.querySelectorAll('.cdf-page')[sp.i];if(!pg)return;
+    const f=sp.f,img=document.createElement('img');img.className='acr-onform';img.alt='Signature';img.src=c.sig;
+    img.style.cssText=`position:absolute;left:${f.x*CDF_K}px;top:${(f.y-24)*CDF_K}px;width:${Math.min(170,Math.max(120,f.w))*CDF_K}px;height:${22*CDF_K}px;object-fit:contain;object-position:left bottom;pointer-events:none`;
+    pg.appendChild(img);
+  }
   /* Open Form: show the relation under the signature */
   const wrapView=()=>{
     const o=window.acrOpenForm;if(typeof o!=='function'||o.__m20)return;
     window.acrOpenForm=function(fid){
+      pinPid();
       const r=o.apply(this,arguments);
+      try{drawOnForm(fid);}catch(e){}
       try{
         let rel=((psyPx(S.pid).consent||{})[fid]||{}).rel||'';
         if(!rel){CD_DATA=cdLoad();const it=cdItems(S.pid).find(i=>i.form&&i.form.id===fid);rel=it?((cdfVals(it.entryKey).__esign||{}).rel||''):'';}
