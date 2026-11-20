@@ -35,6 +35,17 @@
     const btns=[...col.querySelectorAll(':scope > button')];
     const last=btns[btns.length-1];if(last)last.after(b);else col.insertBefore(b,col.firstChild);
   }
+  /* 20 Nov 2026 (owner, WhatsApp "the text is contradictory"): the signed history said it "cannot be edited" next to an Edit history
+     button. Where Edit history is offered, the line says how editing works instead. */
+  function histLockText(){
+    document.querySelectorAll('#view .lkbox[data-lk="hist"]').forEach(b=>{
+      if(!b.querySelector('[data-acr-he]'))return;
+      const s=b.querySelector(':scope > span');if(!s||s.dataset.m20)return;
+      const t=s.innerHTML,re=/\.\s[^.<]*cannot be edited or deleted\. Only an addendum can be added\./;if(!re.test(t))return;
+      s.dataset.m20='1';
+      s.innerHTML=t.replace(re,'. To change it, use Edit history: it reopens for editing and must be signed again, and the reopening is recorded below. Or add an addendum.');
+    });
+  }
   function opdButton(){
     const hd=document.querySelector('#view .dph');if(!hd)return;
     const b=hd.querySelector('.acr-opd'),col=hd.querySelector('.dpact');if(!b||!col)return;
@@ -117,6 +128,6 @@
   wrapOpen();wrapSave();wrapView();
 
   const __r=render;
-  render=function(){const o=__r.apply(this,arguments);try{wrapOpen();wrapSave();wrapView();opdButton();roundButton();}catch(e){}return o;};
+  render=function(){const o=__r.apply(this,arguments);try{wrapOpen();wrapSave();wrapView();opdButton();roundButton();histLockText();}catch(e){}return o;};
   try{opdButton();roundButton();}catch(e){}
 })();
