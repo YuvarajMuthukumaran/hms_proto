@@ -147,4 +147,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/146-discharge-tabs-20nov-js.js',
   '/legacy/js/147-therapy-notes-20nov-js.js',
   '/legacy/js/148-scribe-page-fill-20nov-js.js',
+  '/legacy/js/149-mgmt-plan-step-20nov-js.js',
 ];
