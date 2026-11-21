@@ -164,4 +164,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/163-doctor-form-sign-21nov-js.js',
   '/legacy/js/164-consent-send-nr-21nov-js.js',
   '/legacy/js/165-form-sign-spots-21nov-js.js',
+  '/legacy/js/166-foreign-national-21nov-js.js',
 ];
