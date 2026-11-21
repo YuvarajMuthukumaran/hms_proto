@@ -146,7 +146,7 @@
     const line=name=>{const r=mine.concat(th).find(x=>(x.group||'')===name&&(x.note||x.pp));return r?(r.note||r.pp):'Joined in quietly.';};
     const all=GROUPS.map(g=>({g,st:strip(g[0])})),att=all.reduce((n,x)=>n+x.st.filter(c=>c==='a').length,0),tot=all.length*5;
     const lab={a:'Attended',p:'Part of it',x:'Refused'};
-    return groupTrend(all,lab)+`<div class="tg-top"><div class="tg-sum"><b>${att} of ${tot}</b> recent sessions attended across ${all.length} groups</div><div class="tg-key"><span><i class="a"></i>Attended</span><span><i class="p"></i>Part of it</span><span><i class="x"></i>Refused</span></div></div>
+    return groupTrend(all,lab,pid)+`<div class="tg-top"><div class="tg-sum"><b>By group</b> · the last 5 sessions of each</div><div class="tg-key"><span><i class="a"></i>Attended</span><span><i class="p"></i>Part of it</span><span><i class="x"></i>Refused</span></div></div>
       <div class="tg-grid">${all.map(x=>groupCard(x,mine.concat(th),lab,line,pid)).join('')}</div>
       ${(()=>{/* 19 Nov 2026: every attendance marked on the Group sessions page (or logged here), newest first */
         const L=mine.concat(th);if(!L.length)return '<div class="small muted" style="margin-top:12px">No group attendance marked yet. The psychologist marks it on the Group sessions page.</div>';
@@ -219,32 +219,60 @@
   }
   const chartGrid=h=>'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-bottom:14px">'+h+'</div>';
   const cbox=(title,sub,inner,right)=>'<div class="tp-cbox" style="border:1px solid #e3eaf2;border-radius:14px;background:#fff;padding:16px 18px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div style="font-weight:700;font-size:14.5px">'+esc(title)+'</div><div class="tiny muted" style="margin-top:2px">'+esc(sub)+'</div></div>'+(right||'')+'</div><div style="margin-top:12px">'+inner+'</div></div>';
-  /* group attendance: one clear line, the share of group sessions the patient attended, week by week */
-  /* group attendance: a compact strip. Left: this week. Middle: a smooth line that draws itself in once. Right: averages. */
-  function groupTrend(all,lab){
-    const n=5,names=['4 wk ago','3 wk ago','2 wk ago','Last wk','This wk'],tot=all.length;
-    const pts=names.map((_,i)=>{const k=n-1-i,a=all.reduce((q,x)=>q+(x.st[k]==='a'?1:0),0),p=all.reduce((q,x)=>q+(x.st[k]==='p'?1:0),0);return {a,p,x:tot-a-p,pct:tot?Math.round((a+p*0.5)/tot*100):0};});
-    const W=900,H=150,pl=44,pr=34,pt=26,pb=30,X=i=>pl+i*(W-pl-pr)/(n-1),Y=v=>H-pb-(v/100)*(H-pt-pb);
-    const P=pts.map((q,i)=>[X(i),Y(q.pct)]);
-    /* smooth curve (Catmull-Rom to Bezier), control heights held between neighbours so it never overshoots */
-    let d='M'+P[0][0].toFixed(1)+' '+P[0][1].toFixed(1);
-    for(let i=0;i<n-1;i++){const p0=P[Math.max(0,i-1)],p1=P[i],p2=P[i+1],p3=P[Math.min(n-1,i+2)];
-      const lo=Math.min(p1[1],p2[1]),hi=Math.max(p1[1],p2[1]),cl=y=>Math.max(lo,Math.min(hi,y));
-      d+=' C'+(p1[0]+(p2[0]-p0[0])/6).toFixed(1)+' '+cl(p1[1]+(p2[1]-p0[1])/6).toFixed(1)+' '+(p2[0]-(p3[0]-p1[0])/6).toFixed(1)+' '+cl(p2[1]-(p3[1]-p1[1])/6).toFixed(1)+' '+p2[0].toFixed(1)+' '+p2[1].toFixed(1);}
-    const area=d+' L'+X(n-1)+' '+Y(0)+' L'+X(0)+' '+Y(0)+' Z';
-    const grid=[0,50,100].map(v=>'<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#e8edf3" stroke-dasharray="'+(v?'3 6':'0')+'"/><text x="'+(pl-10)+'" y="'+(Y(v)+4)+'" font-size="12" text-anchor="end" fill="#98a2b3">'+v+'%</text>').join('');
-    const last=n-1;
-    const dots=pts.map((q,i)=>{const lab=q.pct>=95?Y(q.pct)+20:Y(q.pct)-11;return '<g class="gt-dot" style="animation-delay:'+(0.55+i*0.12)+'s"><circle cx="'+P[i][0].toFixed(1)+'" cy="'+P[i][1].toFixed(1)+'" r="'+(i===last?6.5:4.8)+'" fill="'+(i===last?'#16a34a':'#fff')+'" stroke="#16a34a" stroke-width="2.8"><title>'+names[i]+': '+q.a+' attended, '+q.p+' in part, '+q.x+' not attended</title></circle></g>';}).join('');
-    const ring='<circle class="gt-ring" cx="'+P[last][0].toFixed(1)+'" cy="'+P[last][1].toFixed(1)+'" r="6.5" fill="none" stroke="#16a34a" stroke-width="2"/>';
-    const xl=names.map((l,i)=>'<text x="'+X(i)+'" y="'+(H-8)+'" font-size="12" text-anchor="middle" fill="'+(i===last?'#101828':'#98a2b3')+'" font-weight="'+(i===last?700:500)+'">'+l+'</text>').join('');
-    const svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;overflow:visible" role="img" aria-label="Group attendance by week, as a percentage"><defs><linearGradient id="gtA" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#16a34a" stop-opacity=".28"/><stop offset="1" stop-color="#16a34a" stop-opacity="0"/></linearGradient></defs>'+grid+'<path class="gt-area" d="'+area+'" fill="url(#gtA)"/><path class="gt-line" d="'+d+'" pathLength="1" fill="none" stroke="#16a34a" stroke-width="3.2" stroke-linecap="round"/>'+dots+ring+xl+'</svg>';
-    const now=pts[last],prev=pts[last-1],diff=now.pct-prev.pct,avg=Math.round(pts.reduce((q,x)=>q+x.pct,0)/n),sess=all.reduce((q,x)=>q+x.st.filter(c=>c==='a').length,0),all5=tot*5;
-    const dtxt=diff===0?'<span style="color:#667085">Same as last week</span>':'<span style="color:'+(diff>0?'#067647':'#b42318')+';font-weight:600">'+(diff>0?'▲ ':'▼ ')+Math.abs(diff)+' pts on last week</span>';
-    const left='<div><div class="tiny muted">This week</div><div class="gt-big" style="font-size:40px;font-weight:800;line-height:1.05;color:#067647;margin:2px 0 4px">'+now.pct+'%</div><div style="font-size:12.5px">'+dtxt+'</div><div class="tiny muted" style="margin-top:6px">'+now.a+' attended · '+now.p+' in part · '+now.x+' not</div></div>';
-    const stat=(l,v,sub)=>'<div><div class="tiny muted">'+l+'</div><div style="font-size:19px;font-weight:700">'+v+'</div><div class="tiny muted">'+sub+'</div></div>';
-    const right='<div style="display:flex;flex-direction:column;gap:12px;border-left:1px solid #eef2f6;padding-left:22px">'+stat('5-week average',avg+'%','across 5 weeks')+stat('Sessions attended',sess+' of '+all5,'in '+tot+' groups')+'</div>';
-    const css='<style>@keyframes gtDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}@keyframes gtFade{from{opacity:0}to{opacity:1}}@keyframes gtPop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes gtRing{0%{transform:scale(1);opacity:.55}100%{transform:scale(2.8);opacity:0}}.tp-cbox .gt-line{stroke-dasharray:1;animation:gtDraw 1.1s cubic-bezier(.4,0,.2,1) both}.tp-cbox .gt-area{animation:gtFade 1.1s ease .25s both}.tp-cbox .gt-dot{animation:gtPop .45s ease both}.tp-cbox .gt-ring{transform-box:fill-box;transform-origin:center;animation:gtRing 2.4s ease-out 1.4s infinite}.tp-cbox .gt-big{animation:gtPop .6s ease both}@media(prefers-reduced-motion:reduce){.tp-cbox .gt-line,.tp-cbox .gt-area,.tp-cbox .gt-dot,.tp-cbox .gt-big,.tp-cbox .gt-ring{animation:none!important}.tp-cbox .gt-line{stroke-dasharray:none}}@media(max-width:820px){.gt-grid{grid-template-columns:1fr!important}.gt-grid>div:last-child{border-left:0!important;padding-left:0!important;flex-direction:row!important}}</style>';
-    return css+'<section class="tp-cbox" style="border:1px solid #e3eaf2;border-radius:14px;background:#fff;padding:12px 20px 10px;margin-bottom:14px"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline"><div style="font-weight:700;font-size:15px">Group attendance</div><div class="tiny muted">Share of group sessions attended each week. Part of a session counts as half.</div></div><div class="gt-grid" style="display:grid;grid-template-columns:150px minmax(0,1fr) 170px;gap:22px;align-items:center;margin-top:6px">'+left+svg+right+'</div></section>';
+  /* group attendance (21 Nov, owner: "make it look better"). One card in plain HTML, so the text keeps its size at any width.
+     Left: this week's share, the change from last week and the week's three counts.
+     Middle: five weekly columns. Each is a light track (100%) filled to the week's share: attended in green, part of a session
+     in amber at half height, so the height of the column is the figure. Hover or tap a column for its numbers.
+     Right: the 5-week average and the session totals. The columns grow in once per patient, not on every redraw. */
+  function groupTrend(all,lab,pid){
+    const n=5,last=n-1,names=['4 wk ago','3 wk ago','2 wk ago','Last wk','This wk'],tot=all.length;
+    const wk=names.map((nm,i)=>{const k=n-1-i,a=all.filter(x=>x.st[k]==='a').length,p=all.filter(x=>x.st[k]==='p').length;
+      return {nm,a,p,x:Math.max(0,tot-a-p),pct:tot?Math.round((a+p*0.5)/tot*100):0};});
+    const now=wk[last],diff=now.pct-wk[last-1].pct,avg=Math.round(wk.reduce((q,w)=>q+w.pct,0)/n),sum=k=>wk.reduce((q,w)=>q+w[k],0);
+    const grow=window.__gaSeen!==pid;window.__gaSeen=pid;
+    const dl=diff===0?'<div class="ga-d">Same as last week</div>':'<div class="ga-d '+(diff>0?'up':'down')+'">'+(diff>0?'▲ ':'▼ ')+Math.abs(diff)+' points on last week</div>';
+    const cnt=(c,v,l)=>'<li><i class="ga-sw '+c+'"></i><b>'+v+'</b>'+l+'</li>';
+    const left='<div class="ga-now"><div class="ga-l">This week</div><div class="ga-big">'+now.pct+'%</div>'+dl
+      +'<ul class="ga-cnt">'+cnt('a',now.a,'attended')+cnt('p',now.p,'part of it')+cnt('x',now.x,'refused')+'</ul></div>';
+    const cols=wk.map((w,i)=>{
+      const ha=tot?w.a/tot*100:0,hp=tot?w.p*0.5/tot*100:0;
+      const segA=ha?'<i class="ga-f a'+(hp?'':' top')+'" style="height:'+ha.toFixed(2)+'%"></i>':'';
+      const segP=hp?'<i class="ga-f p top" style="bottom:'+(ha?'calc('+ha.toFixed(2)+'% + 2px)':'0')+';height:'+(ha?'calc('+hp.toFixed(2)+'% - 2px)':hp.toFixed(2)+'%')+'"></i>':'';
+      const say=w.nm+': '+w.pct+'%. '+w.a+' attended, '+w.p+' part of it, '+w.x+' refused.';
+      return '<button type="button" class="ga-col'+(i===last?' now':'')+'" aria-label="'+say+'"><span class="ga-trk"><span class="ga-fill"'+(grow?' style="animation-delay:'+(i*70)+'ms"':'')+'>'+segA+segP+'</span></span>'
+        +'<span class="ga-x">'+w.nm+'</span><span class="ga-tip" aria-hidden="true"><b>'+w.pct+'%</b><span>'+w.a+' attended · '+w.p+' part · '+w.x+' refused</span></span></button>';}).join('');
+    const plot='<div class="ga-plot"><div class="ga-y" aria-hidden="true"><span style="top:0">100%</span><span style="top:50%">50%</span><span style="top:100%">0%</span></div>'
+      +'<div class="ga-area"><div class="ga-grid" aria-hidden="true"><i style="top:0"></i><i style="top:50%"></i><i class="b" style="top:100%"></i></div><div class="ga-cols'+(grow?' grow':'')+'">'+cols+'</div></div></div>';
+    const st=(l,v,s)=>'<div><div class="ga-l">'+l+'</div><b>'+v+'</b><small>'+s+'</small></div>';
+    const right='<div class="ga-st">'+st('5-week average',avg+'%','across '+tot+' groups')+st('Sessions attended',sum('a')+' of '+tot*n,sum('p')+' part of it · '+sum('x')+' refused')+'</div>';
+    const key='<div class="ga-key" aria-hidden="true"><span><i class="ga-sw a"></i>Attended</span><span><i class="ga-sw p"></i>Part of it (counts half)</span><span><i class="ga-sw x"></i>Refused</span></div>';
+    const css='<style>'
+      +'.ga{border:1px solid #e3eaf2;border-radius:14px;background:#fff;padding:16px 20px 14px;margin-bottom:14px}'
+      +'.ga-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:8px 24px;flex-wrap:wrap}.ga-hd h3{margin:0;font-size:15px;font-weight:700;color:#101828;line-height:1.3}.ga-hd p{margin:2px 0 0;font-size:12.5px;color:#667085}'
+      +'.ga-key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:#475467;padding-top:3px}.ga-key span{display:inline-flex;align-items:center;gap:6px}'
+      +'.ga-sw{display:inline-block;flex:none;width:10px;height:10px;border-radius:3px}.ga-sw.a{background:#1f9d57}.ga-sw.p{background:#f5a524}.ga-sw.x{background:#f0f3f7;box-shadow:inset 0 0 0 1px #cfd6e0}'
+      +'.ga-body{display:grid;grid-template-columns:172px minmax(0,1fr) 190px;gap:28px;align-items:center;margin-top:18px}'
+      +'.ga-l{font-size:12px;color:#667085}.ga-big{font-size:40px;font-weight:700;line-height:1.05;letter-spacing:-.02em;color:#101828;margin:2px 0 4px}'
+      +'.ga-d{font-size:12.5px;color:#667085}.ga-d.up{color:#067647;font-weight:600}.ga-d.down{color:#b42318;font-weight:600}'
+      +'.ga-cnt{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:5px;font-size:12.5px;color:#475467}.ga-cnt li{display:flex;align-items:center;gap:7px}.ga-cnt b{color:#101828;font-weight:650;font-variant-numeric:tabular-nums;min-width:9px}'
+      +'.ga-plot{display:grid;grid-template-columns:40px minmax(0,1fr);align-items:start;padding-top:8px}.ga-y{position:relative;height:120px}'
+      +'.ga-y span{position:absolute;right:10px;transform:translateY(-50%);font-size:11px;line-height:1;color:#98a2b3;font-variant-numeric:tabular-nums}'
+      +'.ga-area{position:relative}.ga-grid{position:absolute;left:0;right:0;top:0;height:120px;pointer-events:none}.ga-grid i{position:absolute;left:0;right:0;height:1px;background:#eef2f6}.ga-grid i.b{background:#d5dce6}'
+      +'.ga-cols{position:relative;display:flex}'
+      +'.ga-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;border:0;background:none;padding:0;margin:0;font:inherit;color:inherit;cursor:default;-webkit-tap-highlight-color:transparent}'
+      +'.ga-col:focus{outline:none}.ga-col:focus-visible .ga-trk{box-shadow:0 0 0 2px #fff,0 0 0 4px #1e6cdb}'
+      +'.ga-trk{position:relative;display:block;width:24px;height:120px;border-radius:4px 4px 0 0;background:#f0f3f7;transition:background .15s}.ga-col:hover .ga-trk{background:#e4e9f0}'
+      +'.ga-fill{position:absolute;inset:0;transform-origin:50% 100%}.ga-cols.grow .ga-fill{animation:gaGrow .7s cubic-bezier(.2,.8,.2,1) both}@keyframes gaGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}'
+      +'.ga-f{position:absolute;left:0;right:0;bottom:0;display:block}.ga-f.a{background:#1f9d57}.ga-f.p{background:#f5a524}.ga-f.top{border-radius:4px 4px 0 0}'
+      +'.ga-x{font-size:12px;line-height:1.2;color:#667085;white-space:nowrap}.ga-col.now .ga-x{color:#101828;font-weight:650}'
+      +'.ga-tip{position:absolute;left:50%;bottom:calc(100% + 4px);transform:translate(-50%,4px);display:flex;flex-direction:column;gap:2px;background:#101828;color:#fff;border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.3;white-space:nowrap;text-align:left;box-shadow:0 8px 20px rgba(16,24,40,.18);opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;z-index:5}'
+      +'.ga-tip b{font-size:13px}.ga-tip span{color:#d0d5dd}.ga-col:hover .ga-tip,.ga-col:focus .ga-tip{opacity:1;transform:translate(-50%,0)}'
+      +'.ga-st{display:grid;gap:16px;align-self:stretch;align-content:center;border-left:1px solid #eef2f6;padding-left:24px}.ga-st b{display:block;font-size:20px;font-weight:700;color:#101828;line-height:1.2;margin-top:3px}.ga-st small{display:block;font-size:12px;color:#667085;margin-top:2px}'
+      +'@media(prefers-reduced-motion:reduce){.ga-cols.grow .ga-fill{animation:none}.ga-tip,.ga-trk{transition:none}}'
+      +'@media(max-width:900px){.ga-body{grid-template-columns:1fr 1fr;gap:18px}.ga-plot{grid-column:1/-1;order:3}.ga-st{border-left:0;padding-left:0}}'
+      +'</style>';
+    return css+'<section class="tp-cbox ga" aria-label="Group attendance"><div class="ga-hd"><div><h3>Group attendance</h3><p>Share of group sessions attended each week</p></div>'+key+'</div>'
+      +'<div class="ga-body">'+left+plot+right+'</div></section>';
   }
   /* family: WhatsApp as seven day tiles, calls as bars, the 24 hour call as a status */
   function famTrend(pid){
