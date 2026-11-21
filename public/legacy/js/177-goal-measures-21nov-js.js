@@ -103,7 +103,7 @@
     const body='<div class="small" style="margin-bottom:8px"><b>How it is measured:</b> '+E(howText(g))+'<br><b>How it is logged:</b> in every signed session note<br><b>'+E(aimText(g))+'</b></div>'
       +(L.length?'<div style="margin:10px 0 14px">'+strip(g,L,true)+'</div><div class="pin-sum">'+rows+'</div>':'<div class="small muted">Nothing logged yet. It is rated in each signed session note.</div>');
     const old=(g.old||[]).map(o=>'<div class="small muted" style="margin-top:10px"><b>Earlier, measured as '+E(o.how)+':</b> '+(o.rows.length?o.rows.map(r=>E(r.at+' '+r.txt)).join(', '):'nothing logged')+'</div>').join('');
-    const canEdit=/^(psychologist|floor-lead-psychologist)$/.test(String((window.__TULASI__||{}).role||''));
+    const canEdit=/^(psychologist|floor-lead-psychologist|psychiatrist|floor-lead-psychiatrist)$/.test(String((window.__TULASI__||{}).role||''));
     const chg=canEdit?'<button class="btn" onclick="tpGoalNew(\''+String(pid).replace(/'/g,"\\'")+'\','+i+')">Change how it is measured</button>':'';
     V3.modal(E(g.t),E(TYPES[g.type]||'Goal'),body+old,chg+'<button class="btn pri" onclick="closeModal()">Close</button>');
   };
