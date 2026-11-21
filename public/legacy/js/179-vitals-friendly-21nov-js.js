@@ -23,7 +23,7 @@
       +'.vq-c b.vq-n{display:block;font-size:15px}.vq-c .vq-u{font-size:12px;color:#667085}'
       +'.vq-in{display:flex;align-items:center;gap:8px;margin:8px 0 6px}'
       +'.vq-c input{width:100%;min-height:52px;font-size:24px;font-weight:700;text-align:center;border:1px solid #d5e1ef;border-radius:10px;background:#fff;padding:0 6px}'
-      +'.vq-c input:focus{outline:none;border-color:#1e6cdb}'
+      +'.vq-c input:focus{outline:none;border-color:#1e6cdb}.vq-c input::placeholder{color:#c3ccd8;font-weight:500}'
       +'.vq-c .vq-s{font-size:13px;min-height:18px;color:#667085}.vq-c.ok .vq-s{color:#067647;font-weight:600}.vq-c.low .vq-s,.vq-c.high .vq-s{color:#9a5b00;font-weight:600}'
       +'.vq-wide{grid-column:1/-1}.vq-slash{font-size:26px;color:#98a2b3}'
       +'.vq-more{margin-top:14px;font-size:13px;color:#475467}.vq-more .vq-g{margin-top:8px}.vq-more input{font-size:18px;min-height:44px}'
@@ -57,14 +57,35 @@
     if(!roleOk()){toast('Vitals are recorded by the nurse, the RMO or the psychiatrist');return;}
     const p=(ptFind(S.pid)||{}).name||'',who=(typeof signer==='function'?signer():''),tm=new Date().toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});
     openModal('<div class="mh"><h3>Record vitals · '+E(p)+'</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>'
-      +'<div class="mb"><div class="small muted" style="margin-bottom:12px">Fill in each box. It turns green when it is normal and amber when it needs another look.</div>'
+      +'<div class="mb"><div class="small muted" style="margin-bottom:12px">Fill in only what you took. Nothing is compulsory, but add at least one. A box turns green when normal and amber when it needs another look.</div>'
       +'<div class="vq-g">'
       +'<div class="vq-c vq-wide" id="vq-bp"><b class="vq-n">Blood pressure</b><span class="vq-u">mmHg: top number, then bottom number</span><input type="hidden" id="vsBp"><div class="vq-in"><input id="vqS" inputmode="numeric" placeholder="120" oninput="vqBp()" aria-label="Top number"><span class="vq-slash">/</span><input id="vqD" inputmode="numeric" placeholder="80" oninput="vqBp()" aria-label="Bottom number"></div><div class="vq-s">Usually 90 to 140 over 60 to 90</div></div>'
       +card('hr')+card('rr')+card('t')+card('o2')+'</div>'
-      +'<details class="vq-more"><summary style="cursor:pointer;color:#1e6cdb;font-weight:600">If you have them: weight and sleep</summary><div class="vq-g"><div class="vq-c"><b class="vq-n">Weight</b><span class="vq-u">kg</span><div class="vq-in"><input id="vsWt" inputmode="decimal" placeholder="optional"></div></div><div class="vq-c"><b class="vq-n">Sleep last night</b><span class="vq-u">hours</span><div class="vq-in"><input id="vsSl" inputmode="decimal" placeholder="optional"></div></div></div></details>'
+      +'<details class="vq-more"><summary style="cursor:pointer;color:#1e6cdb;font-weight:600">If you have them: weight and sleep</summary><div class="vq-g"><div class="vq-c"><b class="vq-n">Weight</b><span class="vq-u">kg</span><div class="vq-in"><input id="vsWt" inputmode="decimal" placeholder="optional"></div></div><div class="vq-c"><b class="vq-n">Sleep last night</b><span class="vq-u">hours</span><div class="vq-in"><input id="vqSl" inputmode="decimal" placeholder="optional"></div></div></div></details>'
       +'<div class="vq-foot">Saved at '+E(tm)+(who?' by '+E(who):'')+'. Checking blood sugar instead? <a href="#" onclick="closeModal();sugarModal();return false" style="color:#1e6cdb;font-weight:600">Record blood sugar</a></div></div>'
       +'<div class="mf"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" style="min-height:46px;padding:0 28px;font-size:15px" onclick="vitalsSave()">Save vitals</button></div>');
     setTimeout(()=>{const i=document.getElementById('vqS');if(i)i.focus();},50);
+  };
+  /* 21 Nov 2026, owner: nothing is compulsory. Fill in what was taken, at least one box. Each box that is filled is still checked for a sensible number. */
+  window.vitalsSave=function(){
+    const g=id=>((document.getElementById(id)||{}).value||'').trim();
+    const bp=g('vsBp'),hr=g('vsHr'),rr=g('vsRr'),t=g('vsT'),o2=g('vsO2'),wt=g('vsWt'),sl=g('vqSl')||g('vsSl');
+    const s=g('vqS'),d=g('vqD');
+    if(!bp&&!hr&&!rr&&!t&&!o2&&!wt&&!sl&&!s&&!d){toast('Fill in at least one box');return;}
+    let m=null;
+    if(s||d){m=bp.match(/^(\d{2,3})\s*\/\s*(\d{2,3})$/);if(!m){toast('For blood pressure, fill in both the top and the bottom number');return;}}
+    const chk=(v,lo,hi,lab)=>{if(!v)return true;const n=+v;if(!isFinite(n)||n<lo||n>hi){toast('Check the '+lab+' ('+lo+' to '+hi+')');return false;}return true;};
+    if(!chk(hr,20,250,'pulse')||!chk(rr,4,60,'breathing rate')||!chk(t,90,110,'temperature in °F')||!chk(o2,50,100,'oxygen level')||!chk(wt,2,300,'weight')||!chk(sl,0,24,'sleep hours'))return;
+    const who=signer(),ini=String(who).replace(/^Dr\.\s+/,'').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const now=new Date(),day=now.toLocaleDateString('en-IN',{day:'numeric',month:'short'}),tm=now.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});
+    if(!Array.isArray(S.vit))S.vit=[];
+    S.vit=S.vit.concat([[day,bp||'—',hr||'—',t||'—',o2||'—',wt||'—',sl||'—',tm,ini,who,rr||'']]);
+    try{const st=v3();st.vit=st.vit||{};st.vit.last=st.vit.last||{};st.vit.hist=st.vit.hist||{};
+      const prev=st.vit.last[S.pid]||{};
+      const r=Object.assign({},prev,{t:V3.now(),by:who});
+      if(m){r.sbp=+m[1];r.dbp=+m[2];}if(hr)r.hr=+hr;if(rr)r.rr=+rr;if(t)r.temp=+t;if(o2)r.spo2=+o2;
+      st.vit.last[S.pid]=r;(st.vit.hist[S.pid]=st.vit.hist[S.pid]||[]).push(r);}catch(e){}
+    closeModal();render();toast('Vitals saved by '+who+' at '+tm);
   };
   function latest(){
     const v=document.getElementById('view');if(!v)return;

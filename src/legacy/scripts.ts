@@ -178,4 +178,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/177-goal-measures-21nov-js.js',
   '/legacy/js/178-vitals-simple-21nov-js.js',
   '/legacy/js/179-vitals-friendly-21nov-js.js',
+  '/legacy/js/180-vitals-daylog-21nov-js.js',
 ];

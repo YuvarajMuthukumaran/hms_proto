@@ -41,7 +41,7 @@
       const D=day(c[0].textContent),tm=c[1].textContent.trim(),h=hourOf(tm);
       const ini=((c[2].querySelector('.ini')||{}).textContent||'').trim();
       const bp=txt(c[2]),hr=txt(c[3]),rr=txt(c[4]),t=txt(c[5]),o2=txt(c[6]),nw=txt(c[7]),wt=txt(c[8]),sl=txt(c[9]);
-      if(bp&&bp!=='—'){
+      if([bp,hr,rr,t,o2].some(x=>x&&x!=='—')){
         const items=val('BP',bp,bad.bp(bp))+val('P',hr,bad.hr(hr))+val('RR',rr,rr&&bad.rr(rr))+val('T',t,bad.t(t))+val('SpO2',o2,bad.o2(o2))+(nw&&nw!=='—'?val('NEWS2',nw.split(' · ')[0],/Urgent|Inform/.test(nw)):'');
         D.slots[h==null?-1:slotOfH(h)]?D.slots[slotOfH(h)].push({tm,html:items,ini}):(D.untimed=D.untimed||[]).push({tm:'Time not recorded',html:items,ini});
       }
