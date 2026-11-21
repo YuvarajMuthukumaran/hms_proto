@@ -22,7 +22,7 @@
 
   /* 18 Nov 2026: a real patient starts with no goals (the three demo goals and their ratings made a plan look started) */
   /* 21 Nov 2026: goals can be Yes/No (type:'yn') or 0-10 scale (type:'scale') */
-  const defGoals=pid=>{const s=SNO(pid);if(!s.goals)s.goals=window.__realMode?[]:[{t:'Sleep at least 6 hours a night',type:'yn'},{t:'Take part in one group activity a day',type:'yn'},{t:'Talk about worries with the therapist',type:'scale'}];s.goals.forEach(g=>{if(!g.type)g.type=g.start!==undefined?'scale':'yn';if(g.type==='scale'&&g.start===undefined)g.start=2;if(g.type==='scale'&&g.aim===undefined)g.aim=8;});return s.goals;};
+  const defGoals=pid=>{const s=SNO(pid);if(!s.goals)s.goals=window.__realMode?[]:[{t:'Sleep at least 6 hours a night',type:'num',unit:'hours',dir:'atleast',aim:6},{t:'Take part in one group activity a day',type:'yn'},{t:'Talk about worries with the therapist',type:'scale'}];s.goals.forEach(g=>{if(!g.type)g.type=g.start!==undefined?'scale':'yn';if(g.type==='scale'&&g.start===undefined)g.start=2;if(g.type==='scale'&&g.aim===undefined)g.aim=8;});return s.goals;};
   const signed=pid=>(SNO(pid).notes||[]).filter(n=>n.status==='signed').slice().reverse(); /* oldest first */
   const ratings=(pid,i)=>signed(pid).map(n=>({at:n.at,v:(n.goalR||{})[i]})).filter(r=>r.v!==undefined&&r.v!==''&&r.v!==null);
   const nowOf=(pid,i)=>{const r=ratings(pid,i);const g=defGoals(pid)[i];if(g&&g.type==='yn')return r.length?r[r.length-1].v:'—';return r.length?+r[r.length-1].v:g.start;};
