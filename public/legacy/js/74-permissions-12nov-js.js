@@ -12,22 +12,17 @@
   window.permCanDecide=canDecide;
   const PIN='1234';
 
-  /* ---------- PIN sign ---------- */
-  let cb=null,tries=0;
+  /* ---------- PIN sign (PIN removed; confirms signature directly) ---------- */
+  let cb=null;
   window.pinSign=function(title,lines,done,sub){
-    cb=done;tries=0;
+    cb=done;
     const rows=(lines||[]).filter(l=>l&&l[1]!==undefined&&l[1]!==null&&String(l[1]).trim()!=='').map(l=>`<div class="pin-r"><span>${hesc(l[0])}</span><b>${hesc(String(l[1]))}</b></div>`).join('');
-    V3.modal(hesc(title),hesc(sub||'Check it, then sign with your PIN.'),
+    V3.modal(hesc(title),hesc(sub||'Check the details, then confirm signature.'),
       `${rows?`<div class="pin-sum">${rows}</div>`:''}
-       <label class="field" style="margin-top:12px"><span class="lbl">Your PIN</span><input class="input" id="pinIn" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="4 digits" style="max-width:160px;letter-spacing:.3em;font-size:18px" onkeydown="if(event.key==='Enter')pinGo()"></label>
-       <div class="tiny muted">Signed as <b>${hesc(signer())}</b>. Your name and the time are recorded. Prototype PIN: 1234.</div>
-       <div id="pinE" class="small" style="color:var(--red);display:none;margin-top:6px">That PIN is not right. Try again.</div>`,
+       <div class="tiny muted" style="margin-top:12px">Signing as <b>${hesc(signer())}</b>. Your name and the time are recorded.</div>`,
       `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="pinGo()">Sign</button>`);
-    setTimeout(()=>{const i=$('pinIn');if(i)i.focus({preventScroll:true});},60);
   };
   window.pinGo=function(){
-    const v=(($('pinIn')||{}).value||'').trim();
-    if(v!==PIN){tries++;const e=$('pinE');if(e){e.style.display='block';e.textContent=tries>=3?'That PIN is not right. Ask the floor lead to reset it.':'That PIN is not right. Try again.';}const i=$('pinIn');if(i){i.value='';i.focus({preventScroll:true});}return;}
     const f=cb;cb=null;closeModal();if(typeof f==='function')f({by:signer(),at:atNow()});
   };
 
@@ -60,7 +55,7 @@
       ['Patient',V3.pn(o.pid)],['Order',o.text],['Type',o.type],
       ['Drug',o.drug],['Dose',o.dose],['Route',o.route],['Reason',o.reason||o.ind],
       ['Ordered by',o.by],['Through',o.via],['Given by',g]
-    ],()=>__cs.call(V3,id),'Read the order, then sign it with your PIN.');
+    ],()=>__cs.call(V3,id),'Read the order, then confirm signature.');
   };
 
   /* ---------- discharge summary, capacity assessment, history, e-sign forms ---------- */
@@ -68,13 +63,13 @@
     const __fs=flSignDo;
     flSignDo=function(){const a=arguments,t=this;pinSign('Sign discharge summary · Dev Kumar',[['Patient','Dev Kumar'],['Signing as','Covering doctor for Dr. Rohan Mehta'],['Draft by','Priya Nair, psychologist']],()=>__fs.apply(t,a));};
   }
-  /* the capacity assessment, the detailed history and the e-sign forms keep their own signing window; a PIN box is added to it and checked first */
-  const pinField=()=>`<div class="pin-add"><label class="field" style="margin-top:12px"><span class="lbl">Your PIN</span><input class="input" id="pinIn" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="4 digits" style="max-width:160px;letter-spacing:.3em;font-size:18px"></label><div class="tiny muted">Signed as <b>${hesc(signer())}</b>. Name and time are recorded. Prototype PIN: 1234.</div><div id="pinE" class="small" style="color:var(--red);display:none;margin-top:6px">That PIN is not right. Try again.</div></div>`;
-  const addPin=()=>setTimeout(()=>{const mb=document.querySelector('#modal .mb');if(mb&&!$('pinIn'))mb.insertAdjacentHTML('beforeend',pinField());},40);
-  const pinOk=()=>{const i=$('pinIn');if(i&&i.value.trim()===PIN)return true;const e=$('pinE');if(e)e.style.display='block';if(i){i.value='';i.focus({preventScroll:true});}return false;};
+  /* the capacity assessment, the detailed history and the e-sign forms keep their own signing window; no PIN required */
+  const pinField=()=>'';
+  const addPin=()=>{};
+  const pinOk=()=>true;
   const withPin=(name,openToo)=>{
     const f=window[name];if(typeof f!=='function')return;
-    window[name]=function(){if(openToo){const r=f.apply(this,arguments);addPin();return r;}if(!pinOk())return;return f.apply(this,arguments);};
+    window[name]=function(){return f.apply(this,arguments);};
   };
   withPin('psyCapSign',true);withPin('psyCapSignSave',false);
   withPin('psyHistSign',true);withPin('psyHistSignGo',false);
@@ -111,7 +106,7 @@
   };
 
   const css=document.createElement('style');css.id='perm-12nov-css';
-  css.textContent='.pin-sum{display:flex;flex-direction:column;border:1px solid #e1e9f4;border-radius:12px;overflow:hidden}.pin-r{display:flex;justify-content:space-between;gap:16px;padding:9px 14px;border-top:1px solid #eef2f8;font-size:13.5px}.pin-r:first-child{border-top:0}.pin-r span{color:#667085}.pin-r b{text-align:right}';
+  css.textContent='.pin-add{display:none!important}.pin-sum{display:flex;flex-direction:column;border:1px solid #e1e9f4;border-radius:12px;overflow:hidden}.pin-r{display:flex;justify-content:space-between;gap:16px;padding:9px 14px;border-top:1px solid #eef2f8;font-size:13.5px}.pin-r:first-child{border-top:0}.pin-r span{color:#667085}.pin-r b{text-align:right}';
   document.head.appendChild(css);
 
   const __r74=render;
