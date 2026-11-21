@@ -239,6 +239,8 @@
 
   let TAB='sum';
   window.m20DcTab=function(t){TAB=t;render();};
+  /* 21 Nov: the checklist count for the "Discharge checklist" patient tab (block 168) */
+  window.m20DcCount=function(pid){try{mirror(pid);pxLoad(pid);return counts(pid);}catch(e){return null;}};
 
   /* ---------- the Discharge tab ---------- */
   function paintDischarge(pid){
