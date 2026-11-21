@@ -4,7 +4,7 @@
    Other monitoring and Scales ordered get their own spacing. No markup or behaviour changes (blocks 54, 98 and 142 draw it). */
 (function(){
   const ROLE=String((window.__TULASI__||{}).role||'');
-  if(!/^(psychiatrist|floor-lead-psychiatrist)$/.test(ROLE))return;
+  if(!/^(psychiatrist|floor-lead-psychiatrist|psychologist|floor-lead-psychologist)$/.test(ROLE))return;
   const st=document.createElement('style');st.id='vitals-look-css';
   st.textContent=[
   '#psyTxPanel-1>.psy-tx-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 4px 14px}',

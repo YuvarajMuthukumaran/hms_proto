@@ -14,7 +14,7 @@
    The fields are still a first list, to be confirmed with Chandraji. */
 (function(){
   const ROLE=String((window.__TULASI__||{}).role||'');
-  if(!/^(psychiatrist|floor-lead-psychiatrist|rmo)$/.test(ROLE))return;
+  if(!/^(psychiatrist|floor-lead-psychiatrist|rmo|psychologist|floor-lead-psychologist)$/.test(ROLE))return;
   if(typeof pPrefs!=='function')return;
   const E=s=>hesc(String(s==null?'':s));
   const SEEN=['Front desk','Admin (Chandraji)','Patient experience'];
