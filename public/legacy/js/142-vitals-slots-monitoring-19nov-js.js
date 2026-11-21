@@ -54,11 +54,38 @@
     order.forEach(k=>{const D=days[k];if(D.untimed){const first=[...sc.vit].sort()[0];D.slots[first==null?0:first].push(...D.untimed);}});
     const isSched=s=>sc.vit.has(s)||sc.sug.has(s);
     const head=`<tr><th>Date</th>${SL.map((s,i)=>`<th>${s[0]}<small>${s[1]}</small>${sc.names[i].length?`<span class="vs-s">Scheduled: ${E(sc.names[i].join(', '))}</span>`:''}</th>`).join('')}</tr>`;
-    const toD=k=>{const d=new Date(k+' '+new Date().getFullYear());return isNaN(d)?0:d.getTime();};
-    const body=order.sort((a,b)=>(S.vm&&S.vm.sort==='old'?1:-1)*(toD(a)-toD(b))).map(k=>{const D=days[k];
+    const toD=k=>{
+      const s=String(k).trim();
+      const now=new Date();
+      if(/^today/i.test(s))return new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+      if(/^yesterday/i.test(s))return new Date(now.getFullYear(),now.getMonth(),now.getDate()-1).getTime();
+      const m=s.match(/^(\d{1,2})\s+([A-Za-z]{3})(?:\s+(\d{4}))?$/);
+      if(m){
+        const mo={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12}[m[2]];
+        if(mo){
+          const yr=m[3]||now.getFullYear();
+          const d=new Date(`${yr}-${String(mo).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}T00:00:00`);
+          if(!isNaN(d))return d.getTime();
+        }
+      }
+      const d=new Date(s);
+      return isNaN(d)?0:d.getTime();
+    };
+    const inRange=k=>{
+      const vm=(window.S&&S.vm)||{};
+      if(!vm.from&&!vm.to)return true;
+      const t=toD(k);
+      if(!t)return true;
+      const d=new Date(t);
+      if(vm.from&&d<new Date(vm.from+'T00:00:00'))return false;
+      if(vm.to&&d>new Date(vm.to+'T23:59:59'))return false;
+      return true;
+    };
+    const visibleDates=order.filter(inRange);
+    const body=visibleDates.sort((a,b)=>(S.vm&&S.vm.sort==='old'?1:-1)*(toD(a)-toD(b))).map(k=>{const D=days[k];
       return `<tr><td class="d vs-d">${E(k)}${D.daily.map(x=>`<small>${E(x)}</small>`).join('')}</td>${D.slots.map((L,i)=>L.length?`<td>${L.map(r=>`<div class="vs-r"><span class="tm">${E(r.tm||'')}</span>${r.html}${r.ini?` <span class="ini" title="Recorded by">${E(r.ini)}</span>`:''}</div>`).join('')}</td>`:isSched(i)?'<td class="miss">—</td>':'<td class="ns" aria-label="Not scheduled"></td>').join('')}</tr>`;}).join('');
     tb.classList.add('vs');
-    tb.innerHTML='<thead>'+head+'</thead><tbody>'+(body||'<tr><td colspan="7" class="muted small">No readings yet. The nurse, RMO or psychiatrist adds them with Add vitals.</td></tr>')+'</tbody>';
+    tb.innerHTML='<thead>'+head+'</thead><tbody>'+(body||'<tr><td colspan="7" class="muted small">No readings in this date range.</td></tr>')+'</tbody>';
     const note=card.querySelector('.hd .tiny');if(note)note.textContent='One row per date, six time slots. Grey: nothing scheduled in that slot. A dash: scheduled, no reading yet. Out of range in red.';
   }
 
