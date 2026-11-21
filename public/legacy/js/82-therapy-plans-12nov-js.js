@@ -130,8 +130,8 @@
     const t=new Date();t.setHours(0,0,0,0);let last=new Date(t);while(wd!==undefined&&last.getDay()!==wd)last=new Date(last.getTime()-D1);
     const dateOf=k=>{const r=recs[k];if(r&&r.date)return String(r.date).replace(/ d{4}$/,'');return fm(new Date(last.getTime()-k*7*D1));};
     const next=new Date(last.getTime()+7*D1);
-    const n=x.st.filter(c=>c==='a').length,pct=Math.round(n/x.st.length*100),col={a:'#16a34a',p:'#f59e0b',x:'#dc2626'},ht={a:'100%',p:'55%',x:'18%'};
-    const cols=x.st.map((c,k)=>({c,k})).reverse().map(({c,k},i)=>{const dk=dateOf(k),ro=roster(name,dk),tot=ro.a.length+ro.p.length+ro.x.length;return '<button type="button" data-pid="'+esc(pid)+'" data-g="'+esc(name)+'" data-d="'+esc(dk)+'" data-c="'+c+'" onclick="tpGrpSession(this.dataset.pid,this.dataset.g,this.dataset.d,this.dataset.c)" title="'+dk+': '+lab[c]+'. Tap to see who attended" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;border:0;background:none;padding:4px 0 2px;border-radius:8px;cursor:pointer;font:inherit"><span style="height:64px;width:100%;display:flex;align-items:flex-end"><i style="display:block;width:100%;height:'+ht[c]+';border-radius:7px 7px 0 0;background:'+col[c]+';opacity:'+(k===0?1:.85)+';transform-origin:bottom;animation:tgbar .6s ease both;animation-delay:'+(i*70)+'ms"></i></span><span style="font-size:11px;color:#475467;font-weight:'+(k===0?700:500)+'">'+dk+'</span><span style="font-size:10.5px;color:'+col[c]+';font-weight:600">'+({a:'Came',p:'Part',x:'Refused'})[c]+'</span>'+(tot?'<span style="font-size:10.5px;color:#667085">'+ro.a.length+' of '+tot+' came</span>':'')+'</button>';}).join('');
+    const n=x.st.filter(c=>c==='a').length,pct=Math.round(n/x.st.length*100),col={a:'#16a34a',p:'#f59e0b',x:'#dc2626','':'#98a2b3'},ht={a:'100%',p:'55%',x:'18%','':'8%'};
+    const cols=x.st.map((c,k)=>({c,k})).reverse().map(({c,k},i)=>{const dk=dateOf(k),ro=roster(name,dk),tot=ro.a.length+ro.p.length+ro.x.length;return '<button type="button" data-pid="'+esc(pid)+'" data-g="'+esc(name)+'" data-d="'+esc(dk)+'" data-c="'+c+'" onclick="tpGrpSession(this.dataset.pid,this.dataset.g,this.dataset.d,this.dataset.c)" title="'+dk+': '+lab[c]+'. Tap to see who attended" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;border:0;background:none;padding:4px 0 2px;border-radius:8px;cursor:pointer;font:inherit"><span style="height:64px;width:100%;display:flex;align-items:flex-end"><i style="display:block;width:100%;height:'+ht[c]+';border-radius:7px 7px 0 0;background:'+col[c]+';opacity:'+(k===0?1:.85)+';transform-origin:bottom;animation:tgbar .6s ease both;animation-delay:'+(i*70)+'ms"></i></span><span style="font-size:11px;color:#475467;font-weight:'+(k===0?700:500)+'">'+dk+'</span><span style="font-size:10.5px;color:'+col[c]+';font-weight:600">'+({a:'Came',p:'Part',x:'Refused','':'No record'})[c]+'</span>'+(tot?'<span style="font-size:10.5px;color:#667085">'+ro.a.length+' of '+tot+' came</span>':'')+'</button>';}).join('');
     return '<article class="tg-c"><div class="tg-h"><div><b>'+name+'</b><span>Led by '+x.g[2]+'</span></div><span class="tg-when">'+x.g[1]+'</span></div>'
       +'<div style="display:flex;align-items:baseline;gap:10px;margin:10px 0 4px"><span style="font-size:28px;font-weight:800;line-height:1">'+n+'<small style="font-size:14px;font-weight:600;color:#667085"> of '+x.st.length+'</small></span><span class="chip '+(pct>=70?'c-green':pct>=40?'c-amber':'c-red')+'">'+pct+'% attended</span></div>'
       +'<div role="img" aria-label="Last '+x.st.length+' sessions, oldest to newest: '+x.st.slice().reverse().map(c=>lab[c]).join(', ')+'" style="display:flex;gap:8px;border-bottom:1px solid #cbd5e1;padding-bottom:6px">'+cols+'</div>'
@@ -142,10 +142,11 @@
   function group(pid){
     const th=(px(pid).th||{}).grp||[],mine=SNO(pid).grp;
     const hash=[...pid].reduce((a,c)=>a+c.charCodeAt(0),0);
-    const strip=name=>{const L=mine.concat(th).filter(r=>(r.group||'')===name).slice(0,5).map(r=>/Refus|not attend/i.test(r.took||'')?'x':/part/i.test(r.took||'')?'p':'a');while(L.length<5){const k=(hash+L.length+name.length)%5;L.push(k===0?'p':k===1?'x':'a');}return L;};
-    const line=name=>{const r=mine.concat(th).find(x=>(x.group||'')===name&&(x.note||x.pp));return r?(r.note||r.pp):'Joined in quietly.';};
-    const all=GROUPS.map(g=>({g,st:strip(g[0])})),att=all.reduce((n,x)=>n+x.st.filter(c=>c==='a').length,0),tot=all.length*5;
-    const lab={a:'Attended',p:'Part of it',x:'Refused'};
+    const strip=name=>{const L=mine.concat(th).filter(r=>(r.group||'')===name).slice(0,5).map(r=>/Refus|not attend/i.test(r.took||'')?'x':/part/i.test(r.took||'')?'p':'a');while(L.length<5){if(window.__realMode){L.push('');continue;}const k=(hash+L.length+name.length)%5;L.push(k===0?'p':k===1?'x':'a');}return L;};
+    const line=name=>{const r=mine.concat(th).find(x=>(x.group||'')===name&&(x.note||x.pp));return r?(r.note||r.pp):(window.__realMode?'No note yet.':'Joined in quietly.');};
+    const all=GROUPS.map(g=>({g,st:strip(g[0])})).filter(x=>!window.__realMode||x.st.some(c=>c)),att=all.reduce((n,x)=>n+x.st.filter(c=>c==='a').length,0),tot=all.length*5;
+    const lab={a:'Attended',p:'Part of it',x:'Refused','':'No record'};
+    if(!all.length)return '<section class="tp-cbox ga"><div class="ga-hd"><div><h3>Group attendance</h3><p>No group sessions recorded for this patient yet. Attendance marked on the Group sessions page shows here.</p></div></div></section>';
     return groupTrend(all,lab,pid)+`<div class="tg-top"><div class="tg-sum"><b>By group</b> · the last 5 sessions of each</div><div class="tg-key"><span><i class="a"></i>Attended</span><span><i class="p"></i>Part of it</span><span><i class="x"></i>Refused</span></div></div>
       <div class="tg-grid">${all.map(x=>groupCard(x,mine.concat(th),lab,line,pid)).join('')}</div>
       ${(()=>{/* 19 Nov 2026: every attendance marked on the Group sessions page (or logged here), newest first */
@@ -226,25 +227,25 @@
      Right: the 5-week average and the session totals. The columns grow in once per patient, not on every redraw. */
   function groupTrend(all,lab,pid){
     const n=5,last=n-1,names=['4 wk ago','3 wk ago','2 wk ago','Last wk','This wk'],tot=all.length;
-    const wk=names.map((nm,i)=>{const k=n-1-i,a=all.filter(x=>x.st[k]==='a').length,p=all.filter(x=>x.st[k]==='p').length;
-      return {nm,a,p,x:Math.max(0,tot-a-p),pct:tot?Math.round((a+p*0.5)/tot*100):0};});
-    const now=wk[last],diff=now.pct-wk[last-1].pct,avg=Math.round(wk.reduce((q,w)=>q+w.pct,0)/n),sum=k=>wk.reduce((q,w)=>q+w[k],0);
+    const wk=names.map((nm,i)=>{const k=n-1-i,a=all.filter(x=>x.st[k]==='a').length,p=all.filter(x=>x.st[k]==='p').length,x=all.filter(x=>x.st[k]==='x').length,d=a+p+x;
+      return {nm,a,p,x,d,pct:d?Math.round((a+p*0.5)/d*100):0};});
+    const now=wk[last],diff=now.pct-wk[last-1].pct,rec=wk.filter(w=>w.d),avg=rec.length?Math.round(rec.reduce((q,w)=>q+w.pct,0)/rec.length):0,sum=k=>wk.reduce((q,w)=>q+w[k],0);
     const grow=window.__gaSeen!==pid;window.__gaSeen=pid;
     const dl=diff===0?'<div class="ga-d">Same as last week</div>':'<div class="ga-d '+(diff>0?'up':'down')+'">'+(diff>0?'▲ ':'▼ ')+Math.abs(diff)+' points on last week</div>';
     const cnt=(c,v,l)=>'<li><i class="ga-sw '+c+'"></i><b>'+v+'</b>'+l+'</li>';
-    const left='<div class="ga-now"><div class="ga-l">This week</div><div class="ga-big">'+now.pct+'%</div>'+dl
+    const left='<div class="ga-now"><div class="ga-l">This week</div><div class="ga-big">'+(now.d?now.pct+'%':'–')+'</div>'+(now.d&&wk[last-1].d?dl:'<div class="ga-d">'+(now.d?'No record last week':'No record this week')+'</div>')
       +'<ul class="ga-cnt">'+cnt('a',now.a,'attended')+cnt('p',now.p,'part of it')+cnt('x',now.x,'refused')+'</ul></div>';
     const cols=wk.map((w,i)=>{
-      const ha=tot?w.a/tot*100:0,hp=tot?w.p*0.5/tot*100:0;
+      const ha=w.d?w.a/w.d*100:0,hp=w.d?w.p*0.5/w.d*100:0;
       const segA=ha?'<i class="ga-f a'+(hp?'':' top')+'" style="height:'+ha.toFixed(2)+'%"></i>':'';
       const segP=hp?'<i class="ga-f p top" style="bottom:'+(ha?'calc('+ha.toFixed(2)+'% + 2px)':'0')+';height:'+(ha?'calc('+hp.toFixed(2)+'% - 2px)':hp.toFixed(2)+'%')+'"></i>':'';
-      const say=w.nm+': '+w.pct+'%. '+w.a+' attended, '+w.p+' part of it, '+w.x+' refused.';
+      const say=!w.d?w.nm+': no record.':w.nm+': '+w.pct+'%. '+w.a+' attended, '+w.p+' part of it, '+w.x+' refused.';
       return '<button type="button" class="ga-col'+(i===last?' now':'')+'" aria-label="'+say+'"><span class="ga-trk"><span class="ga-fill"'+(grow?' style="animation-delay:'+(i*70)+'ms"':'')+'>'+segA+segP+'</span></span>'
-        +'<span class="ga-x">'+w.nm+'</span><span class="ga-tip" aria-hidden="true"><b>'+w.pct+'%</b><span>'+w.a+' attended · '+w.p+' part · '+w.x+' refused</span></span></button>';}).join('');
+        +'<span class="ga-x">'+w.nm+'</span><span class="ga-tip" aria-hidden="true">'+(w.d?'<b>'+w.pct+'%</b><span>'+w.a+' attended · '+w.p+' part · '+w.x+' refused</span>':'<b>No record</b>')+'</span></button>';}).join('');
     const plot='<div class="ga-plot"><div class="ga-y" aria-hidden="true"><span style="top:0">100%</span><span style="top:50%">50%</span><span style="top:100%">0%</span></div>'
       +'<div class="ga-area"><div class="ga-grid" aria-hidden="true"><i style="top:0"></i><i style="top:50%"></i><i class="b" style="top:100%"></i></div><div class="ga-cols'+(grow?' grow':'')+'">'+cols+'</div></div></div>';
     const st=(l,v,s)=>'<div><div class="ga-l">'+l+'</div><b>'+v+'</b><small>'+s+'</small></div>';
-    const right='<div class="ga-st">'+st('5-week average',avg+'%','across '+tot+' groups')+st('Sessions attended',sum('a')+' of '+tot*n,sum('p')+' part of it · '+sum('x')+' refused')+'</div>';
+    const right='<div class="ga-st">'+st('5-week average',rec.length?avg+'%':'–',rec.length+' of 5 weeks recorded')+st('Sessions attended',sum('a')+' of '+sum('d'),sum('p')+' part of it · '+sum('x')+' refused')+'</div>';
     const key='<div class="ga-key" aria-hidden="true"><span><i class="ga-sw a"></i>Attended</span><span><i class="ga-sw p"></i>Part of it (counts half)</span><span><i class="ga-sw x"></i>Refused</span></div>';
     const css='<style>'
       +'.ga{border:1px solid #e3eaf2;border-radius:14px;background:#fff;padding:16px 20px 14px;margin-bottom:14px}'
