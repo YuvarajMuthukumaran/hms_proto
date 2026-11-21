@@ -287,6 +287,7 @@
 
   /* ---------- 4. Admission tab ---------- */
   const FORMS=[['Admission consent form and letter of undertaking (advance and charges)','admission-consent'],['Form E · request for admission with high support needs (rule 8)','form-e'],['High risk informed consent','high-risk-consent']];
+  window.__psyForms=FORMS; /* 21 Nov: block 171 adds the order consents (MECT, outing, clozapine) to Collect e-signature */
   const when=()=>{const d=new Date();return d.getDate()+' '+d.toLocaleString('en-GB',{month:'short'});};
   const admDate=()=>{try{const p=ptFind(S.pid);return ptD(ptIdentity(p).adm);}catch(e){return '';}};
   function consentCard(){
