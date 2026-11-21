@@ -21,10 +21,23 @@
   window.rpType=function(v){RP.ty=v;const t=document.getElementById('rpText');if(t)t.placeholder=tyOf(v)[3];};
   window.rpAdd=function(){const t=document.getElementById('rpText');const v=((t||{}).value||'').trim();if(!v){if(t)t.focus();return;}RP.list.push({ty:RP.ty,text:v});t.value='';paintList();t.focus();};
   window.rpDel=function(i){RP.list.splice(i,1);paintList();};
+  /* 21 Nov 2026 (owner): Review treatment shows the treatment that is running now, so the doctor reviews what is actually given */
+  function treatment(pid){
+    const ta=document.getElementById('epN');if(!ta)return;
+    let meds=[];try{meds=JSON.parse(ptRun(pid,()=>JSON.stringify((S.meds||[]).filter(m=>!/waiting|stopped/i.test(m.name||'')))))||[];}catch(e){}
+    const box=document.createElement('div');box.id='rvTreat';
+    box.innerHTML='<div class="lbl" style="margin-bottom:8px"><b>Current treatment</b> <span class="tiny muted">'+meds.length+' medicine'+(meds.length===1?'':'s')+' running now</span></div>'
+      +(meds.length?'<div class="scroll"><table class="t"><thead><tr><th>Medicine</th><th>Doses</th><th>When</th><th>Prescribed by</th></tr></thead><tbody>'+meds.map(m=>'<tr><td><b>'+E(String(m.name||'').split(' · ')[0])+'</b></td><td>'+E(m.freq||'')+'</td><td>'+E(m.time||'')+'</td><td>'+E(m.by||'')+'<div class="tiny muted">'+E(String(m.at||'').split(',').slice(0,2).join(','))+'</div></td></tr>').join('')+'</tbody></table></div>'
+        :'<div class="small muted">No medicine recorded for this patient yet.</div>');
+    box.style.cssText='border:1px solid #e3eaf2;border-radius:12px;padding:12px 14px;margin:2px 0 12px;background:#fbfcfe';
+    const lab=ta.closest('label');lab.parentNode.insertBefore(box,lab);
+    const m=document.querySelector('.modal');if(m)m.style.width='min(760px,100%)';
+  }
   const __pop=window.psyEyePop;
   window.psyEyePop=function(pid,idx,mode){
     const r=__pop.apply(this,arguments);
     try{
+      if(mode==='review'){treatment(pid);return r;}
       if(mode!=='round')return r;
       RP.pid=pid;RP.list=[];RP.ty='Medicine';
       const ta=document.getElementById('epN');if(!ta)return r;
