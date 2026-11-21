@@ -87,7 +87,7 @@
   function checklistCard(pid,only){
     const [n,m]=counts(pid);
     const gs=only?GROUPS.filter(g=>g.k===only):GROUPS;
-    const grp=g=>{const mine=g.k===MINE;return `<div class="m20-cg${mine?' mine':''}"><div class="m20-cgh"><b>${E(g.who)}</b>${mine?'<span class="m20-you">You</span>':'<span class="tiny muted">View only</span>'}</div>
+    const grp=g=>{const mine=g.k===MINE;const dn=g.items.filter(it=>tickOf(pid,g.k,it[0])).length;return `<div class="m20-cg${mine?' mine':''}" data-r="${g.k}" style="--p:${Math.round(dn/g.items.length*100)}%"><div class="m20-cgh"><b>${E(g.who)}</b><span class="m20-cnt">${dn}/${g.items.length}</span>${mine?'<span class="m20-you">You</span>':'<span class="tiny muted">View only</span>'}</div>
       ${g.items.map(it=>{const t=tickOf(pid,g.k,it[0]);return `<label class="m20-ci${mine?'':' ro'}"><input type="checkbox" ${t?'checked':''} ${mine?`onchange="m20Tick('${Q(pid)}','${g.k}','${it[0]}',this.checked)"`:'disabled'}><span><span class="m20-cit">${E(it[1])}</span><span class="tiny muted">${t?'Done · '+E(t.by)+(t.at?', '+E(t.at):''):(g.k==='px'?'Ticked by the Patient Experience Lead in their portal':'Not done yet')}</span></span></label>`;}).join('')}</div>`;};
     return `<section class="card" id="m20Role"><div class="hd"><div><h3>Discharge checklist</h3><div class="small muted" style="margin-top:4px">${only?'Your item for this discharge. The other roles tick theirs on their own screens.':'Each role ticks only its own items. Everyone sees all of them, with who and when.'}</div></div><span class="chip ${n===m?'c-green':'c-grey'}">${n} of ${m} done</span></div>
       <div class="pad m20-cgrid">${gs.map(grp).join('')}</div></section>`;
