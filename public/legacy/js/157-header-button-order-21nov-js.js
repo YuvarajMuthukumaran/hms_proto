@@ -19,5 +19,7 @@
   function noIcon(){document.querySelectorAll('#view .subtabs button .sti').forEach(i=>{const b=i.closest('button');if(b&&/^Discharge summary$/i.test((b.textContent||'').trim()))i.remove();});}
   const __r2=render;
   render=function(){const o=__r2.apply(this,arguments);try{noIcon();}catch(e){}return o;};
+  /* the icon is a ::before on .psy-discharge-tab (block 54); hide it */
+  try{const st=document.createElement('style');st.textContent='body #view .subtabs .subtab.psy-discharge-tab::before,body #view .subtabs .subtab.psy-discharge-tab::after{display:none!important;content:none!important;background:none!important}';document.head.appendChild(st);}catch(e){}
   try{reorder();noIcon();}catch(e){}
 })();
