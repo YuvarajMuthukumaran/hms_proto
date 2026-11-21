@@ -128,6 +128,7 @@
     if(typeof dc2Set==='function'){const D=dcrx(pid);dc2Set(pid,'x'+(D.extra.length-1),'start',start);}else render();
     toast(name+' added to the discharge prescription');
   };
+  window.m20Dur=function(pid,key,v){const n=parseInt(v,10);if(!(n>=1))return;const row=(medRows(pid).find(r=>r.key===key)||{}).s||{};const st=row.start||iso(new Date());const end=iso(new Date(new Date(st+'T00:00:00').getTime()+n*DAY));if(typeof dc2Set==='function'){if(!row.start)dc2Set(pid,key,'start',st);dc2Set(pid,key,'end',end);}else render();};
   function medsCard(pid){
     const R=medRows(pid),D=dcrx(pid);
     if(!DOC||typeof dc2Set!=='function'){
@@ -137,11 +138,9 @@
     }
     const sel=(k,f,opts,val,ph)=>`<select class="input" onchange="dc2Set('${Q(pid)}','${Q(k)}','${f}',this.value)"><option value="">${ph}</option>${opts.map(o=>`<option ${val===o?'selected':''}>${E(o)}</option>`).join('')}</select>`;
     const date=(k,f,val)=>`<input class="input" type="date" value="${E(val||'')}" onchange="dc2Set('${Q(pid)}','${Q(k)}','${f}',this.value)">`;
-    const list=R.map(r=>`<div class="m20-med"><div class="row" style="justify-content:space-between;gap:8px;align-items:flex-start"><b>${E(r.name)}</b><button class="btn sm" onclick="dc2Stop('${Q(pid)}','${Q(r.key)}')">${r.extra?'Remove':'Stop'}</button></div>${r.extra?'<div class="tiny muted">New at discharge</div>':''}
-      <div class="m20-g2">${sel(r.key,'freq',FREQ,r.s.freq,'Frequency')}${sel(r.key,'food',FOOD,r.s.food,'With food?')}</div>
-      <div class="m20-g2"><label class="field"><span class="tiny muted">Start</span>${date(r.key,'start',r.s.start)}</label><label class="field"><span class="tiny muted">End</span>${date(r.key,'end',r.s.end)}</label></div>
-      <div class="tiny muted">Duration: ${E(daysTxt(r.s.start,r.s.end))||'set the end date'}</div>
-      <input class="input" placeholder="Note or advice" value="${E(r.s.note||'')}" oninput="dc2Note(this,'${Q(pid)}','${Q(r.key)}')"></div>`).join('');
+    /* 21 Nov 2026 (meeting): medicines at discharge as a table: name, frequency, with or after food, start date, duration, advice */
+    const dur=(k,st,en)=>{const n=(st&&en)?Math.round((new Date(en+'T00:00:00')-new Date(st+'T00:00:00'))/DAY):'';return `<input class="input" type="number" min="1" style="width:78px" value="${n>=0?n:''}" placeholder="days" onchange="m20Dur('${Q(pid)}','${Q(k)}',this.value)">`;};
+    const list=R.length?`<div class="scroll"><table class="t m20-mt"><thead><tr><th>Medicine</th><th>Frequency</th><th>With food</th><th>Start date</th><th>Duration</th><th>Advice</th><th></th></tr></thead><tbody>${R.map(r=>`<tr><td><b>${E(r.name)}</b>${r.extra?'<div class="tiny muted">New at discharge</div>':''}</td><td>${sel(r.key,'freq',FREQ,r.s.freq,'Frequency')}</td><td>${sel(r.key,'food',FOOD,r.s.food,'With food?')}</td><td>${date(r.key,'start',r.s.start)}</td><td>${dur(r.key,r.s.start,r.s.end)}<div class="tiny muted">${E(daysTxt(r.s.start,r.s.end))}</div></td><td><input class="input" placeholder="Advice" value="${E(r.s.note||'')}" oninput="dc2Note(this,'${Q(pid)}','${Q(r.key)}')"></td><td><button class="btn sm" onclick="dc2Stop('${Q(pid)}','${Q(r.key)}')">${r.extra?'Remove':'Stop'}</button></td></tr>`).join('')}</tbody></table></div>`:'';
     const drugs=(typeof DRUGS!=='undefined'?DRUGS:[]);
     return `<section class="card m20-col" id="m20Meds"><div class="hd"><div><h3>Medications at discharge</h3><div class="small muted" style="margin-top:4px">Filled from the stay. Stop a medicine that does not continue.</div></div></div>
       <div class="pad m20-stack">${list||'<div class="small muted">No medicine continues after discharge. Add one below.</div>'}
@@ -209,7 +208,8 @@
     '.m20-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 14px}'+
     '.m20-tab{border:1px solid #d0d5dd;background:#fff;border-radius:99px;padding:8px 16px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;min-height:38px}'+
     '.m20-tab.on{background:#1e6cdb;border-color:#1e6cdb;color:#fff}.m20-tab .m20-n{font-weight:600;opacity:.8;margin-left:6px;font-size:12.5px}'+
-    '.m20-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start;margin-bottom:14px}'+
+    '.m20-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2.1fr);gap:14px;align-items:start;margin-bottom:14px}'+
+    '.m20-grid>#m20Meds{grid-column:2;grid-row:1}.m20-grid>#m20SumCol{grid-column:1;grid-row:1}.m20-grid>.m20-col:not(#m20Meds){grid-column:1/-1;grid-row:2}.m20-mt td,.m20-mt th{vertical-align:top;padding:6px 8px}.m20-mt{min-width:820px}.m20-mt .input{min-height:34px;font-size:13px}.m20-mt select.input{min-width:118px}.m20-mt input[type=date]{min-width:128px}@media(max-width:900px){.m20-grid{grid-template-columns:1fr}.m20-grid>*{grid-column:1!important;grid-row:auto!important}}'+
     '.m20-grid>section.card{margin:0!important;min-width:0}'+
     '.m20-grid section.card.wide{grid-column:auto!important;width:auto!important}'+
     '.m20-stack{display:flex;flex-direction:column;gap:10px}'+
@@ -233,7 +233,7 @@
     '.m20-ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}'+
     '.m20-gs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.m20-gs .box b{font-size:20px;display:block;margin-top:2px}'+
     '@media(max-width:900px){.m20-gs{grid-template-columns:repeat(2,minmax(0,1fr))}}'+
-    '@media(max-width:1100px){.m20-grid{grid-template-columns:1fr}.m20-cgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}'+
+    '@media(max-width:1100px){.m20-cgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}'+
     '@media(max-width:700px){.m20-cgrid,.m20-3{grid-template-columns:1fr}}';
   document.head.appendChild(css);
 
