@@ -97,10 +97,12 @@
       try{const h=(v3().vit.hist||{})[pid]||(v3().vit.last[pid]?[v3().vit.last[pid]]:[]);
         h.slice().reverse().forEach(v=>{if(!v||!isFinite(v.rr))return;const n=psyNewsCalc({rr:v.rr,spo2:v.spo2,o2:false,sbp:v.sbp,pulse:v.hr,cons:'Alert',temp:Math.round((v.temp-32)*5/9*10)/10});
           tb.querySelector('tbody').insertAdjacentHTML('afterbegin',`<tr><td style="font-weight:600">${V3.day&&V3.day(v.t)!==0?esc(V3.stamp(v.t)):'Today'}</td><td>${esc(V3.hm?V3.hm(v.t):V3.stamp(v.t))}</td><td>${v.sbp}/${v.dbp}</td><td>${v.hr}</td><td>${v.temp}</td><td>${v.spo2}</td><td>—</td><td>—</td><td>—</td><td>${v.rr}</td><td><span class="sh-n2 ${n.band==='Urgent RMO review'?'red':n.band==='Inform RMO'?'amber':''}" title="${esc(n.band)} · recorded by ${esc(v.by||'')}">${n.total}</span></td></tr>`);});}catch(e){}}
-    /* Order a scale button in the monitoring card */
-    const mh=[...v.querySelectorAll('h3')].find(x=>/^Other monitoring/.test(x.textContent.trim())),mc=mh&&mh.closest('section.psy-tx-panel,section.card');
-    if(mc&&!mc.querySelector('[data-sc]')){const hd=mc.querySelector('.hd,.psy-tx-head'),b=document.createElement('button');b.className='btn sm';b.dataset.sc='1';b.textContent='Order monitoring';b.onclick=()=>shScaleOrder(pid);if(hd)hd.appendChild(b);}
-    if(mc){const old=mc.querySelector('#scList');if(old)old.remove();const so=(psyPx(pid).scaleOrders||[]);if(so.length){const d=document.createElement('div');d.id='scList';d.className='pad small';d.innerHTML='<div class="lbl">Scales ordered</div>'+so.map(o=>`<div>${esc(o.scale)} · ${esc(o.freq)} <span class="tiny muted">· ${esc(o.by)}, ${esc(o.at)}</span></div>`).join('');mc.appendChild(d);}}
+    /* Order a scale button + Scales ordered list — only in Admission workup (21 Nov: Anu) */
+    if(inWk()){
+      const mh=[...v.querySelectorAll('h3')].find(x=>/^Other monitoring/.test(x.textContent.trim())),mc=mh&&mh.closest('section.psy-tx-panel,section.card');
+      if(mc&&!mc.querySelector('[data-sc]')){const hd=mc.querySelector('.hd,.psy-tx-head'),b=document.createElement('button');b.className='btn sm';b.dataset.sc='1';b.textContent='Order monitoring';b.onclick=()=>shScaleOrder(pid);if(hd)hd.appendChild(b);}
+      if(mc){const old=mc.querySelector('#scList');if(old)old.remove();const so=(psyPx(pid).scaleOrders||[]);if(so.length){const d=document.createElement('div');d.id='scList';d.className='pad small';d.innerHTML='<div class="lbl">Scales ordered</div>'+so.map(o=>`<div>${esc(o.scale)} · ${esc(o.freq)} <span class="tiny muted">· ${esc(o.by)}, ${esc(o.at)}</span></div>`).join('');mc.appendChild(d);}}
+    }
   }
 
   /* ---------------- signed notes are locked: only an addendum (card 93) ---------------- */
