@@ -15,7 +15,15 @@
   const E=s=>hesc(String(s==null?'':s));
   const OC={mect:['MECT consent','mect-final'],out:['Outing consent','outing-consent'],cloz:['Clozapine consent','clozapine-consent'],
     ket:null,dtms:null,rest:null,lai:null};
-  try{const L=window.__psyForms;if(Array.isArray(L))Object.values(OC).forEach(o=>{if(o&&!L.some(f=>f[1]===o[1]))L.push([o[0],o[1]]);});}catch(e){}
+  /* Expose a live getter: returns only the OC entries whose order is in S.consents for the current patient */
+  window.__ocForms=function(){
+    try{
+      const cs=(window.S&&window.S.consents)||[];
+      return Object.entries(OC)
+        .filter(([k,o])=>o&&cs.some(c=>c.name&&c.name.toLowerCase().startsWith(k==='out'?'outing':k==='cloz'?'clozapine':k)))
+        .map(([,o])=>o);
+    }catch(e){return [];}
+  };
   const nameOf=fid=>(Object.values(OC).find(o=>o&&o[1]===fid)||['Consent'])[0];
   const px=pid=>{try{return psyPx(pid)||{};}catch(e){return {};}};
   const atNow=()=>{const d=new Date();return d.getDate()+' '+d.toLocaleString('en-GB',{month:'short'})+', '+d.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});};

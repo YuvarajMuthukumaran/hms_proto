@@ -293,7 +293,9 @@
   function consentCard(){
     const x=px();x.consent=x.consent||{};
     let items=[];try{CD_DATA=cdLoad();items=cdItems(S.pid);}catch(e){}
-    const rows=FORMS.map(([name,fid])=>{
+    const ocExtra=typeof window.__ocForms==='function'?window.__ocForms():[];
+    const allForms=[...FORMS,...ocExtra.filter(o=>!FORMS.some(f=>f[1]===o[1]))];
+    const rows=allForms.map(([name,fid])=>{
       const c=x.consent[fid],it=items.find(i=>i.form&&i.form.id===fid);
       const st=c?(c.st==='esign'?'E-signed '+hesc(c.at)+(c.by?' · '+hesc(c.by):''):c.st==='uploaded'?'Uploaded '+hesc(c.at)+(c.file?' · '+hesc(c.file):''):'Signed '+hesc(c.at))
         :'Signed '+hesc(admDate()||'on admission');
@@ -313,7 +315,9 @@
   window.psyDocPreview=function(key){S.cdfView='page';psyDocOpen(key);};
   let pad=null;
   window.psyEsignOpen=function(fid){
-    const f=FORMS.find(a=>a[1]===fid);if(!f)return;
+    const ocE=typeof window.__ocForms==='function'?window.__ocForms():[];
+    const all=[...FORMS,...ocE.filter(o=>!FORMS.some(f=>f[1]===o[1]))];
+    const f=all.find(a=>a[1]===fid);if(!f)return;
     V3.modal('Collect e-signature','Read the form with the family, then they sign in the box.',
       `<div class="small" style="font-weight:600;margin-bottom:8px">${hesc(f[0])}</div>
        <label class="field"><span class="lbl">Name of the person signing</span><input class="input" id="esN" placeholder="e.g. Ananya Bose (sister, nominated representative)"></label>
