@@ -38,18 +38,49 @@
       const grp=[...wk.querySelectorAll('.wk-grp')].find(g=>/Examination and tests/.test((g.querySelector('.wk-gh')||{}).textContent||''));
       const body=grp&&grp.querySelector('.wk-gb');if(!body)return;
       if(!document.getElementById('pmExamCss')){const c=document.createElement('style');c.id='pmExamCss';
-        c.textContent='#pmExamRow{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:stretch;margin-top:6px;padding-top:14px;border-top:1px solid #e3eaf2}'
-          +'#pmExamRow>section.card{margin:0!important;display:flex;flex-direction:column;border-radius:14px}'
-          +'#pmExamRow #pmResults .hd{flex-direction:column;align-items:flex-start;gap:10px}'
-          +'#pmExamRow #pmResults .empty{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;min-height:110px;color:#667085;border-top:1px dashed #d5e1ef;margin:0 16px 16px;border-radius:10px;background:#f8fafc}'
-          +'@media(max-width:900px){#pmExamRow{grid-template-columns:1fr}}';
+        c.textContent='#pmExamRow{grid-column:1/-1;margin-top:6px;padding-top:14px;border-top:1px solid #e3eaf2}'
+          +'#pmScores{margin:0!important;border-radius:14px}'
+          +'#pmScores .hd{align-items:center;gap:12px}#pmScores .hd h3{font-size:16px}'
+          +'#pmScores .pad{display:grid;grid-template-columns:200px minmax(0,1fr);gap:22px;align-items:start}'
+          +'#pmScores .sc-side{border-radius:12px;background:#f5f8fc;border:1px solid #e3eaf2;padding:16px;text-align:center}'
+          +'#pmScores .sc-side .sc-big{font-size:44px;line-height:1;font-weight:700;display:block;margin-bottom:8px}'
+          +'#pmScores .sc-side .small,#pmScores .sc-side .tiny{display:block;margin-top:6px}'
+          +'#pmScores .sc-f{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 14px}'
+          +'#pmScores .sc-f label{font-size:12px;color:#475467}'
+          +'#pmScores .sc-f label:last-child{grid-column:1/-1;display:flex;justify-content:flex-end}'
+          +'#pmScores .sc-f label:last-child .btn{min-height:40px;padding:0 24px;width:auto!important;flex:none}'
+          +'#pmScores details{margin-top:12px;font-size:13px;color:#475467}#pmScores summary{cursor:pointer;color:#1e6cdb;font-weight:600}'
+          +'@media(max-width:760px){#pmScores .pad{grid-template-columns:1fr}#pmScores .sc-f{grid-template-columns:repeat(2,minmax(0,1fr))}}';
         document.head.appendChild(c);}
       let row=document.getElementById('pmExamRow');
       if(!row||row.parentNode!==body){if(row)row.remove();row=document.createElement('div');row.id='pmExamRow';body.appendChild(row);}
+      const old=document.getElementById('pmResults');if(old)old.remove();
       const sc=document.getElementById('pmScores');
-      if(sc&&sc.parentNode!==row){row.insertBefore(sc,row.firstChild);}
-      let rc=document.getElementById('pmResults');
-      if(!rc||rc.parentNode!==row){if(rc)rc.remove();const t=document.createElement('div');t.innerHTML=resultsCard(r.pid);row.appendChild(t.firstElementChild);}
+      if(sc){
+        if(sc.parentNode!==row)row.appendChild(sc);
+        if(!sc.dataset.tidy){
+          sc.dataset.tidy='1';
+          const h=sc.querySelector('.hd h3'),d=sc.querySelector('.hd .small');
+          if(h)h.textContent='Early warning score (NEWS2)';
+          if(d)d.textContent='A quick check of how unwell the patient is, worked out from the vitals below.';
+          const hd=sc.querySelector('.hd');
+          if(hd&&!hd.querySelector('[data-om]')){const b=document.createElement('button');b.type='button';b.className='btn sm';b.dataset.om='1';b.textContent='Order monitoring';b.setAttribute('onclick',"shScaleOrder('"+r.pid.replace(/'/g,"\\'")+"')");hd.appendChild(b);}
+          const pad=sc.querySelector('.pad'),inner=pad&&pad.firstElementChild;
+          if(inner){
+            const lbl=inner.querySelector(':scope > .lbl'),score=inner.querySelector(':scope > .row'),form=inner.querySelector('.sc-f');
+            const foot=[...inner.children].filter(e=>e!==lbl&&e!==score&&e!==form);
+            const side=document.createElement('div');side.className='sc-side';
+            if(score)side.appendChild(score);
+            foot.filter(e=>/Earlier/.test(e.textContent)).forEach(e=>{e.className='tiny muted';side.appendChild(e);});
+            const main=document.createElement('div');
+            if(form)main.appendChild(form);
+            const rules=foot.filter(e=>/Routine/.test(e.textContent))[0];
+            if(rules){const dt=document.createElement('details');dt.innerHTML='<summary>How is the score used?</summary><div style="margin-top:6px"></div>';dt.lastChild.textContent=rules.textContent;main.appendChild(dt);}
+            if(lbl)lbl.remove();
+            pad.innerHTML='';pad.appendChild(side);pad.appendChild(main);
+          }
+        }
+      }
       return;
     }
 
