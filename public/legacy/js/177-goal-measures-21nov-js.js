@@ -42,6 +42,13 @@
     if(g.type==='choice'){const o=optsOf(g),i=o.indexOf(v);return i<0?0:(i+1)/o.length;}
     return isNum(v)&&max>0?Math.max(0,Math.min(1,+v/max)):0;
   }
+  /* old goals saved before 21 Nov have no measure type and no ratings yet: pick the obvious one from the words */
+  window.goalGuess=function(g){
+    const t=String(g.t||'');
+    if(/sleep/i.test(t)&&/hours?/i.test(t)){const m=t.match(/(\d+(?:\.\d+)?)\s*hours?/i);return {type:'num',unit:'hours',dir:/(at most|no more|less than)/i.test(t)?'atmost':'atleast',aim:m?+m[1]:6};}
+    if(/(group activit|bath|shower|take part|attend|brush|take (his|her|their|the) medic|eat )/i.test(t))return {type:'yn'};
+    return null;
+  };
   window.goalPct=function(g,v){
     if(!g)return 0;
     if(g.type==='scale'||!g.type)return Math.max(0,Math.min(100,Math.round((v-g.start)/Math.max(1,g.aim-g.start)*100)));
