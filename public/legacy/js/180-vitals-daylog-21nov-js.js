@@ -15,7 +15,10 @@
       +'.vd-r:first-of-type{border-top:0}'
       +'.vd-tm b{display:block;font-size:14px}.vd-tm small{color:#667085;font-size:12px}'
       +'.vd-v{display:flex;flex-wrap:wrap;gap:8px}'
-      +'.vd-p{border:1px solid #d5e1ef;border-radius:10px;padding:6px 12px;background:#fff;min-width:78px}'
+      +'.vd-p{display:flex;align-items:center;gap:10px;border:1px solid #d5e1ef;border-radius:12px;padding:6px 14px 6px 8px;background:#fff;min-width:96px}'
+      +'.vd-ic{display:inline-flex;align-items:center;justify-content:center;flex:none;width:32px;height:32px;border-radius:50%;color:#344054}'
+      +'.vd-p.bad .vd-ic{background:#fde1dd!important;color:#b42318}'
+      +'.vd-by{display:flex;gap:4px;justify-content:flex-end}'
       +'.vd-p small{display:block;font-size:11px;color:#667085}.vd-p b{font-size:18px}'
       +'.vd-p.bad{background:#fff3f1;border-color:#f3b8b0}.vd-p.bad b{color:#b42318}'
       +'.vd-by{font-size:12px;color:#667085;text-align:right}.vd-by i{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#e8f0fb;color:#1e4fa8;font-style:normal;font-weight:700;font-size:12px}'
@@ -28,6 +31,17 @@
     document.head.appendChild(c);}
   const NAME={BP:'Blood pressure',P:'Pulse',RR:'Breathing',T:'Temp','SpO2':'Oxygen',Sugar:'Sugar',NEWS2:'NEWS2'};
   const UNIT={BP:'mmHg',P:'per min',RR:'per min',T:'°F','SpO2':'%',Sugar:'mg/dL',NEWS2:''};
+  /* one small line icon per measurement, each on its own soft tint */
+  const svg=p=>`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+  const ICON={
+    BP:[svg('<path d="M3.5 17a9 9 0 1117 0"/><path d="M12 14l4-5"/><circle cx="12" cy="14" r="1"/>'),'#e3eefc'],
+    P:[svg('<path d="M3 12h4l2.5-6 4 12 2.5-6H21"/>'),'#fde7ea'],
+    RR:[svg('<path d="M12 4v9"/><path d="M12 8c-1.5-2.5-5-2.5-6 .5L4 16c-.5 2.5 1.5 3.5 3.5 2.5L12 15"/><path d="M12 8c1.5-2.5 5-2.5 6 .5l2 7.5c.5 2.5-1.5 3.5-3.5 2.5L12 15"/>'),'#dff4f1'],
+    T:[svg('<path d="M14 14.8V5a2 2 0 10-4 0v9.8a4 4 0 104 0z"/>'),'#fff0d9'],
+    SpO2:[svg('<circle cx="12" cy="12" r="9"/><text x="12" y="15.5" text-anchor="middle" font-size="8.5" font-weight="700" fill="currentColor" stroke="none">O₂</text>'),'#e0f2fe'],
+    Sugar:[svg('<path d="M12 3s6 6.5 6 11a6 6 0 01-12 0c0-4.5 6-11 6-11z"/>'),'#efe6fb'],
+    NEWS2:[svg('<path d="M9 4h6v3H9z"/><path d="M7 5H6a1 1 0 00-1 1v13a1 1 0 001 1h12a1 1 0 001-1V6a1 1 0 00-1-1h-1"/><path d="M9 14l2 2 4-4"/>'),'#e8eaf0']
+  };
   const SLOTS=['Before breakfast','After breakfast','Before lunch','After lunch','Before dinner','After dinner'];
   function parse(tb){
     const days=[];
@@ -55,13 +69,23 @@
     if(!days.some(d=>d.entries.length))return '<div class="vd-empty"><b>No readings yet.</b><br>Tap <b>Record vitals</b> or <b>Record blood sugar</b> to add the first one.</div>';
     return days.filter(d=>d.entries.length).map(d=>{
       const n=d.entries.length;
-      const rows=d.entries.slice().sort((a,b)=>key(a)-key(b)).map(e=>{
+      /* readings taken at the same time are one line (blood pressure, pulse and the rest together) */
+      const merged=[];
+      d.entries.slice().sort((a,b)=>key(a)-key(b)).forEach(e=>{
+        const k=e.tm&&e.tm!=='Time not recorded'?(e.tm+'|'+e.slot):null;
+        const f=k?merged.find(x=>x.k===k):null;
+        if(f){e.vals.forEach(v=>{if(!f.vals.some(y=>y.k===v.k))f.vals.push(v);});if(e.ini&&!f.inis.some(i=>i[0]===e.ini))f.inis.push([e.ini,e.who]);}
+        else merged.push({k,slot:e.slot,tm:e.tm,vals:e.vals.slice(),inis:e.ini?[[e.ini,e.who]]:[]});
+      });
+      const ORD=['BP','P','RR','T','SpO2','Sugar','NEWS2'];
+      const rows=merged.map(e=>{
         const slotName=SLOTS[e.slot]||'';
         const tmShow=e.tm&&e.tm!==slotName?e.tm:slotName;
         const sub=e.tm&&e.tm!==slotName?slotName:'';
+        const vals=e.vals.slice().sort((a,b)=>ORD.indexOf(a.k)-ORD.indexOf(b.k));
         return '<div class="vd-r"><div class="vd-tm"><b>'+E(tmShow)+'</b>'+(sub?'<small>'+E(sub)+'</small>':'')+'</div>'
-          +'<div class="vd-v">'+e.vals.map(x=>'<div class="vd-p'+(x.bad?' bad':'')+'"><small>'+E(NAME[x.k]||x.k)+(UNIT[x.k]?' · '+UNIT[x.k]:'')+'</small><b>'+E(x.v)+'</b></div>').join('')+'</div>'
-          +'<div class="vd-by">'+(e.ini?'<i title="'+E(e.who||e.ini)+'">'+E(e.ini)+'</i>':'')+'</div></div>';
+          +'<div class="vd-v">'+vals.map(x=>'<div class="vd-p'+(x.bad?' bad':'')+'"><span class="vd-ic" style="background:'+((ICON[x.k]||ICON.NEWS2)[1])+'">'+(ICON[x.k]||ICON.NEWS2)[0]+'</span><div><small>'+E(NAME[x.k]||x.k)+(UNIT[x.k]?' · '+UNIT[x.k]:'')+'</small><b>'+E(x.v)+'</b></div></div>').join('')+'</div>'
+          +'<div class="vd-by">'+e.inis.map(i=>'<i title="'+E(i[1]||i[0])+'">'+E(i[0])+'</i>').join('')+'</div></div>';
       }).join('');
       return '<section class="vd-day"><div class="vd-dh"><b>'+E(d.date)+'</b><span>'+n+' reading'+(n===1?'':'s')+(d.daily.length?' · '+E(d.daily.join(' · ')):'')+'</span></div>'+rows+'</section>';
     }).join('');
