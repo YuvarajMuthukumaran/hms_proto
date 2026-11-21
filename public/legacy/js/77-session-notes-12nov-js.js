@@ -141,12 +141,18 @@
     const checkin=`<div class="field"><span class="lbl">Mood today (patient rated 0 to 10)</span>${nums(10,D.mood,'snMood')}</div><div class="sn-g"><div class="field"><span class="lbl">Engagement</span>${chips(['Engaged','Partial','Withdrawn'],D.eng,'snEng')}</div><div class="field"><span class="lbl">Compared with last session</span>${chips(['Better','Same','Worse'],D.vs,'snVs')}</div></div>`;
     const spec=BLK[D.mod],block=spec==='erp'?erpBlock():`<div class="sn-g">${spec.map(blockField).join('')}</div>`;
     const modSel=`<div class="field"><span class="lbl">Therapy type</span><div class="sn-chips">${MODS.map(m=>`<button type="button" class="sn-c ${D.mod===m?'on':''}" onclick="snMod('${m}')">${m}</button>`).join('')}</div></div>`;
-    const goalsH=goals.map((g,i)=>`<div class="field"><span class="lbl">${esc(g.t)}</span>${nums(10,D.goalR[i],`(x=>snGoal(${i},x))`)}</div>`).join('');
+    const goalsH=goals.map((g,i)=>{
+      if(g.type==='yn'){
+        const cv=D.goalR[i];
+        return `<div class="field"><span class="lbl">${esc(g.t)}<span class="tiny muted" style="margin-left:6px">Yes / No</span></span><div class="sn-chips"><button type="button" class="sn-c ${cv==='yes'?'on':''}" onclick="snGoal(${i},'yes')">Yes</button><button type="button" class="sn-c ${cv==='no'?'on':''}" onclick="snGoal(${i},'no')">No</button></div></div>`;
+      }
+      return `<div class="field"><span class="lbl">${esc(g.t)}</span>${nums(10,D.goalR[i],`(x=>snGoal(${i},x))`)}</div>`;
+    }).join('');
     const hw=`<div class="field"><span class="lbl">Last homework</span>${chips(['Done','Partly done','Not done'],D.hwRev,'snHw')}</div><label class="field"><span class="lbl">New homework</span><input class="input" value="${esc(D.hwNew||'')}" oninput="snS('hwNew',this.value)" placeholder="e.g. practise the exposure twice a day"></label>`;
     const plan=`<div class="sn-g"><label class="field"><span class="lbl">Plan for next time</span><input class="input" value="${esc(D.plan||'')}" oninput="snS('plan',this.value)"></label><div class="sn-g"><label class="field"><span class="lbl">Next session date</span><input class="input" type="date" value="${esc(D.next||'')}" onchange="snS('next',this.value)"></label><label class="field"><span class="lbl">Time</span><input class="input" type="time" value="${esc(D.nextT||'10:00')}" onchange="snS('nextT',this.value)"></label></div></div><div class="tiny muted">A next session date books it on the Calendar and caseload.</div>`;
     const sum=`<label class="field"><span class="lbl">One line for the psychiatrist (shows on Rounds)</span><textarea class="input" id="snSum" rows="2" oninput="snSumTouch(this.value)">${esc(D.summary||'')}</textarea></label>`;
     const sec=(t,sub,h)=>`<section class="sn-sec"><div class="sn-sh">${t}${sub?` <small>${sub}</small>`:''}</div><div class="sn-sb">${h}</div></section>`;
-    return sec('Session','Filled in for you',hdr)+sec('Risk check','Required. Any yes starts a short C-SSRS',risk)+sec('Check-in','',checkin)+sec('Therapy',D.mod,modSel+block)+sec('Goals','Rate each for today, 0 to 10',goalsH)+sec('Plan','',plan)+sec('Summary','Drafted from what you filled in. Edit it',sum);
+    return sec('Session','Filled in for you',hdr)+sec('Risk check','Required. Any yes starts a short C-SSRS',risk)+sec('Check-in','',checkin)+sec('Therapy',D.mod,modSel+block)+sec('Goals','Rate each goal for today',goalsH)+sec('Plan','',plan)+sec('Summary','Drafted from what you filled in. Edit it',sum);
   }
   window.snKind=v=>{KIND={Individual:'ind',Group:'grp',Family:'fam'}[v];if(!D.modTouched)D.mod=DEFMOD[KIND];D.blk={};draw();};
   window.snMood=v=>{D.mood=D.mood===v?null:v;autoSum();draw();};

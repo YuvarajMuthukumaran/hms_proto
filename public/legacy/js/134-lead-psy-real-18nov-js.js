@@ -42,11 +42,17 @@
   /* ---------- Therapy Plans: add a goal (real patients start with none) ---------- */
   window.tpGoalAdd=function(pid){
     const g=id=>(document.getElementById(id)||{}).value||'';
-    const t=g('tgT').trim(),s=+g('tgS'),a=+g('tgA');
+    const t=g('tgT').trim(),tp=g('tgType')||'scale';
     if(!t){toast('Write the goal first');return;}
-    if(!(s>=0&&s<=10)||!(a>=0&&a<=10)){toast('Start and aim are numbers from 0 to 10');return;}
     const x=px(pid);x.sn=x.sn||{ladder:[],notes:[],goals:null,relapse:null,ybocs:'',planned:8,hwLog:{},hwWhy:{},told:{},grp:[]};
-    x.sn.goals=x.sn.goals||[];x.sn.goals.push({t,start:s,aim:a});
+    x.sn.goals=x.sn.goals||[];
+    if(tp==='yn'){
+      x.sn.goals.push({t,type:'yn'});
+    } else {
+      const s=+g('tgS'),a=+g('tgA');
+      if(!(s>=0&&s<=10)||!(a>=0&&a<=10)){toast('Start and aim are numbers from 0 to 10');return;}
+      x.sn.goals.push({t,start:s,aim:a,type:'scale'});
+    }
     if(typeof window.tpPlanChanged==='function')window.tpPlanChanged(pid);
     render();toast('Goal added');
   };
@@ -57,7 +63,8 @@
     v.querySelectorAll('.tp-sec').forEach(sec=>{
       const h=sec.querySelector('.tp-h');if(!h||!/^Goals/.test(h.textContent.trim())||sec.querySelector('#tgForm'))return;
       const d=document.createElement('div');d.id='tgForm';d.style.cssText='display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px';
-      d.innerHTML='<input class="input" id="tgT" placeholder="Add a goal, in the patient\'s words" style="flex:1;min-width:220px"><label class="tiny muted">Start <input class="input" id="tgS" type="number" min="0" max="10" value="2" style="width:64px;min-height:34px"></label><label class="tiny muted">Aim <input class="input" id="tgA" type="number" min="0" max="10" value="8" style="width:64px;min-height:34px"></label><button class="btn sm pri" type="button" onclick="tpGoalAdd(\''+pid+'\')">Add goal</button>';
+      const scaleF='<span id="tgScaleF" style="display:flex;gap:6px;align-items:center"><label class="tiny muted">Start <input class="input" id="tgS" type="number" min="0" max="10" value="2" style="width:64px;min-height:34px"></label><label class="tiny muted">Aim <input class="input" id="tgA" type="number" min="0" max="10" value="8" style="width:64px;min-height:34px"></label></span>';
+      d.innerHTML='<input class="input" id="tgT" placeholder="Add a goal, in the patient\'s words" style="flex:1;min-width:220px"><select class="input" id="tgType" style="min-height:34px;width:auto" onchange="document.getElementById(\'tgScaleF\').style.display=this.value===\'yn\'?\'none\':\'flex\'"><option value="scale">0–10 scale</option><option value="yn">Yes / No</option></select>'+scaleF+'<button class="btn sm pri" type="button" onclick="tpGoalAdd(\''+pid+'\')">Add goal</button>';
       sec.appendChild(d);
     });
   }

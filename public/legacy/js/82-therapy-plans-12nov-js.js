@@ -21,10 +21,11 @@
   const st=()=>{S.tp=S.tp||{seg:'ind',sub:'progress'};return S.tp;};
 
   /* 18 Nov 2026: a real patient starts with no goals (the three demo goals and their ratings made a plan look started) */
-  const defGoals=pid=>{const s=SNO(pid);if(!s.goals)s.goals=window.__realMode?[]:[{t:'Sleep at least 6 hours a night'},{t:'Take part in one group activity a day'},{t:'Talk about worries with the therapist'}];s.goals.forEach(g=>{if(g.start===undefined)g.start=2;if(g.aim===undefined)g.aim=8;});return s.goals;};
+  /* 21 Nov 2026: goals can be Yes/No (type:'yn') or 0-10 scale (type:'scale') */
+  const defGoals=pid=>{const s=SNO(pid);if(!s.goals)s.goals=window.__realMode?[]:[{t:'Sleep at least 6 hours a night',type:'yn'},{t:'Take part in one group activity a day',type:'yn'},{t:'Talk about worries with the therapist',type:'scale'}];s.goals.forEach(g=>{if(!g.type)g.type=g.start!==undefined?'scale':'yn';if(g.type==='scale'&&g.start===undefined)g.start=2;if(g.type==='scale'&&g.aim===undefined)g.aim=8;});return s.goals;};
   const signed=pid=>(SNO(pid).notes||[]).filter(n=>n.status==='signed').slice().reverse(); /* oldest first */
   const ratings=(pid,i)=>signed(pid).map(n=>({at:n.at,v:(n.goalR||{})[i]})).filter(r=>r.v!==undefined&&r.v!==''&&r.v!==null);
-  const nowOf=(pid,i)=>{const r=ratings(pid,i);return r.length?+r[r.length-1].v:defGoals(pid)[i].start;};
+  const nowOf=(pid,i)=>{const r=ratings(pid,i);const g=defGoals(pid)[i];if(g&&g.type==='yn')return r.length?r[r.length-1].v:'—';return r.length?+r[r.length-1].v:g.start;};
 
   function suggestions(pid){
     const out=[],g=defGoals(pid),s=SNO(pid),sg=signed(pid),p=pat(pid);
@@ -63,12 +64,25 @@
   function progress(pid){
     const g=defGoals(pid),sug=suggestions(pid),rg=rung(pid);
     return `<div class="tp-sec"><div class="tp-h">Suggested next steps</div>${sug.length?sug.map(x=>`<div class="tp-sug">${esc(x)}</div>`).join(''):'<div class="tp-ok"><span>✓</span>On track. No change needed to goals or homework.</div>'}</div>
-      <div class="tp-sec"><div class="tp-h">Goals, in the patient's words <small>start, now, aim. Tap one for its history.</small></div>${g.map((x,i)=>{const n=nowOf(pid,i),lo=Math.min(x.start,n,x.aim),hi=Math.max(x.start,n,x.aim),pos=v=>Math.round((v-lo)/Math.max(1,hi-lo)*100),sp=pos(x.start),np=pos(n),d=n-x.start,say=d===0?'Not moved from '+x.start+' yet':(d>0?'Up ':'Down ')+Math.abs(d)+' from the start of '+x.start;return `<button class="tp-goal" style="grid-template-columns:minmax(140px,1fr) minmax(200px,1.5fr) 56px;gap:24px" onclick="tpGoal('${pid}',${i})"><span class="tp-gt"><b>${esc(x.t)}</b><em>${say}, aim ${x.aim}</em></span>${goalChart(pid,i,x,n)}</span><span class="tp-gn"><b>${n}</b><small>of ${x.aim}</small></span></button>`;}).join('')}</div>
+      <div class="tp-sec"><div class="tp-h">Goals, in the patient's words <small>start, now, aim. Tap one for its history.</small></div>${g.map((x,i)=>{
+        const n=nowOf(pid,i);
+        if(x.type==='yn'){
+          const last=ratings(pid,i).slice(-1)[0];
+          const badge=last?last.v==='yes'?'<span style="color:#067647;font-weight:700;font-size:15px">✓ Yes</span>':'<span style="color:#b42318;font-weight:700;font-size:15px">✗ No</span>':'<span class="tiny muted">Not rated yet</span>';
+          const hist=ratings(pid,i).length;
+          return `<button class="tp-goal" style="grid-template-columns:1fr auto auto;gap:16px" onclick="tpGoal('${pid}',${i})"><span class="tp-gt"><b>${esc(x.t)}</b><em>Yes / No · ${hist} session${hist===1?'':'s'}</em></span><span style="display:flex;align-items:center;justify-content:center;min-width:80px">${badge}</span><span class="tp-gn"><small>Yes/No</small></span></button>`;
+        }
+        const lo=Math.min(x.start,n,x.aim),hi=Math.max(x.start,n,x.aim),pos=v=>Math.round((v-lo)/Math.max(1,hi-lo)*100),sp=pos(x.start),np=pos(n),d=n-x.start,say=d===0?'Not moved from '+x.start+' yet':(d>0?'Up ':'Down ')+Math.abs(d)+' from the start of '+x.start;
+        return `<button class="tp-goal" style="grid-template-columns:minmax(140px,1fr) minmax(200px,1.5fr) 56px;gap:24px" onclick="tpGoal('${pid}',${i})"><span class="tp-gt"><b>${esc(x.t)}</b><em>${say}, aim ${x.aim}</em></span>${goalChart(pid,i,x,n)}</span><span class="tp-gn"><b>${n}</b><small>of ${x.aim}</small></span></button>`;
+      }).join('')}</div>
       ${rg.length?`<div class="tp-sec"><div class="tp-h">Exposure ladder <small>carried forward every session</small></div>${rg.map(r=>`<div class="tp-rung ${r.m?'done':r.next?'next':''}"><span>${esc(r.l.text)}</span><b>${r.l.suds} / 100</b><em>${r.m?'Done':r.next?'Next step':''}</em></div>`).join('')}</div>`:''}`;
   }
   window.tpGoal=function(pid,i){
     const g=defGoals(pid)[i],r=ratings(pid,i);
-    V3.modal(esc(g.t),'Start '+g.start+', aim '+g.aim,r.length?`<div class="pin-sum">${r.map(x=>`<div class="pin-r"><span>${esc(x.at)}</span><b>${x.v} / 10</b></div>`).join('')}</div>`:'<div class="small muted">No rating yet. It is rated in each signed session note.</div>',`<button class="btn pri" onclick="closeModal()">Close</button>`);
+    const isYn=g.type==='yn';
+    const sub=isYn?'Yes / No goal':'Start '+g.start+', aim '+g.aim;
+    const hist=r.length?(isYn?`<div class="pin-sum">${r.map(x=>`<div class="pin-r"><span>${esc(x.at)}</span><b>${x.v==='yes'?'✓ Yes':'✗ No'}</b></div>`).join('')}</div>`:`<div class="pin-sum">${r.map(x=>`<div class="pin-r"><span>${esc(x.at)}</span><b>${x.v} / 10</b></div>`).join('')}</div>`):'<div class="small muted">No rating yet. It is rated in each signed session note.</div>';
+    V3.modal(esc(g.t),sub,hist,`<button class="btn pri" onclick="closeModal()">Close</button>`);
   };
   /* 21 Nov 2026 (owner): each kind of session has its own list: Individual, Group and Family notes no longer mix */
   const kindOf=n=>n.kind||(n.mod==='Family therapy'?'fam':'ind');
