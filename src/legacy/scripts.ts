@@ -157,4 +157,6 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/156-take-action-popups-21nov-js.js',
   '/legacy/js/157-header-button-order-21nov-js.js',
   '/legacy/js/158-eye-cards-21nov-js.js',
+  '/legacy/js/159-psy-daily-popup-21nov-js.js',
+  '/legacy/js/160-rounds-tab-order-21nov-js.js',
 ];
