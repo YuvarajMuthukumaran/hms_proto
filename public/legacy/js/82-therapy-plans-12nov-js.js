@@ -72,12 +72,28 @@
   };
   /* 21 Nov 2026 (owner): each kind of session has its own list: Individual, Group and Family notes no longer mix */
   const kindOf=n=>n.kind||(n.mod==='Family therapy'?'fam':'ind');
+  /* 21 Nov 2026 (owner): every session list has a header bar like Assessment History: title, a filter, and the main button */
+  const SESS_T={ind:'Individual sessions',fam:'Family sessions',grp:'Group session notes'};
+  const sfv=k=>((S.__sf||{})[k])||'all';
+  window.tpSessF=function(k,v){S.__sf=S.__sf||{};S.__sf[k]=v;render();};
+  function barHtml(title,k,opts,btn){
+    const sel='<select class="input" style="min-height:38px;width:auto;min-width:170px;border-radius:10px" aria-label="Filter" data-k="'+k+'" onchange="tpSessF(this.dataset.k,this.value)">'+opts.map(o=>'<option value="'+esc(o[0])+'"'+(sfv(k)===o[0]?' selected':'')+'>'+esc(o[1])+'</option>').join('')+'</select>';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border:1px solid #e3eaf2;border-radius:14px;background:#fff;padding:12px 18px;margin-bottom:10px"><b style="font-size:15px">'+esc(title)+'</b><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+sel+(btn||'')+'</div></div>';
+  }
+  function sessBar(kind){
+    const btn=kind==='ind'&&!doc()?'<button class="btn pri" onclick="snOpen(S.pid,\'ind\')">+ New session note</button>':kind==='fam'?'<button class="btn pri" onclick="snOpen(S.pid,\'fam\')">+ Start family session</button>':'';
+    return barHtml(SESS_T[kind]||'Sessions',kind,[['all','All sessions'],['signed','Signed'],['draft','Draft'],['risk','Risk raised']],btn);
+  }
+  function attBar(){
+    const btn=!doc()?'<button class="btn pri" onclick="tpAttend(S.pid)">+ Log attendance</button>':'';
+    return barHtml('Attendance log','grpAtt',[['all','All groups']].concat(GROUPS.map(g=>[g[0],g[0]])),btn);
+  }
   function sessions(pid,kind){
     kind=kind||'ind';
-    const notes=(SNO(pid).notes||[]).filter(n=>kindOf(n)===kind),legacy=kind==='ind'?((px(pid).th||{}).ind||[]).filter(r=>!r.struct):[];
+    const fv=sfv(kind),notes=(SNO(pid).notes||[]).filter(n=>kindOf(n)===kind).filter(n=>fv==='all'||(fv==='signed'&&n.status==='signed')||(fv==='draft'&&n.status!=='signed')||(fv==='risk'&&Object.values(n.risk||{}).some(v=>v==='yes'))),legacy=kind==='ind'&&fv==='all'?((px(pid).th||{}).ind||[]).filter(r=>!r.struct):[];
     const rows=notes.map(n=>{const yes=Object.values(n.risk||{}).some(v=>v==='yes');return `<tr><td>${esc((n.at||'').split(',')[0])}</td><td>${esc(n.by)}</td><td>${esc(kind==='fam'?((n.blk||{}).who||n.mod):n.mod)}</td><td>${esc(n.mins||'')}</td><td>${yes?'<span class="chip c-red">Raised</span>':'<span class="chip c-green">None</span>'}</td><td>${n.status==='signed'?'<span class="chip c-green">Signed</span>':'<span class="chip c-amber">Draft</span>'}</td><td><button class="btn sm" onclick="snView('${n.id}')">Open</button></td></tr>`;}).concat(legacy.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.by)}</td><td>${esc(r.modality)}</td><td>${esc(r.mins)}</td><td class="muted">Before the new note</td><td></td><td></td></tr>`)).join('');
     const third=kind==='fam'?'Visitor':kind==='grp'?'Group':'Therapy';
-    return `<div class="scroll"><table><thead><tr><th>Date</th><th>Therapist</th><th>${third}</th><th>Min</th><th>Risk check</th><th></th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="muted">No '+(kind==='fam'?'family':kind==='grp'?'group':'individual')+' session yet.</td></tr>'}</tbody></table></div><div class="tiny muted" style="margin-top:8px">Open shows the locked signed note. Only an addendum can be added.</div>`;
+    return sessBar(kind)+`<div class="scroll"><table><thead><tr><th>Date</th><th>Therapist</th><th>${third}</th><th>Min</th><th>Risk check</th><th></th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="muted">No '+(kind==='fam'?'family':kind==='grp'?'group':'individual')+' session yet.</td></tr>'}</tbody></table></div><div class="tiny muted" style="margin-top:8px">Open shows the locked signed note. Only an addendum can be added.</div>`;
   }
   function hwGrid(pid){
     const items=homework(pid),dys=days7();
@@ -134,8 +150,8 @@
       <div class="tg-grid">${all.map(x=>groupCard(x,mine.concat(th),lab,line,pid)).join('')}</div>
       ${(()=>{/* 19 Nov 2026: every attendance marked on the Group sessions page (or logged here), newest first */
         const L=mine.concat(th);if(!L.length)return '<div class="small muted" style="margin-top:12px">No group attendance marked yet. The psychologist marks it on the Group sessions page.</div>';
-        return `<div class="tp-h" style="margin-top:14px">Attendance log</div><div class="scroll"><table><thead><tr><th>Date</th><th>Group</th><th>Took part</th><th>Marked by</th><th>Note</th></tr></thead><tbody>${L.map(r=>`<tr><td>${esc(r.date||'')}</td><td>${esc(r.group||'')}</td><td>${esc(r.took||'')}</td><td>${esc(r.by||'')}</td><td>${esc(r.note||'')}</td></tr>`).join('')}</tbody></table></div>`;})()}
-      ${(SNO(pid).notes||[]).some(n=>kindOf(n)==='grp')?'<div class="tp-sec" style="margin-top:14px"><div class="tp-h">Group session notes</div>'+sessions(pid,'grp')+'</div>':''}<div class="tiny muted" style="margin-top:10px">Groups are run from the Group sessions page: pick the session, mark who attended, and it shows here.</div>`;
+        return `<div style="margin-top:14px">${attBar()}</div><div class="scroll"><table><thead><tr><th>Date</th><th>Group</th><th>Took part</th><th>Marked by</th><th>Note</th></tr></thead><tbody>${L.filter(r=>sfv('grpAtt')==='all'||r.group===sfv('grpAtt')).map(r=>`<tr><td>${esc(r.date||'')}</td><td>${esc(r.group||'')}</td><td>${esc(r.took||'')}</td><td>${esc(r.by||'')}</td><td>${esc(r.note||'')}</td></tr>`).join('')}</tbody></table></div>`;})()}
+      ${(SNO(pid).notes||[]).some(n=>kindOf(n)==='grp')?'<div class="tp-sec" style="margin-top:14px">'+sessions(pid,'grp')+'</div>':''}<div class="tiny muted" style="margin-top:10px">Groups are run from the Group sessions page: pick the session, mark who attended, and it shows here.</div>`;
   }
   window.tpAttend=function(pid){
     V3.modal('Log attendance · '+esc(pat(pid).name),'One line for this patient.',`<div class="grid2"><label class="field"><span class="lbl">Group</span><select class="input" id="taG">${GROUPS.map(g=>`<option>${g[0]}</option>`).join('')}</select></label><label class="field"><span class="lbl">How he took part</span><select class="input" id="taT"><option>Attended</option><option>Attended in part</option><option>Refused</option></select></label></div><label class="field"><span class="lbl">One line</span><input class="input" id="taN" placeholder="e.g. spoke once, stayed to the end"></label>`,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="tpAttendSave('${pid}')">Save</button>`);
@@ -255,7 +271,7 @@
     return famTrend(pid)+`<div class="tf">
       <section class="tf-c"><div class="tf-h"><div><b>Required contact</b><span>Set at admission, ticks itself when logged</span></div><button class="btn sm" data-p="${esc(pid)}" data-k="all" onclick="tpCalls(this.dataset.p,this.dataset.k)">View all</button></div>${req.map((r,ri)=>'<div class="tf-r"><span>'+r[0]+'</span><span style="display:flex;align-items:center;gap:12px">'+st(r)+(r[1]?'<button class="btn sm" data-p="'+esc(pid)+'" data-k="'+['c24','c34','wk','pre'][ri]+'" onclick="tpCalls(this.dataset.p,this.dataset.k)">View</button>':'')+'</span></div>').join('')}</section>
       ${commCard(pid)}
-</div><div class="tp-sec" style="margin-top:14px"><div class="tp-h">Family sessions</div>${sessions(pid,'fam')}</div>`;
+</div><div class="tp-sec" style="margin-top:14px">${sessions(pid,'fam')}</div>`;
   }
   window.tpTold=(pid,name,v)=>{SNO(pid).told[name]=v;toast('Saved: '+name+' may be told: '+v.toLowerCase());};
   /* 21 Nov 2026 (owner): the family concern box is a pop-up opened from the header button */
@@ -276,7 +292,7 @@
     if(s.seg==='ind'){
       const sub=['progress','sessions'].map(k=>`<button class="tp-t ${s.sub===k?'on':''}" onclick="tpSub('${k}')">${{progress:'Progress',sessions:'Sessions',homework:'Homework'}[k]}</button>`).join('');
       /* 21 Nov 2026 (owner): no Progress/Sessions tabs and no add button on Individual; the sessions table sits below the progress content */
-      inner=`${progress(pid)}<div class="tp-sec"><div class="tp-h">Individual sessions</div>${sessions(pid,'ind')}</div>`;
+      inner=`${progress(pid)}<div class="tp-sec">${sessions(pid,'ind')}</div>`;
     }else inner=s.seg==='grp'?group(pid):family(pid);
     const nb=document.createElement('div');nb.className='tp-body';nb.innerHTML=`<div class="tp-segs">${seg}</div>${inner}`;
     body.replaceWith(nb);
