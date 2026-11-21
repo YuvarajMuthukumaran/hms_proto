@@ -37,8 +37,11 @@
     document.body.appendChild(pop);
     const r=sel.getBoundingClientRect(),z=parseFloat(getComputedStyle(document.body).zoom)||1;
     pop.style.minWidth=Math.max(200,r.width/z)+'px';
-    const top=Math.min(r.bottom/z+4,innerHeight/z-pop.offsetHeight-8);
-    pop.style.top=Math.max(8,top)+'px';pop.style.left=Math.max(8,Math.min(r.left/z,innerWidth/z-pop.offsetWidth-8))+'px';
+    /* 21 Nov: placed after the list is drawn (it was measured empty, so the list ran off the bottom of the screen); opens above when there is no room below */
+    const place=()=>{const H=innerHeight/z,below=H-(r.bottom/z+4)-8,above=r.top/z-4-8;
+      const L=pop.querySelector('.ss-l');L.style.maxHeight=Math.max(120,Math.min(260,Math.max(below,above)-52))+'px';
+      const hh=pop.offsetHeight;const top=(below>=hh||below>=above)?r.bottom/z+4:r.top/z-4-hh;
+      pop.style.top=Math.max(8,Math.min(top,H-hh-8))+'px';pop.style.left=Math.max(8,Math.min(r.left/z,innerWidth/z-pop.offsetWidth-8))+'px';};
     const q=pop.querySelector('input'),list=pop.querySelector('.ss-l');let hi=0,shown=[];
     const draw=()=>{
       const t=q.value.trim().toLowerCase();
@@ -56,7 +59,7 @@
       else if(e.key==='Escape'||e.key==='Tab'){closeSS();try{sel.focus();}catch(x){}}
     });
     list.addEventListener('mousedown',e=>{const b=e.target.closest('.ss-o');if(b){e.preventDefault();pick(+b.dataset.i);}});
-    draw();q.focus();
+    draw();place();q.focus();
   }
   const eligible=sel=>sel&&sel.tagName==='SELECT'&&!sel.disabled&&!sel.multiple&&sel.options.length>=4&&!sel.closest('[data-nosearch]');
   document.addEventListener('mousedown',e=>{
