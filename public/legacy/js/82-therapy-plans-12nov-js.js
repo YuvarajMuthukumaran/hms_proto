@@ -70,10 +70,14 @@
     const g=defGoals(pid)[i],r=ratings(pid,i);
     V3.modal(esc(g.t),'Start '+g.start+', aim '+g.aim,r.length?`<div class="pin-sum">${r.map(x=>`<div class="pin-r"><span>${esc(x.at)}</span><b>${x.v} / 10</b></div>`).join('')}</div>`:'<div class="small muted">No rating yet. It is rated in each signed session note.</div>',`<button class="btn pri" onclick="closeModal()">Close</button>`);
   };
-  function sessions(pid){
-    const notes=SNO(pid).notes||[],legacy=((px(pid).th||{}).ind||[]).filter(r=>!r.struct);
-    const rows=notes.map(n=>{const yes=Object.values(n.risk||{}).some(v=>v==='yes');return `<tr><td>${esc((n.at||'').split(',')[0])}</td><td>${esc(n.by)}</td><td>${esc(n.mod)}</td><td>${esc(n.mins||'')}</td><td>${yes?'<span class="chip c-red">Raised</span>':'<span class="chip c-green">None</span>'}</td><td>${n.status==='signed'?'<span class="chip c-green">Signed</span>':'<span class="chip c-amber">Draft</span>'}</td><td><button class="btn sm" onclick="snView('${n.id}')">Open</button></td></tr>`;}).concat(legacy.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.by)}</td><td>${esc(r.modality)}</td><td>${esc(r.mins)}</td><td class="muted">Before the new note</td><td></td><td></td></tr>`)).join('');
-    return `<div class="scroll"><table><thead><tr><th>Date</th><th>Therapist</th><th>Therapy</th><th>Min</th><th>Risk check</th><th></th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="muted">No session yet.</td></tr>'}</tbody></table></div><div class="tiny muted" style="margin-top:8px">Open shows the locked signed note. Only an addendum can be added.</div>`;
+  /* 21 Nov 2026 (owner): each kind of session has its own list: Individual, Group and Family notes no longer mix */
+  const kindOf=n=>n.kind||(n.mod==='Family therapy'?'fam':'ind');
+  function sessions(pid,kind){
+    kind=kind||'ind';
+    const notes=(SNO(pid).notes||[]).filter(n=>kindOf(n)===kind),legacy=kind==='ind'?((px(pid).th||{}).ind||[]).filter(r=>!r.struct):[];
+    const rows=notes.map(n=>{const yes=Object.values(n.risk||{}).some(v=>v==='yes');return `<tr><td>${esc((n.at||'').split(',')[0])}</td><td>${esc(n.by)}</td><td>${esc(kind==='fam'?((n.blk||{}).who||n.mod):n.mod)}</td><td>${esc(n.mins||'')}</td><td>${yes?'<span class="chip c-red">Raised</span>':'<span class="chip c-green">None</span>'}</td><td>${n.status==='signed'?'<span class="chip c-green">Signed</span>':'<span class="chip c-amber">Draft</span>'}</td><td><button class="btn sm" onclick="snView('${n.id}')">Open</button></td></tr>`;}).concat(legacy.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.by)}</td><td>${esc(r.modality)}</td><td>${esc(r.mins)}</td><td class="muted">Before the new note</td><td></td><td></td></tr>`)).join('');
+    const third=kind==='fam'?'Visitor':kind==='grp'?'Group':'Therapy';
+    return `<div class="scroll"><table><thead><tr><th>Date</th><th>Therapist</th><th>${third}</th><th>Min</th><th>Risk check</th><th></th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="muted">No '+(kind==='fam'?'family':kind==='grp'?'group':'individual')+' session yet.</td></tr>'}</tbody></table></div><div class="tiny muted" style="margin-top:8px">Open shows the locked signed note. Only an addendum can be added.</div>`;
   }
   function hwGrid(pid){
     const items=homework(pid),dys=days7();
@@ -115,7 +119,7 @@
       ${(()=>{/* 19 Nov 2026: every attendance marked on the Group sessions page (or logged here), newest first */
         const L=mine.concat(th);if(!L.length)return '<div class="small muted" style="margin-top:12px">No group attendance marked yet. The psychologist marks it on the Group sessions page.</div>';
         return `<div class="tp-h" style="margin-top:14px">Attendance log</div><div class="scroll"><table><thead><tr><th>Date</th><th>Group</th><th>Took part</th><th>Marked by</th><th>Note</th></tr></thead><tbody>${L.map(r=>`<tr><td>${esc(r.date||'')}</td><td>${esc(r.group||'')}</td><td>${esc(r.took||'')}</td><td>${esc(r.by||'')}</td><td>${esc(r.note||'')}</td></tr>`).join('')}</tbody></table></div>`;})()}
-      <div class="tiny muted" style="margin-top:10px">Groups are run from the Group sessions page: pick the session, mark who attended, and it shows here.</div>`;
+      ${(SNO(pid).notes||[]).some(n=>kindOf(n)==='grp')?'<div class="tp-sec" style="margin-top:14px"><div class="tp-h">Group session notes</div>'+sessions(pid,'grp')+'</div>':''}<div class="tiny muted" style="margin-top:10px">Groups are run from the Group sessions page: pick the session, mark who attended, and it shows here.</div>`;
   }
   window.tpAttend=function(pid){
     V3.modal('Log attendance · '+esc(pat(pid).name),'One line for this patient.',`<div class="grid2"><label class="field"><span class="lbl">Group</span><select class="input" id="taG">${GROUPS.map(g=>`<option>${g[0]}</option>`).join('')}</select></label><label class="field"><span class="lbl">How he took part</span><select class="input" id="taT"><option>Attended</option><option>Attended in part</option><option>Refused</option></select></label></div><label class="field"><span class="lbl">One line</span><input class="input" id="taN" placeholder="e.g. spoke once, stayed to the end"></label>`,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="tpAttendSave('${pid}')">Save</button>`);
@@ -147,7 +151,7 @@
       <section class="tf-c"><div class="tf-h"><div><b>Required contact</b><span>Set at admission, ticks itself when logged</span></div></div>${req.map(r=>'<div class="tf-r"><span>'+r[0]+'</span>'+st(r)+'</div>').join('')}</section>
       <section class="tf-c"><div class="tf-h"><div><b>Calls and WhatsApp</b><span>Through the Tulasi number</span></div></div>${comm.length?comm.map(c=>'<div class="tf-r"><span>'+esc(c.type)+' · '+esc(c.who)+'</span><span class="tf-d">'+esc(c.date)+'</span></div>').join(''):'<div class="tf-e">No contact logged yet.</div>'}</section>
       <section class="tf-c"><div class="tf-h"><div><b>Who may be told what</b><span>Family members and what each may hear</span></div></div>${contacts.map(c=>'<div class="tf-r"><span><b>'+esc(c[0])+'</b> <small>'+esc(String(c[1]).split(' · ')[0])+'</small></span><select class="input" style="max-width:190px;min-height:34px" onchange="tpTold(\''+pid+'\',\''+esc(c[0]).replace(/'/g,'')+'\',this.value)">'+['Everything','Clinical updates only','Billing only','Nothing'].map(o=>'<option '+((told[c[0]]||(/Not for now/.test(c[2]||'')?'Nothing':'Everything'))===o?'selected':'')+'>'+o+'</option>').join('')+'</select></div>').join('')||'<div class="tf-e">No family contacts yet.</div>'}</section>
-      <section class="tf-c"><div class="tf-h"><div><b>Family concern</b><span>Goes to the Patient Experience team</span></div></div><div style="padding:12px 16px 16px"><textarea class="input" id="tpConc" rows="3" placeholder="What the family said"></textarea><button class="btn sm pri" style="margin-top:8px" onclick="tpGriev('${pid}')">Raise a grievance</button></div></section></div>`;
+      <section class="tf-c"><div class="tf-h"><div><b>Family concern</b><span>Goes to the Patient Experience team</span></div></div><div style="padding:12px 16px 16px"><textarea class="input" id="tpConc" rows="3" placeholder="What the family said"></textarea><button class="btn sm pri" style="margin-top:8px" onclick="tpGriev('${pid}')">Raise a grievance</button></div></section></div><div class="tp-sec" style="margin-top:14px"><div class="tp-h">Family sessions</div>${sessions(pid,'fam')}</div>`;
   }
   window.tpTold=(pid,name,v)=>{SNO(pid).told[name]=v;toast('Saved: '+name+' may be told: '+v.toLowerCase());};
   window.tpGriev=function(pid){const t=(($('tpConc')||{}).value||'').trim();if(!t){toast('Write the concern first');return;}S.pgriev=S.pgriev||[];S.pgriev.unshift({from:'Family',t:t.slice(0,90),via:'Family session',own:'Patient experience team',st:'Open',sla:'6 h left',src:'family',cat:'Psychologist',...whoAt()});render();toast('Grievance raised for the patient experience team');};
@@ -166,7 +170,7 @@
     if(s.seg==='ind'){
       const sub=['progress','sessions'].map(k=>`<button class="tp-t ${s.sub===k?'on':''}" onclick="tpSub('${k}')">${{progress:'Progress',sessions:'Sessions',homework:'Homework'}[k]}</button>`).join('');
       /* 21 Nov 2026 (owner): no Progress/Sessions tabs and no add button on Individual; the sessions table sits below the progress content */
-      inner=`${progress(pid)}<div class="tp-sec"><div class="tp-h">Sessions</div>${sessions(pid)}</div>`;
+      inner=`${progress(pid)}<div class="tp-sec"><div class="tp-h">Individual sessions</div>${sessions(pid,'ind')}</div>`;
     }else inner=s.seg==='grp'?group(pid):family(pid);
     const nb=document.createElement('div');nb.className='tp-body';nb.innerHTML=`<div class="tp-segs">${seg}</div>${inner}`;
     body.replaceWith(nb);
