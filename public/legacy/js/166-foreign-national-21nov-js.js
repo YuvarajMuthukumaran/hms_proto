@@ -40,14 +40,13 @@
     const exp=(k,what)=>{const d=toD(r[k]);if(!d)return;const n=Math.round((d-day0())/864e5);
       if(n<0)L.push(['bad',what+' expired on '+fmt(r[k])]);else if(n<=30)L.push(['warn',what+' ends in '+n+(n===1?' day':' days')+', on '+fmt(r[k])]);};
     exp('visaExp','Visa');exp('ppExp','Passport');
-    if(!r.visaExp&&r.f2!==NOVISA)L.push(['warn','Visa end date not recorded']);
-    if(r.f3!=='Yes')L.push(['warn','FRRO C-form not submitted yet']);
-    if(r.f4!=='Done')L.push(['warn','Separate admission form (Chandraji) pending']);
+    if(r.f2&&!r.visaExp&&r.f2!==NOVISA)L.push(['warn','Visa end date not recorded']);
+    if(r.f3&&r.f3!=='Yes'&&r.f3!=='Done')L.push(['warn','FRRO C-form not submitted yet']);
     L.sort((a,b)=>(a[0]==='bad'?0:1)-(b[0]==='bad'?0:1));
-    return L.length?L:[['ok','Visa, FRRO C-form and admission form are in order']];
+    return L;
   }
   const ICON={bad:'<path d="M18 6 6 18M6 6l12 12"/>',warn:'<path d="M12 8v5M12 16.5h.01"/><circle cx="12" cy="12" r="9"/>',ok:'<path d="m5 12.5 4.5 4.5L19 7.5"/>'};
-  const flagHtml=r=>`<div class="fn-flags">${flags(r).map(([t,s])=>`<div class="fn-flag ${t}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[t]}</svg><span>${E(s)}</span></div>`).join('')}</div>`;
+  const flagHtml=r=>{const fl=flags(r);return fl.length?`<div class="fn-flags">${fl.map(([t,s])=>`<div class="fn-flag ${t}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[t]}</svg><span>${E(s)}</span></div>`).join('')}</div>`:'';};
 
   /* the questions, used by the Fill form card and by the pop-up */
   function sel(r,k,l,opts){const v=r[k]||'',o=(v&&opts.indexOf(v)<0)?[v].concat(opts):opts;
