@@ -52,9 +52,17 @@
     box.after(vb);vb.after(ob);
     const m=document.querySelector('.modal');if(m)m.style.width='min(760px,100%)';
   }
+  /* 21 Nov 2026 (meeting): every pop-up also offers the redirect, "Open full record" */
+  function redirectBtn(pid){
+    const mf=document.querySelector('.modal .mf');if(!mf||mf.querySelector('.rp-full'))return;
+    const b=document.createElement('button');b.type='button';b.className='btn rp-full';b.style.marginRight='auto';b.textContent='Open full record';
+    b.setAttribute('onclick',"closeModal();go('#/patient/"+String(pid).replace(/'/g,'')+"/overview')");
+    mf.insertBefore(b,mf.firstChild);
+  }
   const __pop=window.psyEyePop;
   window.psyEyePop=function(pid,idx,mode){
     const r=__pop.apply(this,arguments);
+    try{redirectBtn(pid);}catch(e){}
     try{
       if(mode==='review'){treatment(pid);return r;}
       if(mode!=='round')return r;

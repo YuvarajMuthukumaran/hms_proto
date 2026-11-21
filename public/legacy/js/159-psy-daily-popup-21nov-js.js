@@ -31,6 +31,7 @@
     V3.modal('Daily note · '+hesc(nm(pid)),'Today’s note for this patient only. You stay on the dashboard.',`<div id="pdnBody">${body(pid)}</div>`,
       `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="psyPopNoteSave('${pid}')">Save note</button>`);
     const m=document.querySelector('.modal');if(m)m.classList.add('pcd-wide2');
+    try{const mf=document.querySelector('.modal .mf');if(mf&&!mf.querySelector('.rp-full')){const b=document.createElement('button');b.type='button';b.className='btn rp-full';b.style.marginRight='auto';b.textContent='Open full record';b.setAttribute('onclick',"closeModal();go('#/patient/"+String(pid).replace(/'/g,'')+"/daily')");mf.insertBefore(b,mf.firstChild);}}catch(e){}
   };
   window.psyPopNoteSave=function(pid){
     S.eod=S.eod||{};S.eod[pid]=S.eod[pid]||{};const e=S.eod[pid];e.saved=true;
