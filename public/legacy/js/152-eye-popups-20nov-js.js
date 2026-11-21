@@ -42,7 +42,7 @@
 
   window.psyEyePop=function(pid,idx,mode){
     let p={};try{p=ptFind(pid)||{};}catch(e){}
-    const items=idx>=0?(ST.pid===pid?ST.cards[idx]||[]:[]):[];
+    const items=Array.isArray(idx)?idx:idx>=0?(ST.pid===pid?ST.cards[idx]||[]:[]):[];
     ST.cur={pid,items,mode};
     const list=items.length?`<div class="pd-det" style="margin-bottom:10px">${items.map(i=>`<div class="pd-di"><div class="pd-dh"><span class="pd-chip ${i.lab[0]}">${E(i.lab[1])}</span></div><div class="pd-dt">${E(i.txt)}</div></div>`).join('')}</div>`:'';
     const isR=mode==='round';
