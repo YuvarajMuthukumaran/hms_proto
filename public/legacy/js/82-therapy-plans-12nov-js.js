@@ -86,6 +86,23 @@
   window.tpWhy=(pid,id,v)=>{SNO(pid).hwWhy[id]=v;};
   window.tpHw=function(pid,id,v){const h=SNO(pid).hwLog;h[id]=h[id]||{};h[id][iso(new Date())]=v;render();toast('Homework logged by '+signer()+': '+v);};
 
+  /* 21 Nov 2026: group card as a small chart: five sessions oldest to newest with dates, attendance rate, last and next session */
+  const WD={sunday:0,monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6};
+  function groupCard(x,L,lab,line){
+    const name=x.g[0],recs=L.filter(r=>(r.group||'')===name).slice(0,5),wd=WD[String(x.g[1]).split(' ')[0].toLowerCase()];
+    const fm=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}),fl=d=>d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    const t=new Date();t.setHours(0,0,0,0);let last=new Date(t);while(wd!==undefined&&last.getDay()!==wd)last=new Date(last.getTime()-D1);
+    const dateOf=k=>{const r=recs[k];if(r&&r.date)return String(r.date).replace(/ d{4}$/,'');return fm(new Date(last.getTime()-k*7*D1));};
+    const next=new Date(last.getTime()+7*D1);
+    const n=x.st.filter(c=>c==='a').length,pct=Math.round(n/x.st.length*100),col={a:'#16a34a',p:'#f59e0b',x:'#dc2626'},ht={a:'100%',p:'55%',x:'18%'};
+    const cols=x.st.map((c,k)=>({c,k})).reverse().map(({c,k},i)=>'<div title="'+dateOf(k)+': '+lab[c]+'" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0"><div style="height:64px;width:100%;display:flex;align-items:flex-end"><i style="display:block;width:100%;height:'+ht[c]+';border-radius:7px 7px 0 0;background:'+col[c]+';opacity:'+(k===0?1:.85)+';transform-origin:bottom;animation:tgbar .6s ease both;animation-delay:'+(i*70)+'ms"></i></div><span style="font-size:11px;color:#475467;font-weight:'+(k===0?700:500)+'">'+dateOf(k)+'</span><span style="font-size:10.5px;color:'+col[c]+';font-weight:600">'+({a:'Came',p:'Part',x:'Refused'})[c]+'</span></div>').join('');
+    return '<article class="tg-c"><div class="tg-h"><div><b>'+name+'</b><span>Led by '+x.g[2]+'</span></div><span class="tg-when">'+x.g[1]+'</span></div>'
+      +'<div style="display:flex;align-items:baseline;gap:10px;margin:10px 0 4px"><span style="font-size:28px;font-weight:800;line-height:1">'+n+'<small style="font-size:14px;font-weight:600;color:#667085"> of '+x.st.length+'</small></span><span class="chip '+(pct>=70?'c-green':pct>=40?'c-amber':'c-red')+'">'+pct+'% attended</span></div>'
+      +'<div role="img" aria-label="Last '+x.st.length+' sessions, oldest to newest: '+x.st.slice().reverse().map(c=>lab[c]).join(', ')+'" style="display:flex;gap:8px;border-bottom:1px solid #cbd5e1;padding-bottom:6px">'+cols+'</div>'
+      +'<style>@keyframes tgbar{from{transform:scaleY(0)}to{transform:scaleY(1)}}@media(prefers-reduced-motion:reduce){.tg-c i{animation:none!important}}</style>'
+      +'<div style="display:flex;justify-content:space-between;gap:10px;margin-top:10px;font-size:12px;color:#475467"><span>Last session <b style="color:#101828">'+fl(last)+'</b></span><span>Next <b style="color:#101828">'+fl(next)+'</b></span></div>'
+      +'<blockquote class="tg-q">'+esc(line(name))+'</blockquote></article>';
+  }
   function group(pid){
     const th=(px(pid).th||{}).grp||[],mine=SNO(pid).grp;
     const hash=[...pid].reduce((a,c)=>a+c.charCodeAt(0),0);
@@ -94,9 +111,7 @@
     const all=GROUPS.map(g=>({g,st:strip(g[0])})),att=all.reduce((n,x)=>n+x.st.filter(c=>c==='a').length,0),tot=all.length*5;
     const lab={a:'Attended',p:'Part of it',x:'Refused'};
     return `<div class="tg-top"><div class="tg-sum"><b>${att} of ${tot}</b> recent sessions attended across ${all.length} groups</div><div class="tg-key"><span><i class="a"></i>Attended</span><span><i class="p"></i>Part of it</span><span><i class="x"></i>Refused</span></div></div>
-      <div class="tg-grid">${all.map(x=>{const n=x.st.filter(c=>c==='a').length;return `<article class="tg-c"><div class="tg-h"><div><b>${x.g[0]}</b><span>Led by ${x.g[2]}</span></div><span class="tg-when">${x.g[1]}</span></div>
-        <div class="tg-att"><div class="tg-pips" role="img" aria-label="Last 5 sessions: ${x.st.map(c=>lab[c]).join(', ')}" style="display:flex;align-items:flex-end;gap:8px;height:56px;flex:1;max-width:220px;border-bottom:1px solid #cbd5e1">${x.st.map((c,i)=>'<i title="Session '+(i+1)+' of the last 5: '+lab[c]+'" style="flex:1;display:block;border-radius:6px 6px 0 0;background:'+{a:'#16a34a',p:'#f59e0b',x:'#dc2626'}[c]+';height:'+{a:'100%',p:'55%',x:'18%'}[c]+';min-width:0;width:auto;transform-origin:bottom;animation:tgbar .6s ease both;animation-delay:'+(i*70)+'ms"></i>').join('')}</div><style>@keyframes tgbar{from{transform:scaleY(0)}to{transform:scaleY(1)}}@media(prefers-reduced-motion:reduce){.tg-pips i{animation:none!important}}</style><span class="tg-n"><b>${n}</b> of 5</span></div>
-        <blockquote class="tg-q">${esc(line(x.g[0]))}</blockquote></article>`;}).join('')}</div>
+      <div class="tg-grid">${all.map(x=>groupCard(x,mine.concat(th),lab,line)).join('')}</div>
       ${(()=>{/* 19 Nov 2026: every attendance marked on the Group sessions page (or logged here), newest first */
         const L=mine.concat(th);if(!L.length)return '<div class="small muted" style="margin-top:12px">No group attendance marked yet. The psychologist marks it on the Group sessions page.</div>';
         return `<div class="tp-h" style="margin-top:14px">Attendance log</div><div class="scroll"><table><thead><tr><th>Date</th><th>Group</th><th>Took part</th><th>Marked by</th><th>Note</th></tr></thead><tbody>${L.map(r=>`<tr><td>${esc(r.date||'')}</td><td>${esc(r.group||'')}</td><td>${esc(r.took||'')}</td><td>${esc(r.by||'')}</td><td>${esc(r.note||'')}</td></tr>`).join('')}</tbody></table></div>`;})()}
