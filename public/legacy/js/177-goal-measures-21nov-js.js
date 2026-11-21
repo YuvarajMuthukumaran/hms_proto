@@ -95,19 +95,29 @@
     const rows=L.slice().reverse().map(r=>'<div class="pin-r"><span>'+E(r.at)+'</span><b style="color:'+(met(g,r.v)?'#067647':'#b45309')+'">'+E(fmt(g,r.v))+(met(g,r.v)?' · aim met':'')+'</b></div>').join('');
     const body='<div class="small" style="margin-bottom:8px"><b>How it is measured:</b> '+E(howText(g))+'<br><b>How it is logged:</b> in every signed session note<br><b>'+E(aimText(g))+'</b></div>'
       +(L.length?'<div style="margin:10px 0 14px">'+strip(g,L,true)+'</div><div class="pin-sum">'+rows+'</div>':'<div class="small muted">Nothing logged yet. It is rated in each signed session note.</div>');
-    V3.modal(E(g.t),E(TYPES[g.type]||'Goal'),body,'<button class="btn pri" onclick="closeModal()">Close</button>');
+    const old=(g.old||[]).map(o=>'<div class="small muted" style="margin-top:10px"><b>Earlier, measured as '+E(o.how)+':</b> '+(o.rows.length?o.rows.map(r=>E(r.at+' '+r.txt)).join(', '):'nothing logged')+'</div>').join('');
+    const canEdit=/^(psychologist|floor-lead-psychologist)$/.test(String((window.__TULASI__||{}).role||''));
+    const chg=canEdit?'<button class="btn" onclick="tpGoalNew(\''+String(pid).replace(/'/g,"\\'")+'\','+i+')">Change how it is measured</button>':'';
+    V3.modal(E(g.t),E(TYPES[g.type]||'Goal'),body+old,chg+'<button class="btn pri" onclick="closeModal()">Close</button>');
   };
   /* session note: free number */
   /* ---------- set a goal: goal, how to measure, how it is logged, how it is shown ---------- */
   const val=id=>((document.getElementById(id)||{}).value||'');
-  window.tpGoalNew=function(pid){
+  window.tpGoalNew=function(pid,idx){
+    const editing=idx!==undefined&&idx!==null&&idx!=='';
     const body='<div class="field"><span class="lbl">1 · The goal, in the patient\'s words</span><input class="input" id="gm_t" placeholder="e.g. Take a bath every day"></div>'
       +'<div class="field"><span class="lbl">2 · How will you measure it?</span><select class="input" id="gm_type" onchange="gmType()">'
       +'<option value="yn">Yes / No (done or not done)</option><option value="scale">0 to 10 scale (how much)</option><option value="choice">My own options (levels I choose)</option><option value="num">A number (hours, times, minutes)</option></select></div>'
       +'<div id="gm_f"></div>'
       +'<div class="callout grey small" id="gm_prev" style="margin-top:8px"></div>';
-    V3.modal('Set a goal · '+E(V3.pn(pid)),'Choose how it will be scored, so every session rates it the same way.',body,
-      '<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="tpGoalSave(\''+pid+'\')">Add goal</button>');
+    V3.modal((editing?'Change how it is measured · ':'Set a goal · ')+E(V3.pn(pid)),editing?'Earlier ratings that do not fit the new measure are kept as history on the goal.':'Choose how it will be scored, so every session rates it the same way.',body,
+      '<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="tpGoalSave(\''+pid+'\''+(editing?','+idx:'')+')">'+(editing?'Save':'Add goal')+'</button>');
+    if(editing){const g0=((psyPx(pid).sn||{}).goals||[])[idx]||{};const set=(id,v)=>{const e=document.getElementById(id);if(e&&v!==undefined)e.value=v;};
+      set('gm_t',g0.t);set('gm_type',g0.type||(g0.start!==undefined?'scale':'yn'));window.gmType();
+      if(g0.type==='scale'||!g0.type){set('gm_s',g0.start);set('gm_a',g0.aim);}
+      if(g0.type==='choice'){set('gm_o',(g0.opts||[]).join(', '));window.gmOpts();set('gm_ao',g0.aimOpt);}
+      if(g0.type==='num'){set('gm_u',g0.unit);set('gm_d',g0.dir);set('gm_a',g0.aim);}
+      window.gmPrev();return;}
     window.gmType();
   };
   window.gmType=function(){
@@ -135,16 +145,27 @@
     const p=document.getElementById('gm_prev');if(!p)return;const g=draft();
     p.innerHTML='<b>3 · How it is logged:</b> '+E(howText(g))+', in every signed session note.<br><b>4 · How it is shown:</b> one bar per session, green when the aim is met ('+E(aimText(g))+').';
   };
-  window.tpGoalSave=function(pid){
+  window.tpGoalSave=function(pid,idx){
+    const editing=idx!==undefined&&idx!==null&&idx!=='';
     const g=draft();
     if(!g.t){toast('Write the goal first');return;}
     if(g.type==='scale'&&!(g.start>=0&&g.start<=10&&g.aim>=0&&g.aim<=10)){toast('Start and aim are numbers from 0 to 10');return;}
     if(g.type==='choice'&&g.opts.length<2){toast('Write at least two options, separated by commas');return;}
     if(g.type==='num'&&!isNum(g.aim)){toast('Write the number that counts as met');return;}
     const x=psyPx(pid);x.sn=x.sn||{ladder:[],notes:[],goals:null,relapse:null,ybocs:'',planned:8,hwLog:{},hwWhy:{},told:{},grp:[]};
-    x.sn.goals=x.sn.goals||[];x.sn.goals.push(g);
+    x.sn.goals=x.sn.goals||[];
+    if(editing){
+      const o=x.sn.goals[idx];if(!o)return;
+      const oldType=o.type||(o.start!==undefined?'scale':'yn');
+      if(oldType!==g.type){
+        const rows=[];((x.sn.notes||[]).filter(n=>n&&n.status==='signed').slice().reverse()).forEach(n=>{const v=(n.goalR||{})[idx];if(v!==undefined&&v!==''&&v!==null){rows.push({at:n.at,txt:fmt(o,v)});}});
+        (x.sn.notes||[]).forEach(n=>{if(n&&n.goalR&&n.goalR[idx]!==undefined)delete n.goalR[idx];});
+        g.old=(o.old||[]).concat([{how:howText(Object.assign({},o,{type:oldType})),rows}]);
+      }else if(o.old)g.old=o.old;
+      x.sn.goals[idx]=g;
+    }else x.sn.goals.push(g);
     if(typeof window.tpPlanChanged==='function')window.tpPlanChanged(pid);
-    closeModal();render();toast('Goal added');
+    closeModal();render();toast(editing?'Goal updated':'Goal added');
   };
   /* the old one-line form from 134 becomes one button */
   function swapForm(){
