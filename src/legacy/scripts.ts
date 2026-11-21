@@ -161,4 +161,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/160-rounds-tab-order-21nov-js.js',
   '/legacy/js/161-mect-questions-21nov-js.js',
   '/legacy/js/162-rounds-popup-21nov-js.js',
+  '/legacy/js/163-doctor-form-sign-21nov-js.js',
 ];
