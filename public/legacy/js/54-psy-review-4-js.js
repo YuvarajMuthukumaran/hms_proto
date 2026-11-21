@@ -16,9 +16,38 @@
   const css=document.createElement('style');css.id='psy-review-4-css';
   css.textContent=`
   /* vitals and monitoring */
-  .vm9-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;padding:12px 16px;background:#f8fafc;border:1px solid var(--line,#e4e7ec);border-radius:12px;margin-bottom:14px}
-  .vm9-bar label{display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#667085}
-  .vm9-bar input,.vm9-bar select{min-height:34px;padding:3px 10px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500}
+  /* ── FilterToolbar aesthetic (vm9-bar) ─────────────────────────── */
+  .vm9-bar, #psyTxPanel-1 .vm9-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:8px 12px;background:#fff;border:1px solid #e4e7ec;border-radius:12px;margin-bottom:14px;box-shadow:0 1px 3px rgba(16,24,40,.04)}
+  .vm9-group{display:inline-flex;align-items:center;gap:6px}
+  .vm9-label-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#f8fafc;color:#667085}
+  /* Preset segmented pill */
+  .vm9-presets{display:inline-flex;border:1px solid #d0d5dd;border-radius:99px;overflow:hidden;background:#fcfcfd;height:32px}
+  .vm9-pbtn{border:none;background:transparent;padding:0 11px;font-size:12px;font-weight:600;color:#475467;cursor:pointer;transition:all .15s ease;white-space:nowrap;height:100%}
+  .vm9-pbtn:not(:last-child){border-right:1px solid #eaecf0}
+  .vm9-pbtn:hover{background:#f2f4f7;color:#1d2939}
+  .vm9-pbtn.on{background:#eff8ff;color:#175cd3;font-weight:700}
+  /* Date chip pill */
+  .vm9-chip{display:inline-flex;align-items:center;border:1px solid #d0d5dd;border-radius:99px;background:#fff;height:32px;transition:border-color .15s ease,box-shadow .15s ease,background-color .15s ease}
+  .vm9-chip:hover{border-color:#98a2b3}
+  .vm9-chip.has-val{border-color:#84caff;background:#f5faff}
+  .vm9-chip:focus-within{border-color:#2e90fa;box-shadow:0 0 0 3px rgba(46,144,250,.15)}
+  .vm9-cl{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#475467;padding:0 8px 0 12px;white-space:nowrap;user-select:none;pointer-events:none}
+  .vm9-chip.has-val .vm9-cl{color:#175cd3}
+  .vm9-chip input[type=date]{border:none;outline:none;background:transparent;font-size:12.5px;font-weight:600;color:#101828;padding:0 8px 0 0;height:100%;min-width:116px;cursor:pointer}
+  .vm9-cx{display:none;align-items:center;justify-content:center;width:20px;height:20px;margin-right:6px;border-radius:50%;border:none;background:#e0f2fe;color:#026aa2;cursor:pointer;font-size:11px;line-height:1;padding:0;transition:background .12s ease}
+  .vm9-cx:hover{background:#b9e6fe;color:#0e7090}
+  .vm9-chip.has-val .vm9-cx{display:inline-flex}
+  /* Sort segmented pill */
+  .vm9-seg{display:inline-flex;border:1px solid #d0d5dd;border-radius:99px;overflow:hidden;height:32px;background:#fcfcfd}
+  .vm9-seg button{border:none;background:transparent;padding:0 12px;font-size:12px;font-weight:600;color:#475467;cursor:pointer;transition:all .15s ease;white-space:nowrap;height:100%}
+  .vm9-seg button:first-child{border-right:1px solid #eaecf0}
+  .vm9-seg button:hover{background:#f2f4f7;color:#1d2939}
+  .vm9-seg button.on{background:#eff8ff;color:#175cd3;font-weight:700}
+  /* Clear-all pill */
+  .vm9-clear{display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 12px;border-radius:99px;border:1px solid #fda29b;background:#fffbfa;color:#b42318;font-size:12px;font-weight:600;cursor:pointer;transition:all .12s ease}
+  .vm9-clear:hover{background:#fee4e2}
+  /* Hint */
+  .vm9-hint{margin-left:auto;font-size:11.5px;color:#667085;white-space:nowrap;display:inline-flex;align-items:center}
   .vm9{background:#fff;border:1px solid var(--line,#e4e7ec);border-radius:14px;margin-bottom:14px;overflow:hidden}
   .vm9>.hd{padding:12px 16px;border-bottom:1px solid var(--line-2,#eaecf0);display:flex;align-items:baseline;gap:10px}
   .vm9>.hd h3{margin:0;font-size:15px}
@@ -77,6 +106,21 @@
   const isoOf=txt=>{const d=new Date(String(txt).trim()+' 2026');return isNaN(d)?null:d;};
   window.psyVmSet=function(k,v){S.vm=S.vm||{};S.vm[k]=v;render();};
   window.psyVmClear=function(){S.vm={};render();};
+  window.psyVmPreset=function(type){
+    S.vm=S.vm||{};
+    const now=new Date();
+    const pad=n=>String(n).padStart(2,'0');
+    const toIso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+    if(type==='all'){
+      delete S.vm.from;delete S.vm.to;
+    }else if(type==='today'){
+      S.vm.from=toIso(now);S.vm.to=toIso(now);
+    }else if(type==='7d'){
+      const past=new Date(now.getTime()-6*86400000);
+      S.vm.from=toIso(past);S.vm.to=toIso(now);
+    }
+    render();
+  };
   const inRange=(d)=>{const vm=S.vm||{};if(!d)return true;if(vm.from&&d<new Date(vm.from+'T00:00:00'))return false;if(vm.to&&d>new Date(vm.to+'T23:59:59'))return false;return true;};
   const bump=(val,k,seed)=>{
     const m=String(val).match(/^(\d+)\/(\d+)$/);const dl=(hash(seed+k)%5)-2;
@@ -123,9 +167,49 @@
     }
     const on=find('Ongoing monitoring');if(on){const h=on.querySelector('h3,h4,.lbl');if(h)h.textContent='Other monitoring';}
     const vm=S.vm||{};
-    const bar=`<div class="vm9-bar" role="group" aria-label="Filter and sort"><label>From<input class="input" type="date" value="${hesc(vm.from||'')}" onchange="psyVmSet('from',this.value)"></label><label>To<input class="input" type="date" value="${hesc(vm.to||'')}" onchange="psyVmSet('to',this.value)"></label>
-      <label>Sort<select class="input" onchange="psyVmSet('sort',this.value)"><option value="new" ${vm.sort!=='old'?'selected':''}>Newest first</option><option value="old" ${vm.sort==='old'?'selected':''}>Oldest first</option></select></label>
-      ${vm.from||vm.to||vm.sort?'<button class="btn sm" onclick="psyVmClear()">Clear</button>':''}<span class="tiny muted" style="margin-left:auto">Applies to every table below. Scroll sideways inside a table to see more.</span></div>`;
+    const pad=n=>String(n).padStart(2,'0');
+    const toIso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+    const todayIso=toIso(new Date());
+    const d7Iso=toIso(new Date(Date.now()-6*86400000));
+    const isToday=vm.from===todayIso&&vm.to===todayIso;
+    const is7d=vm.from===d7Iso&&vm.to===todayIso;
+    const isAll=!vm.from&&!vm.to;
+
+    const bar=`<div class="vm9-bar" role="toolbar" aria-label="Filter and sort vitals">
+      <div class="vm9-group">
+        <span class="vm9-label-icon" title="Filter vitals and monitoring">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+        </span>
+        <div class="vm9-presets" role="group" aria-label="Date presets">
+          <button type="button" class="vm9-pbtn ${isAll?'on':''}" onclick="psyVmPreset('all')">All dates</button>
+          <button type="button" class="vm9-pbtn ${isToday?'on':''}" onclick="psyVmPreset('today')">Today</button>
+          <button type="button" class="vm9-pbtn ${is7d?'on':''}" onclick="psyVmPreset('7d')">Last 7d</button>
+        </div>
+      </div>
+      <div class="vm9-group">
+        <span class="vm9-chip${vm.from?' has-val':''}">
+          <span class="vm9-cl">From</span>
+          <input type="date" value="${hesc(vm.from||'')}" aria-label="From date" onchange="psyVmSet('from',this.value)">
+          <button type="button" class="vm9-cx" title="Clear from date" onclick="psyVmSet('from','')">&#x2715;</button>
+        </span>
+        <span class="vm9-chip${vm.to?' has-val':''}">
+          <span class="vm9-cl">To</span>
+          <input type="date" value="${hesc(vm.to||'')}" aria-label="To date" onchange="psyVmSet('to',this.value)">
+          <button type="button" class="vm9-cx" title="Clear to date" onclick="psyVmSet('to','')">&#x2715;</button>
+        </span>
+      </div>
+      <div class="vm9-group">
+        <span class="vm9-seg" role="group" aria-label="Sort order">
+          <button type="button" class="${vm.sort!=='old'?'on':''}" onclick="psyVmSet('sort','new')" title="Newest first">Newest first</button>
+          <button type="button" class="${vm.sort==='old'?'on':''}" onclick="psyVmSet('sort','old')" title="Oldest first">Oldest first</button>
+        </span>
+        ${(vm.from||vm.to)?`<button type="button" class="vm9-clear" onclick="psyVmClear()" title="Clear all date filters">&#x2715; Clear</button>`:''}
+      </div>
+      <span class="vm9-hint">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-1px;margin-right:3px"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        Applies to every table below · Scroll sideways inside a table to see more
+      </span>
+    </div>`;
     if(vt)vt.remove();
     const first=body.firstElementChild;
     const h=tpl(bar+tables).content;
