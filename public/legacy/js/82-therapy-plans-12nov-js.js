@@ -91,15 +91,31 @@
   window.tpHw=function(pid,id,v){const h=SNO(pid).hwLog;h[id]=h[id]||{};h[id][iso(new Date())]=v;render();toast('Homework logged by '+signer()+': '+v);};
 
   /* 21 Nov 2026: group card as a small chart: five sessions oldest to newest with dates, attendance rate, last and next session */
+  /* 21 Nov 2026: who attended and who did not, per session, read from every patient's group record (written by the Group sessions page) */
+  const dKey=d=>String(d||'').split(' ').slice(0,2).join(' ');
+  const tookC=t=>/Refus|not attend/i.test(t||'')?'x':/part/i.test(t||'')?'p':'a';
+  function roster(group,dk){
+    const out={a:[],p:[],x:[]};let L=[];try{L=allPts()||[];}catch(e){}
+    L.forEach(p=>{try{const g=(SNO(p.id).grp||[]).find(r=>r.group===group&&dKey(r.date)===dk);if(g)out[tookC(g.took)].push({n:p.name,l:g.note||'',t:g.took});}catch(e){}});
+    return out;
+  }
+  window.tpGrpSession=function(pid,group,dk,c){
+    const ro=roster(group,dk),tot=ro.a.length+ro.p.length+ro.x.length;
+    const sec=(t,col,arr,empty)=>'<div style="margin-top:12px"><div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px"><i style="width:10px;height:10px;border-radius:3px;background:'+col+'"></i>'+t+' <span style="color:#667085;font-weight:600">'+arr.length+'</span></div>'+(arr.length?arr.map(r=>'<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0 6px 18px;border-top:1px solid #eef2f6;font-size:13px"><span><b style="font-weight:600">'+esc(r.n)+'</b>'+(r.t&&!/^Attended$/.test(r.t)?' <small style="color:#667085">'+esc(r.t)+'</small>':'')+'</span><span style="color:#667085;text-align:right">'+esc(r.l)+'</span></div>').join(''):'<div style="padding:4px 0 0 18px;font-size:12.5px;color:#98a2b3">'+empty+'</div>')+'</div>';
+    const me=pat(pid).name,lbl={a:'Attended',p:'Attended in part',x:'Refused or did not attend'}[c];
+    const body=tot?sec('Attended','#16a34a',ro.a,'Nobody marked as attended.')+sec('Part of it','#f59e0b',ro.p,'Nobody.')+sec('Refused or did not attend','#dc2626',ro.x,'Nobody.')
+      :'<div style="font-size:13.5px"><b>'+esc(me)+'</b>: '+lbl+'</div><div class="small muted" style="margin-top:8px">The full list of who came appears here once this session is marked on the Group sessions page.</div>';
+    V3.modal(esc(group),esc(dk)+(tot?' · '+ro.a.length+' of '+tot+' attended':''),body,'<button class="btn pri" onclick="closeModal()">Close</button>');
+  };
   const WD={sunday:0,monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6};
-  function groupCard(x,L,lab,line){
+  function groupCard(x,L,lab,line,pid){
     const name=x.g[0],recs=L.filter(r=>(r.group||'')===name).slice(0,5),wd=WD[String(x.g[1]).split(' ')[0].toLowerCase()];
     const fm=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}),fl=d=>d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
     const t=new Date();t.setHours(0,0,0,0);let last=new Date(t);while(wd!==undefined&&last.getDay()!==wd)last=new Date(last.getTime()-D1);
     const dateOf=k=>{const r=recs[k];if(r&&r.date)return String(r.date).replace(/ d{4}$/,'');return fm(new Date(last.getTime()-k*7*D1));};
     const next=new Date(last.getTime()+7*D1);
     const n=x.st.filter(c=>c==='a').length,pct=Math.round(n/x.st.length*100),col={a:'#16a34a',p:'#f59e0b',x:'#dc2626'},ht={a:'100%',p:'55%',x:'18%'};
-    const cols=x.st.map((c,k)=>({c,k})).reverse().map(({c,k},i)=>'<div title="'+dateOf(k)+': '+lab[c]+'" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0"><div style="height:64px;width:100%;display:flex;align-items:flex-end"><i style="display:block;width:100%;height:'+ht[c]+';border-radius:7px 7px 0 0;background:'+col[c]+';opacity:'+(k===0?1:.85)+';transform-origin:bottom;animation:tgbar .6s ease both;animation-delay:'+(i*70)+'ms"></i></div><span style="font-size:11px;color:#475467;font-weight:'+(k===0?700:500)+'">'+dateOf(k)+'</span><span style="font-size:10.5px;color:'+col[c]+';font-weight:600">'+({a:'Came',p:'Part',x:'Refused'})[c]+'</span></div>').join('');
+    const cols=x.st.map((c,k)=>({c,k})).reverse().map(({c,k},i)=>{const dk=dateOf(k),ro=roster(name,dk),tot=ro.a.length+ro.p.length+ro.x.length;return '<button type="button" data-pid="'+esc(pid)+'" data-g="'+esc(name)+'" data-d="'+esc(dk)+'" data-c="'+c+'" onclick="tpGrpSession(this.dataset.pid,this.dataset.g,this.dataset.d,this.dataset.c)" title="'+dk+': '+lab[c]+'. Tap to see who attended" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;border:0;background:none;padding:4px 0 2px;border-radius:8px;cursor:pointer;font:inherit"><span style="height:64px;width:100%;display:flex;align-items:flex-end"><i style="display:block;width:100%;height:'+ht[c]+';border-radius:7px 7px 0 0;background:'+col[c]+';opacity:'+(k===0?1:.85)+';transform-origin:bottom;animation:tgbar .6s ease both;animation-delay:'+(i*70)+'ms"></i></span><span style="font-size:11px;color:#475467;font-weight:'+(k===0?700:500)+'">'+dk+'</span><span style="font-size:10.5px;color:'+col[c]+';font-weight:600">'+({a:'Came',p:'Part',x:'Refused'})[c]+'</span>'+(tot?'<span style="font-size:10.5px;color:#667085">'+ro.a.length+' of '+tot+' came</span>':'')+'</button>';}).join('');
     return '<article class="tg-c"><div class="tg-h"><div><b>'+name+'</b><span>Led by '+x.g[2]+'</span></div><span class="tg-when">'+x.g[1]+'</span></div>'
       +'<div style="display:flex;align-items:baseline;gap:10px;margin:10px 0 4px"><span style="font-size:28px;font-weight:800;line-height:1">'+n+'<small style="font-size:14px;font-weight:600;color:#667085"> of '+x.st.length+'</small></span><span class="chip '+(pct>=70?'c-green':pct>=40?'c-amber':'c-red')+'">'+pct+'% attended</span></div>'
       +'<div role="img" aria-label="Last '+x.st.length+' sessions, oldest to newest: '+x.st.slice().reverse().map(c=>lab[c]).join(', ')+'" style="display:flex;gap:8px;border-bottom:1px solid #cbd5e1;padding-bottom:6px">'+cols+'</div>'
@@ -115,7 +131,7 @@
     const all=GROUPS.map(g=>({g,st:strip(g[0])})),att=all.reduce((n,x)=>n+x.st.filter(c=>c==='a').length,0),tot=all.length*5;
     const lab={a:'Attended',p:'Part of it',x:'Refused'};
     return `<div class="tg-top"><div class="tg-sum"><b>${att} of ${tot}</b> recent sessions attended across ${all.length} groups</div><div class="tg-key"><span><i class="a"></i>Attended</span><span><i class="p"></i>Part of it</span><span><i class="x"></i>Refused</span></div></div>
-      <div class="tg-grid">${all.map(x=>groupCard(x,mine.concat(th),lab,line)).join('')}</div>
+      <div class="tg-grid">${all.map(x=>groupCard(x,mine.concat(th),lab,line,pid)).join('')}</div>
       ${(()=>{/* 19 Nov 2026: every attendance marked on the Group sessions page (or logged here), newest first */
         const L=mine.concat(th);if(!L.length)return '<div class="small muted" style="margin-top:12px">No group attendance marked yet. The psychologist marks it on the Group sessions page.</div>';
         return `<div class="tp-h" style="margin-top:14px">Attendance log</div><div class="scroll"><table><thead><tr><th>Date</th><th>Group</th><th>Took part</th><th>Marked by</th><th>Note</th></tr></thead><tbody>${L.map(r=>`<tr><td>${esc(r.date||'')}</td><td>${esc(r.group||'')}</td><td>${esc(r.took||'')}</td><td>${esc(r.by||'')}</td><td>${esc(r.note||'')}</td></tr>`).join('')}</tbody></table></div>`;})()}

@@ -15,7 +15,9 @@
    floor lead screens keep working. Old notes still open with their old fields. */
 (function(){
   const ROLE=String((window.__TULASI__||{}).role||'');
-  if(!/^(psychologist|floor-lead-psychologist)$/.test(ROLE))return;
+  /* 21 Nov 2026 (owner): the psychiatrist's session note form is the same as the psychologist's, for all three types */
+  if(!/^(psychologist|floor-lead-psychologist|psychiatrist|floor-lead-psychiatrist)$/.test(ROLE))return;
+  const WHO=/psychiatrist/.test(ROLE)?'psychiatrist':'psychologist';
   const E=s=>hesc(String(s==null?'':s));
   const A=s=>E(s).replace(/'/g,'&#39;');
   const J=s=>String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
@@ -110,7 +112,7 @@
       +q('Plan for next session','',ta('plan','What comes next')+`<label class="field"><span class="lbl">Homework (optional)</span><input class="input" value="${A(D.hwNew||'')}" oninput="tnS('hwNew',this.value)" placeholder="e.g. practise the breathing exercise twice a day"></label>
         <div class="tn-g"><label class="field"><span class="lbl">Next session date</span><input class="input" type="date" value="${A(D.next||'')}" onchange="tnS('next',this.value)"></label><label class="field"><span class="lbl">Time</span><input class="input" type="time" value="${A(D.nextT||'10:00')}" onchange="tnS('nextT',this.value)"></label></div><div class="tiny muted">A next session date books it on the Calendar and caseload.</div>`)
       +q('One line for the psychiatrist','Shows on Rounds. Drafted from the note, edit it',`<textarea class="input" id="tnSum" rows="2" oninput="tnSumTouch(this.value)">${E(D.summary||'')}</textarea>`)
-      +`<div class="small muted">Name and signature of the psychologist: added when you press Sign and lock.</div>`;
+      +`<div class="small muted">Name and signature of the ${WHO}: added when you press Sign and lock.</div>`;
   }
   function famBody(){
     const b=D.blk;
@@ -121,10 +123,10 @@
         <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><span class="lbl" style="margin:0">Duration</span><div class="sn-chips">${DUR.map(m=>`<button type="button" class="sn-c ${String(D.mins)===String(m)?'on':''}" onclick="tnDur(${m})">${m} min</button>`).join('')}</div><input class="input" type="number" min="1" placeholder="Other" value="${A(D.mins||'')}" oninput="tnS('mins',this.value)" style="width:110px"></div>`)
       +q('Agenda of the family visit','',many(AGENDA,b.topics,"tnFT")+`<textarea class="input" rows="2" placeholder="Anything else on the agenda" oninput="tnB('agenda',this.value)">${E(b.agenda||'')}</textarea>`)
       +q("Family's comments and viewpoints",'',`<textarea class="input" rows="3" oninput="tnB('fcom',this.value)">${E(b.fcom||'')}</textarea><label class="row small" style="gap:8px"><input type="checkbox" ${b.grv?'checked':''} onchange="tnB('grv',this.checked)"> The family raised a concern: send it to the Patient Experience team as a grievance</label>`)
-      +q('Comments of the psychologist','',`<textarea class="input" rows="3" oninput="tnB('pcom',this.value)">${E(b.pcom||'')}</textarea>`)
+      +q('Comments of the '+WHO,'',`<textarea class="input" rows="3" oninput="tnB('pcom',this.value)">${E(b.pcom||'')}</textarea>`)
       +q("Patient's requirements",'',`<textarea class="input" rows="2" oninput="tnB('req',this.value)">${E(b.req||'')}</textarea>`)
       +q('Next visit agenda or any instructions','',`<textarea class="input" rows="2" oninput="tnB('nextAg',this.value)">${E(b.nextAg||'')}</textarea><div class="tn-g"><label class="field"><span class="lbl">Next family session (optional)</span><input class="input" type="date" value="${A(D.next||'')}" onchange="tnS('next',this.value)"></label><label class="field"><span class="lbl">Time</span><input class="input" type="time" value="${A(D.nextT||'10:00')}" onchange="tnS('nextT',this.value)"></label></div>`)
-      +q('Signature of the visitor','Optional. The psychologist signs with Sign and lock',`<canvas class="tn-sig" id="tnSig" width="520" height="110"></canvas><div class="row" style="gap:8px"><button type="button" class="btn sm" onclick="tnSigClear()">Clear</button>${b.vsig?'<span class="tiny muted">Signed by the visitor</span>':''}</div>`)
+      +q('Signature of the visitor','Optional. The '+WHO+' signs with Sign and lock',`<canvas class="tn-sig" id="tnSig" width="520" height="110"></canvas><div class="row" style="gap:8px"><button type="button" class="btn sm" onclick="tnSigClear()">Clear</button>${b.vsig?'<span class="tiny muted">Signed by the visitor</span>':''}</div>`)
       +q('One line for the psychiatrist','Shows on Rounds. Drafted from the note, edit it',`<textarea class="input" id="tnSum" rows="2" oninput="tnSumTouch(this.value)">${E(D.summary||'')}</textarea>`);
   }
   window.tnFT=v=>{const a=D.blk.topics||[];D.blk.topics=a.includes(v)?a.filter(x=>x!==v):a.concat(v);autoSum();draw();};
@@ -182,7 +184,7 @@
       if(!String(b.who||'').trim())return 'Write the name of the visitor.';
       if(!b.rel)return 'Pick the relation of the visitor.';
       if(!(b.topics||[]).length&&!String(b.agenda||'').trim())return 'Write the agenda of the family visit.';
-      if(!String(b.pcom||'').trim())return 'Write the comments of the psychologist.';
+      if(!String(b.pcom||'').trim())return 'Write the comments of the '+WHO+'.';
     }else{
       if(!(D.aimT||[]).length&&!String(D.aim||'').trim())return 'Write the aim of the intervention.';
       if(!D.mod&&!String(D.intv||'').trim())return 'Pick or write the intervention.';
@@ -211,7 +213,7 @@
       if(D.mod==='Relapse prevention'&&KIND==='ind')s.relapse={trig:D.blk.trig||'',ews:D.blk.ews||'',cope:D.blk.cope||'',sup:D.blk.sup||'',by:signer(),at:atNow()};
       if(D.next){S.pgc=S.pgc||{tab:'cal',flt:'all',wk:0,extra:[],cols:{}};S.pgc.extra=S.pgc.extra||[];const [h,m]=String(D.nextT||'10:00').split(':').map(Number);S.pgc.extra.push({id:'n'+Date.now(),date:D.next,h:Math.min(17,Math.max(9,h||10)),m:m||0,kind:KIND,pid:PID,label:(KIND==='fam'?'Family · ':'')+pat(PID).name});}
       if(KIND==='fam'&&D.blk.grv&&String(D.blk.fcom||'').trim()){try{S.pgriev=S.pgriev||[];S.pgriev.unshift({from:'Family',t:String(D.blk.fcom).slice(0,90),via:'Family session',own:'Patient experience team',st:'Open',sla:'6 h left',src:'family',cat:'Psychologist',...whoAt()});}catch(e){}}
-      if(riskAny()){try{V3.alert({pid:PID,sev:'urgent',title:'Therapy session: risk noticed',detail:(D.riskNote||'See the session note')+'. Session note signed by '+signer()+'.',src:'Psychologist',by:signer()});}catch(e){}}
+      if(riskAny()){try{V3.alert({pid:PID,sev:'urgent',title:'Therapy session: risk noticed',detail:(D.riskNote||'See the session note')+'. Session note signed by '+signer()+'.',src:WHO==='psychiatrist'?'Psychiatrist':'Psychologist',by:signer()});}catch(e){}}
     }
     return note;
   }
