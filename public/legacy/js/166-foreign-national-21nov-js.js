@@ -14,23 +14,18 @@
    The fields are still a first list, to be confirmed with Chandraji. */
 (function(){
   const ROLE=String((window.__TULASI__||{}).role||'');
-  if(!/^(psychiatrist|floor-lead-psychiatrist|rmo|psychologist|floor-lead-psychologist)$/.test(ROLE))return;
+  if(!/^(psychiatrist|floor-lead-psychiatrist|rmo)$/.test(ROLE))return;
   if(typeof pPrefs!=='function')return;
   const E=s=>hesc(String(s==null?'':s));
   const SEEN=['Front desk','Admin (Chandraji)','Patient experience'];
   const NOVISA='No visa needed (Nepal, Bhutan)';
   const VISA=['Medical or e-Medical','Medical attendant','Tourist','Business','Employment','Student','OCI card holder',NOVISA,'Other'];
   /* [key, label, type, options]. f0 to f12 are the keys saved before this change. */
+  /* 4 essential fields only (21 Nov, trimmed). f0–f12 keys kept for backwards compat. */
   const G=[
-    ['Passport and visa',[['f0','Nationality','txt'],['f1','Passport number','txt'],['ppExp','Passport valid until','date'],['f2','Visa type','sel',VISA],
-      ['visaExp','Visa valid until','date'],['arrived','Arrived in India on','date'],['copies','Passport and visa copies on file','sel',['Yes','No']],
-      ['f11','Where the passport is kept','sel',['With the patient','Locker','Front desk']]]],
-    ['Registration',[['f3','FRRO C-form submitted?','sel',['Yes','No','Pending']],['f4','Separate admission form (Chandraji)','sel',['Done','Pending']],
-      ['emb','Embassy told about the admission','sel',['Yes','No','Not needed']],['f5','Embassy or consulate contact','txt']]],
-    ['Family and language',[['f6','Language and interpreter needed','txt'],['f7','Contact abroad (name, number with country code, time zone)','txt'],
-      ['local','Local contact or attendant in India (name, relation, number)','txt'],['f8','How to update the family abroad','sel',['WhatsApp','Email','Video call','Phone call']]]],
-    ['Stay and going home',[['f9','Diet, religious or cultural needs','txt'],['f10','Payment (currency, insurance, who pays)','sel',['Self, in India','Family abroad','Insurance','Embassy','Other']],
-      ['travel','Return travel (date, escort, fit-to-fly letter)','txt'],['f12','Anything else for the admission','txt']]]];
+    ['',[['f0','Nationality','txt'],['f1','Passport number','txt'],
+      ['f3','FRRO C-form submitted?','sel',['Yes','No','Pending']],
+      ['f4','Separate admission form (Chandraji)','sel',['Done','Pending']]]]];
   const short=l=>l.split(' (')[0].split('?').join('');
   const rec=()=>{const x=psyPx(S.pid);return x.foreign=x.foreign||{};};
   window.fnSet=function(k,v,redraw){const r=rec();r[k]=v;if(redraw||k==='yes')render();};
@@ -59,14 +54,14 @@
     return `<label class="field"><span class="lbl">${E(l)}</span><select class="input" onchange="fnSet('${k}',this.value,1)"><option value=""></option>${o.map(x=>`<option ${v===x?'selected':''}>${E(x)}</option>`).join('')}</select></label>`;}
   const inp=(r,k,l)=>`<label class="field"><span class="lbl">${E(l)}</span><input class="input" value="${E(r[k]||'')}" oninput="fnSet('${k}',this.value)"></label>`;
   const dat=(r,k,l)=>`<label class="field"><span class="lbl">${E(l)}</span><input class="input" type="date" value="${E(r[k]||'')}" onchange="fnSet('${k}',this.value,1)"></label>`;
-  const groups=r=>G.map(([g,fs])=>`<div class="fn-g"><h5>${E(g)}</h5><div class="fn-fields">${fs.map(f=>f[2]==='sel'?sel(r,f[0],f[1],f[3]):f[2]==='date'?dat(r,f[0],f[1]):inp(r,f[0],f[1])).join('')}</div></div>`).join('');
+  const groups=r=>G.map(([g,fs])=>`<div class="fn-g">${g?`<h5>${E(g)}</h5>`:''}<div class="fn-fields">${fs.map(f=>f[2]==='sel'?sel(r,f[0],f[1],f[3]):f[2]==='date'?dat(r,f[0],f[1]):inp(r,f[0],f[1])).join('')}</div></div>`).join('');
 
   /* Fill form view */
   function formCard(r){
     const yes=r.yes==='Yes';
     const body=yes?flagHtml(r)+groups(r)
       :`<div class="tiny muted">${r.yes==='No'?'Nothing else to record.':'Passport, visa, FRRO C-form, embassy, family abroad and payment questions open when the answer is Yes.'}</div>`;
-    return `<section class="card pad fn-card${yes?' fn-wide':''}" id="fnCard"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><h3>Foreign national</h3><span class="row" style="gap:4px;flex-wrap:wrap">${SEEN.map(x=>`<span class="chip c-grey">${E(x)}</span>`).join('')}</span></div>
+    return `<section class="card pad fn-card" id="fnCard"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><h3>Foreign national</h3><span class="row" style="gap:4px;flex-wrap:wrap">${SEEN.map(x=>`<span class="chip c-grey">${E(x)}</span>`).join('')}</span></div>
       <div class="fn-q">${sel(r,'yes','Is the patient a foreign national?',['Yes','No'])}</div>${body}</section>`;
   }
 
@@ -88,10 +83,10 @@
       :`<button type="button" class="btn sm" onclick="fnSet('yes','Yes');fnEdit()">Yes</button><button type="button" class="btn sm" onclick="fnSet('yes','No')">No</button>`;
     const q=`<div class="fn-row fn-qrow"><dt>Is the patient a foreign national?</dt><dd><span class="fn-ans">${ans}</span></dd></div>`;
     let body='';
-    if(yes)body=flagHtml(r)+`<div class="fn-cols">${G.map(([g,fs])=>`<div class="fn-g"><h5>${E(g)}</h5><dl>${fs.map(f=>row(short(f[1]),val(f))).join('')}</dl></div>`).join('')}</div>`;
+    if(yes)body=flagHtml(r)+`<dl>${G[0][1].map(f=>row(short(f[1]),val(f))).join('')}</dl>`;
     else if(no)body=`<div class="fn-note">Not a foreign national. Nothing else to record.</div>`;
-    else body=`<div class="fn-pre"><div class="fn-pre-h">If Yes, this card holds</div><ul>${G.map(([g,fs])=>`<li><b>${E(g)}</b><span>${E(fs.map(f=>short(f[1])).join(' · '))}</span></li>`).join('')}</ul></div>`;
-    return `<section class="pxs-card fn-card${yes?' fn-wide':''}"><div class="pxs-hd"><h4>Foreign national</h4><span class="pxs-seen">Seen by ${E(SEEN.join(' · '))}</span></div><dl class="fn-dl">${q}</dl>${body}</section>`;
+    else body=`<div class="fn-pre"><div class="fn-pre-h">If Yes, this card holds</div><div class="tiny muted">Nationality · Passport number · FRRO C-form · Chandraji's admission form</div></div>`;
+    return `<section class="pxs-card fn-card"><div class="pxs-hd"><h4>Foreign national</h4><span class="pxs-seen">Seen by ${E(SEEN.join(' · '))}</span></div><dl class="fn-dl">${q}</dl>${body}</section>`;
   }
 
   const css=document.createElement('style');
