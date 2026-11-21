@@ -103,7 +103,16 @@
   /* ---------------- 1. Vitals and monitoring ---------------- */
   const SLOTS={1:['9 am'],2:['9 am','9 pm'],3:['9 am','1 pm','9 pm'],4:['9 am','1 pm','5 pm','9 pm']};
   const NURSES=['SR','PN','AK','MJ'];
-  const isoOf=txt=>{const d=new Date(String(txt).trim()+' 2026');return isNaN(d)?null:d;};
+  const isoOf=txt=>{
+    const s=String(txt).trim();
+    const m=s.match(/^(\d{1,2})\s+([A-Za-z]{3})(?:\s+(\d{4}))?$/);
+    if(!m)return null;
+    const mo={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12}[m[2]];
+    if(!mo)return null;
+    const yr=m[3]||new Date().getFullYear();
+    const d=new Date(`${yr}-${String(mo).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}T00:00:00`);
+    return isNaN(d)?null:d;
+  };
   window.psyVmSet=function(k,v){S.vm=S.vm||{};S.vm[k]=v;render();};
   window.psyVmClear=function(){S.vm={};render();};
   window.psyVmPreset=function(type){
