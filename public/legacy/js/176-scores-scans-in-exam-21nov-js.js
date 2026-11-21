@@ -24,7 +24,7 @@
     const none=!repRows&&!labRows;
     return '<section class="card" id="pmResults" style="margin:12px 0"><div class="hd"><div><h3>Results and scans</h3><div class="small muted" style="margin-top:4px">Lab reports, scans and results for this patient. An out-of-range result becomes a "Review result" task.</div></div>'
       +'<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn sm pri" type="button" onclick="psyLabAdd(\''+q(pid)+'\')">Upload lab report</button><button class="btn sm" type="button" onclick="rsEnter(\''+q(pid)+'\')">Enter a result</button><button class="btn sm" type="button" onclick="shScaleOrder(\''+q(pid)+'\')">Order monitoring</button></div></div>'
-      +(none?'<div class="pad small muted">No reports or results yet.</div>':'<div class="scroll"><table class="t"><thead><tr><th>Report or test</th><th>Date</th><th>Lab or result</th><th>Status or by</th><th></th></tr></thead><tbody>'+repRows+labRows+'</tbody></table></div>')
+      +(none?'<div class="empty small">No reports or results yet.<br>Upload a lab report or enter a result to see it here.</div>':'<div class="scroll"><table class="t"><thead><tr><th>Report or test</th><th>Date</th><th>Lab or result</th><th>Status or by</th><th></th></tr></thead><tbody>'+repRows+labRows+'</tbody></table></div>')
       +'</section>';
   }
 
@@ -37,10 +37,19 @@
       const wk=document.getElementById('workupCard');if(!wk)return;
       const grp=[...wk.querySelectorAll('.wk-grp')].find(g=>/Examination and tests/.test((g.querySelector('.wk-gh')||{}).textContent||''));
       const body=grp&&grp.querySelector('.wk-gb');if(!body)return;
+      if(!document.getElementById('pmExamCss')){const c=document.createElement('style');c.id='pmExamCss';
+        c.textContent='#pmExamRow{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:stretch;margin-top:6px;padding-top:14px;border-top:1px solid #e3eaf2}'
+          +'#pmExamRow>section.card{margin:0!important;display:flex;flex-direction:column;border-radius:14px}'
+          +'#pmExamRow #pmResults .hd{flex-direction:column;align-items:flex-start;gap:10px}'
+          +'#pmExamRow #pmResults .empty{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;min-height:110px;color:#667085;border-top:1px dashed #d5e1ef;margin:0 16px 16px;border-radius:10px;background:#f8fafc}'
+          +'@media(max-width:900px){#pmExamRow{grid-template-columns:1fr}}';
+        document.head.appendChild(c);}
+      let row=document.getElementById('pmExamRow');
+      if(!row||row.parentNode!==body){if(row)row.remove();row=document.createElement('div');row.id='pmExamRow';body.appendChild(row);}
       const sc=document.getElementById('pmScores');
-      if(sc&&sc.parentNode!==body){sc.style.margin='12px 0';body.appendChild(sc);}
+      if(sc&&sc.parentNode!==row){row.insertBefore(sc,row.firstChild);}
       let rc=document.getElementById('pmResults');
-      if(!rc||rc.parentNode!==body){if(rc)rc.remove();const t=document.createElement('div');t.innerHTML=resultsCard(r.pid);body.appendChild(t.firstElementChild);}
+      if(!rc||rc.parentNode!==row){if(rc)rc.remove();const t=document.createElement('div');t.innerHTML=resultsCard(r.pid);row.appendChild(t.firstElementChild);}
       return;
     }
 
