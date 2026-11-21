@@ -159,7 +159,9 @@
   }
   window.psyScoresCard=scoresCard;
   const __pv=pVitals;
-  pVitals=function(){const h=__pv.apply(this,arguments);return psy()?scoresCard(S.pid)+h:h;};
+  /* 21 Nov: scores only in Admission workup (Anu: "scores and scans with examination only") */
+  const inWorkup=()=>{try{const m=(location.hash||'').match(/^#\/patient\/[^/]+\/([^/?]+)/);return!!m&&m[1]==='admission'&&S.admSec==='workup';}catch(e){return false;}};
+  pVitals=function(){const h=__pv.apply(this,arguments);return psy()&&inWorkup()?scoresCard(S.pid)+h:h;};
 
   /* ---------- lab results ---------- */
   const spark=(vals,lo,hi)=>{
@@ -205,7 +207,7 @@
   pOrders=function(){const h=__po.apply(this,arguments);if(!psy())return h;
     const x=pxOf(S.pid),al=x.allergy;
     const line=`<section class="card pad row" style="justify-content:space-between;gap:12px"><div class="small"><b>Allergies</b> · ${al?(al.list&&al.list.length?al.list.map(i=>hesc(i.drug)+(i.rx?' ('+hesc(i.rx)+')':'')).join(', '):'No known drug allergies')+` <span class="tiny muted">· ${hesc(al.by)}, ${hesc(al.at)}</span>`:'<span style="color:var(--amber);font-weight:600">Not recorded</span>'}</div><button class="btn sm" onclick="psyAllergy('${S.pid}')">${al?'Edit':'Record'} allergies</button></section>`;
-    return line+labsCard(S.pid)+h;};
+    return inWorkup()?line+labsCard(S.pid)+h:line+h;};
 
   /* one line at the top of Stay summary */
   const prevVP=ROLE.psychiatrist.vPatient;

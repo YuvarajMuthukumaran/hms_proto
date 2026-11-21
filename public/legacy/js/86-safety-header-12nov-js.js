@@ -81,8 +81,9 @@
   const rrDemo=(i)=>[16,18,16,20,17,16,19][i%7];
   function scoresPaint(v,pid){
     if(!/^#\/patient\/[^/]+\/orders/.test(location.hash||''))return;
-    /* Scores card after the first "Vitals and monitoring" card */
-    if(!v.querySelector('.sc-grid')&&window.psyScoresCard){
+    /* Scores card after the first "Vitals and monitoring" card — only in Admission workup (21 Nov: Anu) */
+    const inWk=()=>{try{const m=(location.hash||'').match(/^#\/patient\/[^/]+\/([^/?]+)/);return!!m&&m[1]==='admission'&&window.S&&S.admSec==='workup';}catch(e){return false;}};
+    if(!v.querySelector('.sc-grid')&&window.psyScoresCard&&inWk()){
       const h=[...v.querySelectorAll('h3')].filter(x=>/^Vitals and monitoring/.test(x.textContent.trim()))[0],card=h&&h.closest('section.psy-tx-panel,section.card');
       if(card){const t=document.createElement('div');t.innerHTML=window.psyScoresCard(pid);const el=t.firstElementChild;if(el)card.parentNode.insertBefore(el,card.nextSibling);}}
     /* NEWS2 and resp. rate columns on the vitals table */
