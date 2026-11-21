@@ -174,4 +174,6 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/173-psychologist-rounds-pop-21nov-js.js',
   '/legacy/js/174-order-mon-workup-only-21nov-js.js',
   '/legacy/js/175-move-add-vitals-btn-21nov-js.js',
+  '/legacy/js/176-scores-scans-in-exam-21nov-js.js',
+  '/legacy/js/177-goal-measures-21nov-js.js',
 ];

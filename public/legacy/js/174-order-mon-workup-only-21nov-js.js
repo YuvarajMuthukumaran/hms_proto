@@ -4,7 +4,7 @@
   const inWorkup=()=>{
     try{
       const m=(location.hash||'').match(/^#\/patient\/[^/]+\/([^/?]+)/);
-      return!!m&&m[1]==='admission'&&window.S&&S.admSec==='workup';
+      return!!m&&m[1]==='admission'&&typeof S!=='undefined'&&S.admSec==='workup';
     }catch(e){return false;}
   };
 

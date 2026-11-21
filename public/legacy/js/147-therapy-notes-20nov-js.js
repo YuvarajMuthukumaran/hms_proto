@@ -64,6 +64,8 @@
   window.tnMod=v=>{D.mod=D.mod===v?'':v;D.blk=D.mod==='ERP for OCD'||D.mod==='Relapse prevention'?D.blk:{};autoSum();draw();};
   window.tnB=(k,v)=>{D.blk[k]=v;autoSum();};
   window.tnBT=(k,v)=>{D.blk[k]=D.blk[k]===v?'':v;autoSum();draw();};
+  window.tnGoal=(i,v)=>{D.goalR=D.goalR||{};D.goalR[i]=D.goalR[i]===v?'':v;draw();};
+  window.tnGoalSet=(i,v)=>{D.goalR=D.goalR||{};D.goalR[i]=v===''?'':+v;};
   window.tnKind=v=>{KIND={Individual:'ind',Family:'fam',Group:'grp'}[v]||'ind';D=fresh(KIND,null);draw();};
   window.tnSumTouch=v=>{D.summary=v;D.touched=true;};
 
@@ -109,6 +111,7 @@
       +q('Outcome','',`<div class="tn-g"><div class="field"><span class="lbl">Mood (same tags as the daily note)</span>${one(MOODS(),D.moodT,"tnT.bind(null,'moodT')")}</div><div class="field"><span class="lbl">Engagement</span>${one(['Engaged','Partial','Withdrawn'],D.eng,"tnT.bind(null,'eng')")}</div></div>`
         +ta('outcome','How the patient responded, what changed',3)
         +`<div class="sn-yn"><span>Risk noticed in this session? <span class="tiny muted">(optional; Yes alerts the psychiatrist)</span></span><div class="sn-chips"><button type="button" class="sn-c bad ${D.riskSeen==='yes'?'on':''}" onclick="tnT('riskSeen','yes')">Yes</button><button type="button" class="sn-c ${D.riskSeen==='no'?'on':''}" onclick="tnT('riskSeen','no')">No</button></div></div>${D.riskSeen==='yes'?ta('riskNote','What was said or seen'):''}`)
+      +q('Goals','Rate each goal the way it was set up',window.goalNoteInputs?window.goalNoteInputs(sn(PID).goals||[],D.goalR,'tnGoal'):'')
       +q('Plan for next session','',ta('plan','What comes next')+`<label class="field"><span class="lbl">Homework (optional)</span><input class="input" value="${A(D.hwNew||'')}" oninput="tnS('hwNew',this.value)" placeholder="e.g. practise the breathing exercise twice a day"></label>
         <div class="tn-g"><label class="field"><span class="lbl">Next session date</span><input class="input" type="date" value="${A(D.next||'')}" onchange="tnS('next',this.value)"></label><label class="field"><span class="lbl">Time</span><input class="input" type="time" value="${A(D.nextT||'10:00')}" onchange="tnS('nextT',this.value)"></label></div><div class="tiny muted">A next session date books it on the Calendar and caseload.</div>`)
       +q('One line for the psychiatrist','Shows on Rounds. Drafted from the note, edit it',`<textarea class="input" id="tnSum" rows="2" oninput="tnSumTouch(this.value)">${E(D.summary||'')}</textarea>`)
@@ -165,7 +168,7 @@
 
   function fresh(kind,pre){
     pre=pre||{};
-    const d={kind,mod:kind==='fam'?'Family therapy':kind==='grp'?'Group':'',lang:'English',mins:'',aimT:[],aim:'',intv:'',moodT:'',eng:'',outcome:'',riskSeen:'',riskNote:'',plan:'',hwNew:'',next:'',nextT:'10:00',blk:{},summary:pre.summary||'',touched:!!pre.summary};
+    const d={kind,goalR:{},mod:kind==='fam'?'Family therapy':kind==='grp'?'Group':'',lang:'English',mins:'',aimT:[],aim:'',intv:'',moodT:'',eng:'',outcome:'',riskSeen:'',riskNote:'',plan:'',hwNew:'',next:'',nextT:'10:00',blk:{},summary:pre.summary||'',touched:!!pre.summary};
     if(kind==='fam'){d.blk={who:pre.who||'',topics:[],visit:'',rel:''};if(pre.purpose)d.blk.agenda=String(pre.purpose);if(pre.outcome)d.blk.pcom=String(pre.outcome);}
     return d;
   }

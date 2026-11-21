@@ -9,7 +9,7 @@
     if(!addVitBtn)return;
 
     /* Find the "+ Add reading" button in the vitals table header */
-    const addReadBtn=[...v.querySelectorAll('button')].find(b=>/^\+\s*Add reading$/.test(b.textContent.trim()));
+    const addReadBtn=[...v.querySelectorAll('button')].find(b=>/^\+?\s*Add reading$/.test(b.textContent.trim()));
     if(!addReadBtn)return;
 
     /* Only move once — skip if already beside Add reading */

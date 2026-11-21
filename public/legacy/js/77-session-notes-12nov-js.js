@@ -67,6 +67,7 @@
   window.snBT=(k,v)=>{D.blk[k]=D.blk[k]===v?'':v;autoSum();draw();};
   window.snBM=(k,v)=>{const a=D.blk[k]||[];D.blk[k]=a.includes(v)?a.filter(x=>x!==v):a.concat(v);draw();};
   window.snGoal=(i,v)=>{D.goalR[i]=D.goalR[i]===v?'':v;draw();};
+  window.snGoalSet=(i,v)=>{D.goalR[i]=v===''?'':+v;};
   window.snMod=v=>{D.mod=v;D.blk={};draw();};
   window.snRos=id=>{const a=D.blk.ros||[];D.blk.ros=a.includes(id)?a.filter(x=>x!==id):a.concat(id);draw();};
   window.snLadAdd=()=>{const t=(($('snLt')||{}).value||'').trim(),n=+(($('snLn')||{}).value||0);if(!t)return;const s=sn(PID);s.ladder.push({id:'l'+Date.now(),text:t,suds:isFinite(n)?n:0});draw();};
@@ -142,6 +143,7 @@
     const spec=BLK[D.mod],block=spec==='erp'?erpBlock():`<div class="sn-g">${spec.map(blockField).join('')}</div>`;
     const modSel=`<div class="field"><span class="lbl">Therapy type</span><div class="sn-chips">${MODS.map(m=>`<button type="button" class="sn-c ${D.mod===m?'on':''}" onclick="snMod('${m}')">${m}</button>`).join('')}</div></div>`;
     const goalsH=goals.map((g,i)=>{
+      if(g.type&&g.type!=='scale'&&window.goalInput)return window.goalInput(g,i,D.goalR[i]);
       if(g.type==='yn'){
         const cv=D.goalR[i];
         return `<div class="field"><span class="lbl">${esc(g.t)}<span class="tiny muted" style="margin-left:6px">Yes / No</span></span><div class="sn-chips"><button type="button" class="sn-c ${cv==='yes'?'on':''}" onclick="snGoal(${i},'yes')">Yes</button><button type="button" class="sn-c ${cv==='no'?'on':''}" onclick="snGoal(${i},'no')">No</button></div></div>`;

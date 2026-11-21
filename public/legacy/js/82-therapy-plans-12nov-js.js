@@ -66,6 +66,7 @@
     return `<div class="tp-sec"><div class="tp-h">Suggested next steps</div>${sug.length?sug.map(x=>`<div class="tp-sug">${esc(x)}</div>`).join(''):'<div class="tp-ok"><span>✓</span>On track. No change needed to goals or homework.</div>'}</div>
       <div class="tp-sec"><div class="tp-h">Goals, in the patient's words <small>start, now, aim. Tap one for its history.</small></div>${g.map((x,i)=>{
         const n=nowOf(pid,i);
+        if(x.type&&x.type!=='scale'&&window.goalRow)return window.goalRow(pid,i,x,ratings(pid,i));
         if(x.type==='yn'){
           const last=ratings(pid,i).slice(-1)[0];
           const badge=last?last.v==='yes'?'<span style="color:#067647;font-weight:700;font-size:15px">✓ Yes</span>':'<span style="color:#b42318;font-weight:700;font-size:15px">✗ No</span>':'<span class="tiny muted">Not rated yet</span>';
@@ -403,7 +404,7 @@
     const fam=sg.filter(n=>n.mod==='Family therapy').length;
     const d=document.createElement('div');d.className='pr-tp';
     d.innerHTML=`<b>Therapy</b> · ${last?'last session '+esc((last.at||'').split(',')[0])+', '+esc(last.mod):'no signed session yet'}${risk?' · <span style="color:#b42318;font-weight:700">risk raised</span>':''}
-      <div class="tp-mini">${g.map((x,i)=>`<span>${esc(x.t.split(' ').slice(0,3).join(' '))}<i style="width:${Math.max(0,Math.min(100,Math.round((nowOf(pid,i)-x.start)/Math.max(1,x.aim-x.start)*100)))}%"></i></span>`).join('')}</div>
+      <div class="tp-mini">${g.map((x,i)=>`<span>${esc(x.t.split(' ').slice(0,3).join(' '))}<i style="width:${Math.max(0,Math.min(100,Math.round(x.type&&x.type!=='scale'&&window.goalPct?window.goalPct(x,nowOf(pid,i)):(nowOf(pid,i)-x.start)/Math.max(1,x.aim-x.start)*100)))}%"></i></span>`).join('')}</div>
       <div class="tiny muted">Homework tonight: ${hwl.length?hwDone+' of '+hwl.length+' logged':'none set'} · Family sessions: ${fam} signed</div>`;
     const host=grid.querySelector('.pr-sn');(host&&host.parentNode||grid.lastElementChild).appendChild(d);
   }
