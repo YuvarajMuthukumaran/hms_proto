@@ -130,7 +130,7 @@
     const line=name=>{const r=mine.concat(th).find(x=>(x.group||'')===name&&(x.note||x.pp));return r?(r.note||r.pp):'Joined in quietly.';};
     const all=GROUPS.map(g=>({g,st:strip(g[0])})),att=all.reduce((n,x)=>n+x.st.filter(c=>c==='a').length,0),tot=all.length*5;
     const lab={a:'Attended',p:'Part of it',x:'Refused'};
-    return `<div class="tg-top"><div class="tg-sum"><b>${att} of ${tot}</b> recent sessions attended across ${all.length} groups</div><div class="tg-key"><span><i class="a"></i>Attended</span><span><i class="p"></i>Part of it</span><span><i class="x"></i>Refused</span></div></div>
+    return groupTrend(all,lab)+`<div class="tg-top"><div class="tg-sum"><b>${att} of ${tot}</b> recent sessions attended across ${all.length} groups</div><div class="tg-key"><span><i class="a"></i>Attended</span><span><i class="p"></i>Part of it</span><span><i class="x"></i>Refused</span></div></div>
       <div class="tg-grid">${all.map(x=>groupCard(x,mine.concat(th),lab,line,pid)).join('')}</div>
       ${(()=>{/* 19 Nov 2026: every attendance marked on the Group sessions page (or logged here), newest first */
         const L=mine.concat(th);if(!L.length)return '<div class="small muted" style="margin-top:12px">No group attendance marked yet. The psychologist marks it on the Group sessions page.</div>';
@@ -190,6 +190,35 @@
     x.th.comm.unshift({type:$('ccT').value,who:($('ccW').value||'').trim()||signer(),date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+', '+new Date().toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}),what:n,by:signer()});
     closeModal();render();toast('Contact logged');
   };
+  /* 21 Nov 2026 (meeting): charts as small boxes, each a line chart: group attendance (attended, in part, not attended),
+     family WhatsApp sent or not sent per day, family contacts per week, and the 24 hour call. */
+  function lineChart(title,sub,labels,series,max){
+    const W=320,H=130,pl=26,pr=10,pt=10,pb=24,n=labels.length;max=max||Math.max(1,...series.map(x=>Math.max(...x.v)));
+    const X=i=>n<2?W/2:pl+i*(W-pl-pr)/(n-1),Y=v=>H-pb-(v/max)*(H-pt-pb);
+    let g='';for(let k=0;k<=max&&k<=6;k++){const y=Y(k);g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="#e6ebf1"/><text x="'+(pl-6)+'" y="'+(y+3.5)+'" font-size="10" text-anchor="end" fill="#667085">'+k+'</text>';}
+    const xl=labels.map((l,i)=>'<text x="'+X(i)+'" y="'+(H-6)+'" font-size="10" text-anchor="middle" fill="#667085">'+esc(l)+'</text>').join('');
+    const ln=series.map(x=>'<polyline fill="none" stroke="'+x.c+'" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" points="'+x.v.map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ')+'"/>'+x.v.map((v,i)=>'<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="3.6" fill="#fff" stroke="'+x.c+'" stroke-width="2"><title>'+esc(x.n)+', '+esc(labels[i])+': '+v+'</title></circle>').join('')).join('');
+    const lg=series.map(x=>'<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#475467"><i style="width:14px;height:3px;border-radius:2px;background:'+x.c+'"></i>'+esc(x.n)+'</span>').join('');
+    return '<div class="tp-cbox" style="border:1px solid #e3eaf2;border-radius:12px;background:#fff;padding:14px 16px"><div style="font-weight:700;font-size:14px">'+esc(title)+'</div><div class="tiny muted" style="margin-bottom:6px">'+esc(sub)+'</div><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img" aria-label="'+esc(title)+'">'+g+xl+ln+'</svg><div style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px">'+lg+'</div></div>';
+  }
+  const chartGrid=h=>'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,420px));gap:12px;margin-bottom:14px">'+h+'</div>';
+  function groupTrend(all,lab){
+    const n=5,labels=['5 wk ago','4 wk ago','3 wk ago','2 wk ago','Latest'],cnt=c=>labels.map((_,i)=>{const k=n-1-i;return all.reduce((a,x)=>a+(x.st[k]===c?1:0),0);});
+    return chartGrid(lineChart('Group attendance, last 5 weeks','Sessions across all groups, by how the patient took part',labels,[{n:'Attended',c:'#16a34a',v:cnt('a')},{n:'Attended in part',c:'#f59e0b',v:cnt('p')},{n:'Not attended',c:'#dc2626',v:cnt('x')}],all.length));
+  }
+  function famTrend(pid){
+    const rows=commList(pid),days=[],t=new Date();t.setHours(0,0,0,0);
+    for(let i=6;i>=0;i--)days.push(new Date(t.getTime()-i*D1));
+    const isoD=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+    const wa=days.map(d=>rows.some(r=>/whatsapp/i.test(r.type)&&r.ts&&isoD(new Date(r.ts))===isoD(d))?1:0);
+    const cl=days.map(d=>rows.filter(r=>!/whatsapp/i.test(r.type)&&r.ts&&isoD(new Date(r.ts))===isoD(d)).length);
+    const lab=days.map(d=>d.toLocaleDateString('en-GB',{weekday:'short'}));
+    let fs={};try{fs=(window.__faApi&&__faApi.famState(pid))||{};}catch(e){}
+    const c24=fs.c24?'<div style="font-size:18px;font-weight:700;color:#067647">Done</div><div class="tiny muted">'+esc(String(fs.c24).indexOf(' · ')>0?String(fs.c24):'Recorded')+'</div>':'<div style="font-size:18px;font-weight:700;color:#b54708">Not done yet</div><div class="tiny muted">Use Call family on the dashboard</div>';
+    return chartGrid(lineChart('Daily WhatsApp to the family','1 = sent that day, 0 = not sent',lab,[{n:'WhatsApp sent',c:'#16a34a',v:wa}],1)
+      +lineChart('Calls with the family, last 7 days','Number of calls each day',lab,[{n:'Calls',c:'#2563eb',v:cl}])
+      +'<div class="tp-cbox" style="border:1px solid #e3eaf2;border-radius:12px;background:#fff;padding:14px 16px"><div style="font-weight:700;font-size:14px">24-hour call by the psychiatrist</div><div class="tiny muted" style="margin-bottom:10px">Required in the first day</div>'+c24+'</div>');
+  }
   function family(pid){
     const fam=signed(pid).filter(n=>n.mod==='Family therapy'),done={};
     fam.forEach(n=>{(n.blk&&n.blk.topics||[]).forEach(t=>{done[t]={at:(n.at||'').split(',')[0],who:n.blk.who||'',und:n.blk.und||''};});});
@@ -208,7 +237,7 @@
     const nDone=TOPICS.filter(t=>done[t]).length;
     const st=r=>r[1]?'<span class="tf-st ok">Done</span>':r[2]?'<span class="tf-st due">Due now</span>':'<span class="tf-st">Not due yet</span>';
     /* 19 Nov 2026 (owner): the Sensitisation topics card is gone from here; topics are ticked in the Call family pop-up (block 140) */
-    return `<div class="tf">
+    return famTrend(pid)+`<div class="tf">
       <section class="tf-c"><div class="tf-h"><div><b>Required contact</b><span>Set at admission, ticks itself when logged</span></div><button class="btn sm" data-p="${esc(pid)}" data-k="all" onclick="tpCalls(this.dataset.p,this.dataset.k)">View all</button></div>${req.map((r,ri)=>'<div class="tf-r"><span>'+r[0]+'</span><span style="display:flex;align-items:center;gap:12px">'+st(r)+'<button class="btn sm" data-p="'+esc(pid)+'" data-k="'+['c24','c34','wk','pre'][ri]+'" onclick="tpCalls(this.dataset.p,this.dataset.k)">View</button></span></div>').join('')}</section>
       ${commCard(pid)}
 </div><div class="tp-sec" style="margin-top:14px"><div class="tp-h">Family sessions</div>${sessions(pid,'fam')}</div>`;
