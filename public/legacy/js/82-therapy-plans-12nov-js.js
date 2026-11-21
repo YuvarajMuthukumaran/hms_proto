@@ -50,7 +50,7 @@
   function progress(pid){
     const g=defGoals(pid),sug=suggestions(pid),rg=rung(pid);
     return `<div class="tp-sec"><div class="tp-h">Suggested next steps</div>${sug.length?sug.map(x=>`<div class="tp-sug">${esc(x)}</div>`).join(''):'<div class="tp-ok"><span>✓</span>On track. No change needed to goals or homework.</div>'}</div>
-      <div class="tp-sec"><div class="tp-h">Goals, in the patient's words <small>start, now, aim. Tap one for its history.</small></div>${g.map((x,i)=>{const n=nowOf(pid,i),lo=Math.min(x.start,n,x.aim),hi=Math.max(x.start,n,x.aim),pos=v=>Math.round((v-lo)/Math.max(1,hi-lo)*100),sp=pos(x.start),np=pos(n),d=n-x.start,say=d===0?'Not moved from '+x.start+' yet':(d>0?'Up ':'Down ')+Math.abs(d)+' from the start of '+x.start;return `<button class="tp-goal" onclick="tpGoal('${pid}',${i})"><span class="tp-gt"><b>${esc(x.t)}</b><em>${say}, aim ${x.aim}</em></span><span class="tp-rl" aria-hidden="true"><i class="tp-rf" style="left:${Math.min(sp,np)}%;width:${Math.abs(np-sp)}%"></i><i class="tp-rs" style="left:${sp}%"></i><i class="tp-ra" style="left:${pos(x.aim)}%"></i><i class="tp-rn" style="left:${np}%"></i></span><span class="tp-gn"><b>${n}</b><small>of ${x.aim}</small></span></button>`;}).join('')}</div>
+      <div class="tp-sec"><div class="tp-h">Goals, in the patient's words <small>start, now, aim. Tap one for its history.</small></div>${g.map((x,i)=>{const n=nowOf(pid,i),lo=Math.min(x.start,n,x.aim),hi=Math.max(x.start,n,x.aim),pos=v=>Math.round((v-lo)/Math.max(1,hi-lo)*100),sp=pos(x.start),np=pos(n),d=n-x.start,say=d===0?'Not moved from '+x.start+' yet':(d>0?'Up ':'Down ')+Math.abs(d)+' from the start of '+x.start;return `<button class="tp-goal" onclick="tpGoal('${pid}',${i})"><span class="tp-gt"><b>${esc(x.t)}</b><em>${say}, aim ${x.aim}</em></span><span class="tp-rl" aria-hidden="true" style="display:block;height:64px;background:none;border:0">${(()=>{const pts=[x.start].concat(ratings(pid,i).map(r=>+r.v)),W=300,H=64,X=k=>pts.length<2?W-12:8+k*(W-24)/(pts.length-1),Y=v=>H-8-Math.max(0,Math.min(10,v))/10*(H-16),line=pts.map((v,k)=>(k?'L':'M')+X(k).toFixed(1)+' '+Y(v).toFixed(1)).join(' '),pp=pts.length<2?'M8 '+Y(pts[0]).toFixed(1)+' L'+(W-12)+' '+Y(pts[0]).toFixed(1):line,area=pp+' L'+X(Math.max(1,pts.length-1)).toFixed(1)+' '+(H-8)+' L8 '+(H-8)+' Z';return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="width:100%;height:64px;display:block"><line x1="8" x2="'+(W-8)+'" y1="'+Y(x.aim).toFixed(1)+'" y2="'+Y(x.aim).toFixed(1)+'" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="4 4"/><path d="'+area+'" fill="#2563eb" opacity=".12"/><path d="'+pp+'" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'+pts.map((v,k)=>'<circle cx="'+(pts.length<2?(k?W-12:8):X(k)).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="4" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>').join('')+'</svg>';})()}</span><span class="tp-gn"><b>${n}</b><small>of ${x.aim}</small></span></button>`;}).join('')}</div>
       ${rg.length?`<div class="tp-sec"><div class="tp-h">Exposure ladder <small>carried forward every session</small></div>${rg.map(r=>`<div class="tp-rung ${r.m?'done':r.next?'next':''}"><span>${esc(r.l.text)}</span><b>${r.l.suds} / 100</b><em>${r.m?'Done':r.next?'Next step':''}</em></div>`).join('')}</div>`:''}`;
   }
   window.tpGoal=function(pid,i){
@@ -82,7 +82,7 @@
     const lab={a:'Attended',p:'Part of it',x:'Refused'};
     return `<div class="tg-top"><div class="tg-sum"><b>${att} of ${tot}</b> recent sessions attended across ${all.length} groups</div><div class="tg-key"><span><i class="a"></i>Attended</span><span><i class="p"></i>Part of it</span><span><i class="x"></i>Refused</span></div></div>
       <div class="tg-grid">${all.map(x=>{const n=x.st.filter(c=>c==='a').length;return `<article class="tg-c"><div class="tg-h"><div><b>${x.g[0]}</b><span>Led by ${x.g[2]}</span></div><span class="tg-when">${x.g[1]}</span></div>
-        <div class="tg-att"><div class="tg-pips" role="img" aria-label="Last 5 sessions: ${x.st.map(c=>lab[c]).join(', ')}">${x.st.map((c,i)=>'<i class="'+c+'" title="Session '+(i+1)+' of the last 5: '+lab[c]+'"></i>').join('')}</div><span class="tg-n"><b>${n}</b> of 5</span></div>
+        <div class="tg-att"><div class="tg-pips" role="img" aria-label="Last 5 sessions: ${x.st.map(c=>lab[c]).join(', ')}" style="display:flex;align-items:flex-end;gap:8px;height:56px;flex:1;max-width:220px;border-bottom:1px solid #cbd5e1">${x.st.map((c,i)=>'<i title="Session '+(i+1)+' of the last 5: '+lab[c]+'" style="flex:1;display:block;border-radius:6px 6px 0 0;background:'+{a:'#16a34a',p:'#f59e0b',x:'#dc2626'}[c]+';height:'+{a:'100%',p:'55%',x:'18%'}[c]+';min-width:0;width:auto;transform-origin:bottom;animation:tgbar .6s ease both;animation-delay:'+(i*70)+'ms"></i>').join('')}</div><style>@keyframes tgbar{from{transform:scaleY(0)}to{transform:scaleY(1)}}@media(prefers-reduced-motion:reduce){.tg-pips i{animation:none!important}}</style><span class="tg-n"><b>${n}</b> of 5</span></div>
         <blockquote class="tg-q">${esc(line(x.g[0]))}</blockquote></article>`;}).join('')}</div>
       ${(()=>{/* 19 Nov 2026: every attendance marked on the Group sessions page (or logged here), newest first */
         const L=mine.concat(th);if(!L.length)return '<div class="small muted" style="margin-top:12px">No group attendance marked yet. The psychologist marks it on the Group sessions page.</div>';
@@ -137,7 +137,8 @@
     let inner='';
     if(s.seg==='ind'){
       const sub=['progress','sessions'].map(k=>`<button class="tp-t ${s.sub===k?'on':''}" onclick="tpSub('${k}')">${{progress:'Progress',sessions:'Sessions',homework:'Homework'}[k]}</button>`).join('');
-      inner=`<div class="tp-tabs">${sub}</div>${s.sub==='progress'?progress(pid):s.sub==='sessions'?sessions(pid):progress(pid)}`;
+      /* 21 Nov 2026 (owner): no Progress/Sessions tabs and no add button on Individual; the sessions table sits below the progress content */
+      inner=`${progress(pid)}<div class="tp-sec"><div class="tp-h">Sessions</div>${sessions(pid)}</div>`;
     }else inner=s.seg==='grp'?group(pid):family(pid);
     const nb=document.createElement('div');nb.className='tp-body';nb.innerHTML=`<div class="tp-segs">${seg}</div>${inner}`;
     body.replaceWith(nb);
@@ -148,7 +149,7 @@
     /* one main button per tab; the psychiatrist reads Individual and Group, and has full access to Family */
     const hd=card.querySelector('.hd');
     if(hd){[...hd.querySelectorAll('button')].forEach(b=>{if(b!==add)b.remove();});
-      if(doc()&&s.seg!=='fam'&&add)add.remove();
+      if((doc()&&s.seg!=='fam'||s.seg==='ind')&&add)add.remove();
       const sub={ind:'One-to-one sessions between the therapist and the patient',grp:'Group sessions: who came, and the latest line from each',fam:'Family sessions, topics covered, required contact and calls'}[s.seg];
       const sm=hd.querySelector('.small,.muted');if(sm)sm.textContent=sub+(doc()&&s.seg!=='fam'?' · read only for the psychiatrist':'');}
     /* plan sign-off by the Psychologist Lead (quality indicator): "Signed off by ... on ..." or "Awaiting sign-off", nudge after 48 hours */
