@@ -201,23 +201,38 @@
     const lg=series.map(x=>'<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#475467"><i style="width:14px;height:3px;border-radius:2px;background:'+x.c+'"></i>'+esc(x.n)+'</span>').join('');
     return '<div class="tp-cbox" style="border:1px solid #e3eaf2;border-radius:12px;background:#fff;padding:14px 16px"><div style="font-weight:700;font-size:14px">'+esc(title)+'</div><div class="tiny muted" style="margin-bottom:6px">'+esc(sub)+'</div><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img" aria-label="'+esc(title)+'">'+g+xl+ln+'</svg><div style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px">'+lg+'</div></div>';
   }
-  const chartGrid=h=>'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,420px));gap:12px;margin-bottom:14px">'+h+'</div>';
+  const chartGrid=h=>'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-bottom:14px">'+h+'</div>';
+  const cbox=(title,sub,inner,right)=>'<div class="tp-cbox" style="border:1px solid #e3eaf2;border-radius:14px;background:#fff;padding:16px 18px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div style="font-weight:700;font-size:14.5px">'+esc(title)+'</div><div class="tiny muted" style="margin-top:2px">'+esc(sub)+'</div></div>'+(right||'')+'</div><div style="margin-top:12px">'+inner+'</div></div>';
+  /* group attendance: one clear line, the share of group sessions the patient attended, week by week */
   function groupTrend(all,lab){
-    const n=5,labels=['5 wk ago','4 wk ago','3 wk ago','2 wk ago','Latest'],cnt=c=>labels.map((_,i)=>{const k=n-1-i;return all.reduce((a,x)=>a+(x.st[k]===c?1:0),0);});
-    return chartGrid(lineChart('Group attendance, last 5 weeks','Sessions across all groups, by how the patient took part',labels,[{n:'Attended',c:'#16a34a',v:cnt('a')},{n:'Attended in part',c:'#f59e0b',v:cnt('p')},{n:'Not attended',c:'#dc2626',v:cnt('x')}],all.length));
+    const n=5,names=['4 wk ago','3 wk ago','2 wk ago','Last wk','This wk'],pts=names.map((_,i)=>{const k=n-1-i,tot=all.length,a=all.reduce((q,x)=>q+(x.st[k]==='a'?1:0),0),p=all.reduce((q,x)=>q+(x.st[k]==='p'?1:0),0);return {a,p,x:tot-a-p,pct:tot?Math.round((a+p*0.5)/tot*100):0};});
+    const W=360,H=170,pl=34,pr=16,pt=22,pb=30,X=i=>pl+i*(W-pl-pr)/(n-1),Y=v=>H-pb-(v/100)*(H-pt-pb);
+    const grid=[0,50,100].map(v=>'<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#e6ebf1" stroke-dasharray="'+(v?'3 4':'0')+'"/><text x="'+(pl-8)+'" y="'+(Y(v)+4)+'" font-size="11" text-anchor="end" fill="#667085">'+v+'%</text>').join('');
+    const line=pts.map((q,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(q.pct).toFixed(1)).join(' ');
+    const area=line+' L'+X(n-1)+' '+Y(0)+' L'+X(0)+' '+Y(0)+' Z';
+    const dots=pts.map((q,i)=>'<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(q.pct).toFixed(1)+'" r="4.5" fill="#fff" stroke="#16a34a" stroke-width="2.6"><title>'+names[i]+': '+q.a+' attended, '+q.p+' in part, '+q.x+' not attended</title></circle><text x="'+X(i).toFixed(1)+'" y="'+(Y(q.pct)-10).toFixed(1)+'" font-size="11" font-weight="700" text-anchor="middle" fill="#067647">'+q.pct+'%</text>').join('');
+    const xl=names.map((l,i)=>'<text x="'+X(i)+'" y="'+(H-8)+'" font-size="11" text-anchor="'+(i===0?'start':i===n-1?'end':'middle')+'" fill="#667085">'+l+'</text>').join('');
+    const svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img" aria-label="Group attendance by week, as a percentage"><defs><linearGradient id="gtA" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#16a34a" stop-opacity=".22"/><stop offset="1" stop-color="#16a34a" stop-opacity="0"/></linearGradient></defs>'+grid+'<path d="'+area+'" fill="url(#gtA)"/><path d="'+line+'" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>'+dots+xl+'</svg>';
+    const last=pts[n-1],chips='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"><span class="chip c-green">'+last.a+' attended</span><span class="chip c-amber">'+last.p+' in part</span><span class="chip c-red">'+last.x+' not attended</span><span class="tiny muted" style="align-self:center">this week, across '+all.length+' groups</span></div>';
+    return '<div style="max-width:560px">'+chartGrid(cbox('Group attendance','Share of group sessions attended, week by week (part of a session counts as half)',svg+chips))+'</div>';
   }
+  /* family: WhatsApp as seven day tiles, calls as bars, the 24 hour call as a status */
   function famTrend(pid){
     const rows=commList(pid),days=[],t=new Date();t.setHours(0,0,0,0);
     for(let i=6;i>=0;i--)days.push(new Date(t.getTime()-i*D1));
     const isoD=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
-    const wa=days.map(d=>rows.some(r=>/whatsapp/i.test(r.type)&&r.ts&&isoD(new Date(r.ts))===isoD(d))?1:0);
+    const wa=days.map(d=>rows.some(r=>/whatsapp/i.test(r.type)&&r.ts&&isoD(new Date(r.ts))===isoD(d)));
     const cl=days.map(d=>rows.filter(r=>!/whatsapp/i.test(r.type)&&r.ts&&isoD(new Date(r.ts))===isoD(d)).length);
-    const lab=days.map(d=>d.toLocaleDateString('en-GB',{weekday:'short'}));
+    const dn=days.map(d=>d.toLocaleDateString('en-GB',{weekday:'short'}));
+    const sent=wa.filter(Boolean).length;
+    const tiles='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">'+days.map((d,i)=>'<div style="text-align:center"><div style="height:44px;border-radius:12px;display:grid;place-items:center;font-size:20px;font-weight:700;'+(wa[i]?'background:#ecfdf3;color:#16a34a;border:1px solid #abefc6':'background:#fff5f4;color:#e5484d;border:1px solid #fcd5d1')+'" title="'+esc(dn[i])+': '+(wa[i]?'sent':'not sent')+'">'+(wa[i]?'✓':'–')+'</div><div class="tiny muted" style="margin-top:4px">'+dn[i]+(i===6?'<br><b style="color:#101828">Today</b>':'')+'</div></div>').join('')+'</div>';
+    const mx=Math.max(3,...cl),bars='<div style="display:flex;align-items:flex-end;gap:8px;height:96px;border-bottom:1px solid #cbd5e1">'+cl.map((v,i)=>'<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%" title="'+esc(dn[i])+': '+v+' calls"><span style="font-size:11px;font-weight:700;color:#175cd3;height:16px">'+(v||'')+'</span><i style="display:block;width:100%;max-width:34px;border-radius:6px 6px 0 0;background:'+(v?'#2563eb':'#e6ebf1')+';height:'+(v?Math.max(8,Math.round(v/mx*70)):3)+'px"></i></div>').join('')+'</div><div style="display:flex;gap:8px;margin-top:4px">'+dn.map(x=>'<span class="tiny muted" style="flex:1;text-align:center">'+x+'</span>').join('')+'</div>';
     let fs={};try{fs=(window.__faApi&&__faApi.famState(pid))||{};}catch(e){}
-    const c24=fs.c24?'<div style="font-size:18px;font-weight:700;color:#067647">Done</div><div class="tiny muted">'+esc(String(fs.c24).indexOf(' · ')>0?String(fs.c24):'Recorded')+'</div>':'<div style="font-size:18px;font-weight:700;color:#b54708">Not done yet</div><div class="tiny muted">Use Call family on the dashboard</div>';
-    return chartGrid(lineChart('Daily WhatsApp to the family','1 = sent that day, 0 = not sent',lab,[{n:'WhatsApp sent',c:'#16a34a',v:wa}],1)
-      +lineChart('Calls with the family, last 7 days','Number of calls each day',lab,[{n:'Calls',c:'#2563eb',v:cl}])
-      +'<div class="tp-cbox" style="border:1px solid #e3eaf2;border-radius:12px;background:#fff;padding:14px 16px"><div style="font-weight:700;font-size:14px">24-hour call by the psychiatrist</div><div class="tiny muted" style="margin-bottom:10px">Required in the first day</div>'+c24+'</div>');
+    const ok=!!fs.c24,when=ok&&String(fs.c24).indexOf(' · ')>0?String(fs.c24):'';
+    const st='<div style="display:flex;align-items:center;gap:14px"><div style="width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:26px;font-weight:700;flex:none;'+(ok?'background:#ecfdf3;color:#16a34a':'background:#fffaeb;color:#d97706')+'">'+(ok?'✓':'!')+'</div><div><div style="font-size:18px;font-weight:700;color:'+(ok?'#067647':'#b54708')+'">'+(ok?'Done':'Not done yet')+'</div><div class="tiny muted" style="margin-top:2px">'+(ok?esc(when||'Recorded'):'Use Call family on the dashboard')+'</div></div></div>';
+    return chartGrid(cbox('Daily WhatsApp to the family',sent+' of 7 days sent',tiles)
+      +cbox('Calls with the family',cl.reduce((a,b)=>a+b,0)+' in the last 7 days',bars)
+      +cbox('24-hour call by the psychiatrist','Required in the first day',st));
   }
   function family(pid){
     const fam=signed(pid).filter(n=>n.mod==='Family therapy'),done={};
