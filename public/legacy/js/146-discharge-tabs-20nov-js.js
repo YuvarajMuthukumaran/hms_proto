@@ -39,7 +39,7 @@
     {k:'psy',who:'Psychiatrist',items:[['capacity','Capacity assessment'],['medrev','Medication review'],['finaldx','Discharge diagnosis finalised']]},
     {k:'nurse',who:'Nurse',items:[['medfam','Medicines explained to the family']]},
     {k:'psg',who:'Psychologist',items:[['famc','Family counselled'],['ews','Early warning signs discussed'],['brief','Family briefed']]},
-    {k:'px',who:'Patient Experience Lead',items:[['fb','Feedback collected from the patient and family'],['fu','Importance of follow-up explained']]}
+    {k:'px',who:'Patient Experience Lead',items:[['fb','Feedback collected from the patient and family'],['fu','Importance of follow-up explained'],['fub','Follow-ups booked']]}
   ];
   const MINE=DOC?'psy':PSG?'psg':NUR?'nurse':'';
   const TYPES=['Discharge on medical grounds','Discharge on request','Discharge against medical advice (DAMA)','Left against medical advice (LAMA)'];

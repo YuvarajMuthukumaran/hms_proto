@@ -145,8 +145,7 @@
     {k:'topics',t:'Family sensitisation topics covered',ok:!!m.topics,man:true},
     {k:'meds',t:'Medicines stable (no change in 72 h)',ok:medStable(pid)},
     {k:'mhca',t:'MHCA status resolved',ok:mhcaOk(pid),man:String(pt(pid).sec)==='89'&&!(psyPx(pid).mhca||{}).decision},
-    {k:'risk',t:'Risk check clear (no open alert)',ok:riskOk(pid)},
-    {k:'fu',t:'Follow-ups booked',ok:!!d.fu}];};
+    {k:'risk',t:'Risk check clear (no open alert)',ok:riskOk(pid)}];};
   const dcMeds=pid=>medRows(pid).map(x=>({m:{name:x.name,freq:'',time:''},v:x.v}));
   const required=pid=>{const miss=[],d=dcs(pid);
     if(dcMeds(pid).some(x=>!x.v))miss.push('Mark every medicine continue, stop or changed ('+dcMeds(pid).filter(x=>!x.v).length+' left)');

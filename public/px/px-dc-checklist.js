@@ -3,7 +3,7 @@
    Discharge tab here. The ticks are kept in localStorage key px_dc_<HMS patient id>, which px-store.js copies to the shared store
    (px_state), where the clinical portal reads them (block 146) and shows them, view only, in its Discharge checklist. */
 (function () {
-  var ITEMS = [['fb', 'Feedback collected from the patient and family'], ['fu', 'Importance of follow-up explained']];
+  var ITEMS = [['fb', 'Feedback collected from the patient and family'], ['fu', 'Importance of follow-up explained'], ['fub', 'Follow-ups booked']];
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function cur() {
     try { if (typeof S === 'undefined' || typeof P === 'undefined' || S.view !== 'rec' || S.rtab !== 'dis') return null; var p = P.find(function (x) { return x.id === S.pid; }); return p ? (p.hmsId || p.id) : null; } catch (e) { return null; }
