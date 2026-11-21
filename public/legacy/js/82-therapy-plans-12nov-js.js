@@ -238,7 +238,7 @@
     const st=r=>r[1]?'<span class="tf-st ok">Done</span>':r[2]?'<span class="tf-st due">Due now</span>':'<span class="tf-st">Not due yet</span>';
     /* 19 Nov 2026 (owner): the Sensitisation topics card is gone from here; topics are ticked in the Call family pop-up (block 140) */
     return famTrend(pid)+`<div class="tf">
-      <section class="tf-c"><div class="tf-h"><div><b>Required contact</b><span>Set at admission, ticks itself when logged</span></div><button class="btn sm" data-p="${esc(pid)}" data-k="all" onclick="tpCalls(this.dataset.p,this.dataset.k)">View all</button></div>${req.map((r,ri)=>'<div class="tf-r"><span>'+r[0]+'</span><span style="display:flex;align-items:center;gap:12px">'+st(r)+'<button class="btn sm" data-p="'+esc(pid)+'" data-k="'+['c24','c34','wk','pre'][ri]+'" onclick="tpCalls(this.dataset.p,this.dataset.k)">View</button></span></div>').join('')}</section>
+      <section class="tf-c"><div class="tf-h"><div><b>Required contact</b><span>Set at admission, ticks itself when logged</span></div><button class="btn sm" data-p="${esc(pid)}" data-k="all" onclick="tpCalls(this.dataset.p,this.dataset.k)">View all</button></div>${req.map((r,ri)=>'<div class="tf-r"><span>'+r[0]+'</span><span style="display:flex;align-items:center;gap:12px">'+st(r)+(r[1]?'<button class="btn sm" data-p="'+esc(pid)+'" data-k="'+['c24','c34','wk','pre'][ri]+'" onclick="tpCalls(this.dataset.p,this.dataset.k)">View</button>':'')+'</span></div>').join('')}</section>
       ${commCard(pid)}
 </div><div class="tp-sec" style="margin-top:14px"><div class="tp-h">Family sessions</div>${sessions(pid,'fam')}</div>`;
   }

@@ -7,10 +7,11 @@
 (function(){
   const esc=s=>hesc(String(s==null?'':s));
   const NEEL_DEF=[['18 Oct','138/88','104','98.8','97','72.4','3'],['19 Oct','134/86','98','98.6','98','—','4'],['20 Oct','130/84','96','98.4','98','—','3.5'],['21 Oct','128/82','92','98.6','98','—','5'],['22 Oct','126/80','90','98.4','99','71.8','4'],['23 Oct','124/80','88','98.6','98','—','6.5']];
-  const roleOk=()=>{const r=(window.__TULASI__||{}).role||S.role;return r==='nurse'||r==='rmo'||S.role==='nurse'||S.role==='rmo';};
+  /* 21 Nov 2026 (owner): the psychiatrist can add vitals too (and the floor lead psychiatrist) */
+  const roleOk=()=>{const r=(window.__TULASI__||{}).role||S.role;return /^(nurse|rmo|psychiatrist|floor-lead-psychiatrist)$/.test(r)||S.role==='nurse'||S.role==='rmo'||S.role==='psychiatrist';};
   const F=[['vsBp','BP (mmHg)','e.g. 120/80',1],['vsHr','Pulse (per min)','e.g. 80',1],['vsRr','Resp. rate (per min)','e.g. 16',1],['vsT','Temp (°F)','e.g. 98.6',1],['vsO2','SpO2 (%)','e.g. 98',1],['vsWt','Weight (kg)','optional',0],['vsSl','Sleep (h)','optional',0]];
   vitalsModal=function(){
-    if(!roleOk()){toast('Vitals are recorded by the nurse or the RMO');return;}
+    if(!roleOk()){toast('Vitals are recorded by the nurse, the RMO or the psychiatrist');return;}
     openModal(`<div class="mh"><h3>Add vitals · ${esc((ptFind(S.pid)||{}).name||'')}</h3><button class="x" aria-label="Close" onclick="closeModal()">×</button></div>
       <div class="mb"><div class="grid2">${F.map(f=>`<label class="field"><span class="lbl">${f[1]}${f[3]?'':' <span class="tiny muted">(optional)</span>'}</span><input class="input" id="${f[0]}" placeholder="${f[2]}" inputmode="decimal" autocomplete="off"></label>`).join('')}</div>
       <div class="tiny muted" style="margin-top:8px">Saved with your name and the time. The doctor's NEWS2 uses this reading.</div></div>
@@ -22,7 +23,7 @@
   try{if(Array.isArray(PT_KEYS)&&PT_KEYS.indexOf('trLog')<0)PT_KEYS.push('trLog');}catch(e){}
   const __sg=sugarModal;
   sugarModal=function(){
-    if(!roleOk()){toast('Sugar readings are recorded by the nurse or the RMO');return;}
+    if(!roleOk()){toast('Sugar readings are recorded by the nurse, the RMO or the psychiatrist');return;}
     __sg.apply(this,arguments);
     const i=$('sgV');if(i){i.value='';i.placeholder='e.g. 110';setTimeout(()=>i.focus(),0);}
   };
@@ -47,7 +48,7 @@
     }).join('');
     /* a sugar reading with no vitals reading on its day still gets its own row */
     const extra=sug.filter(x=>!rows.some(v=>String(x.at||'').indexOf(v[0])===0)).map(x=>`<tr class="first"><td class="d">${esc(String(x.at||'').split(',')[0])}</td><td class="t">${esc(String(x.at||'').split(',')[1]||'—')}</td><td colspan="8"><span class="none">—</span></td><td>${esc(x.when)} ${esc(x.v)}</td></tr>`).join('');
-    tb.innerHTML='<thead>'+head+'</thead><tbody>'+((body+extra)||'<tr><td colspan="11" class="muted small">No readings yet. The nurse or RMO adds them with Add vitals.</td></tr>')+'</tbody>';
+    tb.innerHTML='<thead>'+head+'</thead><tbody>'+((body+extra)||'<tr><td colspan="11" class="muted small">No readings yet. The nurse, RMO or psychiatrist adds them with Add vitals.</td></tr>')+'</tbody>';
     const note=card.querySelector('.hd .tiny');if(note)note.textContent='One row per reading, with the time and who took it. Out of range in red. NEWS2 is worked out from the reading.';
   }
   const __rh=render;

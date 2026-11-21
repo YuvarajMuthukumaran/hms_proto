@@ -58,7 +58,7 @@
     const body=order.sort((a,b)=>(S.vm&&S.vm.sort==='old'?1:-1)*(toD(a)-toD(b))).map(k=>{const D=days[k];
       return `<tr><td class="d vs-d">${E(k)}${D.daily.map(x=>`<small>${E(x)}</small>`).join('')}</td>${D.slots.map((L,i)=>L.length?`<td>${L.map(r=>`<div class="vs-r"><span class="tm">${E(r.tm||'')}</span>${r.html}${r.ini?` <span class="ini" title="Recorded by">${E(r.ini)}</span>`:''}</div>`).join('')}</td>`:isSched(i)?'<td class="miss">—</td>':'<td class="ns" aria-label="Not scheduled"></td>').join('')}</tr>`;}).join('');
     tb.classList.add('vs');
-    tb.innerHTML='<thead>'+head+'</thead><tbody>'+(body||'<tr><td colspan="7" class="muted small">No readings yet. The nurse or RMO adds them with Add vitals.</td></tr>')+'</tbody>';
+    tb.innerHTML='<thead>'+head+'</thead><tbody>'+(body||'<tr><td colspan="7" class="muted small">No readings yet. The nurse, RMO or psychiatrist adds them with Add vitals.</td></tr>')+'</tbody>';
     const note=card.querySelector('.hd .tiny');if(note)note.textContent='One row per date, six time slots. Grey: nothing scheduled in that slot. A dash: scheduled, no reading yet. Out of range in red.';
   }
 

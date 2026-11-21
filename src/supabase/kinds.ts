@@ -25,7 +25,7 @@ const WRITERS: Record<WriteScope, readonly RoleKey[]> = {
   consents: ['psychiatrist', 'lead', 'rmo', 'floor-lead-psychiatrist'],
   events: ['lead', 'psychiatrist', 'psychologist', 'nurse', 'rmo', 'floor-lead-psychiatrist', 'floor-lead-psychologist'],
   prefs: ['lead', 'psychiatrist', 'psychologist', 'nurse', 'rmo', 'floor-lead-psychiatrist', 'floor-lead-psychologist'],
-  vitals: ['nurse', 'rmo'],
+  vitals: ['nurse', 'rmo', 'psychiatrist', 'floor-lead-psychiatrist'],
   notes: ['psychologist', 'psychiatrist', 'lead', 'floor-lead-psychologist', 'floor-lead-psychiatrist'],
   mar: ['nurse', 'rmo'],
   docs: ['lead', 'psychiatrist', 'psychologist', 'floor-lead-psychologist', 'floor-lead-psychiatrist'],
