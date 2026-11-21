@@ -145,6 +145,24 @@
     SNO(pid).grp.unshift(r);closeModal();render();toast('Attendance logged for '+r.group);
   };
 
+  /* 21 Nov 2026 (owner): every required contact has a View button and the card has View all: what was saved in the Call family pop-up
+     (famState log: what, who, when, how it went, how long, what was said, topics covered) */
+  const CALLK={c24:['24-hour call',/24 hour/i],c34:['Day 3 to 4 call',/day 3 to 4/i],wk:['Weekly update',/week/i],pre:['Pre-discharge session',/discharge/i],all:['All family calls',/./]};
+  window.tpCalls=function(pid,key){
+    const K=CALLK[key]||CALLK.all;let log=[];
+    try{log=((window.__faApi&&__faApi.famState(pid))||{}).log||[];}catch(e){}
+    const rows=log.filter(l=>key==='all'||K[1].test(l.what||''));
+    const card=l=>{const parts=String(l.note||'').split(' · '),spoke=!/attempt/i.test(l.what||''),out=parts[0]||'',dur=/min/i.test(parts[1]||'')?parts[1]:'',said=parts.slice(dur?2:1).join(' · ');
+      const dot=spoke?'#16a34a':'#98a2b3';
+      return '<div style="display:grid;grid-template-columns:14px minmax(0,1fr);gap:12px;padding:12px 0;border-top:1px solid #eef2f6"><i style="width:10px;height:10px;border-radius:50%;background:'+dot+';margin-top:6px"></i><div>'
+        +'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><b>'+esc(l.what||'Family contact')+'</b>'+(out?'<span class="chip '+(spoke?'c-green':'c-grey')+'">'+esc(out)+'</span>':'')+(dur?'<span class="chip c-grey">'+esc(dur)+'</span>':'')+'</div>'
+        +'<div class="tiny muted" style="margin-top:2px">'+esc(l.by||'')+' · '+esc(l.at||'')+'</div>'
+        +(said?'<div style="margin-top:6px;font-size:13.5px">'+esc(said)+'</div>':'')
+        +((l.topics||[]).length?'<div class="mini-chips" style="margin-top:8px">'+l.topics.map(t=>'<span class="chip c-blue">'+esc(t)+'</span>').join('')+'</div>':'')
+        +'</div></div>';};
+    const body=rows.length?'<div style="max-height:60vh;overflow:auto">'+rows.map(card).join('')+'</div>':'<div class="small muted" style="padding:6px 0">Nothing logged yet. Use Call family on the dashboard or the patient page; it is saved here.</div>';
+    V3.modal(esc(K[0])+' · '+esc(pat(pid).name),rows.length+' logged. Saved from the Call family pop-up.',body,'<button class="btn pri" onclick="closeModal()">Close</button>');
+  };
   function family(pid){
     const fam=signed(pid).filter(n=>n.mod==='Family therapy'),done={};
     fam.forEach(n=>{(n.blk&&n.blk.topics||[]).forEach(t=>{done[t]={at:(n.at||'').split(',')[0],who:n.blk.who||'',und:n.blk.und||''};});});
@@ -164,7 +182,7 @@
     const st=r=>r[1]?'<span class="tf-st ok">Done</span>':r[2]?'<span class="tf-st due">Due now</span>':'<span class="tf-st">Not due yet</span>';
     /* 19 Nov 2026 (owner): the Sensitisation topics card is gone from here; topics are ticked in the Call family pop-up (block 140) */
     return `<div class="tf">
-      <section class="tf-c"><div class="tf-h"><div><b>Required contact</b><span>Set at admission, ticks itself when logged</span></div></div>${req.map(r=>'<div class="tf-r"><span>'+r[0]+'</span>'+st(r)+'</div>').join('')}</section>
+      <section class="tf-c"><div class="tf-h"><div><b>Required contact</b><span>Set at admission, ticks itself when logged</span></div><button class="btn sm" data-p="${esc(pid)}" data-k="all" onclick="tpCalls(this.dataset.p,this.dataset.k)">View all</button></div>${req.map((r,ri)=>'<div class="tf-r"><span>'+r[0]+'</span><span style="display:flex;align-items:center;gap:12px">'+st(r)+'<button class="btn sm" data-p="'+esc(pid)+'" data-k="'+['c24','c34','wk','pre'][ri]+'" onclick="tpCalls(this.dataset.p,this.dataset.k)">View</button></span></div>').join('')}</section>
       <section class="tf-c"><div class="tf-h"><div><b>Calls and WhatsApp</b><span>Through the Tulasi number</span></div></div>${comm.length?comm.map(c=>'<div class="tf-r"><span>'+esc(c.type)+' · '+esc(c.who)+'</span><span class="tf-d">'+esc(c.date)+'</span></div>').join(''):'<div class="tf-e">No contact logged yet.</div>'}</section>
 </div><div class="tp-sec" style="margin-top:14px"><div class="tp-h">Family sessions</div>${sessions(pid,'fam')}</div>`;
   }

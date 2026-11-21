@@ -31,6 +31,25 @@
         :'<div class="small muted">No medicine recorded for this patient yet.</div>');
     box.style.cssText='border:1px solid #e3eaf2;border-radius:12px;padding:12px 14px;margin:2px 0 12px;background:#fbfcfe';
     const lab=ta.closest('label');lab.parentNode.insertBefore(box,lab);
+    /* latest vitals and the orders that are active now */
+    let vit=null,ords=[];
+    try{vit=JSON.parse(ptRun(pid,()=>JSON.stringify(Array.isArray(S.vit)&&S.vit.length?S.vit[S.vit.length-1]:null)));}catch(e){}
+    try{ords=JSON.parse(ptRun(pid,()=>{const o=[];
+      (typeof monList==='function'?monList(pid):[]).forEach(x=>o.push(['Monitoring',x[0]+': '+(typeof monLabel==='function'?monLabel(x[1]):x[1]),(x[2]||{}).by||'']));
+      (S.labs||[]).filter(l=>!/done|resulted|cancel/i.test(l.st||'')).forEach(l=>o.push(['Investigation',(l.t||'')+(l.d?' · '+l.d:''),l.by||'']));
+      (S.stand||[]).filter(i=>i.pid===pid).forEach(i=>o.push(['Advice',i.text||'',i.by||'']));
+      return JSON.stringify(o);}))||[];}catch(e){}
+    try{((psyPx(pid)||{}).tmp||[]).filter(t=>t.steps&&t.steps.some(z=>!z.done)).forEach(t=>ords.push(['Order',(t.key||'').toUpperCase()+' · '+t.steps.filter(z=>z.done).length+' of '+t.steps.length+' tasks done',t.by||'']));}catch(e){}
+    const bad=(k,v)=>{v=String(v||'');if(k==='bp'){const m=v.match(/^(\d+)\/(\d+)/);return !!m&&(+m[1]>=140||+m[1]<90||+m[2]>=90);}if(k==='hr')return +v>100||+v<50;if(k==='t')return +v>=100.4||+v<96;if(k==='o2')return +v<95;if(k==='rr')return +v>20||+v<12;return false;};
+    const cell=(l,v,k,u)=>'<div style="min-width:90px"><div class="tiny muted">'+l+'</div><div style="font-size:15px;font-weight:700;'+(bad(k,v)?'color:#b42318':'')+'">'+(v?E(v):'—')+(v&&u?' <span class="tiny muted" style="font-weight:500">'+u+'</span>':'')+'</div></div>';
+    const vb=document.createElement('div');vb.id='rvVit';vb.style.cssText=box.style.cssText;
+    vb.innerHTML='<div class="lbl" style="margin-bottom:8px"><b>Latest vitals</b>'+(vit?' <span class="tiny muted">'+E(vit[0]||'')+(vit[7]?' · '+E(vit[7]):'')+(vit[8]?' · taken by '+E(vit[8]):'')+'</span>':'')+'</div>'
+      +(vit?'<div style="display:flex;flex-wrap:wrap;gap:8px 26px">'+cell('Blood pressure',vit[1],'bp','mmHg')+cell('Pulse',vit[2],'hr','bpm')+cell('Resp. rate',vit[10],'rr','per min')+cell('Temperature',vit[3],'t','°F')+cell('SpO2',vit[4],'o2','%')+'</div>':'<div class="small muted">No reading recorded yet. Vitals are entered by the nurse or the RMO.</div>');
+    const ob=document.createElement('div');ob.id='rvOrd';ob.style.cssText=box.style.cssText;
+    const col={Monitoring:'c-green',Investigation:'c-violet',Advice:'c-amber',Order:'c-blue'};
+    ob.innerHTML='<div class="lbl" style="margin-bottom:8px"><b>Active orders</b> <span class="tiny muted">'+ords.length+' running now</span></div>'
+      +(ords.length?ords.map(o=>'<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid #eef2f6;font-size:13.5px"><span class="chip '+(col[o[0]]||'c-grey')+'" style="min-width:92px;justify-content:center">'+E(o[0])+'</span><b style="font-weight:600;margin-right:auto">'+E(o[1])+'</b><span class="tiny muted">'+E(o[2])+'</span></div>').join(''):'<div class="small muted">No active order for this patient.</div>');
+    box.after(vb);vb.after(ob);
     const m=document.querySelector('.modal');if(m)m.style.width='min(760px,100%)';
   }
   const __pop=window.psyEyePop;
