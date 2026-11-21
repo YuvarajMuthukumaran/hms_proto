@@ -150,11 +150,12 @@
     return `<div class="tf">
       <section class="tf-c"><div class="tf-h"><div><b>Required contact</b><span>Set at admission, ticks itself when logged</span></div></div>${req.map(r=>'<div class="tf-r"><span>'+r[0]+'</span>'+st(r)+'</div>').join('')}</section>
       <section class="tf-c"><div class="tf-h"><div><b>Calls and WhatsApp</b><span>Through the Tulasi number</span></div></div>${comm.length?comm.map(c=>'<div class="tf-r"><span>'+esc(c.type)+' · '+esc(c.who)+'</span><span class="tf-d">'+esc(c.date)+'</span></div>').join(''):'<div class="tf-e">No contact logged yet.</div>'}</section>
-      <section class="tf-c"><div class="tf-h"><div><b>Who may be told what</b><span>Family members and what each may hear</span></div></div>${contacts.map(c=>'<div class="tf-r"><span><b>'+esc(c[0])+'</b> <small>'+esc(String(c[1]).split(' · ')[0])+'</small></span><select class="input" style="max-width:190px;min-height:34px" onchange="tpTold(\''+pid+'\',\''+esc(c[0]).replace(/'/g,'')+'\',this.value)">'+['Everything','Clinical updates only','Billing only','Nothing'].map(o=>'<option '+((told[c[0]]||(/Not for now/.test(c[2]||'')?'Nothing':'Everything'))===o?'selected':'')+'>'+o+'</option>').join('')+'</select></div>').join('')||'<div class="tf-e">No family contacts yet.</div>'}</section>
-      <section class="tf-c"><div class="tf-h"><div><b>Family concern</b><span>Goes to the Patient Experience team</span></div></div><div style="padding:12px 16px 16px"><textarea class="input" id="tpConc" rows="3" placeholder="What the family said"></textarea><button class="btn sm pri" style="margin-top:8px" onclick="tpGriev('${pid}')">Raise a grievance</button></div></section></div><div class="tp-sec" style="margin-top:14px"><div class="tp-h">Family sessions</div>${sessions(pid,'fam')}</div>`;
+</div><div class="tp-sec" style="margin-top:14px"><div class="tp-h">Family sessions</div>${sessions(pid,'fam')}</div>`;
   }
   window.tpTold=(pid,name,v)=>{SNO(pid).told[name]=v;toast('Saved: '+name+' may be told: '+v.toLowerCase());};
-  window.tpGriev=function(pid){const t=(($('tpConc')||{}).value||'').trim();if(!t){toast('Write the concern first');return;}S.pgriev=S.pgriev||[];S.pgriev.unshift({from:'Family',t:t.slice(0,90),via:'Family session',own:'Patient experience team',st:'Open',sla:'6 h left',src:'family',cat:'Psychologist',...whoAt()});render();toast('Grievance raised for the patient experience team');};
+  /* 21 Nov 2026 (owner): the family concern box is a pop-up opened from the header button */
+  window.tpGrievOpen=function(pid){V3.modal('Raise a grievance','Goes to the Patient Experience team.','<label class="field"><span class="lbl">What the family said</span><textarea class="input" id="tpConc" rows="4" placeholder="What the family said"></textarea></label>','<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="tpGriev(\''+pid+'\')">Raise a grievance</button>');};
+  window.tpGriev=function(pid){const t=(($('tpConc')||{}).value||'').trim();if(!t){toast('Write the concern first');return;}S.pgriev=S.pgriev||[];S.pgriev.unshift({from:'Family',t:t.slice(0,90),via:'Family session',own:'Patient experience team',st:'Open',sla:'6 h left',src:'family',cat:'Psychologist',...whoAt()});closeModal();render();toast('Grievance raised for the patient experience team');};
 
   /* ---------------- the card ---------------- */
   window.tpSeg=v=>{st().seg=v;render();};
@@ -181,6 +182,7 @@
     /* one main button per tab; the psychiatrist reads Individual and Group, and has full access to Family */
     const hd=card.querySelector('.hd');
     if(hd){[...hd.querySelectorAll('button')].forEach(b=>{if(b!==add)b.remove();});
+      if(s.seg==='fam'&&add&&!hd.querySelector('.tp-griev')){const gb=document.createElement('button');gb.className='btn tp-griev';gb.textContent='Raise a grievance';gb.setAttribute('onclick',"tpGrievOpen(S.pid)");add.parentNode.insertBefore(gb,add);}
       if((doc()&&s.seg!=='fam'||s.seg==='ind')&&add)add.remove();
       const sub={ind:'One-to-one sessions between the therapist and the patient',grp:'Group sessions: who came, and the latest line from each',fam:'Family sessions, topics covered, required contact and calls'}[s.seg];
       const sm=hd.querySelector('.small,.muted');if(sm)sm.textContent=sub+(doc()&&s.seg!=='fam'?' · read only for the psychiatrist':'');}
