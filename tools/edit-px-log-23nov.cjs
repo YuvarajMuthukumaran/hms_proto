@@ -24,3 +24,7 @@ require('./rep.cjs')('public/px-lead-prototype.html',[
  [String.raw`saveConcern = function () {\n      if (self.__rec) { try { self.__rec.stop(); } catch (e) {} }\n      var f = self.state.form,`,
   String.raw`saveConcern = function () {\n      if (self.__rec) { try { self.__rec.stop(); } catch (e) {} }\n      var f0 = self.state.form; if (!f0.pid || (f0.kind !== 'random' && (!f0.category || !f0.sev))) { var miss = [!f0.pid && 'the patient', !f0.category && 'what it is about', !f0.sev && 'how serious it is'].filter(Boolean); window.alert('Please choose ' + miss.join(', ') + ' first.'); return; }\n      var f = self.state.form,`],
 ]);
+/* 23 Nov, later: every concern has the 6-hour rule (Low severity said "Due tomorrow"); the logged time is kept so Today can count down */
+require('./rep.cjs')('public/px-lead-prototype.html',[
+ ["sla: f.sev === 'Low' ? 'Due tomorrow' : '6 h left', slaTone: 'grey',","sla: '6 h left', at: Date.now(), slaTone: 'grey',"],
+]);

@@ -60,6 +60,7 @@
           var k = r.key, d = r.data || {}, t = stamp(d), id = k.split(':')[1];
           if (k.indexOf('pxg:') === 0) {
             if (last[k] === t) return; last[k] = t;
+            if (d.c && d.c.sla === 'Due tomorrow') d.c.sla = '6 h left'; /* 23 Nov: every concern has the 6-hour rule */
             if (d.c && !have[d.c.id]) { extra.push(d.c); have[d.c.id] = 1; changed = true; }
             if (d.st && stamp(cs[id]) !== stamp(d.st)) { cs[id] = d.st; changed = true; }
           } else if (k.indexOf('pxn:') === 0) {

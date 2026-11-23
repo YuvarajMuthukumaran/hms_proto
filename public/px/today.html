@@ -374,7 +374,9 @@ function concernRows(){
   const cs=st.concernStatus||{},pts=(window.HMS_PATIENTS&&window.HMS_PATIENTS.patients)||[];
   (st.extraConcerns||[]).forEach(c=>{
     const s=Object.assign({},c,cs[c.id]||{});if(s.status==='Resolved')return;
-    const h=pts.find(p=>p.id===c.pid)||{},red=/safety|rights/i.test(s.category||'')||s.type==='grievance';
+    const h=pts.find(p=>p.id===c.pid)||{},left=s.at?6*36e5-(Date.now()-s.at):null,over=left!==null&&left<=0,red=/safety|rights/i.test(s.category||'')||s.type==='grievance'||over;
+    const hm=ms=>{const m=Math.max(1,Math.round(Math.abs(ms)/6e4));return m>=60?Math.floor(m/60)+' h'+(m%60?' '+m%60+' min':''):m+' min';};
+    s.sla=left===null?(s.sla==='Due tomorrow'?'':s.sla):over?'late by '+hm(left):hm(left)+' left of 6 h';
     raw.unshift({id:'g:'+c.id,type:s.type==='grievance'?'Grievance':'Concern',late:red,red:/safety|rights/i.test(s.category||''),name:h.name||c.pname||'Patient',initials:h.ini||'',sub:h.room?('Room '+String(h.room).replace(/^Room\s*/,'')):'',tags:[c.id],
       items:[{id:'gi'+c.id,c:red?'red':'blue',text:(s.title||'Concern')+(s.category?' · '+s.category:''),meta:'with '+(s.owner||'owner')+(s.ownerRole?' ('+s.ownerRole+')':'')+' · '+(s.status||'Open')+(s.sla?' · '+s.sla:'')}],
       others:s.latest?(s.latestBy?s.latestBy+': ':'')+s.latest:'Nothing yet'});
@@ -408,7 +410,7 @@ function today(){
     <div class="bar"><input class="inp" type="search" placeholder="Type a name" aria-label="Search patients"><div style="display:flex;gap:8px"><button class="btn">${I.plus}Log a grievance</button><button class="btn pri" data-call="pick">${I.phone}Log a family call</button></div></div>
     ${brief}<div class="chips">${chips}</div>
     <div class="tw"><table><thead><tr><th style="padding-left:18px">TYPE</th><th>PATIENT</th><th>WHAT'S DUE</th><th>ACTION TAKEN BY OTHERS</th><th></th></tr></thead><tbody>${rows||(window.PX_REAL?'<tr><td colspan="5" style="padding:22px;color:#667085">Nothing is due right now. New admissions and the concerns you log will show here.</td></tr>':'')}</tbody></table></div>
-    ${(()=>{const e=raw.find(x=>x.id===state.eye);if(!e)return "";return `<div class="tw" style="margin:12px 0;padding:16px 18px" role="region" aria-label="Details for ${esc(e.name)}"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><b style="font-size:16px">${esc(e.name)}</b> <span style="color:#667085;font-size:13px">${esc(e.sub)}</span></div><button class="btn" data-eye="">Close</button></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">${e.items.map(it=>`<div style="display:flex;gap:8px"><i class="dot" style="background:${state.done[it.id]?dotC.ok:dotC[it.c]}"></i><span>${esc(it.text)} <span style="font-size:12px;color:#667085">· ${esc(state.done[it.id]?"done just now":it.meta)}</span></span></div>`).join("")}</div><div style="margin-top:12px;font-size:13px;color:#344054"><b>Action taken by others:</b> ${esc(e.others)}</div></div>`})()}<div class="key" role="note"><b style="font-size:11px;color:#667085;letter-spacing:.05em">KEY</b><span><i class="dot" style="background:#E5484D"></i>Safety or rights concern <em style="color:#667085">· needs you now</em></span><span><i class="dot" style="background:#F5A524"></i>Late <em style="color:#667085">· past its time</em></span><span><i class="dot" style="background:#3B82F6"></i>Due today</span><span><i class="dot" style="background:#12B76A"></i>Action taken</span></div>
+    ${(()=>{const e=raw.find(x=>x.id===state.eye);if(!e)return "";return `<div class="eyeov" style="position:fixed;inset:0;z-index:60;background:rgba(15,23,42,.38);display:flex;align-items:center;justify-content:center;padding:16px"><div class="tw" style="background:#fff;border:1px solid #E3EAF2;width:min(620px,100%);max-height:86vh;overflow:auto;padding:20px 22px;border-radius:16px;box-shadow:0 20px 50px rgba(15,23,42,.25);font-size:15px" role="dialog" aria-modal="true" aria-label="Details for ${esc(e.name)}"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><b style="font-size:16px">${esc(e.name)}</b> <span style="color:#667085;font-size:13px">${esc(e.sub)}</span></div><button class="btn" data-eye="">Close</button></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">${e.items.map(it=>`<div style="display:flex;gap:8px"><i class="dot" style="background:${state.done[it.id]?dotC.ok:dotC[it.c]}"></i><span>${esc(it.text)} <span style="font-size:12px;color:#667085">· ${esc(state.done[it.id]?"done just now":it.meta)}</span></span></div>`).join("")}</div><div style="margin-top:14px;font-size:14px;color:#344054"><b>Action taken by others:</b> ${esc(e.others)}</div>${/^g:/.test(e.id)?'<div style="margin-top:16px"><button class="btn" data-act="'+e.id+'" data-m="Open in Grievances">Open in Grievances</button></div>':''}</div></div>`})()}<div class="key" role="note"><b style="font-size:11px;color:#667085;letter-spacing:.05em">KEY</b><span><i class="dot" style="background:#E5484D"></i>Safety or rights concern <em style="color:#667085">· needs you now</em></span><span><i class="dot" style="background:#F5A524"></i>Late <em style="color:#667085">· past its time</em></span><span><i class="dot" style="background:#3B82F6"></i>Due today</span><span><i class="dot" style="background:#12B76A"></i>Action taken</span></div>
   </main>`);
 }
 function cmp(){
@@ -422,9 +424,15 @@ function trk(){
   <div class="gt"><div style="grid-template-columns:200px 1fr 1.4fr 180px"><span>TRACKER TAB OR HABIT</span><span>HOW IT WORKS TODAY</span><span>IN THE HMS</span><span>WHO ENTERS IT</span></div>
   ${TRK.map(r=>`<div style="grid-template-columns:200px 1fr 1.4fr 180px"><span style="font-weight:600">${esc(r.tab)}</span><span style="color:#475569">${esc(r.now)}</span><span class="hl">${esc(r.hms)}</span><span>${esc(r.who)}</span></div>`).join('')}</div></div>`;
 }
+/* eye pop-up: backdrop click or Escape closes it; Take Action menu placed on the page under its button */
+document.addEventListener('click',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('eyeov'))setState({eye:null});});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(state.eye||state.open))setState({eye:null,open:null});});
+window.addEventListener('scroll',()=>{if(state.open)setState({open:null});},true);
+function placeMenu(){const m=document.querySelector('.menu[role=menu]');if(!m)return;const b=m.parentElement&&m.parentElement.querySelector('.take');if(!b)return;const r=b.getBoundingClientRect(),w=m.offsetWidth||260,h=m.offsetHeight;let top=r.bottom+6;if(top+h>innerHeight-8&&r.top-h-6>8)top=r.top-h-6;m.style.position='fixed';m.style.top=top+'px';m.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w))+'px';m.style.zIndex='70';}
 function render(){
   document.getElementById('root').innerHTML = state.view==='today'?today():state.view==='cmp'?cmp():trk();
   document.querySelectorAll('.rev button').forEach(b=>b.classList.toggle('on',b.dataset.v===state.view));
+  try{placeMenu();}catch(e){}
 }
 /* every chip and name does something: it jumps to the rows it counts, or opens the page that holds the detail */
 const CHIPTIP={late:'Jump to the first late row',safety:'Open Grievances (safety concerns are on top)',griev:'Open Grievances',disch:'Jump to patients going home today',nps:'Open Reports',calls:'Jump to the first random call that is due',team:'Jump to the first row where the team is late'};
@@ -456,7 +464,7 @@ document.addEventListener('click',e=>{
     setState({open:null,acted:{...state.acted,[t.dataset.act]:t.dataset.m}});return;
   }
   if(t.dataset.hide){setState({brief:false});return;}
-  if(t.hasAttribute("data-eye")){const same=state.eye===t.dataset.eye;setState({eye:same?null:(t.dataset.eye||null),open:null});if(!same)setTimeout(()=>{const p=document.querySelector('[aria-label^="Details for"]');if(p)p.scrollIntoView({block:"center",behavior:"smooth"});},60);return;}
+  if(t.hasAttribute("data-eye")){const same=state.eye===t.dataset.eye;setState({eye:same?null:(t.dataset.eye||null),open:null});return;}
   if(state.open&&!t.closest('.menu')) setState({open:null});
 });
 const TP=[
