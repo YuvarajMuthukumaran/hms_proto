@@ -11,9 +11,14 @@
   var dayKey = function () { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
   var hhmm = function (t) { var d = new Date(t); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
   var jget = function (k, d) { try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
-  var jset = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  var jset = function (k, v) { MEMO = {}; try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   var DEF = { times: { M: '09:00-11:00', A: '14:00-16:00', E: '18:00-20:00' }, alloc: [{ name: 'Grisham', who: 'nonvvip' }, { name: 'Prabh', who: 'vvip' }, { name: 'Anurag', who: 'all' }], backup: {}, vvip: {} };
-  var cfg = function () { var c = jget(CFG, null) || {}; return { times: Object.assign({}, DEF.times, c.times || {}), alloc: (c.alloc && c.alloc.length ? c.alloc : DEF.alloc), backup: c.backup || {}, vvip: c.vvip || {} }; };
+  var cfg0 = function () { var c = jget(CFG, null) || {}; return { times: Object.assign({}, DEF.times, c.times || {}), alloc: (c.alloc && c.alloc.length ? c.alloc : DEF.alloc), backup: c.backup || {}, vvip: c.vvip || {} }; };
+  /* 23 Nov meeting (slow Rounds): one draw used to re-read the settings and re-split the caseload for every patient (hundreds of
+     times). Settings and the caseload are now worked out once per draw (cleared after the current task and on every save). */
+  var MEMO = {}, memoT = 0;
+  var memo = function (k, f) { if (!(k in MEMO)) { MEMO[k] = f(); if (!memoT) memoT = setTimeout(function () { MEMO = {}; memoT = 0; }, 0); } return MEMO[k]; };
+  var cfg = function () { return memo('cfg', cfg0); };
   var ROUNDS = [['M', 'Morning', 'How was the night?', 'How was your night? Did you sleep? Anything you need this morning?'],
     ['A', 'Afternoon', 'How did the morning go?', 'How did the morning go? Was what we talked about earlier sorted?'],
     ['E', 'Evening', 'How was your day?', 'How was your day? Is there anything before tonight?']];
@@ -26,7 +31,8 @@
   var state = { v: 'all', sel: '', round: '', topic: '', sp: '', words: '', ans: '', room: '', roomOpen: false, scribe: null };
   var day = function () { var s = jget(RV, null); if (!s || s.day !== dayKey()) s = { day: dayKey(), v: {}, flags: (s && s.flags) || {} }; return s; };
   var curRound = function () { var h = new Date().getHours(); return h < 13 ? 'M' : h < 17 ? 'A' : 'E'; };
-  var mineOf = function () {
+  var mineOf = function () { return memo('mine:' + me(), mine0); };
+  var mine0 = function () {
     var c = cfg(), a = c.alloc.filter(function (x) { return x.name === me(); })[0] || c.alloc[0];
     /* 23 Nov: more than 90 patients -> each person's caseload comes from PXSplit (by floor, at most 90 each) */
     if (window.PXSplit && P().length > window.PXSplit.CAP) { var o = window.PXSplit.owner(P(), c.alloc, c.vvip); return P().filter(function (p) { return o.byId[p.id] === a.name; }); }
@@ -55,17 +61,18 @@
     return slotCache.m[p.id] === undefined ? 'M' : slotCache.m[p.id];
   };
   /* who is on which round, and why */
+  var onRound = function (p, r) { return split() ? slotOf(p) === r : r === 'M'; };
   function why(p, r, D) {
     var c = cfg(), out = [], v = D.v[p.id] || {}, vip = !!c.vvip[p.id], fl = D.flags[p.id];
     var openFlag = fl && fl.open;
     var home = function (n) { if (!p.edd) return false; var d = new Date(); d.setHours(0, 0, 0, 0); return p.edd === new Date(d.getTime() + n * 864e5).toISOString().slice(0, 10); };
-    if (split() ? slotOf(p) === r : r === 'M') out.push(vip ? 'VVIP' : 'Allocated to you');
+    /* 23 Nov meeting: no "Allocated to you" / "Missed this morning" labels; the patient is still on their round */
+    if (r === 'M' && vip && onRound(p, r)) out.push('VVIP');
     if (r === 'A') {
       if (+p.day <= 2) out.push('New admission, day ' + p.day);
       if (v.M && (v.M.a === 'notgood' || v.M.a === 'tell')) out.push('Flagged this morning');
       else if (openFlag) out.push('Flagged earlier, not closed');
       if (v.M && v.M.a === 'na') out.push('Not available this morning');
-      if (!v.M && passed('M') && (!split() || slotOf(p) === 'M')) out.push('Missed this morning');
       if (home(0)) out.push('Going home today');
       if (vip) out.push('VVIP');
     }
@@ -82,7 +89,7 @@
   /* a round counts as missed only once its time is over */
   var passed = function (k) { var e = String((cfg().times[k] || '').split('-')[1] || '23:59').split(':'), n = new Date(); return n.getHours() * 60 + n.getMinutes() >= (+e[0]) * 60 + (+e[1] || 0); };
   var tagsOf = function (p) { var c = cfg(), t = []; if (c.vvip[p.id]) t.push('VVIP'); if (+p.day <= 2) t.push('New'); return t; };
-  function listFor(r, D) { return mineOf().map(function (p) { return { p: p, why: why(p, r, D) }; }).filter(function (x) { return x.why.length; }); }
+  function listFor(r, D) { return mineOf().map(function (p) { return { p: p, why: why(p, r, D) }; }).filter(function (x) { return x.why.length || onRound(x.p, r); }); }
   function statusOf(D, p, r) { var v = D.v[p.id] && D.v[p.id][r]; if (!v) return 'to'; if (v.a === 'good') return 'seen'; if (v.a === 'na') return 'na'; return 'flag'; }
 
   /* ---------- entries (same shapes as the old screen) ---------- */
@@ -131,7 +138,7 @@
   var css = document.createElement('style');
   css.textContent = '.rv{padding:16px;display:flex;flex-direction:column;gap:12px}.rv-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.rv-card{background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;font:inherit}.rv-card.on{border-color:#1E6CDB;box-shadow:0 0 0 2px #E8F1FE}.rv-card b{font-size:15px}.rv-card .t{font-size:12px;color:#667085}.rv-bar{height:6px;background:#EEF2F6;border-radius:99px;margin-top:8px}.rv-bar i{display:block;height:6px;border-radius:99px;background:#1E6CDB}' +
     '.rv-fl{display:flex;gap:6px;flex-wrap:wrap}.rv-ch{border:1px solid #D6DEE8;background:#fff;border-radius:99px;padding:5px 13px;font-size:13px;font-weight:600;cursor:pointer}.rv-ch.on{background:#EAF2FF;color:#1E5BB8;border-color:#9EC0F7}' +
-    '.rv-main{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:12px;align-items:start}.rv-list{background:#fff;border:1px solid #E3EAF2;border-radius:12px;overflow:hidden}.rv-row{display:grid;grid-template-columns:70px minmax(0,1.3fr) minmax(0,1.2fr) 46px 96px 96px;gap:8px;align-items:center;padding:10px 12px;border-top:1px solid #EEF2F6;cursor:pointer;width:100%;background:none;border-left:0;border-right:0;border-bottom:0;font:inherit;text-align:left}.rv-row:first-child{border-top:0}.rv-row:hover,.rv-row.sel{background:#F5F9FF}.rv-row small{color:#667085;display:block}' +
+    '.rv-main{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:12px;align-items:start}.rv-list{background:#fff;border:1px solid #E3EAF2;border-radius:12px;overflow:hidden}.rv-row{display:grid;grid-template-columns:64px minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) 40px 64px 96px;gap:8px;align-items:center;padding:10px 12px;border-top:1px solid #EEF2F6;cursor:pointer;width:100%;background:none;border-left:0;border-right:0;border-bottom:0;font:inherit;text-align:left}.rv-row:first-child{border-top:0}.rv-row.rv-hd,.rv-row.rv-hd:hover{cursor:default;background:#F8FAFC;font-size:11px;font-weight:700;color:#667085;text-transform:uppercase;letter-spacing:.04em;padding:8px 12px}.rv-row .c3{font-size:13px;color:#344054;overflow-wrap:anywhere;line-height:1.3}.rv-row:hover,.rv-row.sel{background:#F5F9FF}.rv-row small{color:#667085;display:block}' +
     '.rv-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:99px;padding:1px 8px;margin-left:5px;background:#FFF4D6;color:#93370D}.rv-tag.n{background:#E8F1FE;color:#1E5BB8}.rv-mae{display:flex;gap:3px}.rv-mae i{width:14px;height:14px;border-radius:4px;background:#EEF2F6;display:block}.rv-mae i.seen{background:#12B76A}.rv-mae i.flag{background:#F04438}.rv-mae i.na{background:#98A2B3}' +
     '.rv-st{font-size:12px;font-weight:700;border-radius:99px;padding:2px 10px;justify-self:start}.rv-st.to{background:#EEF2F6;color:#475467}.rv-st.seen{background:#ECFDF3;color:#067647}.rv-st.flag{background:#FEF3F2;color:#B42318}.rv-st.na{background:#F2F4F7;color:#475467}' +
     '.rv-pan{background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px;position:sticky;top:8px}.rv-ans{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.rv-a{border:2px solid #E3EAF2;border-radius:12px;padding:12px;font:inherit;font-weight:700;cursor:pointer;background:#fff}.rv-a.on{border-width:2px}.rv-pan h4{margin:0;font-size:12px;letter-spacing:.05em;color:#667085;text-transform:uppercase}' +
@@ -154,10 +161,10 @@
       return state.v === 'all' || (state.v === 'to' && s === 'to') || (state.v === 'seen' && s === 'seen') || (state.v === 'flag' && (s === 'flag' || s === 'na'));
     });
     if (!L.length) return '<div style="padding:18px;color:#667085">' + (mineOf().length ? 'Nobody on this list.' : 'No patients are allocated to you yet. Ask the admin to set the allocation in Setting.') + '</div>';
-    return L.map(function (x) {
+    return '<div class="rv-row rv-hd"><span class="c1">Room</span><span class="c2">Patient</span><span class="c3">Psychiatrist</span><span class="c3">Psychologist</span><span class="c4">Day</span><span class="c5">M A E</span><span>Status</span></div>' + L.map(function (x) {
       var p = x.p, s = statusOf(D, p, r), v = D.v[p.id] || {};
       var mae = ['M', 'A', 'E'].map(function (k) { var st = v[k] ? (v[k].a === 'good' ? 'seen' : v[k].a === 'na' ? 'na' : 'flag') : ''; return '<i class="' + st + '" title="' + k + '"></i>'; }).join('');
-      return '<button class="rv-row ' + (state.sel === p.id ? 'sel' : '') + '" onclick="RV2.open(\'' + esc(p.id) + '\')"><span class="c1"><b>' + esc(String(p.room || '').replace(/^Room\s*/, '')) + '</b></span><span class="c2"><b>' + esc(p.name) + '</b>' + tagsOf(p).map(function (t) { return '<span class="rv-tag ' + (t === 'New' ? 'n' : '') + '">' + t + '</span>'; }).join('') + '</span><span class="c3"><small>' + esc(x.why.join(' · ')) + '</small></span><span class="c4">D' + (+p.day) + '</span><span class="c5 rv-mae" aria-label="Morning, afternoon, evening">' + mae + '</span><span class="rv-st ' + s + '">' + ({ to: 'To see', seen: 'Seen', flag: 'Flagged', na: 'Not available' }[s]) + '</span></button>';
+      return '<button class="rv-row ' + (state.sel === p.id ? 'sel' : '') + '" onclick="RV2.open(\'' + esc(p.id) + '\')"><span class="c1"><b>' + esc(String(p.room || '').replace(/^Room\s*/, '')) + '</b></span><span class="c2"><b>' + esc(p.name) + '</b>' + tagsOf(p).map(function (t) { return '<span class="rv-tag ' + (t === 'New' ? 'n' : '') + '">' + t + '</span>'; }).join('') + (x.why.length ? '<small>' + esc(x.why.join(' · ')) + '</small>' : '') + '</span><span class="c3" title="Psychiatrist">' + esc(p.doctor || '—') + '</span><span class="c3" title="Psychologist">' + esc(p.psych || '—') + '</span><span class="c4">D' + (+p.day) + '</span><span class="c5 rv-mae" aria-label="Morning, afternoon, evening">' + mae + '</span><span class="rv-st ' + s + '">' + ({ to: 'To see', seen: 'Seen', flag: 'Flagged', na: 'Not available' }[s]) + '</span></button>';
     }).join('');
   }
   function panel(D) {
@@ -172,9 +179,9 @@
     var scr = dr ? '<div style="background:#F2F7FF;border:1px solid #D5E4FB;border-radius:10px;padding:8px 10px;font-size:13px"><b>AI scribe draft</b><div style="margin:4px 0">' + esc(dr) + '</div><div class="rv-btns"><button class="rv-b pri" onclick="RV2.useDraft()">Use this</button><button class="rv-b" onclick="RV2.discardDraft()">Discard</button></div></div>'
       : (SR.on ? '<div style="font-size:12px;color:#B42318">● The round scribe is listening to this patient.</div>' : '');
     var roomSel = '<div style="border:2px solid #F79009;background:#FFFAEB;border-radius:12px;padding:10px"><button class="rv-b" style="width:100%;background:#F79009;border-color:#F79009;color:#fff;font-size:15px;padding:12px" onclick="RV2.roomToggle()">' + (state.roomOpen ? 'Hide the issue list' : '⚠ Report an issue (room, food, noise, safety)') + '</button>' + (state.roomOpen ? '<select id="rvRoom" onchange="RV2.room(this.value)" style="margin-top:10px;height:46px;font-size:15px;border:2px solid #F79009"><option value="">Choose the issue…</option>' + gTODAY().map(function (x) { return '<option value="' + esc(x[0]) + '"' + (state.room === x[0] ? ' selected' : '') + '>' + (x[2] ? '[Safety] ' : '') + esc(x[0]) + ' → ' + esc(x[1]) + '</option>'; }).join('') + '</select>' : '') + '</div>';
-    return '<aside class="rv-pan" id="rvPan"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b style="font-size:17px">' + esc(p.name) + '</b>' + tagsOf(p).map(function (t) { return '<span class="rv-tag ' + (t === 'New' ? 'n' : '') + '">' + t + '</span>'; }).join('') + '<div style="font-size:13px;color:#667085">Room ' + esc(String(p.room || '').replace(/^Room\s*/, '')) + ' · day ' + (+p.day) + ' · ' + esc(p.doctor || '') + '</div></div><button class="rv-b" onclick="RV2.close()" aria-label="Close">×</button></div>' +
+    return '<aside class="rv-pan" id="rvPan"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b style="font-size:17px">' + esc(p.name) + '</b>' + tagsOf(p).map(function (t) { return '<span class="rv-tag ' + (t === 'New' ? 'n' : '') + '">' + t + '</span>'; }).join('') + '<div style="font-size:13px;color:#667085">Room ' + esc(String(p.room || '').replace(/^Room\s*/, '')) + ' · day ' + (+p.day) + (p.doctor ? ' · Psychiatrist ' + esc(p.doctor) : '') + (p.psych ? ' · Psychologist ' + esc(p.psych) : '') + '</div></div><button class="rv-b" onclick="RV2.close()" aria-label="Close">×</button></div>' +
       '<div class="rv-btns"><button class="rv-b" onclick="RV2.record()">Open record</button><button class="rv-b" onclick="RV2.vvip()">' + (c.vvip[p.id] ? 'Remove VVIP' : 'Mark VVIP') + '</button></div>' +
-      '<div><h4>Why on this round</h4><div style="font-size:14px">' + esc(why(p, r, D).join(' · ') || 'Allocated to you') + '</div>' + (earlier ? '<div style="margin-top:6px">' + earlier + '</div>' : '') + '</div>' +
+      '<div><h4>Why on this round</h4><div style="font-size:14px">' + esc(why(p, r, D).join(' · ') || 'On this round') + '</div>' + (earlier ? '<div style="margin-top:6px">' + earlier + '</div>' : '') + '</div>' +
       '<div><h4>Step 1 · ask</h4><div style="font-size:15px;margin:4px 0 8px">' + esc(R[3]) + '</div><div class="rv-ans">' + ANS.map(function (a) { return '<button class="rv-a ' + (state.ans === a[0] ? 'on' : '') + '" style="border-color:' + (state.ans === a[0] ? a[2] : '#E3EAF2') + ';background:' + (state.ans === a[0] ? a[3] : '#fff') + ';color:' + a[2] + '" onclick="RV2.ans(\'' + a[0] + '\')">' + a[1] + '</button>'; }).join('') + '</div></div>' +
       '<div>' + scr + '</div>' + step2 + roomSel +
       '<div class="rv-btns"><button class="rv-b pri" onclick="RV2.save(false)">Save</button><button class="rv-b" onclick="RV2.save(true)">Save, next patient</button></div></aside>';
