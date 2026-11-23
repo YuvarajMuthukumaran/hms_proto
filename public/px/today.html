@@ -363,7 +363,26 @@ function shell(inner){
     <header class="top"><h1>Patient experience</h1><div style="display:flex;align-items:center;gap:14px"><button class="eye" aria-label="Notifications">${I.bell}</button><div style="display:flex;align-items:center;gap:8px"><div class="av" style="width:32px;height:32px;background:#1E6CDB;color:#fff;font-size:12px">KA</div><span style="font-size:14px;font-weight:500">Patient Experience</span></div></div></header>
     ${inner}</div></div>`;
 }
+/* 23 Nov 2026 (Nikita: "I logged a grievance but it is not on my dashboard"): in real mode Today listed only new admissions.
+   Open concerns and grievances logged in the PX app (held by the app around this frame, PXG.self) are now rows too:
+   safety or rights in red, the others blue; resolved ones drop off. "Open in Grievances" goes to the full record. */
+function concernRows(){
+  if(!window.PX_REAL)return;
+  for(let i=raw.length-1;i>=0;i--)if(String(raw[i].id).indexOf('g:')===0)raw.splice(i,1);
+  let st=null;try{const P=window.parent&&window.parent!==window&&window.parent.PXG;st=P&&P.self&&P.self.state;}catch(e){}
+  if(!st)return;
+  const cs=st.concernStatus||{},pts=(window.HMS_PATIENTS&&window.HMS_PATIENTS.patients)||[];
+  (st.extraConcerns||[]).forEach(c=>{
+    const s=Object.assign({},c,cs[c.id]||{});if(s.status==='Resolved')return;
+    const h=pts.find(p=>p.id===c.pid)||{},red=/safety|rights/i.test(s.category||'')||s.type==='grievance';
+    raw.unshift({id:'g:'+c.id,type:s.type==='grievance'?'Grievance':'Concern',late:red,red:/safety|rights/i.test(s.category||''),name:h.name||c.pname||'Patient',initials:h.ini||'',sub:h.room?('Room '+String(h.room).replace(/^Room\s*/,'')):'',tags:[c.id],
+      items:[{id:'gi'+c.id,c:red?'red':'blue',text:(s.title||'Concern')+(s.category?' · '+s.category:''),meta:'with '+(s.owner||'owner')+(s.ownerRole?' ('+s.ownerRole+')':'')+' · '+(s.status||'Open')+(s.sla?' · '+s.sla:'')}],
+      others:s.latest?(s.latestBy?s.latestBy+': ':'')+s.latest:'Nothing yet'});
+  });
+}
+if(window.PX_REAL)setInterval(()=>{try{if(!document.querySelector('.menu')&&!(typeof CM!=='undefined'&&CM.open))render();}catch(e){}},15000);
 function today(){
+  try{concernRows();menus.Grievance=menus.Concern=[['Open in Grievances','See the full record, update or close it']];}catch(e){}
   const done=state.done, acted=state.acted;
   let late=0;
   if(window.HMSX&&!window.PX_REAL)HMSX.fix(raw,(r,h)=>{r.sub=h.age+'/'+h.sex+' · Day '+HMSX.day(h)+' · '+h.room;});
@@ -382,7 +401,7 @@ function today(){
       <td style="width:170px;padding:14px 14px 14px 8px"><div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;position:relative"><button class="eye" data-eye="${r.id}" aria-label="View details for ${esc(r.name)}">${I.eye}</button><button class="take" aria-haspopup="menu" data-open="${r.id}">Take Action ▾</button>${menu}</div></td></tr>`;
   }).join('');
   const chip=(l,c,w,k)=>`<a href="#" class="chip" data-chip="${k}" title="${esc(CHIPTIP[k]||'')}">${l} <span style="font-weight:700;color:${w?'#B54708':'#0F172A'}">${c}</span></a>`;
-  const chips=(window.PX_REAL?[chip('Late now',late,late>0,'late'),chip('Admitted now',(window.HMS_PATIENTS.patients||[]).length,0,'x'),chip('New in 24 h',raw.length,0,'x')]:[chip('Late now',late,late>0,'late'),chip('Safety open',1,1,'safety'),chip('Grievances open',5+state.newG,1,'griev'),chip('Discharges today',2,0,'disch'),chip('NPS, last 30 days','+58',0,'nps'),chip('Random calls due',3,0,'calls'),chip('Team calls or updates late',4,1,'team')]).join('');
+  const chips=(window.PX_REAL?[chip('Late now',late,late>0,'late'),chip('Admitted now',(window.HMS_PATIENTS.patients||[]).length,0,'x'),chip('New in 24 h',raw.filter(r=>r.type==='Admission').length,0,'x')]:[chip('Late now',late,late>0,'late'),chip('Safety open',1,1,'safety'),chip('Grievances open',5+state.newG,1,'griev'),chip('Discharges today',2,0,'disch'),chip('NPS, last 30 days','+58',0,'nps'),chip('Random calls due',3,0,'calls'),chip('Team calls or updates late',4,1,'team')]).join('');
   const brief=state.brief?`<section class="brief" aria-label="Morning brief"><div style="display:flex;justify-content:space-between;gap:12px"><div style="display:flex;gap:10px"><span class="av" style="width:28px;height:28px;background:#fff;border:1px solid #D5E4FB;color:#1E6CDB">${I.sun}</span><div><div style="font-weight:700">Morning brief</div><div style="font-size:12px;color:#667085">9:00 am · from overnight calls, family updates, feedback and grievances · no clinical notes</div></div></div><button data-hide="1" style="border:0;background:transparent;color:#1E5BB8;font-weight:600;font-size:13px">Hide</button></div>
     <ul><li>1 safety allegation overnight (Room 213 A). It needs Chandraji and an incident report number today.</li><li>Rohit Kapoor's wife wants to take him home (DAMA risk). Rahul Sethi goes home at 3 pm, and his psychologist has not met the family yet.</li><li>Yesterday: 1 detractor (NPS 5) and 3 families with no 8 pm update. Kavya Menon had no psychologist session over the weekend.</li><li>1 compliment: Karan Malhotra's mother thanked Priya Nair for the daily updates. Shared with Priya.</li></ul></section>`:'';
   return shell(`<main>
@@ -431,6 +450,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.done){setState({done:{...state.done,[t.dataset.done]:true}});return;}
   if(t.dataset.open){setState({open:state.open===t.dataset.open?null:t.dataset.open});return;}
   if(t.dataset.act){
+    if(t.dataset.m==='Open in Grievances'){ setState({open:null}); navShell('grievances'); return; }
     if(t.dataset.m==='Family intake done'){ setState({open:null}); openFI(t.dataset.act,t.dataset.actp); return; }
     if(t.dataset.m==='Took Pt Preferences'){ setState({open:null}); if(!navShell('patients',t.dataset.actp)) setState({eye:(raw.find(x=>x.id===t.dataset.act)||{}).id||null}); return; }
     setState({open:null,acted:{...state.acted,[t.dataset.act]:t.dataset.m}});return;
