@@ -185,4 +185,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/184-psy-history-23nov-js.js',
   '/legacy/js/185-psy-documentation-23nov-js.js',
   '/legacy/js/186-psy-vitals-views-23nov-js.js',
+  '/legacy/js/187-goal-calendar-23nov-js.js',
 ];
