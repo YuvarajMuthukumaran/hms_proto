@@ -90,7 +90,8 @@
     const nr=NORM[k];let lo=Math.min(...all),hi=Math.max(...all);
     if(nr){const a=isBp?[nr[0][0],nr[1][0]]:[nr[0]],b=isBp?[nr[0][1],nr[1][1]]:[nr[1]];lo=Math.min(lo,...a);hi=Math.max(hi,...b);}
     const pad=(hi-lo||Math.abs(hi)||10)*.12;lo=Math.floor(lo-pad);hi=Math.ceil(hi+pad);
-    const colW=Math.max(64,Math.min(120,560/D.length)),L=46,T=14,H=isBp?220:170,W=L+colW*D.length+12,B=H-30;
+    /* 23 Nov redesign: the chart fills its row (viewBox 760 wide, scaled to the row); many days scroll sideways at 64 px a day */
+    const VW=760,L=46,T=18,H=isBp?210:150,fit=(VW-L-12)/D.length>=64,colW=fit?(VW-L-12)/D.length:64,W=fit?VW:L+colW*D.length+12,B=H-30;
     const y=v=>T+(hi-v)/((hi-lo)||1)*(B-T);
     const step=(()=>{const r=(hi-lo)/4,m=Math.pow(10,Math.floor(Math.log10(r||1)));return [1,2,2.5,5,10].map(f=>f*m).find(f=>f>=r)||r;})();
     let g='';
@@ -103,17 +104,32 @@
       if(i)g+=`<line x1="${x0}" x2="${x0}" y1="${T}" y2="${B}" stroke="#f2f4f7"/>`;});
     g+=`<line x1="${L}" x2="${L}" y1="${T}" y2="${B}" stroke="#d0d5dd"/><line x1="${L}" x2="${W-8}" y1="${B}" y2="${B}" stroke="#d0d5dd"/>`;
     S1.forEach(([nm,c,f])=>{const P2=pts.map(p=>({p,v:f(p.r)})).filter(o=>isFinite(o.v));
-      if(isBp&&P2.length>1)g+=`<polyline fill="none" stroke="${c}" stroke-width="2.25" stroke-linejoin="round" points="${P2.map(o=>o.p.x.toFixed(1)+','+y(o.v).toFixed(1)).join(' ')}"/>`;
+      if(isBp&&P2.length>1)g+=`<polyline class="vx-ln" pathLength="1" fill="none" stroke="${c}" stroke-width="2.25" stroke-linejoin="round" points="${P2.map(o=>o.p.x.toFixed(1)+','+y(o.v).toFixed(1)).join(' ')}"/>`;
       P2.forEach(o=>{const out=bad[k]&&bad[k](o.p.r[k]);const lbl=isBp?o.v:o.p.r[k];
         g+=`<g class="vx-pt"><circle cx="${o.p.x.toFixed(1)}" cy="${y(o.v).toFixed(1)}" r="${isBp?3.6:4.6}" fill="${out&&!isBp?'#d92d20':c}" stroke="#fff" stroke-width="1.5"/><text x="${o.p.x.toFixed(1)}" y="${(y(o.v)-9).toFixed(1)}" text-anchor="middle" class="vx-pv${out&&!isBp?' bad':''}">${E(lbl)}</text>${!isBp&&tmS(o.p.r)?`<text x="${o.p.x.toFixed(1)}" y="${(y(o.v)+16).toFixed(1)}" text-anchor="middle" class="vx-pt-t">${E(tmS(o.p.r))}</text>`:''}<title>${E(dayLbl(o.p.r.ts))} ${E(o.p.r.time||'')}: ${isBp?nm+' ':''}${E(lbl)}${o.p.r.by?' · '+E(o.p.r.by):''}</title></g>`;});});
-    if(isBp)g+=`<text x="${L-8}" y="${T-2}" text-anchor="end" class="vx-ax">mmHg</text>`;
-    return `<div class="vx-cw"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${isBp?'Blood pressure, systolic and diastolic, by date':'Readings by date'}">${g}</svg></div>`;
+    return `<div class="vx-cw"><svg viewBox="0 0 ${W} ${H}" ${fit?'width="100%"':`width="${W}" height="${H}"`} role="img" aria-label="${isBp?'Blood pressure, systolic and diastolic, by date':'Readings by date'}">${g}</svg></div>`;
   }
+  /* 23 Nov redesign (owner): one monitor row per vital: latest value and whether it is in the usual range on the left,
+     the chart across the row, lowest / highest / count on the right. Vitals with no readings fold into one line. */
+  const fmtN=n=>String(Math.round(n*10)/10);
   function vTrend(R,ps){
-    return `<div class="vx-tr">${ps.map(p=>{const k=p[0],xs=R.filter(r=>ok(r[k])).slice().reverse();const L=xs[xs.length-1];
-      const vals=xs.map(r=>num(k,r[k])).filter(n=>isFinite(n));
-      const key=k==='bp'?'<span class="vx-key"><i style="background:#c2410c"></i>Systolic <i style="background:#1e6cdb"></i>Diastolic <i class="dash"></i>Usual limits</span>':NORM[k]?'<span class="vx-key"><i class="band"></i>Usual range</span>':'';
-      return `<div class="vx-tc${k==='bp'?' vx-wide':''}"><div class="vx-th"><b>${p[1]}</b><small>${p[2]}</small>${key}<span style="flex:1"></span>${L?cell(k,L[k]):''}</div>${xs.length?chart(k,xs)+`<div class="tiny muted">${xs.length} reading${xs.length>1?'s':''} · lowest ${Math.min(...vals)} · highest ${Math.max(...vals)}${k==='bp'?' (systolic)':''} · latest ${E(dayLbl(L.ts))} ${E(L.time||'')}</div>`:'<div class="small muted" style="padding:20px 0">No readings</div>'}</div>`;}).join('')}</div>`;
+    const has=[],none=[];
+    ps.forEach(p=>{const xs=R.filter(r=>ok(r[p[0]])).slice().reverse();(xs.length?has:none).push([p,xs]);});
+    const pid=S.pid+'|'+R.length,anim=window.__vxAnim!==pid;window.__vxAnim=pid;
+    const rows=has.map(([p,xs])=>{const k=p[0],L=xs[xs.length-1],pv=xs[xs.length-2],isBp=k==='bp',out=bad[k]&&bad[k](L[k]);
+      const sys=r=>+String(r.bp).split('/')[0],dia=r=>+String(r.bp).split('/')[1];
+      let dl='First reading';
+      if(pv){const a=isBp?sys(L):+L[k],b=isBp?sys(pv):+pv[k],d=a-b;dl=d===0?'Same as last time':(d>0?'Up ':'Down ')+fmtN(Math.abs(d))+(isBp?' systolic':'')+' since '+E(pv.time||dayLbl(pv.ts));}
+      const st2=NORM[k]?`<div class="vx-st ${out?'bad':'ok'}"><i></i>${out?'Outside usual range':'In usual range'}</div>`:'';
+      const sum=isBp?[['Highest',Math.max(...xs.map(sys))+'/'+Math.max(...xs.map(dia))],['Lowest',Math.min(...xs.map(sys))+'/'+Math.min(...xs.map(dia))],['Readings',xs.length]]
+        :(()=>{const v=xs.map(r=>+r[k]).filter(isFinite);return [['Highest',fmtN(Math.max(...v))],['Lowest',fmtN(Math.min(...v))],['Readings',xs.length]];})();
+      const key=isBp?'<div class="vx-key"><i style="background:#c2410c"></i>Systolic <i style="background:#1e6cdb"></i>Diastolic <i class="dash"></i>140 / 90 limits</div>':NORM[k]?'<div class="vx-key"><i class="band"></i>Usual range '+NORM[k][0]+' to '+NORM[k][1]+'</div>':'';
+      return `<section class="vx-row${out?' is-bad':''}" aria-label="${E(p[1])}">
+        <div class="vx-id"><div class="vx-nm">${E(p[1])} <small>${E(p[2])}</small></div><div class="vx-big${out?' bad':''}">${E(L[k])}</div>${st2}<div class="vx-dl">${dl}</div><div class="vx-at">Latest ${E(dayLbl(L.ts))}${L.time?', '+E(L.time):''}${L.by?'<br>by '+E(L.by):''}</div></div>
+        <div class="vx-plot">${key}${chart(k,xs)}</div>
+        <dl class="vx-sum">${sum.map(s=>`<div><dt>${s[0]}</dt><dd>${E(s[1])}</dd></div>`).join('')}</dl></section>`;}).join('');
+    const nn=none.length?`<div class="vx-none"><span>Not recorded ${R.length?'in these dates':'yet'}:</span> ${none.map(([p])=>`<b>${E(p[1])}</b>`).join('')}</div>`:'';
+    return `<div class="vx-mon${anim?' vx-anim':''}">${rows}${nn}</div>`;
   }
 
   const LAY=[['day','One row a day'],['trend','Trend']];
@@ -185,6 +201,21 @@
     +'.vx-tr{grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}.vx-tc.vx-wide{grid-column:1/-1}.vx-cw{overflow-x:auto;margin:4px 0 6px}.vx-cw svg{display:block;max-width:none}'
     +'.vx-ax{font-size:11px;fill:#98a2b3}.vx-axd{font-size:11.5px;fill:#475467;font-weight:600}.vx-pv{font-size:11px;fill:#344054;font-weight:700}.vx-pv.bad{fill:#b42318}.vx-pt-t{font-size:10px;fill:#98a2b3}'
     +'.vx-key{display:inline-flex;align-items:center;gap:5px;margin-left:10px;font-size:11.5px;color:#667085}.vx-key i{display:inline-block;width:14px;height:3px;border-radius:2px}.vx-key i.dash{border-top:2px dashed #f04438;height:0;opacity:.6}.vx-key i.band{height:10px;background:#12b76a;opacity:.18}'
+    /* trend redesign: monitor rows */
+    +'.vx-mon{border:1px solid #e3eaf2;border-radius:14px;background:#fff;overflow:hidden}'
+    +'.vx-row{display:grid;grid-template-columns:196px minmax(0,1fr) 120px;gap:20px;align-items:center;padding:16px 18px 14px;border-bottom:1px solid #eef2f6;position:relative}'
+    +'.vx-row::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:#12b76a}.vx-row.is-bad::before{background:#d92d20}'
+    +'.vx-nm{font-size:13.5px;font-weight:700;color:#344054}.vx-nm small{font-weight:500;color:#98a2b3;font-size:12px}'
+    +'.vx-big{font-size:34px;line-height:1.1;font-weight:700;color:#101828;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin:4px 0 6px}.vx-big.bad{color:#b42318}'
+    +'.vx-st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#067647}.vx-st i{width:7px;height:7px;border-radius:50%;background:currentColor}.vx-st.bad{color:#b42318}'
+    +'.vx-dl{font-size:12.5px;color:#475467;margin-top:4px}.vx-at{font-size:11.5px;color:#98a2b3;margin-top:6px;line-height:1.4}'
+    +'.vx-plot{min-width:0}.vx-plot .vx-key{margin:0 0 2px}.vx-plot .vx-cw{margin:0}'
+    +'.vx-sum{margin:0;display:grid;gap:10px;border-left:1px solid #eef2f6;padding-left:16px}.vx-sum div{display:grid;gap:1px}.vx-sum dt{font-size:11.5px;color:#98a2b3}.vx-sum dd{margin:0;font-size:15px;font-weight:700;color:#344054;font-variant-numeric:tabular-nums}'
+    +'.vx-none{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:12px 18px;background:#f9fafb;font-size:13px;color:#667085}.vx-none b{font-weight:600;color:#475467;background:#fff;border:1px solid #e3eaf2;border-radius:6px;padding:2px 8px}'
+    +'.vx-anim .vx-ln{stroke-dasharray:1;stroke-dashoffset:1;animation:vxDraw .9s ease-out .1s forwards}.vx-anim .vx-pt{opacity:0;animation:vxIn .35s ease-out .6s forwards}'
+    +'@keyframes vxDraw{to{stroke-dashoffset:0}}@keyframes vxIn{to{opacity:1}}'
+    +'@media(prefers-reduced-motion:reduce){.vx-anim .vx-ln,.vx-anim .vx-pt{animation:none;stroke-dashoffset:0;opacity:1}}'
+    +'@media(max-width:900px){.vx-row{grid-template-columns:1fr;gap:10px}.vx-sum{grid-template-columns:repeat(3,1fr);border-left:0;padding-left:0;border-top:1px solid #eef2f6;padding-top:10px}.vx-big{font-size:28px}}'
     +'.vx-empty{padding:22px;border:1px dashed #cfd8d6;border-radius:12px;color:#475467;text-align:center}';
   document.head.appendChild(css);
   /* 23 Nov meeting: urine output can be recorded with the vitals (psychiatrist's form; saved as the 12th field of the vitals row) */
