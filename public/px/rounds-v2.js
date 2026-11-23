@@ -232,7 +232,7 @@
     topic: function (t) { state.topic = t; state.sp = ''; draw(); }, sp: function (o) { state.sp = o; draw(); }, words: function (v) { state.words = v; },
     roomToggle: function () { state.roomOpen = !state.roomOpen; draw(); }, room: function (v) { state.room = v; },
     me: function (n) { try { localStorage.setItem('pxme', n); } catch (e) {} state.sel = ''; draw(); },
-    record: function () { var p = P().filter(function (x) { return x.id === state.sel; })[0]; try { parent.postMessage({ pxNav: 'patients', pxOpen: p ? p.name : '' }, '*'); } catch (e) {} },
+    record: function () { var p = P().filter(function (x) { return x.id === state.sel; })[0]; var name = p ? p.name : ''; try { if (window.parent && window.parent !== window) { parent.postMessage({ pxNav: 'patients', pxOpen: name }, '*'); return; } } catch (e) {} /* standalone fallback: save the name and navigate */ try { localStorage.setItem('pxopen', name); } catch (e) {} window.location.href = 'patients.html'; },
     vvip: function () { var c = cfg(), full = jget(CFG, null) || c; full.vvip = full.vvip || {}; full.vvip[state.sel] = !c.vvip[state.sel]; if (!full.times) full.times = c.times; if (!full.alloc) full.alloc = c.alloc; jset(CFG, full); draw(); },
     save: function (next) {
       var D = day(), L = listFor(state.round, D), idx = L.map(function (x) { return x.p.id; }).indexOf(state.sel), p = save(); if (!p) return;

@@ -185,7 +185,7 @@ document.addEventListener('change',e=>{ const t=e.target;
 </script>
 <script>
 const LIVE_IMG = "";
-const state = { done:{}, acted:{}, open:null, brief:!window.PX_REAL, view:'today', newG:0, q:'' };
+const state = { done:{}, acted:{}, open:null, brief:!window.PX_REAL, view:'today', newG:0, q:'', chip:'' };
 function setState(p){ Object.assign(state,p); render(); }
     const menus = {
       'Safety': [['Call Chandraji and the treating doctor', 'Required today for Safety = Yes'], ['Add incident report number', 'Grievance cannot close without it'], ['Update the family', 'Call first, then write']],
@@ -483,7 +483,16 @@ function today(){
   if(window.HMSX&&!window.PX_REAL)HMSX.fix(raw,(r,h)=>{r.sub=h.age+'/'+h.sex+' · Day '+HMSX.day(h)+' · '+h.room;});
   raw.forEach(r=>{if(r.late&&r.items.some(it=>(it.c==='amber'||it.c==='red')&&!done[it.id]))late++;});
   const q=(state.q||'').trim().toLowerCase();
-  const list=q?raw.filter(r=>r.name.toLowerCase().includes(q)):raw;
+  let list=q?raw.filter(r=>r.name.toLowerCase().includes(q)):raw.slice();
+  /* Chip filtering (real mode: late, adm, amber, grey; demo mode: late, disch, calls, team) */
+  const ck=state.chip;
+  if(ck==='late') list=list.filter(r=>r.late&&r.items.some(it=>(it.c==='amber'||it.c==='red')&&!done[it.id]));
+  else if(ck==='adm') list=list.filter(r=>r.type==='Admission'||/new|24 h/i.test((r.tags||[]).join(' ')));
+  else if(ck==='amber') list=list.filter(r=>r.items.some(it=>it.c==='amber'));
+  else if(ck==='grey') list=list.filter(r=>r.items.some(it=>it.c==='grey'));
+  else if(ck==='disch') list=list.filter(r=>/discharge|goes home/i.test(r.type+' '+(r.tags||[]).join(' ')+' '+r.items.map(it=>it.text).join(' ')));
+  else if(ck==='calls') list=list.filter(r=>r.items.some(it=>it.call));
+  else if(ck==='team') list=list.filter(r=>r.type==='Team check');
   const rows=list.map((r,idx)=>{
     const stillLate=r.late&&r.items.some(it=>(it.c==='amber'||it.c==='red')&&!done[it.id]);
     const tcol=r.red&&stillLate?'#B42318':(stillLate?'#B54708':'#475467');
@@ -496,7 +505,7 @@ function today(){
       <td style="width:240px"><div style="font-size:13px;color:${/nothing yet|no update|no answer/i.test(r.others)?'#667085':'#344054'}">${esc(r.others)}</div>${acted[r.id]?`<div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:13px;color:#067647;font-weight:600"><i class="dot" style="background:#12B76A;margin:0"></i>You: ${esc(acted[r.id])} · just now</div>`:''}</td>
       <td style="width:170px;padding:14px 14px 14px 8px"><div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;position:relative"><button class="eye" data-eye="${r.id}" aria-label="View details for ${esc(r.name)}">${I.eye}</button><button class="take" aria-haspopup="menu" data-open="${r.id}">Take Action ▾</button>${menu}</div></td></tr>`;
   }).join('');
-  const chip=(l,c,w,k)=>`<a href="#" class="chip" data-chip="${k}" title="${esc(CHIPTIP[k]||'')}">${l} <span style="font-weight:700;color:${w?'#B54708':'#0F172A'}">${c}</span></a>`;
+  const chip=(l,c,w,k)=>`<a href="#" class="chip" data-chip="${k}" title="${esc(CHIPTIP[k]||'')}" style="${state.chip===k?'background:#E8F1FE;border-color:#1E6CDB;color:#1E5BB8':''}">${l} <span style="font-weight:700;color:${w?'#B54708':'#0F172A'}">${c}</span></a>`;
   const chips=(window.PX_REAL?[chip('Late now',late,late>0,'late'),chip('Admitted now',(window.HMS_PATIENTS.patients||[]).length,0,'adm'),chip('Action today (amber)',raw.filter(r=>r.items[0].c==='amber').length,0,'amber'),chip('Routine (grey)',raw.filter(r=>r.items[0].c==='grey').length,0,'grey')]:[chip('Late now',late,late>0,'late'),chip('Safety open',1,1,'safety'),chip('Grievances open',5+state.newG,1,'griev'),chip('Discharges today',2,0,'disch'),chip('NPS, last 30 days','+58',0,'nps'),chip('Random calls due',3,0,'calls'),chip('Team calls or updates late',4,1,'team')]).join('');
   const brief=state.brief?`<section class="brief" aria-label="Morning brief"><div style="display:flex;justify-content:space-between;gap:12px"><div style="display:flex;gap:10px"><span class="av" style="width:28px;height:28px;background:#fff;border:1px solid #D5E4FB;color:#1E6CDB">${I.sun}</span><div><div style="font-weight:700">Morning brief</div><div style="font-size:12px;color:#667085">9:00 am · from overnight calls, family updates, feedback and grievances · no clinical notes</div></div></div><button data-hide="1" style="border:0;background:transparent;color:#1E5BB8;font-weight:600;font-size:13px">Hide</button></div>
     <ul><li>1 safety allegation overnight (Room 213 A). It needs Chandraji and an incident report number today.</li><li>Rohit Kapoor's wife wants to take him home (DAMA risk). Rahul Sethi goes home at 3 pm, and his psychologist has not met the family yet.</li><li>Yesterday: 1 detractor (NPS 5) and 3 families with no 8 pm update. Kavya Menon had no psychologist session over the weekend.</li><li>1 compliment: Karan Malhotra's mother thanked Priya Nair for the daily updates. Shared with Priya.</li></ul></section>`:'';
@@ -533,20 +542,19 @@ const CHIPTIP={late:'Jump to the first late row',safety:'Open Grievances (safety
 function navShell(page,name){try{if(window.parent&&window.parent!==window){window.parent.postMessage({pxNav:page,pxOpen:name||''},'*');return true;}}catch(e){}return false;}
 function flashRow(tr){if(!tr){const tw=document.querySelector('.tw');if(tw)tw.scrollIntoView({block:'start',behavior:'smooth'});return false;}tr.scrollIntoView({block:'center',behavior:'smooth'});tr.style.transition='background .3s';tr.style.background='#FFF7E6';setTimeout(()=>{tr.style.background='';},2200);return true;}
 function chipGo(k){
-  const trs=[...document.querySelectorAll('.tw tbody tr')];
-  const has=(tr,re)=>re.test(tr.innerText||'');
-  if(k==='griev'||k==='safety'){if(!navShell('grievances'))flashRow(trs.find(tr=>has(tr,/safety|grievance/i)));return;}
+  /* If a chip is already active and we tap it again, clear the filter */
+  if(state.chip===k){setState({chip:''});return;}
+  /* For chips that navigate away, don't filter */
+  if(k==='griev'||k==='safety'){if(!navShell('grievances')){const trs=[...document.querySelectorAll('.tw tbody tr')];flashRow(trs.find(tr=>/safety|grievance/i.test(tr.innerText||'')));}return;}
   if(k==='nps'){if(!navShell('reports'))window.scrollTo({top:0,behavior:'smooth'});return;}
-  if(k==='disch'){flashRow(trs.find(tr=>has(tr,/goes home|discharge/i)));return;}
-  if(k==='calls'){flashRow(trs.find(tr=>tr.querySelector('[data-call]')));return;}
-  if(k==='team'){flashRow(trs.find(tr=>/no update|nothing yet|no answer|late/i.test((tr.children[3]||{}).innerText||'')));return;}
-  flashRow(trs.find(tr=>tr.querySelector('.dot[style*="F5A524"],.dot[style*="E5484D"]')));
+  /* For all other chips, filter the rows */
+  setState({chip:k});
 }
 document.addEventListener('click',e=>{
   const t=e.target.closest('button,a'); if(!t) return;
   if(t.tagName==='A'&&t.getAttribute('href')==='#') e.preventDefault();
   if(t.dataset.chip){chipGo(t.dataset.chip);return;}
-  if(t.dataset.pname){const ty=t.dataset.ptype;if(ty==='Ward check'){navShell('rounds');return;}if(ty==='Training'){navShell('training');return;}if(!navShell('patients',t.dataset.pname))setState({eye:(raw.find(x=>x.name===t.dataset.pname)||{}).id||null});return;}
+  if(t.dataset.pname){const ty=t.dataset.ptype;if(ty==='Ward check'){navShell('rounds');return;}if(ty==='Training'){navShell('training');return;}if(!navShell('patients',t.dataset.pname)){/* standalone fallback: try to navigate to patients page */try{localStorage.setItem('pxopen',t.dataset.pname);}catch(x){}const eyeRow=raw.find(x=>x.name===t.dataset.pname);if(eyeRow)setState({eye:eyeRow.id});else window.location.href='patients.html';}return;}
   if(t.dataset.v){setState({view:t.dataset.v,open:null});window.scrollTo(0,0);return;}
   if(t.dataset.call){ if(t.dataset.call==='pick') openCall(null); else { const pp=TP.find(x=>x.id===t.dataset.call); pp.item=t.dataset.item; pp.row=t.dataset.row; openCall(pp, pp.callN); } return; }
   if(t.dataset.done){setState({done:{...state.done,[t.dataset.done]:true}});return;}
@@ -622,6 +630,9 @@ window.onCallSaved = r => {
   today=function(){const out=__t.apply(this,arguments);return out.replace('<div class="chips">',strips()+'<div class="chips">');};
   window.addEventListener('storage',()=>{try{render();}catch(e){}});
 })();
+
+/* Search input: update state.q on typing */
+document.addEventListener('input', e => { if(e.target && e.target.id === 'pxSearch') setState({q: e.target.value}); });
 
 render();
 </script>
