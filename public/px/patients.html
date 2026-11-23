@@ -468,7 +468,38 @@ function pfOpen(pid){ const p=P.find(x=>x.id===pid); if(!p)return; const cur=pfA
   {const fgS=o.querySelector('[data-pf="'+FG+'.0"]'),sec=fgS&&fgS.closest('section');if(fgS&&sec){const tg=()=>{sec.querySelectorAll('label').forEach((l,i)=>{if(i>0)l.style.display=fgS.value==='Yes'?'':'none';});};fgS.onchange=tg;tg();}}o.querySelector('#pfS2').onclick=()=>o.querySelector('#pfS').click();
   o.querySelector('#pfS').onclick=()=>{const all=pfAll(),v={};o.querySelectorAll('[data-pf]').forEach(e=>{if(e.value.trim())v[e.dataset.pf]=e.value.trim();});v.__at=new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});all[pid]=v;try{localStorage.setItem('px_prefs_v2',JSON.stringify(all));}catch(e){}o.remove();render();};
 }
+/* 23 Nov 2026 (owner): Preferences are folding sections on the tab itself, like the psych pages. A section with nothing in it opens
+   in fill view; a closed section shows its read view (what was recorded). Saves as you type into the same px_prefs_v2 record. */
+window.__pfO=window.__pfO||{};
+const pfFilled=(f,gi)=>PF_GROUPS[gi][2].some((x,fi)=>f[gi+'.'+fi]);
 function prefs(p){
+  const f=pfAll()[p.id]||{},O=window.__pfO[p.id]=window.__pfO[p.id]||{},P=esc(p.id);
+  const n=PF_GROUPS.filter((g,gi)=>pfFilled(f,gi)).length;
+  const head=`<div class="pf-top"><span>${f.__at?'Last saved '+esc(f.__at)+'. ':'Not taken yet. Due by Day 2, with the RMO, the patient and the family. '}Same record as the psychiatrist's Patient Experience tab. Saves as you type.</span><span class="pf-cnt">${n} of ${PF_GROUPS.length} sections filled</span></div>`;
+  return head+'<div class="pf-acc">'+PF_GROUPS.map((g,gi)=>{
+    const open=O[gi]!==undefined?O[gi]:!pfFilled(f,gi),fgNo=gi===FG&&f[FG+'.0']!=='Yes';
+    const read=g[2].map((x,fi)=>f[gi+'.'+fi]&&!(fgNo&&fi>0)?[x[0],f[gi+'.'+fi]]:null).filter(Boolean);
+    const rv=read.length?'<dl class="pf-read">'+read.map(r=>'<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>').join('')+'</dl>':'<div class="pf-read pf-none">Nothing recorded yet. Open to fill.</div>';
+    const fields=g[2].map((x,fi)=>{const k=gi+'.'+fi,v=f[k]||'',hide=gi===FG&&fi>0&&f[FG+'.0']!=='Yes';
+      return `<label class="pf-f"${hide?' hidden':''}>${esc(x[0])}${x[1]==='sel'?`<select data-pfi="${k}" data-pid="${P}"><option value=""></option>${x[2].map(o=>`<option${v===o?' selected':''}>${esc(o)}</option>`).join('')}</select>`:`<textarea rows="2" data-pfi="${k}" data-pid="${P}">${esc(v)}</textarea>`}</label>`;}).join('');
+    return `<details class="pf-s" data-pid="${P}" data-gi="${gi}"${open?' open':''}><summary><span class="pf-h"><b>${esc(g[0])}</b><span class="pf-st${read.length?' ok':''}">${read.length?read.length+' filled':'Empty'}</span><span class="pf-seen">Seen by ${esc(g[1])}</span><span class="pf-chev" aria-hidden="true"></span></span>${rv}</summary><div class="pf-fill">${fields}<div class="pf-done"><button type="button" class="btn" data-pfclose="1">Done</button></div></div></details>`;}).join('')+'</div>';
+}
+function pfSave(pid,k,v){const all=pfAll(),cur=all[pid]||{};if(v)cur[k]=v;else delete cur[k];cur.__at=new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});all[pid]=cur;try{localStorage.setItem('px_prefs_v2',JSON.stringify(all));}catch(e){}}
+document.addEventListener('input',e=>{const t=e.target.closest&&e.target.closest('[data-pfi]');if(!t)return;pfSave(t.dataset.pid,t.dataset.pfi,t.value.trim());
+  if(t.dataset.pfi===FG+'.0')t.closest('.pf-fill').querySelectorAll('.pf-f').forEach((l,i)=>{if(i>0)l.hidden=t.value!=='Yes';});});
+document.addEventListener('toggle',e=>{const d=e.target;if(!d.classList||!d.classList.contains('pf-s'))return;const O=window.__pfO[d.dataset.pid]=window.__pfO[d.dataset.pid]||{};O[d.dataset.gi]=d.open;if(!d.open){const y=window.scrollY;render();window.scrollTo(0,y);}},true);
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-pfclose]');if(t){const d=t.closest('details');if(d)d.open=false;}});
+(function(){const s=document.createElement('style');s.textContent='.pf-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:#475467;margin-bottom:10px}.pf-cnt{font-weight:600;color:#344054}'
+ +'.pf-acc{display:grid;gap:10px}.pf-s{background:#fff;border:1px solid #E3EAF2;border-radius:12px}.pf-s[open]{border-color:#B9D3F5;box-shadow:0 0 0 3px #EEF5FF}'
+ +'.pf-s>summary{list-style:none;cursor:pointer;padding:12px 16px;display:grid;gap:8px}.pf-s>summary::-webkit-details-marker{display:none}.pf-s>summary:focus-visible{outline:2px solid #1e6cdb;outline-offset:2px;border-radius:12px}'
+ +'.pf-h{display:flex;align-items:center;gap:10px}.pf-h b{font-size:15px;color:#101828}.pf-st{font-size:12px;font-weight:600;color:#98A2B3}.pf-st.ok{color:#067647}.pf-seen{margin-left:auto;font-size:12px;color:#667085}'
+ +'.pf-chev{flex:none;width:8px;height:8px;border-right:2px solid #667085;border-bottom:2px solid #667085;transform:rotate(45deg);transition:transform .15s;margin:0 4px 3px}.pf-s[open] .pf-chev{transform:rotate(225deg);margin-bottom:-3px}'
+ +'.pf-s[open] .pf-read{display:none}.pf-read{display:grid;grid-template-columns:minmax(140px,240px) 1fr;gap:4px 14px;margin:0;font-size:13.5px}.pf-read dt{color:#667085}.pf-read dd{margin:0;color:#101828;white-space:pre-wrap}.pf-none{display:block;color:#98A2B3;font-size:13px}'
+ +'.pf-fill{padding:0 16px 14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.pf-f{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:600;color:#475467}.pf-f[hidden]{display:none}'
+ +'.pf-f select{height:38px;border:1px solid #D6DEE8;border-radius:10px;padding:0 8px;font:inherit;font-weight:400;background:#fff}.pf-f textarea{border:1px solid #D6DEE8;border-radius:10px;padding:8px 10px;font:inherit;font-weight:400;resize:vertical}'
+ +'.pf-f select:focus,.pf-f textarea:focus{outline:2px solid #1e6cdb;outline-offset:0;border-color:#1e6cdb}.pf-done{grid-column:1/-1;display:flex;justify-content:flex-end}'
+ +'@media(max-width:640px){.pf-read{grid-template-columns:1fr}.pf-seen{display:none}}@media(prefers-reduced-motion:reduce){.pf-chev{transition:none}}';document.head.appendChild(s);})();
+function prefsOld(p){
   const f=pfAll()[p.id];
   if(f) return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;color:#475467"><span>Same record as the psychiatrist\'s Patient Experience tab. Last saved '+esc(f.__at||'')+'.</span><button class="btn" data-pfopen="'+p.id+'">Edit preferences</button></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px">'+
     PF_GROUPS.map((g,gi)=>gi===FG&&f[FG+'.0']!=='Yes'?'':'<section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:14px 16px"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+g[0]+'</b><span style="font-size:12px;color:#667085">Seen by '+g[1]+'</span></div><div style="display:grid;grid-template-columns:170px 1fr;gap:6px 12px;font-size:13px;margin-top:10px">'+g[2].map((x,fi)=>'<span style="color:#667085">'+x[0]+'</span><span>'+(f[gi+'.'+fi]?esc(f[gi+'.'+fi]):'<span style="color:#98A2B3">Not set</span>')+'</span>').join('')+'</div></section>').join('')+'</div>';
