@@ -180,4 +180,7 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/179-vitals-friendly-21nov-js.js',
   '/legacy/js/180-vitals-daylog-21nov-js.js',
   '/legacy/js/181-patient-page-popups-23nov-js.js',
+  '/legacy/js/182-psy-meeting-23nov-js.js',
+  '/legacy/js/183-psy-forms-23nov-js.js',
+  '/legacy/js/184-psy-history-23nov-js.js',
 ];

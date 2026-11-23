@@ -27,8 +27,16 @@
   /* who signs -> which blanks get the name, relation and date */
   const SIGNER={
     'admission-consent':{patient:{name:'p1f22',rel:null,date:'p1f23'},family:{name:'p1f20',rel:'acRelRel',date:'acRelDate'}},
-    'form-e':{family:{name:'p1f10',sent:'feN'},patient:{}}
+    'form-e':{family:{name:'p1f10',sent:'feN'},patient:{}},
+    /* 23 Nov (meeting): the signer's name and the date on the other forms too */
+    'form-c':{patient:{name:'p1f12',date:'p1f13'},family:{name:'p1f12',date:'p1f13'}},
+    'high-risk-consent':{patient:{name:'p1f10',date:'p1f11'},family:{name:'p1f10',date:'p1f11'}},
+    'mect-final':{patient:{name:'p8f16',date:'p8f18'},family:{name:'p8f19',date:'p8f21'}},
+    'outing-consent':{patient:{},family:{name:'p1f3',date:'p1f11'}},
+    'clozapine-consent':{patient:{date:'p1f19'},family:{date:'p1f20'}}
   };
+  /* 23 Nov (meeting): the signing date shows today as soon as the window opens and can be changed (family members often sign later) */
+  const dateIds=fid=>{const m=SIGNER[fid]||{};return [...new Set(Object.values(m).map(x=>x.date).filter(Boolean))];};
 
   /* ---------- 4: Form E sentence ---------- */
   const fe=F['form-e'],fep=fe&&fe.pages&&fe.pages[0];
@@ -72,6 +80,7 @@
       let a='';try{a=cdfAuto(f.label,p,ep)||'';}catch(e){}
       put(f.id,a||extra(f.label,p));
     }));
+    dateIds(fid).forEach(id=>put(id,today()));
     if(fid==='form-e'){put('feP',p.name);put('feAge',p.age!=null?String(p.age):'');put('feA',p.address||(reg[pid]||{}).address||'');}
     if(ch)cdfTouch(it.entryKey);
     return ch;
@@ -105,16 +114,20 @@
     window.psyEsignSave=function(fid){
       const pid=S.pid,as=((document.getElementById('esAs')||{}).value)||'family',nm=((document.getElementById('esN')||{}).value||'').trim();
       const r=s.apply(this,arguments);
-      try{
-        const map=SIGNER[fid]&&SIGNER[fid][as];if(!map)return r;
-        const it=cdItems(pid).find(i=>i.form&&i.form.id===fid);if(!it)return r;
-        const v=cdfVals(it.entryKey),es=v.__esign;if(!es||!es.sig)return r;
+      /* 23 Nov: the signature reaches the form record a moment after the save (blocks 141/145), so this runs again until it is there */
+      const fill=()=>{try{
+        const map=SIGNER[fid]&&SIGNER[fid][as];if(!map)return true;
+        const it=cdItems(pid).find(i=>i.form&&i.form.id===fid);if(!it)return true;
+        const v=cdfVals(it.entryKey);let es=v.__esign;if(!es||!es.sig){const c=((window.psyPx?psyPx(pid):{}).consent||{})[fid];if(c&&c.st==='esign'&&c.sig)es=c;}if(!es||!es.sig)return false;
         const name=nm||String(es.by||'').replace(/\s*\(patient\)\s*$/i,'');
         /* empty blanks, and blanks the form filled by itself (Form E's "Name" got the patient's name), take the signer's details */
         const auto=v.__autoIds||{},put=(id,val)=>{if(id&&val&&(!v[id]||auto[id])){v[id]=val;delete auto[id];}};
         put(map.name,name);put(map.sent,name);put(map.rel,es.rel);put(map.date,today());
+        /* the other side's date was only shown in case they sign: take it off again when it was not changed */
+        Object.keys(SIGNER[fid]).forEach(k=>{const o=SIGNER[fid][k];if(k!==as&&o.date&&o.date!==map.date&&auto[o.date]&&!(o.name&&v[o.name]&&!auto[o.name])){delete v[o.date];delete auto[o.date];}});
         cdfTouch(it.entryKey);
-      }catch(e){}
+      }catch(e){}return true;};
+      if(!fill())[300,900,2000].forEach(t=>setTimeout(fill,t));else setTimeout(fill,900);
       return r;};
     Object.keys(s).forEach(k=>{if(k.indexOf('__')===0)window.psyEsignSave[k]=s[k];});window.psyEsignSave.__fill=1;
   };

@@ -16,8 +16,10 @@
   const OC={mect:['MECT consent','mect-final'],out:['Outing consent','outing-consent'],cloz:['Clozapine consent','clozapine-consent'],
     ket:null,dtms:null,rest:null,lai:null};
   /* Expose a live getter: returns only the OC entries whose order is in S.consents for the current patient */
-  window.__ocForms=function(){
+  window.__ocForms=function(all){
     try{
+      /* 23 Nov: Collect e-signature on an order card asks for every order form (MECT was refused when no MECT consent row existed) */
+      if(all)return Object.values(OC).filter(Boolean);
       const cs=(window.S&&window.S.consents)||[];
       return Object.entries(OC)
         .filter(([k,o])=>o&&cs.some(c=>c.name&&c.name.toLowerCase().startsWith(k==='out'?'outing':k==='cloz'?'clozapine':k)))

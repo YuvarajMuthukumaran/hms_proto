@@ -315,7 +315,7 @@
   window.psyDocPreview=function(key){S.cdfView='page';psyDocOpen(key);};
   let pad=null;
   window.psyEsignOpen=function(fid){
-    const ocE=typeof window.__ocForms==='function'?window.__ocForms():[];
+    const ocE=typeof window.__ocForms==='function'?window.__ocForms(true):[];
     const all=[...FORMS,...ocE.filter(o=>!FORMS.some(f=>f[1]===o[1]))];
     const f=all.find(a=>a[1]===fid);if(!f)return;
     V3.modal('Collect e-signature','Read the form with the family, then they sign in the box.',
