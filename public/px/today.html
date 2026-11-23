@@ -460,7 +460,8 @@ document.addEventListener('click',e=>{
   if(t.dataset.act){
     if(t.dataset.m==='Open in Grievances'){ setState({open:null}); navShell('grievances'); return; }
     if(t.dataset.m==='Family intake done'){ setState({open:null}); openFI(t.dataset.act,t.dataset.actp); return; }
-    if(t.dataset.m==='Took Pt Preferences'){ setState({open:null}); if(!navShell('patients',t.dataset.actp)) setState({eye:(raw.find(x=>x.id===t.dataset.act)||{}).id||null}); return; }
+    if(/^Call the family/.test(t.dataset.m)){ setState({open:null}); const pp=TP.find(x=>x.name===t.dataset.actp)||{id:t.dataset.act,name:t.dataset.actp,rep:'',rel:'',ph:'',day:'',room:''}; pp.row=t.dataset.act; openCall(pp, pp.callN||1); return; }
+    if(t.dataset.m==='Took Pt Preferences'){ setState({open:null}); try{localStorage.setItem('pxopentab','prefs');}catch(e){} if(!navShell('patients',t.dataset.actp)) setState({eye:(raw.find(x=>x.id===t.dataset.act)||{}).id||null}); return; }
     setState({open:null,acted:{...state.acted,[t.dataset.act]:t.dataset.m}});return;
   }
   if(t.dataset.hide){setState({brief:false});return;}

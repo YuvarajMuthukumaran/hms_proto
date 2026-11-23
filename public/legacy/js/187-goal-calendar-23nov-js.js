@@ -73,7 +73,9 @@
     const {y,m}=st[k],first=new Date(y,m,1),days=new Date(y,m+1,0).getDate(),lead=(first.getDay()+6)%7;
     const inM=D.out.filter(e=>e.d.getFullYear()===y&&e.d.getMonth()===m),by={};
     inM.forEach(e=>{(by[key(e.d)]=by[key(e.d)]||[]).push(e);});
-    const sel=st['s_'+pid+'_'+seg]||'';
+    const todayK=key(now),canLog=seg==='ind'&&D.series.length>0,selRaw=st['s_'+pid+'_'+seg];
+    const sel=(selRaw===undefined||selRaw==='')?(canLog?todayK:''):selRaw==='sum'?'':selRaw;
+    const due=canLog?D.series.map((t,i)=>i).filter(i=>!D.out.some(e=>e.s===i&&key(e.d)===todayK)):[];
     const word=s=>s==='ok'?(seg==='grp'?'attended':seg==='fam'?'reached':'aim met'):s==='half'?'part of it':(seg==='grp'?'refused':seg==='fam'?'not reached':'not met');
     const glyph=s=>s==='ok'?'✓':s==='half'?'½':'✕';
     const mark=e=>{const s=e.ok===true?'ok':e.ok==='half'?'half':'no';
@@ -81,7 +83,7 @@
     let cells='';for(let i=0;i<lead;i++)cells+='<div class="gc-d gc-x"></div>';
     for(let d=1;d<=days;d++){const dt=new Date(y,m,d),L=by[key(dt)]||[],today=key(dt)===key(now),fut=dt>now;
       const nOk=L.filter(e=>e.ok===true).length,tone=!L.length?'':nOk===L.length?' t-ok':L.some(e=>e.ok===true||e.ok==='half')?' t-half':' t-no';
-      cells+='<button type="button" class="gc-d'+(today?' today':'')+(fut?' fut':'')+(L.length?' has':'')+tone+(sel===key(dt)?' sel':'')+'" aria-label="'+d+' '+MN[m]+(L.length?', '+L.length+' record'+(L.length>1?'s':''):'')+'" onclick="gcDay(\''+seg+'\',\''+key(dt)+'\')"><span class="gc-n">'+d+'</span><span class="gc-ms">'+L.map(mark).join('')+'</span></button>';}
+      cells+='<button type="button" class="gc-d'+(today?' today':'')+(fut?' fut':'')+(L.length?' has':'')+tone+(sel===key(dt)?' sel':'')+'" aria-label="'+d+' '+MN[m]+(L.length?', '+L.length+' record'+(L.length>1?'s':''):'')+'" onclick="gcDay(\''+seg+'\',\''+key(dt)+'\')"><span class="gc-n">'+d+'</span><span class="gc-ms">'+L.map(mark).join('')+(key(dt)===todayK?due.map(i=>'<i class="gc-c due" style="--c:'+colOf(seg,D,i)+'" title="'+E(D.series[i])+': due today, not logged yet"></i>').join(''):'')+'</span></button>';}
     const tail=(7-(lead+days)%7)%7;for(let i=0;i<tail;i++)cells+='<div class="gc-d gc-x"></div>';
     /* 23 Nov (owner): the goal rows above the calendar are gone, so on the Goals calendar each goal in the key opens its pop-up (Log now, history) */
     const legend=D.series.map((t,i)=>D.what==='goal'&&typeof window.tpGoal==='function'?'<button type="button" class="gc-kb" title="Log this goal or see its history" onclick="tpGoal(\''+E(pid)+'\','+i+')"><i class="gc-sw" style="background:'+colOf(seg,D,i)+'"></i>'+E(t)+'<em>Log</em></button>':'<span><i class="gc-sw" style="background:'+colOf(seg,D,i)+'"></i>'+E(t)+'</span>').join('');
@@ -91,7 +93,8 @@
       return '<div class="gc-st"><i class="gc-sw" style="background:'+colOf(seg,D,i)+'"></i><div><b>'+E(t)+'</b><small>'+(n?lab:'nothing this month')+'</small></div></div>';};
     const dayCount=Object.keys(by).length;
     let side;
-    if(sel&&by[sel]){const L=by[sel],dd=L[0].d;
+    if(canLog&&sel===todayK)side=todayPanel(pid,seg,D,by[sel]||[],due);
+    else if(sel&&by[sel]){const L=by[sel],dd=L[0].d;
       side='<div class="gc-side gc-det"><div class="gc-dh"><b>'+E(dd.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'}))+'</b><button type="button" class="btn sm" onclick="gcDay(\''+seg+'\',\'\')">Month summary</button></div>'
         +L.map(e=>{const s=e.ok===true?'ok':e.ok==='half'?'half':'no';return '<div class="gc-ev" style="--c:'+colOf(seg,D,e.s)+'"><div class="gc-et"><i class="gc-sw" style="background:var(--c)"></i><b>'+E(e.txt||D.series[e.s]||'')+'</b><span class="gc-es '+s+'">'+word(s)+'</span></div>'
           +(e.det||[]).filter(r=>r[1]).map(r=>'<div class="gc-er"><span>'+E(r[0])+'</span><span>'+E(r[1])+'</span></div>').join('')+'</div>';}).join('')+'</div>';}
@@ -108,7 +111,33 @@
   }
   const redraw=seg=>{const el=document.querySelector('#view .gc[data-seg="'+seg+'"]');if(el)el.outerHTML=cal(S.pid,seg);};
   window.gcMove=function(seg,dir){const k='m_'+S.pid+'_'+seg,c=st[k];if(!c)return;let m=c.m+dir,y=c.y;if(m<0){m=11;y--;}if(m>11){m=0;y++;}st[k]={y,m};st['s_'+S.pid+'_'+seg]='';redraw(seg);};
-  window.gcDay=function(seg,k){const s='s_'+S.pid+'_'+seg;st[s]=st[s]===k?'':k;redraw(seg);};
+  window.gcDay=function(seg,k){const s='s_'+S.pid+'_'+seg;st[s]=(k===''||st[s]===k)?'sum':k;redraw(seg);};
+  /* today's panel: every goal with its aim, what is logged today, and the buttons to log it here */
+  const aimT=g=>{const t=g.type||'scale';if(t==='yn')return 'Aim: Yes';if(t==='num')return 'Aim: '+(g.dir==='atmost'?'at most ':'at least ')+g.aim+(g.unit?' '+g.unit:'');if(t==='choice')return 'Aim: '+(g.aimOpt||((g.opts||[]).slice(-1)[0])||'');return 'Aim: '+(g.aim==null?8:g.aim)+' of 10';};
+  function todayPanel(pid,seg,D,L,due){
+    const goals=((psyPx(pid).sn||{}).goals)||[],P=E(pid);
+    const rows=goals.map((g0,i)=>{const g=Object.assign({},g0,{type:g0.type||'scale'}),mine=L.filter(e=>e.s===i),isDue=due.indexOf(i)>=0;
+      const got=mine.map(e=>(e.det.find(r=>r[0]==='Logged')||[])[1]).filter(v=>v!==undefined);
+      const lastV=got.length?got[got.length-1]:'',ok=got.length?met(g,g.type==='scale'?+lastV:lastV):null;
+      let opts=null;if(g.type==='yn')opts=[['yes','Yes'],['no','No']];else if(g.type==='choice')opts=(g.opts||[]).map(o=>[o,o]);else if(g.type==='scale'){opts=[];for(let k=0;k<=10;k++)opts.push([String(k),String(k)]);}
+      const inp=opts?`<div class="gc-lo${g.type==='scale'?' sc':''}">${opts.map(o=>`<button type="button" class="gc-lb${String(lastV)===String(o[0])?' on':''}" data-p="${P}" data-i="${i}" data-v="${E(o[0])}" onclick="gcLog(this)">${E(o[1])}</button>`).join('')}</div>`
+        :`<div class="gc-lo"><input type="number" step="any" inputmode="decimal" class="input gc-ni" id="gcN${i}" placeholder="0" aria-label="${E(g.t)}" onkeydown="if(event.key==='Enter')gcLogNum(this.nextElementSibling)"><button type="button" class="btn sm pri" data-p="${P}" data-i="${i}" onclick="gcLogNum(this)">Save</button>${g.unit?`<span class="tiny muted">${E(g.unit)}</span>`:''}</div>`;
+      const stt=isDue?'<span class="gc-es due">Due</span>':`<span class="gc-es ${ok?'ok':'no'}">${E(got.length>1?got.length+' logs, last '+lastV:'Logged '+lastV)}</span>`;
+      return `<div class="gc-lg${isDue?' is-due':''}" style="--c:${colOf(seg,D,i)}"><div class="gc-et"><i class="gc-sw" style="background:var(--c)"></i><b>${E(g.t)}</b>${stt}</div><div class="tiny muted">${E(aimT(g))}</div>${inp}</div>`;}).join('');
+    const nd=due.length;
+    return `<div class="gc-side gc-det"><div class="gc-dh"><b>Today · ${E(new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'}))}</b><button type="button" class="btn sm" data-s="${seg}" onclick="gcDay(this.dataset.s,'')">Month summary</button></div><div class="small ${nd?'':'muted'}" style="${nd?'color:#475467':''}">${nd?nd+' of '+goals.length+' goal'+(goals.length===1?'':'s')+' still to log today':'All goals logged today'}</div>${rows}</div>`;
+  }
+  function gcSave(pid,i,v){
+    const x=psyPx(pid);x.sn=x.sn||{ladder:[],notes:[],goals:null,relapse:null,ybocs:'',planned:8,hwLog:{},hwWhy:{},told:{},grp:[]};
+    const g=((x.sn.goals||[])[i])||{};x.sn.goalLog=x.sn.goalLog||{};const k=String(i);x.sn.goalLog[k]=x.sn.goalLog[k]||[];
+    const d=new Date(),at=d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+', '+d.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}),role=ROLE;
+    x.sn.goalLog[k].push({at,ts:Date.now(),by:(typeof signer==='function'?signer():'')||role,role,v});
+    try{if(typeof V3!=='undefined'&&V3.log)V3.log(pid,S.role,'note','Goal logged: '+(g.t||'')+' = '+v);}catch(e){}
+    if(typeof window.tpPlanChanged==='function')window.tpPlanChanged(pid);
+    render();toast('Logged: '+(g.t||'goal'));
+  }
+  window.gcLog=function(b){const pid=b.dataset.p,i=+b.dataset.i,g=(((psyPx(pid).sn||{}).goals)||[])[i]||{};let v=b.dataset.v;if((g.type||'scale')==='scale')v=+v;gcSave(pid,i,v);};
+  window.gcLogNum=function(b){const i=+b.dataset.i,el=document.getElementById('gcN'+i),s=String((el||{}).value||'').trim();if(s===''||isNaN(+s)){if(el)el.focus();toast('Type a number first');return;}gcSave(b.dataset.p,i,+s);};
 
   function place(){
     if(!/^#\/patient\/[^/]+\/therapy/.test(location.hash||''))return;
@@ -127,6 +156,12 @@
     '.gc-nav{display:flex;align-items:center;gap:10px}.gc-nav b{min-width:120px;text-align:center;font-size:14px}'+
     '.gc-kb{display:inline-flex;align-items:center;gap:7px;border:1px solid #d0d5dd;background:#fff;border-radius:99px;padding:4px 6px 4px 10px;font:inherit;font-size:12.5px;color:#344054;cursor:pointer}.gc-kb:hover{border-color:#1e6cdb;background:#f5f9ff}.gc-kb em{font-style:normal;font-weight:700;color:#1e6cdb;background:#eef4fd;border-radius:99px;padding:1px 8px}'+
     '.gc-key{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-size:12.5px;color:#344054}.gc-key span{display:inline-flex;align-items:center;gap:7px}'+
+    '.gc-c.due{background:#f2f4f7;border-color:#98a2b3;position:relative}.gc-c.due::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}.gc-es.due{background:#f2f4f7;color:#475467}'+
+    '.gc-lg{border:1px solid #eef2f6;border-left:4px solid var(--c);border-radius:10px;padding:10px 12px;display:grid;gap:6px}.gc-lg.is-due{background:#fafbfc}'+
+    '.gc-lo{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.gc-lo.sc{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}'+
+    '.gc-lb{all:unset;box-sizing:border-box;min-width:40px;min-height:34px;padding:0 10px;border:1.5px solid #d0d8e3;border-radius:8px;background:#fff;font-size:13px;font-weight:600;color:#1d2939;text-align:center;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}'+
+    '.gc-lb:hover{border-color:var(--c)}.gc-lb:focus-visible{outline:2px solid #1e6cdb;outline-offset:1px}.gc-lb.on{background:var(--c);border-color:var(--c);color:#fff}.gc-lo.sc .gc-lb{min-width:0;padding:0}'+
+    '.gc-ni{width:96px;min-height:34px;font-size:15px;font-weight:700;text-align:center}'+
     '.gc-sw{display:inline-block;flex:none;width:12px;height:12px;border-radius:4px}'+
     '.gc-body{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:24px;margin-top:14px;align-items:start}'+
     '.gc-w,.gc-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.gc-w span{font-size:11.5px;font-weight:600;color:#475467;text-align:center;padding:4px 0;border-radius:6px;background:#f2f4f7}.gc-w span.we{background:#eef4ff;color:#3538cd}'+
