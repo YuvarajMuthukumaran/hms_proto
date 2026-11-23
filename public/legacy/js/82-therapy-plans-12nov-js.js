@@ -209,16 +209,28 @@
   function commList(pid){
     const out=[];
     ((px(pid).th||{}).comm||[]).forEach(c=>out.push({type:c.type||'Contact',who:c.who||'',when:c.date||'',what:c.what||c.note||c.summary||'',ts:tsOf(c.date),own:1}));
-    try{(((window.__faApi&&__faApi.famState(pid))||{}).log||[]).forEach(l=>{const p=String(l.note||'').split(' · ');out.push({type:l.what||'Call',who:l.by||'',when:l.at||'',what:p.length>2?p.slice(2).join(' · '):p.slice(1).join(' · '),ts:tsOf(l.at)});});}catch(e){}
+    try{(((window.__faApi&&__faApi.famState(pid))||{}).log||[]).forEach(l=>{const p=String(l.note||'').split(' · ');out.push({type:l.what||'Call',who:l.by||'',when:l.at||'',what:p.length>2?p.slice(2).join(' · '):p.slice(1).join(' · '),ts:tsOf(l.at),log:l});});}catch(e){}
     return out.sort((a,b)=>b.ts-a.ts);
   }
   function commCard(pid){
     const d=COMMF[pid]||'',all=commList(pid),rows=d?all.filter(r=>(r.ts?isoOf(new Date(r.ts).toISOString()):isoOf(r.when))===d):all;
     const col={WhatsApp:'c-green',Call:'c-blue'};
-    const body=rows.length?rows.map(r=>'<div class="tf-r" style="align-items:flex-start;gap:12px"><span style="min-width:0"><span class="chip '+(col[(r.type||'').split(' ')[0]]||'c-grey')+'">'+esc(r.type)+'</span> <b style="font-weight:600">'+esc(r.who)+'</b>'+(r.what?'<div style="margin-top:4px;font-size:13px">'+esc(r.what)+'</div>':'<div class="tiny muted" style="margin-top:4px">What was discussed: not written</div>')+'</span><span class="tf-d" style="white-space:nowrap">'+esc(r.when)+'</span></div>').join(''):'<div class="tf-e">'+(d?'No contact on this date.':'No contact logged yet.')+'</div>';
+    COMMR[pid]=rows;const body=rows.length?rows.map((r,ri)=>'<div class="tf-r tf-rc" role="button" tabindex="0" title="Open the full details" data-p="'+esc(pid)+'" data-i="'+ri+'" onclick="tpCommPop(this.dataset.p,+this.dataset.i)" onkeydown="if(event.key==\'Enter\')this.click()" style="align-items:flex-start;gap:12px"><span style="min-width:0"><span class="chip '+(col[(r.type||'').split(' ')[0]]||'c-grey')+'">'+esc(r.type)+'</span> <b style="font-weight:600">'+esc(r.who)+'</b>'+(r.what?'<div style="margin-top:4px;font-size:13px">'+esc(r.what)+'</div>':'<div class="tiny muted" style="margin-top:4px">What was discussed: not written</div>')+'</span><span class="tf-d" style="white-space:nowrap">'+esc(r.when)+'</span></div>').join(''):'<div class="tf-e">'+(d?'No contact on this date.':'No contact logged yet.')+'</div>';
     return '<section class="tf-c" id="tpComm"><div class="tf-h" style="gap:10px;flex-wrap:wrap"><div><b>Calls and WhatsApp</b><span>Through the Tulasi number · '+all.length+' logged</span></div><div style="display:flex;gap:8px;align-items:center;margin-left:auto"><input class="input" type="date" style="min-height:34px;width:150px" value="'+esc(d)+'" aria-label="Show one date" data-p="'+esc(pid)+'" onchange="tpCommDate(this.dataset.p,this.value)">'+(d?'<button class="btn sm" data-p="'+esc(pid)+'" onclick="tpCommDate(this.dataset.p,null)">All dates</button>':'')+'<button class="btn sm pri" data-p="'+esc(pid)+'" onclick="tpCommAdd(this.dataset.p)">Log a contact</button></div></div><div style="max-height:300px;overflow:auto">'+body+'</div></section>';
   }
   window.tpCommDate=function(pid,v){COMMF[pid]=v||'';render();};
+  /* 23 Nov 2026 meeting (Anu): tapping a call or WhatsApp opens everything saved about it (who called, which family member, how it went, how long, what was said, topics) */
+  const COMMR={};
+  window.tpCommPop=function(pid,i){
+    const r=(COMMR[pid]||[])[i];if(!r)return;const l=r.log;
+    let rows;
+    if(l){const parts=String(l.note||'').split(' · '),dur=/min/i.test(parts[1]||'')?parts[1]:'',said=parts.slice(dur?2:1).join(' · ');
+      rows=[['Call',l.what||'Family call'],['Called by',l.by||''],['When',l.at||''],['How it went',parts[0]||''],['How long',dur],['What was said',said],['Topics covered',(l.topics||[]).join(', ')]];}
+    else rows=[['Type',r.type],[/whatsapp/i.test(r.type)?'Message sent':'What was discussed',r.what||'Not written'],['With / by',r.who],['When',r.when]];
+    const body='<div style="display:grid;gap:10px">'+rows.filter(x=>x[1]).map(x=>'<div style="display:grid;grid-template-columns:140px minmax(0,1fr);gap:12px;padding:8px 0;border-bottom:1px solid #eef2f6"><span class="muted">'+esc(x[0])+'</span><span style="white-space:pre-wrap">'+esc(x[1])+'</span></div>').join('')+'</div>';
+    V3.modal(esc(r.type||'Contact')+' · '+esc(pat(pid).name),esc(r.when||''),body,'<button class="btn pri" onclick="closeModal()">Close</button>');
+  };
+  if(!document.getElementById('tpCommCss')){const c=document.createElement('style');c.id='tpCommCss';c.textContent='.tf-rc{cursor:pointer;border-radius:8px;transition:background .15s}.tf-rc:hover{background:#f5f8fc}.tf-rc:focus-visible{outline:2px solid #1e6cdb;outline-offset:-2px}';document.head.appendChild(c);}
   window.tpCommAdd=function(pid){
     V3.modal('Log a contact · '+esc(pat(pid).name),'A call or WhatsApp with the family.','<div class="grid2"><label class="field"><span class="lbl">How</span><select class="input" id="ccT"><option>Call</option><option>WhatsApp</option></select></label><label class="field"><span class="lbl">With</span><input class="input" id="ccW" placeholder="e.g. Ananya Bose, sister"></label></div><label class="field"><span class="lbl">What was discussed (required)</span><textarea class="input" id="ccN" rows="4" placeholder="In a few words"></textarea></label><div id="ccE" class="small" style="color:var(--red);display:none">Write what was discussed</div>','<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" data-p="'+esc(pid)+'" onclick="tpCommSave(this.dataset.p)">Save</button>');
   };
@@ -332,7 +344,8 @@
     const nDone=TOPICS.filter(t=>done[t]).length;
     const st=r=>r[1]?'<span class="tf-st ok">Done</span>':r[2]?'<span class="tf-st due">Due now</span>':'<span class="tf-st">Not due yet</span>';
     /* 19 Nov 2026 (owner): the Sensitisation topics card is gone from here; topics are ticked in the Call family pop-up (block 140) */
-    return famTrend(pid)+`<div class="tf">
+    /* 23 Nov 2026 meeting (Anu): the WhatsApp / calls / 24-hour summary cards are gone; the family contact calendar (block 187) shows it all */
+    return `<div class="tf">
       <section class="tf-c"><div class="tf-h"><div><b>Required contact</b><span>Set at admission, ticks itself when logged</span></div><button class="btn sm" data-p="${esc(pid)}" data-k="all" onclick="tpCalls(this.dataset.p,this.dataset.k)">View all</button></div>${req.map((r,ri)=>'<div class="tf-r"><span>'+r[0]+'</span><span style="display:flex;align-items:center;gap:12px">'+st(r)+(r[1]?'<button class="btn sm" data-p="'+esc(pid)+'" data-k="'+['c24','c34','wk','pre'][ri]+'" onclick="tpCalls(this.dataset.p,this.dataset.k)">View</button>':'')+'</span></div>').join('')}</section>
       ${commCard(pid)}
 </div><div class="tp-sec" style="margin-top:14px">${sessions(pid,'fam')}</div>`;
