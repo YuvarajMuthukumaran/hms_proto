@@ -100,8 +100,8 @@
     box.innerHTML='<div class="vl-h"><b>Latest vitals</b><span class="muted">'+E(r[0])+(r[7]?', '+E(r[7]):'')+(r[9]?' · taken by '+E(r[9]):'')+'</span></div>'
       +tile('Blood pressure',r[1],bpBad,'mmHg')+tile('Pulse',r[2],M.hr.t(+r[2])!=='ok','per min')+tile('Breathing',r[10],r[10]&&M.rr.t(+r[10])!=='ok','per min')+tile('Temperature',r[3],M.t.t(+r[3])!=='ok','°F')+tile('Oxygen',r[4],M.o2.t(+r[4])!=='ok','%');
   }
-  /* 23 Nov (owner): Record vitals sits on the left, right after Day by day / By time slot; Record blood sugar stays on the right */
-  try{const st=document.createElement('style');st.textContent='#view .vm10 .hd{justify-content:flex-start!important;gap:12px}#view .vm10 .hd .vl-rec{margin-right:auto!important;margin-left:0!important}#view .vl-h{padding:0 13px!important;box-sizing:border-box;align-items:baseline}#view .vl-h .muted{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}';document.head.appendChild(st);}catch(e){}
+  /* 23 Nov (owner, later): Day by day / By time slot on the left; Record vitals and Record blood sugar together on the right */
+  try{const st=document.createElement('style');st.textContent='#view .vm10 .hd{justify-content:flex-start!important;gap:12px}#view .vm10 .hd .vl-rec{margin-left:auto!important;margin-right:0!important}#view .vl-h{padding:0 13px!important;box-sizing:border-box;align-items:baseline}#view .vl-h .muted{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}';document.head.appendChild(st);}catch(e){}
   const __r=render;
   render=function(){const o=__r.apply(this,arguments);try{latest();
     document.querySelectorAll('#view .vm10 .hd button').forEach(b=>{const t=b.textContent.trim();
