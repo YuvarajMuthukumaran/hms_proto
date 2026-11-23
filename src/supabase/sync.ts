@@ -121,10 +121,13 @@ export class RecordSync {
     if (!this.ready || this.busy) return;
     this.busy = true;
     try {
-      await this.push();
+      // a refused save never stops the pull of what other roles changed
+      let pushErr: unknown = null;
+      try { await this.push(); } catch (e) { pushErr = e; }
       const changed = await this.pull();
-      setSyncStatus({ state: 'live', lastSync: new Date(), error: '' });
       if (changed) this.bridge.rerenderIfIdle();
+      if (pushErr) throw pushErr;
+      setSyncStatus({ state: 'live', lastSync: new Date(), error: '' });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.warn('Supabase sync:', msg);
@@ -138,6 +141,7 @@ export class RecordSync {
     const rows: Array<{ patient_id: string; kind: RecordKind; data: unknown; updated_role: RoleKey; updated_by: string; updated_at: string }> = [];
     const pending: Array<[string, string]> = [];
     const who = this.bridge.signer();
+    let refused = '';
     for (const pid of this.bridge.pids()) {
       if (this.waiting.has(pid)) continue;
       for (const kind of RECORD_KINDS) {
@@ -152,8 +156,20 @@ export class RecordSync {
     }
     if (rows.length) {
       const { error } = await this.client.from('patient_records').upsert(rows, { onConflict: 'patient_id,kind' });
-      if (error) throw new Error(`${error.code ?? ''} ${error.message}`.trim());
-      pending.forEach(([k, t]) => this.saved.set(k, t));
+      if (!error) {
+        pending.forEach(([k, t]) => this.saved.set(k, t));
+      } else {
+        // 23 Nov: one refused kind (e.g. a role the database does not yet allow to write vitals) used to block every save.
+        // Save kind by kind so everything else still reaches Supabase, and say which kind was refused.
+        const failed: string[] = [];
+        for (const kind of [...new Set(rows.map((r) => r.kind))]) {
+          const idx = rows.map((r, i) => (r.kind === kind ? i : -1)).filter((i) => i >= 0);
+          const { error: e2 } = await this.client.from('patient_records').upsert(idx.map((i) => rows[i]), { onConflict: 'patient_id,kind' });
+          if (e2) failed.push(`${kind}: ${`${e2.code ?? ''} ${e2.message}`.trim()}`);
+          else idx.forEach((i) => this.saved.set(pending[i][0], pending[i][1]));
+        }
+        if (failed.length) refused = `Not saved: ${failed.join('; ')}`;
+      }
     }
 
     await this.pushGlobal();
@@ -189,6 +205,7 @@ export class RecordSync {
         docPending.forEach(([k, t]) => this.saved.set(k, t));
       }
     }
+    if (refused) throw new Error(refused);
   }
 
   /** Whole-hospital state (RMO shift handover, nurse instructions, Rounds seen marks): never stops the patient sync if the table is missing. */
