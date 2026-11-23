@@ -122,8 +122,17 @@
       let opts=null;if(g.type==='yn')opts=[['yes','Yes'],['no','No']];else if(g.type==='choice')opts=(g.opts||[]).map(o=>[o,o]);else if(g.type==='scale'){opts=[];for(let k=0;k<=10;k++)opts.push([String(k),String(k)]);}
       const inp=opts?`<div class="gc-lo${g.type==='scale'?' sc':''}">${opts.map(o=>`<button type="button" class="gc-lb${String(lastV)===String(o[0])?' on':''}" data-p="${P}" data-i="${i}" data-v="${E(o[0])}" onclick="gcLog(this)">${E(o[1])}</button>`).join('')}</div>`
         :`<div class="gc-lo"><input type="number" step="any" inputmode="decimal" class="input gc-ni" id="gcN${i}" placeholder="0" aria-label="${E(g.t)}" onkeydown="if(event.key==='Enter')gcLogNum(this.nextElementSibling)"><button type="button" class="btn sm pri" data-p="${P}" data-i="${i}" onclick="gcLogNum(this)">Save</button>${g.unit?`<span class="tiny muted">${E(g.unit)}</span>`:''}</div>`;
-      const stt=isDue?'<span class="gc-es due">Due</span>':`<span class="gc-es ${ok?'ok':'no'}">${E(got.length>1?got.length+' logs, last '+lastV:'Logged '+lastV)}</span>`;
-      return `<div class="gc-lg${isDue?' is-due':''}" style="--c:${colOf(seg,D,i)}"><div class="gc-et"><i class="gc-sw" style="background:var(--c)"></i><b>${E(g.t)}</b>${stt}</div><div class="tiny muted">${E(aimT(g))}</div>${inp}</div>`;}).join('');
+      const stt=isDue?'<span class="gc-es due">Due</span>':`<span class="gc-es ${ok?'ok':'no'}">${ok?'Aim met':'Below aim'}</span>`;
+      /* 23 Nov (owner): once logged today the goal shows its result only; it cannot be logged again today */
+      let res='';
+      if(!isDue){
+        const vs=g.type==='yn'?(String(lastV)==='yes'?'Yes':'No'):g.type==='scale'?lastV+' of 10':g.type==='num'?lastV+(g.unit?' '+g.unit:''):String(lastV);
+        const t0=new Date();t0.setHours(0,0,0,0);
+        const lg=((((psyPx(pid).sn||{}).goalLog)||{})[String(i)]||[]).filter(x=>(x.ts||0)>=t0.getTime()).slice(-1)[0];
+        const when=lg?new Date(lg.ts).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'})+(lg.by?' by '+lg.by:''):'From today’s session note';
+        res=`<div class="gc-res"><span class="gc-rv">${E(vs)}</span><span class="tiny muted">Logged ${E(when)}</span></div>`;
+      }
+      return `<div class="gc-lg${isDue?' is-due':''}" style="--c:${colOf(seg,D,i)}"><div class="gc-et"><i class="gc-sw" style="background:var(--c)"></i><b>${E(g.t)}</b>${stt}</div><div class="tiny muted">${E(aimT(g))}</div>${isDue?inp:res}</div>`;}).join('');
     const nd=due.length;
     return `<div class="gc-side gc-det"><div class="gc-dh"><b>Today · ${E(new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'}))}</b><button type="button" class="btn sm" data-s="${seg}" onclick="gcDay(this.dataset.s,'')">Month summary</button></div><div class="small ${nd?'':'muted'}" style="${nd?'color:#475467':''}">${nd?nd+' of '+goals.length+' goal'+(goals.length===1?'':'s')+' still to log today':'All goals logged today'}</div>${rows}</div>`;
   }
@@ -161,6 +170,7 @@
     '.gc-lo{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.gc-lo.sc{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}'+
     '.gc-lb{all:unset;box-sizing:border-box;min-width:40px;min-height:34px;padding:0 10px;border:1.5px solid #d0d8e3;border-radius:8px;background:#fff;font-size:13px;font-weight:600;color:#1d2939;text-align:center;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}'+
     '.gc-lb:hover{border-color:var(--c)}.gc-lb:focus-visible{outline:2px solid #1e6cdb;outline-offset:1px}.gc-lb.on{background:var(--c);border-color:var(--c);color:#fff}.gc-lo.sc .gc-lb{min-width:0;padding:0}'+
+    '.gc-res{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.gc-rv{font-size:20px;font-weight:700;color:var(--c);line-height:1.2}'+
     '.gc-ni{width:96px;min-height:34px;font-size:15px;font-weight:700;text-align:center}'+
     '.gc-sw{display:inline-block;flex:none;width:12px;height:12px;border-radius:4px}'+
     '.gc-body{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:24px;margin-top:14px;align-items:start}'+
