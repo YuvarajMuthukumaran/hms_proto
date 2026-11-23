@@ -77,7 +77,7 @@
   /* SOP 3: consultant review at least twice a week; nudge at 4 days, floor lead at 5 days; 5 field template; high risk: risk discussed with family */
   const CR_FIELDS=[['status','Current clinical status'],['effects','Side effects or complications'],['invest','Investigations needed'],['plan','Change in management plan'],['advice','Any other advice']];
   const CR_SEED={arjun:1,varun:4,kabir:2,sameer:5,neel:1,dev:3,tarun:6,rohit:0};
-  const crDays=pid=>{const a=au();a.cr=a.cr||{};const c=a.cr[pid];/* 23 Nov 2026 (meeting): a saved round note is a consultant review too */let rl=0;try{const r=((window.psyPx?psyPx(pid):{}).roundLog||[])[0];rl=(r&&+r.ts)||0;}catch(e){}const last=Math.max((c&&c.at)||0,rl);if(last)return Math.floor((nowMs()-last)/86400000);return CR_SEED[pid]!==undefined?CR_SEED[pid]+Math.floor((au().skip||0)/24):clk(pt(pid)||{});};
+  const crDays=pid=>{const a=au();a.cr=a.cr||{};const c=a.cr[pid];/* 23 Nov 2026 (meeting): a saved round note is a consultant review too */let rl=0;try{const X=(window.psyPx?psyPx(pid):{}),r=(X.roundLog||[])[0];rl=(r&&+r.ts)||0;/* 23 Nov (IPD alerts doc): a re-assessment or a daily note saved today counts too */(Array.isArray(X.reassess)?X.reassess:[]).forEach(a=>{if(a&&+a.ts>rl)rl=+a.ts;});if(S.eod&&S.eod[pid]&&S.eod[pid].saved)rl=Math.max(rl,nowMs());}catch(e){}const last=Math.max((c&&c.at)||0,rl);if(last)return Math.floor((nowMs()-last)/86400000);return CR_SEED[pid]!==undefined?CR_SEED[pid]+Math.floor((au().skip||0)/24):clk(pt(pid)||{});};
   const needRisk=pid=>!!pt(pid).risk&&!((au().rf||{})[pid]);
   const crDue=()=>kind()==='psychiatrist'?PTS.filter(p=>(+p.day||0)>=1&&crDays(p.id)>=4):[];
   const riskDue=()=>kind()==='psychiatrist'?PTS.filter(p=>needRisk(p.id)):[];

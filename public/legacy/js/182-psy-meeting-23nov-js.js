@@ -64,14 +64,14 @@
 
   /* ---------- 3. Type column: the most critical open task ---------- */
   const CAT=[
-    ['Critical','red',/critical|escalat|seizure|self-?harm|abscond|chok|emergency|suicid|early warning score [5-9]|urgent rmo/i],
+    ['Critical','red',/critical|escalat|seizure|self-?harm|abscond|chok|emergency|suicid|physical aggression|assault|delirium|medically unstable|early warning score [5-9]|urgent rmo/i],
     ['Clinical event','amber',/vital|fever|withdrawal|\bfall\b|aggress|behaviour|incident|\bevent\b|early warning/i],
-    ['Medication','amber',/countersign|refus|\bSOS\b|\bPRN\b|adverse|medicine|medication|\border\b|\bdose|approve/i],
+    ['Medication','amber',/countersign|drows|refus|\bSOS\b|\bPRN\b|adverse|medicine|medication|\border\b|\bdose|approve/i],
     ['Investigation','amber',/\blab\b|\becg\b|result|investigation/i],
     ['Overdue review','amber',/consultant review|follow-up|overdue|not assessed|not reviewed/i],
-    ['MHCA','amber',/capacity|form e|form c|consent|section 8|section 9|mhca|nominated|advance directive|mhrb/i],
+    ['MHCA','amber',/admission capacity|capacity (assessment )?at admission|capacity assessment due|form e|form c|section 8|section 9|mhca|nominated|advance directive|mhrb/i],
     ['Admission','grey',/admission|work-?up|add psychologist/i],
-    ['Documentation','grey',/note|history|plan|summary|re-?assess|draft|document|sign/i],
+    ['Documentation','grey',/capacity|consent|note|history|plan|summary|re-?assess|draft|document|sign/i],
     ['Family','grey',/family|call|visit|24[ -]?hour/i]];
   const NAME={'Overdue review':'Review due'};
   function typeFix(){
