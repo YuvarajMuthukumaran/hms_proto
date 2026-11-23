@@ -254,16 +254,36 @@ export class RecordSync {
     return n;
   }
 
+  /**
+   * 23 Nov 2026: Supabase returns at most 1000 rows per request. With 192 inpatients the record table is past that, so the newest
+   * saves (a goal just added) were cut off when the page loaded, and patients whose rows fell past the cut showed blank.
+   * Every read now goes page by page until a short page comes back.
+   */
+  private async all<T>(page: (from: number, to: number) => PromiseLike<{ data: unknown[] | null; error: { code?: string; message: string } | null }>): Promise<T[]> {
+    const SIZE = 500;
+    const out: T[] = [];
+    for (let from = 0; from < 200_000; from += SIZE) {
+      const { data, error } = await page(from, from + SIZE - 1);
+      if (error) throw new Error(`${error.code ?? ''} ${error.message}`.trim());
+      out.push(...((data ?? []) as T[]));
+      if (!data || data.length < SIZE) break;
+    }
+    return out;
+  }
+
   /** Loads every saved record of these patients, whatever the time cursor says (they were not on the wards at the first pull). */
   private async pullFor(pids: string[]) {
     if (!pids.length) return;
     for (let i = 0; i < 50 && this.busy; i++) await new Promise((r) => setTimeout(r, 200));
     this.busy = true;
     try {
-      const { data: rows, error } = await this.client.from('patient_records').select('patient_id,kind,data,updated_at').in('patient_id', pids);
-      if (error) throw new Error(`${error.code ?? ''} ${error.message}`.trim());
+      const rows: RecordRow[] = [];
+      for (let i = 0; i < pids.length; i += 40) {
+        const part = pids.slice(i, i + 40);
+        rows.push(...(await this.all<RecordRow>((a, b) => this.client.from('patient_records').select('patient_id,kind,data,updated_at').in('patient_id', part).order('patient_id').order('kind').range(a, b))));
+      }
       let n = 0;
-      for (const r of (rows ?? []) as RecordRow[]) {
+      for (const r of rows) {
         if (!this.bridge.hasPatient(r.patient_id)) continue;
         const key = `${r.patient_id}|${r.kind}`;
         const text = stamp(r.data);
@@ -287,12 +307,14 @@ export class RecordSync {
 
   /** Returns how many records or documents changed on screen. */
   private async pull(): Promise<number> {
-    let q = this.client.from('patient_records').select('patient_id,kind,data,updated_at,updated_role').order('updated_at', { ascending: true });
-    if (this.since) q = q.gt('updated_at', this.since);
-    const { data: rows, error } = await q;
-    if (error) throw new Error(`${error.code ?? ''} ${error.message}`.trim());
+    const since = this.since;
+    const rows = await this.all<RecordRow>((a, b) => {
+      let q = this.client.from('patient_records').select('patient_id,kind,data,updated_at,updated_role').order('updated_at', { ascending: true }).order('patient_id').order('kind');
+      if (since) q = q.gt('updated_at', since);
+      return q.range(a, b);
+    });
     let n = 0;
-    for (const r of (rows ?? []) as RecordRow[]) {
+    for (const r of rows) {
       this.since = r.updated_at;
       // a patient not on the wards yet (a database inpatient still loading): skipped here, loaded by pullFor when they join
       if (!this.bridge.hasPatient(r.patient_id)) continue;
@@ -307,11 +329,12 @@ export class RecordSync {
       n++;
     }
 
-    let dq = this.client.from('clinical_docs').select('entry_key,doc,updated_at').order('updated_at', { ascending: true });
-    if (this.sinceDocs) dq = dq.gt('updated_at', this.sinceDocs);
-    const { data: docs, error: docErr } = await dq;
-    if (docErr) throw new Error(`${docErr.code ?? ''} ${docErr.message}`.trim());
-    const docRows = (docs ?? []) as Array<DocRow & { updated_at: string }>;
+    const sinceDocs = this.sinceDocs;
+    const docRows = await this.all<DocRow & { updated_at: string }>((a, b) => {
+      let dq = this.client.from('clinical_docs').select('entry_key,doc,updated_at').order('updated_at', { ascending: true }).order('entry_key');
+      if (sinceDocs) dq = dq.gt('updated_at', sinceDocs);
+      return dq.range(a, b);
+    });
     if (docRows.length) {
       // Only documents whose content really differs from what this browser already has are applied (and redraw the page).
       // Another browser re-saving the same documents moves their updated_at, but that is not a change for us.
