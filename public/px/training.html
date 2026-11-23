@@ -13,11 +13,11 @@ button{font-family:inherit;cursor:pointer}
 main{padding:14px 16px 48px;display:flex;flex-direction:column;gap:14px}
 .btn{height:36px;display:inline-flex;align-items:center;gap:8px;padding:0 13px;border-radius:10px;border:1px solid #D6DEE8;background:#fff;color:#0F172A;font-size:13.5px;font-weight:600}
 .btn.pri{background:#1E6CDB;border-color:#1E6CDB;color:#fff}.btn.sm{height:30px;padding:0 10px;font-size:12.5px}.btn:disabled{opacity:.5;cursor:default}
-.hello{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}.hello h2{margin:0;font-size:21px}.muted{color:#667085}.small{font-size:12.5px}
+.hello{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.hello h2{margin:0;font-size:21px}.muted{color:#667085}.small{font-size:12.5px}
 .alert{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:12px;padding:11px 14px;border:1px solid}
 .alert.blue{background:#F2F7FF;border-color:#D5E4FB}.alert.amber{background:#FFFAEB;border-color:#FEDF89}
 .alert b{font-weight:650}
-.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-start}
 .seg{display:inline-flex;border:1px solid #D6DEE8;border-radius:10px;overflow:hidden;background:#fff}.seg button{border:0;background:#fff;padding:8px 16px;font-size:13.5px;font-weight:600;color:#475467}.seg button.on{background:#1E6CDB;color:#fff}
 .chips{display:flex;gap:8px;flex-wrap:wrap}.chip{border:1px solid #D6DEE8;background:#fff;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:600;color:#344054}.chip.on{background:#E8F1FE;border-color:#1E6CDB;color:#1E5BB8}
 select{height:36px;border:1px solid #D6DEE8;border-radius:10px;padding:0 10px;font:inherit;font-size:13.5px;background:#fff}
@@ -48,7 +48,7 @@ html:not(.admin) [data-planmod],html:not(.admin) [data-addp]{display:none!import
 const OFF=Math.round((new Date().setHours(0,0,0,0)-new Date('2026-11-12T00:00:00').getTime())/864e5);
 const shiftD=s=>{const d=new Date(s.length<=10?s+'T00:00:00':s);d.setDate(d.getDate()+OFF);const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+(s.length>10?'T'+s.slice(11):'');};
 const TODAY=new Date();TODAY.setHours(9,0,0,0);
-const ADMIN=/[?&]admin=1/.test(location.search);if(ADMIN)document.documentElement.classList.add('admin');
+const ADMIN=!/[?&]admin=0/.test(location.search);if(ADMIN)document.documentElement.classList.add('admin');
 const KEY='px_training_v2';
 const MODS=[
  {id:'rights',name:'Patient rights and dignity',team:'All',days:7,core:1},{id:'listen',name:'Listening and tone',team:'All',days:30,core:1},{id:'concern',name:'Handling a concern',team:'All',days:30,core:1},
@@ -146,7 +146,7 @@ function drawer(){
     <div class="muted small">Passed updates the person's record. Repeat goes into the next session. Counts go to Reports for NABH training records.</div><button class="btn pri" data-attok="1">Save attendance</button></div></div>`;}
   return '';}
 function render(){const need=PEOPLE.length;document.getElementById('root').innerHTML=`
- <div class="hello"><div><h2>Staff training</h2><div class="muted">Nurses, call centre, front desk and ward staff. ${window.PX_REAL?(PEOPLE.length?'The staff list is the one entered here, until the HR list is connected.':'No staff are listed yet. Add them one by one, or paste a list.'):'Staff list comes from HR. Demo data.'}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">${ADMIN?((window.PX_REAL?'<button class="btn" data-addst="one">Add staff</button><button class="btn" data-addst="list">Paste a list</button>':'')+'<button class="btn pri" data-planmod="rights" data-people="">Plan a session</button>'):''}</div></div>
+ <div class="hello"><div><div class="muted">Nurses, call centre, front desk and ward staff. ${window.PX_REAL?(PEOPLE.length?'The staff list is the one entered here, until the HR list is connected.':'No staff are listed yet. Add them one by one, or paste a list.'):'Staff list comes from HR. Demo data.'}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">${ADMIN?((window.PX_REAL?'<button class="btn" data-addst="one">Add staff</button><button class="btn" data-addst="list">Paste a list</button>':'')+'<button class="btn pri" data-planmod="rights" data-people="">Plan a session</button>'):''}</div></div>
  ${alerts()}
  <div class="bar">${ADMIN?`<div class="seg"><button class="${S.view==='people'?'on':''}" data-v="people">People</button><button class="${S.view==='sessions'?'on':''}" data-v="sessions">Sessions</button></div>`:'<div></div>'}
   <div class="chips">${['All','Nurses','Call centre','Front desk','Ward staff'].map(t=>`<button class="chip ${S.team===t?'on':''}" data-team="${t}">${t==='All'?'All teams':t}</button>`).join('')}</div>

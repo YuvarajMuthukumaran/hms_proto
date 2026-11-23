@@ -12,7 +12,7 @@ body{margin:0;background:#F6FBFF;font-family:Inter,system-ui,sans-serif;color:#0
 button{font-family:inherit;cursor:pointer}
 main{padding:14px 16px 48px;display:flex;flex-direction:column;gap:14px}
 .btn{height:36px;display:inline-flex;align-items:center;gap:8px;padding:0 13px;border-radius:10px;border:1px solid #D6DEE8;background:#fff;color:#0F172A;font-size:13.5px;font-weight:600}.btn.sm{height:30px;padding:0 10px;font-size:12.5px}.btn:disabled{opacity:.55;cursor:default}
-.hello{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}.hello h2{margin:0;font-size:21px}.muted{color:#667085}.small{font-size:12.5px}
+.hello{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.hello h2{margin:0;font-size:21px}.muted{color:#667085}.small{font-size:12.5px}
 .seg{display:inline-flex;border:1px solid #D6DEE8;border-radius:10px;overflow:hidden;background:#fff}.seg button{border:0;background:#fff;padding:8px 16px;font-size:13.5px;font-weight:600;color:#475467}.seg button.on{background:#1E6CDB;color:#fff}
 .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .tile{background:#fff;border:1px solid #E3EAF2;border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
@@ -82,7 +82,7 @@ function csv(){const P=PER[S.per],T=P.tiles;const rows=[['Patient Experience rep
 function render(){const P=PER[S.per],T=P.tiles;
  const tile=(l,v,of,sub)=>`<div class="tile"><span class="l">${l}</span><b>${v}${of!=null?' <span class="muted" style="font-size:15px;font-weight:600">of '+of+'</span>':''}</b>${sub}</div>`;
  document.getElementById('root').innerHTML=`
- <div class="hello"><div><h2>Reports</h2><div class="muted">${P.label}, ${P.dates}. Your own work only. Nothing here is typed in.</div><div class="small muted" style="margin-top:4px">Counted from what is logged: random calls, concerns closed (Grievances), discharge feedback, compliments and staff training. ${window.PX_REAL?'The steps-on-time bars come from the stay steps marked done on Patients.':'The steps-on-time bars other than random calls are demo numbers.'}</div></div>
+ <div class="hello"><div><div class="muted">${P.label}, ${P.dates}. Your own work only. Nothing here is typed in.</div><div class="small muted" style="margin-top:4px">Counted from what is logged: random calls, concerns closed (Grievances), discharge feedback, compliments and staff training. ${window.PX_REAL?'The steps-on-time bars come from the stay steps marked done on Patients.':'The steps-on-time bars other than random calls are demo numbers.'}</div></div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><div class="seg"><button class="${S.per==='week'?'on':''}" data-per="week">This week</button><button class="${S.per==='month'?'on':''}" data-per="month">Last month</button></div><button class="btn" data-dl="1">Download for ops review</button></div></div>
  <div class="tiles">
   ${tile('Random calls done',T.calls[0],T.calls[1],chg(pc(T.calls[0],T.calls[1]),pc(T.calls[2],T.calls[3]),'%'))}
