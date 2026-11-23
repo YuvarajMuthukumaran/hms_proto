@@ -91,7 +91,8 @@
     if(nr){const a=isBp?[nr[0][0],nr[1][0]]:[nr[0]],b=isBp?[nr[0][1],nr[1][1]]:[nr[1]];lo=Math.min(lo,...a);hi=Math.max(hi,...b);}
     const pad=(hi-lo||Math.abs(hi)||10)*.12;lo=Math.floor(lo-pad);hi=Math.ceil(hi+pad);
     /* 23 Nov redesign: the chart fills its row (viewBox 760 wide, scaled to the row); many days scroll sideways at 64 px a day */
-    const VW=760,L=46,T=18,H=isBp?210:150,fit=(VW-L-12)/D.length>=64,colW=fit?(VW-L-12)/D.length:64,W=fit?VW:L+colW*D.length+12,B=H-30;
+    /* drawn at real pixel size (no scaling, so text stays small): width = the row's chart space, measured from the page */
+    const vw0=((document.querySelector('#view')||{}).clientWidth||1000),VW=Math.max(360,Math.min(1100,(vw0>900?vw0-420:vw0-40))),L=40,T=16,H=isBp?170:120,fit=(VW-L-12)/D.length>=64,colW=fit?(VW-L-12)/D.length:64,W=fit?VW:L+colW*D.length+12,B=H-30;
     const y=v=>T+(hi-v)/((hi-lo)||1)*(B-T);
     const step=(()=>{const r=(hi-lo)/4,m=Math.pow(10,Math.floor(Math.log10(r||1)));return [1,2,2.5,5,10].map(f=>f*m).find(f=>f>=r)||r;})();
     let g='';
@@ -107,7 +108,7 @@
       if(isBp&&P2.length>1)g+=`<polyline class="vx-ln" pathLength="1" fill="none" stroke="${c}" stroke-width="2.25" stroke-linejoin="round" points="${P2.map(o=>o.p.x.toFixed(1)+','+y(o.v).toFixed(1)).join(' ')}"/>`;
       P2.forEach(o=>{const out=bad[k]&&bad[k](o.p.r[k]);const lbl=isBp?o.v:o.p.r[k];
         g+=`<g class="vx-pt"><circle cx="${o.p.x.toFixed(1)}" cy="${y(o.v).toFixed(1)}" r="${isBp?3.6:4.6}" fill="${out&&!isBp?'#d92d20':c}" stroke="#fff" stroke-width="1.5"/><text x="${o.p.x.toFixed(1)}" y="${(y(o.v)-9).toFixed(1)}" text-anchor="middle" class="vx-pv${out&&!isBp?' bad':''}">${E(lbl)}</text>${!isBp&&tmS(o.p.r)?`<text x="${o.p.x.toFixed(1)}" y="${(y(o.v)+16).toFixed(1)}" text-anchor="middle" class="vx-pt-t">${E(tmS(o.p.r))}</text>`:''}<title>${E(dayLbl(o.p.r.ts))} ${E(o.p.r.time||'')}: ${isBp?nm+' ':''}${E(lbl)}${o.p.r.by?' · '+E(o.p.r.by):''}</title></g>`;});});
-    return `<div class="vx-cw"><svg viewBox="0 0 ${W} ${H}" ${fit?'width="100%"':`width="${W}" height="${H}"`} role="img" aria-label="${isBp?'Blood pressure, systolic and diastolic, by date':'Readings by date'}">${g}</svg></div>`;
+    return `<div class="vx-cw"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${isBp?'Blood pressure, systolic and diastolic, by date':'Readings by date'}">${g}</svg></div>`;
   }
   /* 23 Nov redesign (owner): one monitor row per vital: latest value and whether it is in the usual range on the left,
      the chart across the row, lowest / highest / count on the right. Vitals with no readings fold into one line. */
@@ -203,14 +204,14 @@
     +'.vx-key{display:inline-flex;align-items:center;gap:5px;margin-left:10px;font-size:11.5px;color:#667085}.vx-key i{display:inline-block;width:14px;height:3px;border-radius:2px}.vx-key i.dash{border-top:2px dashed #f04438;height:0;opacity:.6}.vx-key i.band{height:10px;background:#12b76a;opacity:.18}'
     /* trend redesign: monitor rows */
     +'.vx-mon{border:1px solid #e3eaf2;border-radius:14px;background:#fff;overflow:hidden}'
-    +'.vx-row{display:grid;grid-template-columns:196px minmax(0,1fr) 120px;gap:20px;align-items:center;padding:16px 18px 14px;border-bottom:1px solid #eef2f6;position:relative}'
+    +'.vx-row{display:grid;grid-template-columns:180px minmax(0,1fr) 110px;gap:18px;align-items:center;padding:10px 16px 8px;border-bottom:1px solid #eef2f6;position:relative}'
     +'.vx-row::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:#12b76a}.vx-row.is-bad::before{background:#d92d20}'
     +'.vx-nm{font-size:13.5px;font-weight:700;color:#344054}.vx-nm small{font-weight:500;color:#98a2b3;font-size:12px}'
-    +'.vx-big{font-size:34px;line-height:1.1;font-weight:700;color:#101828;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin:4px 0 6px}.vx-big.bad{color:#b42318}'
+    +'.vx-big{font-size:26px;line-height:1.1;font-weight:700;color:#101828;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin:2px 0 4px}.vx-big.bad{color:#b42318}'
     +'.vx-st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#067647}.vx-st i{width:7px;height:7px;border-radius:50%;background:currentColor}.vx-st.bad{color:#b42318}'
     +'.vx-dl{font-size:12.5px;color:#475467;margin-top:4px}.vx-at{font-size:11.5px;color:#98a2b3;margin-top:6px;line-height:1.4}'
     +'.vx-plot{min-width:0}.vx-plot .vx-key{margin:0 0 2px}.vx-plot .vx-cw{margin:0}'
-    +'.vx-sum{margin:0;display:grid;gap:10px;border-left:1px solid #eef2f6;padding-left:16px}.vx-sum div{display:grid;gap:1px}.vx-sum dt{font-size:11.5px;color:#98a2b3}.vx-sum dd{margin:0;font-size:15px;font-weight:700;color:#344054;font-variant-numeric:tabular-nums}'
+    +'.vx-sum{margin:0;display:grid;gap:6px;border-left:1px solid #eef2f6;padding-left:16px}.vx-sum div{display:grid;gap:1px}.vx-sum dt{font-size:11.5px;color:#98a2b3}.vx-sum dd{margin:0;font-size:14px;font-weight:700;color:#344054;font-variant-numeric:tabular-nums}'
     +'.vx-none{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:12px 18px;background:#f9fafb;font-size:13px;color:#667085}.vx-none b{font-weight:600;color:#475467;background:#fff;border:1px solid #e3eaf2;border-radius:6px;padding:2px 8px}'
     +'.vx-anim .vx-ln{stroke-dasharray:1;stroke-dashoffset:1;animation:vxDraw .9s ease-out .1s forwards}.vx-anim .vx-pt{opacity:0;animation:vxIn .35s ease-out .6s forwards}'
     +'@keyframes vxDraw{to{stroke-dashoffset:0}}@keyframes vxIn{to{opacity:1}}'
