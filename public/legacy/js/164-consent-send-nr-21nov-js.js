@@ -10,7 +10,7 @@
    NOT BUILT YET: the page the NR opens on their phone to sign. Until it exists the message asks them to contact the team. */
 (function(){
   const E=s=>hesc(String(s==null?'':s));
-  const FORMS=[['Admission consent form and letter of undertaking','admission-consent'],['Form E · request for admission','form-e'],['High risk informed consent','high-risk-consent'],['Form C · independent admission','form-c']];
+  const FORMS=[['Admission consent form and letter of undertaking','admission-consent'],['Form E · request for admission','form-e'],['High risk informed consent','high-risk-consent'],['Form C · independent admission','form-c'],['Admission terms (pages 3 to 8)','adm-terms']];
   const nameOf=fid=>(FORMS.find(f=>f[1]===fid)||['Form'])[0];
   const fidOf=t=>{const s=String(t||'').trim();const f=FORMS.find(x=>s.indexOf(x[0])===0);return f?f[1]:'';};
   const px=pid=>{try{return psyPx(pid)||{};}catch(e){return {};}};
