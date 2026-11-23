@@ -98,14 +98,32 @@
   window.tpGoal=function(pid,i){
     const x=psyPx(pid),goals=(x.sn&&x.sn.goals)||[],g=goals[i];if(!g)return;
     const notes=((x.sn&&x.sn.notes)||[]).filter(n=>n&&n.status==='signed').slice().reverse().filter(n=>(n.goalR||{})[i]!==undefined&&n.goalR[i]!==''&&n.goalR[i]!==null);
-    const L=notes.map(n=>({at:n.at,v:n.goalR[i]}));
-    const rows=L.slice().reverse().map(r=>'<div class="pin-r"><span>'+E(r.at)+'</span><b style="color:'+(met(g,r.v)?'#067647':'#b45309')+'">'+E(fmt(g,r.v))+(met(g,r.v)?' · aim met':'')+'</b></div>').join('');
-    const body='<div class="small" style="margin-bottom:8px"><b>How it is measured:</b> '+E(howText(g))+'<br><b>How it is logged:</b> in every signed session note<br><b>'+E(aimText(g))+'</b></div>'
-      +(L.length?'<div style="margin:10px 0 14px">'+strip(g,L,true)+'</div><div class="pin-sum">'+rows+'</div>':'<div class="small muted">Nothing logged yet. It is rated in each signed session note.</div>');
+    const L=notes.map(n=>({at:n.at,ts:n.ts||Date.parse(String(n.at||'').replace(/,/g,''))||0,v:n.goalR[i],src:'session note'})).concat((((x.sn&&x.sn.goalLog)||{})[i]||[]).map(r=>({at:r.at,ts:r.ts||0,v:r.v,src:r.by}))).sort((a,b)=>(a.ts||0)-(b.ts||0));
+    const rows=L.slice().reverse().map(r=>'<div class="pin-r"><span>'+E(r.at)+(r.src?' · '+E(r.src):'')+'</span><b style="color:'+(met(g,r.v)?'#067647':'#b45309')+'">'+E(fmt(g,r.v))+(met(g,r.v)?' · aim met':'')+'</b></div>').join('');
+    const body='<div class="small" style="margin-bottom:8px"><b>How it is measured:</b> '+E(howText(g))+'<br><b>How it is logged:</b> here with Log now, or in a signed session note<br><b>'+E(aimText(g))+'</b></div>'
+      +(L.length?'<div style="margin:10px 0 14px">'+strip(g,L,true)+'</div><div class="pin-sum">'+rows+'</div>':'<div class="small muted">Nothing logged yet. Log it above, or rate it in a session note.</div>');
     const old=(g.old||[]).map(o=>'<div class="small muted" style="margin-top:10px"><b>Earlier, measured as '+E(o.how)+':</b> '+(o.rows.length?o.rows.map(r=>E(r.at+' '+r.txt)).join(', '):'nothing logged')+'</div>').join('');
     const canEdit=/^(psychologist|floor-lead-psychologist|psychiatrist|floor-lead-psychiatrist)$/.test(String((window.__TULASI__||{}).role||''));
     const chg=canEdit?'<button class="btn" onclick="tpGoalNew(\''+String(pid).replace(/'/g,"\\'")+'\','+i+')">Change how it is measured</button>':'';
-    V3.modal(E(g.t),E(TYPES[g.type]||'Goal'),body+old,chg+'<button class="btn pri" onclick="closeModal()">Close</button>');
+    GL.pid=pid;GL.i=i;GL.v='';
+    const logBox=canEdit?'<div id="glBox" style="border:1px solid #d6e4f7;background:#f5f9ff;border-radius:12px;padding:12px 14px;margin-bottom:14px"><div style="font-weight:700;margin-bottom:6px">Log now</div><div id="glIn">'+window.goalInput(g,i,'','glPick')+'</div><div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button class="btn pri sm" onclick="glSave()">Save log</button><span id="glErr" class="small" style="color:var(--red)"></span></div></div>':'';
+    V3.modal(E(g.t),E(TYPES[g.type]||'Goal'),logBox+body+old,chg+'<button class="btn pri" onclick="closeModal()">Close</button>');
+  };
+  /* Log now (goal pop-up) */
+  const GL={pid:'',i:0,v:''};
+  window.glPick=function(i,v){GL.v=GL.v===v?'':v;const x=psyPx(GL.pid),g=((x.sn&&x.sn.goals)||[])[i];const el=document.getElementById('glIn');if(g&&el)el.innerHTML=window.goalInput(g,i,GL.v,'glPick');};
+  window.glPickSet=function(i,v){GL.v=v===''?'':+v;};
+  window.glSave=function(){
+    const err=document.getElementById('glErr');
+    if(GL.v===''||GL.v===null||GL.v===undefined||(typeof GL.v==='number'&&isNaN(GL.v))){if(err)err.textContent='Choose or type a value first';return;}
+    const x=psyPx(GL.pid);x.sn=x.sn||{ladder:[],notes:[],goals:null,relapse:null,ybocs:'',planned:8,hwLog:{},hwWhy:{},told:{},grp:[]};
+    x.sn.goalLog=x.sn.goalLog||{};const k=String(GL.i);x.sn.goalLog[k]=x.sn.goalLog[k]||[];
+    const d=new Date(),at=d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+', '+d.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});
+    const role=String((window.__TULASI__||{}).role||'');
+    x.sn.goalLog[k].push({at,ts:Date.now(),by:(typeof signer==='function'?signer():'')||role,role,v:GL.v});
+    try{if(typeof V3!=='undefined'&&V3.log)V3.log(GL.pid,S.role,'note','Goal logged: '+(((x.sn.goals||[])[GL.i]||{}).t||'')+' = '+GL.v);}catch(e){}
+    if(typeof window.tpPlanChanged==='function')window.tpPlanChanged(GL.pid);
+    const pid=GL.pid,i=GL.i;closeModal();render();toast('Goal logged');
   };
   /* session note: free number */
   /* ---------- set a goal: goal, how to measure, how it is logged, how it is shown ---------- */
@@ -167,6 +185,7 @@
       if(oldType!==g.type){
         const rows=[];((x.sn.notes||[]).filter(n=>n&&n.status==='signed').slice().reverse()).forEach(n=>{const v=(n.goalR||{})[idx];if(v!==undefined&&v!==''&&v!==null){rows.push({at:n.at,txt:fmt(o,v)});}});
         (x.sn.notes||[]).forEach(n=>{if(n&&n.goalR&&n.goalR[idx]!==undefined)delete n.goalR[idx];});
+        if(x.sn.goalLog&&x.sn.goalLog[idx]){x.sn.goalLog[idx].forEach(r=>rows.push({at:r.at,txt:fmt(o,r.v)}));delete x.sn.goalLog[idx];}
         g.old=(o.old||[]).concat([{how:howText(Object.assign({},o,{type:oldType})),rows}]);
       }else if(o.old)g.old=o.old;
       x.sn.goals[idx]=g;

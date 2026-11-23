@@ -24,7 +24,7 @@
   /* 21 Nov 2026: goals can be Yes/No (type:'yn') or 0-10 scale (type:'scale') */
   const defGoals=pid=>{const s=SNO(pid);if(!s.goals)s.goals=window.__realMode?[]:[{t:'Sleep at least 6 hours a night',type:'num',unit:'hours',dir:'atleast',aim:6},{t:'Take part in one group activity a day',type:'yn'},{t:'Talk about worries with the therapist',type:'scale'}];s.goals.forEach((g,gi)=>{if(!g.type&&window.goalGuess&&!ratings(pid,gi).length){const q=window.goalGuess(g);if(q)Object.assign(g,q);}if(!g.type)g.type=g.start!==undefined?'scale':'yn';if(g.type==='scale'&&g.start===undefined)g.start=2;if(g.type==='scale'&&g.aim===undefined)g.aim=8;});return s.goals;};
   const signed=pid=>(SNO(pid).notes||[]).filter(n=>n.status==='signed').slice().reverse(); /* oldest first */
-  const ratings=(pid,i)=>signed(pid).map(n=>({at:n.at,v:(n.goalR||{})[i]})).filter(r=>r.v!==undefined&&r.v!==''&&r.v!==null);
+  const ratings=(pid,i)=>signed(pid).map(n=>({at:n.at,ts:n.ts||Date.parse(String(n.at||'').replace(/,/g,''))||0,v:(n.goalR||{})[i]})).filter(r=>r.v!==undefined&&r.v!==''&&r.v!==null).concat((((SNO(pid).goalLog)||{})[i]||[]).map(r=>({at:r.at,ts:r.ts||0,v:r.v}))).sort((a,b)=>(a.ts||0)-(b.ts||0));
   const nowOf=(pid,i)=>{const r=ratings(pid,i);const g=defGoals(pid)[i];if(g&&g.type==='yn')return r.length?r[r.length-1].v:'—';return r.length?+r[r.length-1].v:g.start;};
 
   function suggestions(pid){
@@ -64,7 +64,7 @@
   function progress(pid){
     const g=defGoals(pid),sug=suggestions(pid),rg=rung(pid);
     return `<div class="tp-sec"><div class="tp-h">Suggested next steps</div>${sug.length?sug.map(x=>`<div class="tp-sug">${esc(x)}</div>`).join(''):'<div class="tp-ok"><span>✓</span>On track. No change needed to goals or homework.</div>'}</div>
-      <div class="tp-sec"><div class="tp-h">Goals, in the patient's words <small>start, now, aim. Tap one for its history.</small></div>${g.map((x,i)=>{
+      <div class="tp-sec"><div class="tp-h">Goals, in the patient's words <small>start, now, aim. Tap a goal to log it or see its history.</small></div>${g.map((x,i)=>{
         const n=nowOf(pid,i);
         if(x.type&&x.type!=='scale'&&window.goalRow)return window.goalRow(pid,i,x,ratings(pid,i));
         if(x.type==='yn'){
