@@ -475,7 +475,8 @@ window.onCallSaved = r => {
         const w=on.filter(x=>x.code==='M'||x.code==='E').map(x=>esc(x.name)+' <span style="color:#667085">('+(x.code==='M'?'morning':'evening')+', '+esc(x.floor)+')</span>').join(' · ');
         const lv=on.filter(x=>x.code==='L').map(x=>esc(x.name)+' ('+esc(x.leave.type.toLowerCase())+(x.leave.cover?', cover '+esc(C.nameOf(x.leave.cover)):'')+')');
         const off=on.filter(x=>x.code==='O').map(x=>esc(x.name));
-        h+='<div style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:10px 16px;font-size:14px;display:flex;flex-direction:column;gap:3px"><div><b>Who is on today</b> <span style="color:#667085">· '+esc(C.label(t))+'</span></div><div>'+(w||'No one is on shift.')+'</div>'+(lv.length?'<div style="color:#93370D"><b>On leave:</b> '+lv.join(', ')+'</div>':'')+(off.length?'<div style="color:#667085">Off: '+off.join(', ')+'</div>':'')+'</div>';
+        /* 23 Nov (Nikita): no 'Who is on today' strip on this dashboard */
+        if(false)h+='<div style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:10px 16px;font-size:14px;display:flex;flex-direction:column;gap:3px"><div><b>Who is on today</b> <span style="color:#667085">· '+esc(C.label(t))+'</span></div><div>'+(w||'No one is on shift.')+'</div>'+(lv.length?'<div style="color:#93370D"><b>On leave:</b> '+lv.join(', ')+'</div>':'')+(off.length?'<div style="color:#667085">Off: '+off.join(', ')+'</div>':'')+'</div>';
         const cl=C.clashes(t,C.addDays(t,7)).slice(0,3);
         cl.forEach(c=>{const cv=c.cover.map(C.nameOf);h+='<div style="background:#FEF3F2;border:1px solid #FDA29B;border-radius:12px;padding:10px 16px;font-size:14px"><b style="color:#B42318">'+esc(C.summary(c))+'.</b> '+(cv.length?esc(cv[0])+' is on shift. Open the Calendar and give them these.':'No one else is on shift then.')+'</div>';});
       }

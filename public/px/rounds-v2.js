@@ -35,13 +35,22 @@
   var split = function () { return P().length > 30; };
   var slotCache = { key: '', m: {} };
   var slotOf = function (p) {
-    var L = P(), key = L.length + ':' + (L[0] ? L[0].id : '') + ':' + (L[L.length - 1] ? L[L.length - 1].id : '');
+    var L = P(), key = L.length + ':' + (L[0] ? L[0].id : '') + ':' + (L[L.length - 1] ? L[L.length - 1].id : '') + ':' + new Date().toDateString();
     if (slotCache.key !== key) {
       var S2 = L.slice().sort(function (a, b) { return String(a.floor || '').localeCompare(String(b.floor || '')) || String(a.room || '').localeCompare(String(b.room || ''), undefined, { numeric: true }) || String(a.name).localeCompare(String(b.name)); });
       slotCache = { key: key, m: {} };
-      S2.forEach(function (x, i) { slotCache.m[x.id] = ['M', 'A', 'E'][Math.min(2, Math.floor(i * 3 / S2.length))]; });
+      /* 23 Nov (Nikita): at most 30 patients in a round. Up to 90 patients: thirds as before. More than 90: groups of at most 30
+         (by floor and room), and today's morning, afternoon and evening take the next three groups in turn, so everyone gets a
+         round every few days and no round is over 30. */
+      var G = Math.ceil(S2.length / 30);
+      if (G <= 3) S2.forEach(function (x, i) { slotCache.m[x.id] = ['M', 'A', 'E'][Math.min(2, Math.floor(i * 3 / S2.length))]; });
+      else {
+        var sz = Math.ceil(S2.length / G), t = new Date(), day = Math.floor(Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) / 864e5), gs = {};
+        ['M', 'A', 'E'].forEach(function (k, j) { gs[(day * 3 + j) % G] = k; });
+        S2.forEach(function (x, i) { slotCache.m[x.id] = gs[Math.floor(i / sz)] || ''; });
+      }
     }
-    return slotCache.m[p.id] || 'M';
+    return slotCache.m[p.id] === undefined ? 'M' : slotCache.m[p.id];
   };
   /* who is on which round, and why */
   function why(p, r, D) {
