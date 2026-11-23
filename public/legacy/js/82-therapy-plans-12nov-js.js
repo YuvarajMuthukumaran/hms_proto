@@ -66,7 +66,7 @@
   function progress(pid){
     const g=defGoals(pid),sug=suggestions(pid),rg=rung(pid);
     return `<div class="tp-sec"><div class="tp-h">Suggested next steps</div>${sug.length?sug.map(x=>`<div class="tp-sug">${esc(x)}</div>`).join(''):'<div class="tp-ok"><span>✓</span>On track. No change needed to goals or homework.</div>'}</div>
-      <div class="tp-sec"><div class="tp-h">Goals, in the patient's words <small>start, now, aim. Tap a goal to log it or see its history.</small></div>${g.map((x,i)=>{
+      ${/* 23 Nov (owner): the goal rows (bars and scale) are removed; the Goals calendar shows them and its key opens Log now */''}${[].map((x,i)=>{
         const n=nowOf(pid,i);
         if(x.type&&x.type!=='scale'&&window.goalRow)return window.goalRow(pid,i,x,ratings(pid,i));
         if(x.type==='yn'){
@@ -77,7 +77,7 @@
         }
         const lo=Math.min(x.start,n,x.aim),hi=Math.max(x.start,n,x.aim),pos=v=>Math.round((v-lo)/Math.max(1,hi-lo)*100),sp=pos(x.start),np=pos(n),d=n-x.start,say=d===0?'Not moved from '+x.start+' yet':(d>0?'Up ':'Down ')+Math.abs(d)+' from the start of '+x.start;
         return `<button class="tp-goal" style="grid-template-columns:minmax(140px,1fr) minmax(200px,1.5fr) 56px;gap:24px" onclick="tpGoal('${pid}',${i})"><span class="tp-gt"><b>${esc(x.t)}</b><em>${say}, aim ${x.aim}</em></span>${goalChart(pid,i,x,n)}</span><span class="tp-gn"><b>${n}</b><small>of ${x.aim}</small></span></button>`;
-      }).join('')}</div>
+      }).join('')}
       ${rg.length?`<div class="tp-sec"><div class="tp-h">Exposure ladder <small>carried forward every session</small></div>${rg.map(r=>`<div class="tp-rung ${r.m?'done':r.next?'next':''}"><span>${esc(r.l.text)}</span><b>${r.l.suds} / 100</b><em>${r.m?'Done':r.next?'Next step':''}</em></div>`).join('')}</div>`:''}`;
   }
   window.tpGoal=function(pid,i){

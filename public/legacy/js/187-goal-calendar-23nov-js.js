@@ -83,7 +83,8 @@
       const nOk=L.filter(e=>e.ok===true).length,tone=!L.length?'':nOk===L.length?' t-ok':L.some(e=>e.ok===true||e.ok==='half')?' t-half':' t-no';
       cells+='<button type="button" class="gc-d'+(today?' today':'')+(fut?' fut':'')+(L.length?' has':'')+tone+(sel===key(dt)?' sel':'')+'" aria-label="'+d+' '+MN[m]+(L.length?', '+L.length+' record'+(L.length>1?'s':''):'')+'" onclick="gcDay(\''+seg+'\',\''+key(dt)+'\')"><span class="gc-n">'+d+'</span><span class="gc-ms">'+L.map(mark).join('')+'</span></button>';}
     const tail=(7-(lead+days)%7)%7;for(let i=0;i<tail;i++)cells+='<div class="gc-d gc-x"></div>';
-    const legend=D.series.map((t,i)=>'<span><i class="gc-sw" style="background:'+colOf(seg,D,i)+'"></i>'+E(t)+'</span>').join('');
+    /* 23 Nov (owner): the goal rows above the calendar are gone, so on the Goals calendar each goal in the key opens its pop-up (Log now, history) */
+    const legend=D.series.map((t,i)=>D.what==='goal'&&typeof window.tpGoal==='function'?'<button type="button" class="gc-kb" title="Log this goal or see its history" onclick="tpGoal(\''+E(pid)+'\','+i+')"><i class="gc-sw" style="background:'+colOf(seg,D,i)+'"></i>'+E(t)+'<em>Log</em></button>':'<span><i class="gc-sw" style="background:'+colOf(seg,D,i)+'"></i>'+E(t)+'</span>').join('');
     const statRow=(t,i)=>{const L=inM.filter(e=>e.s===i),dset={},okd={};L.forEach(e=>{dset[key(e.d)]=1;if(e.ok===true)okd[key(e.d)]=1;});
       const n=Object.keys(dset).length,o=Object.keys(okd).length;
       const lab=D.what==='goal'?'aim met '+o+' of '+n+' logged day'+(n===1?'':'s'):D.what==='group'?o+' attended of '+n+' day'+(n===1?'':'s')+' marked':L.length+' this month';
@@ -124,6 +125,7 @@
     '.gc{border:1px solid #e3eaf2;border-radius:14px;background:#fff;padding:16px 20px;margin:14px 0}'+
     '.gc-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px 20px;flex-wrap:wrap}.gc-hd h3{margin:0;font-size:15px;color:#101828}.gc-hd p{margin:2px 0 0;font-size:12.5px;color:#667085}'+
     '.gc-nav{display:flex;align-items:center;gap:10px}.gc-nav b{min-width:120px;text-align:center;font-size:14px}'+
+    '.gc-kb{display:inline-flex;align-items:center;gap:7px;border:1px solid #d0d5dd;background:#fff;border-radius:99px;padding:4px 6px 4px 10px;font:inherit;font-size:12.5px;color:#344054;cursor:pointer}.gc-kb:hover{border-color:#1e6cdb;background:#f5f9ff}.gc-kb em{font-style:normal;font-weight:700;color:#1e6cdb;background:#eef4fd;border-radius:99px;padding:1px 8px}'+
     '.gc-key{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-size:12.5px;color:#344054}.gc-key span{display:inline-flex;align-items:center;gap:7px}'+
     '.gc-sw{display:inline-block;flex:none;width:12px;height:12px;border-radius:4px}'+
     '.gc-body{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:24px;margin-top:14px;align-items:start}'+
