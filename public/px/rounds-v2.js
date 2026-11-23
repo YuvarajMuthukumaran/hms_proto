@@ -28,14 +28,16 @@
   var curRound = function () { var h = new Date().getHours(); return h < 13 ? 'M' : h < 17 ? 'A' : 'E'; };
   var mineOf = function () {
     var c = cfg(), a = c.alloc.filter(function (x) { return x.name === me(); })[0] || c.alloc[0];
+    /* 23 Nov: more than 90 patients -> each person's caseload comes from PXSplit (by floor, at most 90 each) */
+    if (window.PXSplit && P().length > window.PXSplit.CAP) { var o = window.PXSplit.owner(P(), c.alloc, c.vvip); return P().filter(function (p) { return o.byId[p.id] === a.name; }); }
     return P().filter(function (p) { var vip = !!c.vvip[p.id]; return a.who === 'all' || (a.who === 'vvip' ? vip : !vip); });
   };
   var seenIn = function (D, p, r) { return D.v[p.id] && D.v[p.id][r]; };
   /* 19 Nov: a full ward has ONE round a day per patient (thirds by floor and room, about 30 at a time), not everyone every morning. */
-  var split = function () { return P().length > 30; };
+  var split = function () { return mineOf().length > 30; };
   var slotCache = { key: '', m: {} };
   var slotOf = function (p) {
-    var L = P(), key = L.length + ':' + (L[0] ? L[0].id : '') + ':' + (L[L.length - 1] ? L[L.length - 1].id : '') + ':' + new Date().toDateString();
+    var L = mineOf(), key = L.length + ':' + (L[0] ? L[0].id : '') + ':' + (L[L.length - 1] ? L[L.length - 1].id : '') + ':' + new Date().toDateString();
     if (slotCache.key !== key) {
       var S2 = L.slice().sort(function (a, b) { return String(a.floor || '').localeCompare(String(b.floor || '')) || String(a.room || '').localeCompare(String(b.room || ''), undefined, { numeric: true }) || String(a.name).localeCompare(String(b.name)); });
       slotCache = { key: key, m: {} };

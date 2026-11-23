@@ -66,6 +66,7 @@ td{padding:14px 16px;background:#fff;border-bottom:1px solid #E3EAF2;vertical-al
 </style>
 <style id="embed-css">html.embed .side,html.embed .rev,html.embed .top{display:none!important}html.embed body{background:transparent}html.embed .app{min-height:0}html.embed main{padding-top:6px}</style>
 <script src="hms-patients.js"></script>
+<script src="px-split.js"></script>
 <script src="px-store.js"></script>
 <script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');</script>
 <script>if(/[?&]embed=1/.test(location.search)){var __rm=function(){document.querySelectorAll('button').forEach(function(b){if(/^\s*\+?\s*(Log a grievance|Log a family call|Log grievance)\s*$/.test(b.textContent)&&!b.dataset.keep)b.remove();});};new MutationObserver(__rm).observe(document.documentElement,{childList:true,subtree:true});document.addEventListener('DOMContentLoaded',__rm);}</script>
@@ -269,10 +270,22 @@ const stepsDone = p => [...p.st].filter(c=>c==='d').length;
 const isLate = p => p.st.includes('l');
 function pill(t,kind){ const k={amber:'background:#FFF4D6;border-color:#F79009;color:#93370D',blue:'background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF',green:'background:#ECFDF3;border-color:#ABEFC6;color:#067647'}[kind]||''; return `<span class="tag" style="${k}">${esc(t)}</span>`; }
 function tagKind(t){ return /DAMA/.test(t)?'amber':/New/.test(t)?'blue':/Discharge/.test(t)?'green':''; }
+function caseload(){
+  if(!window.PXSplit||P.length<=PXSplit.CAP)return null;
+  let c={};try{c=JSON.parse(localStorage.getItem('px_rounds_cfg_v2')||'{}')||{};}catch(e){}
+  const alloc=(c.alloc&&c.alloc.length)?c.alloc:[{name:'Grisham',who:'nonvvip'},{name:'Prabh',who:'vvip'},{name:'Anurag',who:'all'}];
+  const o=PXSplit.owner(P,alloc,c.vvip||{});
+  let me='';try{me=localStorage.getItem('pxme')||'';}catch(e){}
+  const who=S.who||(alloc.some(a=>a.name===me)?me:alloc[0].name);
+  const base=who==='__all'?P:who==='__none'?P.filter(p=>!o.byId[p.id]):P.filter(p=>o.byId[p.id]===who);
+  const floors=o.groups.filter(g=>g.who===who).map(g=>g.label).join(', ');
+  return {alloc,o,who,base,floors};
+}
 function list(){
-  const counts = { all:P.length, new:P.filter(p=>p.tags.some(t=>/New/.test(t))).length, late:P.filter(isLate).length, dis:P.filter(p=>p.dis!=='Not set').length, griev:P.filter(p=>p.open>0).length, prefs:P.filter(p=>!p.prefs).length, vip:P.filter(p=>p.tags.includes('VIP')).length };
+  const CL=caseload(), B=CL?CL.base:P;
+  const counts = { all:B.length, new:B.filter(p=>p.tags.some(t=>/New/.test(t))).length, late:B.filter(isLate).length, dis:B.filter(p=>p.dis!=='Not set').length, griev:B.filter(p=>p.open>0).length, prefs:B.filter(p=>!p.prefs).length, vip:B.filter(p=>p.tags.includes('VIP')).length };
   const F = [['all','All inpatients'],['new','New in 24 h'],['late','Steps late'],['dis','Discharge planned'],['griev','Open grievance'],['prefs','Preferences pending'],['vip','VIP']];
-  let rows = P.filter(p=> S.filter==='all'||(S.filter==='new'&&p.tags.some(t=>/New/.test(t)))||(S.filter==='late'&&isLate(p))||(S.filter==='dis'&&p.dis!=='Not set')||(S.filter==='griev'&&p.open>0)||(S.filter==='prefs'&&!p.prefs)||(S.filter==='vip'&&p.tags.includes('VIP')));
+  let rows = B.filter(p=> S.filter==='all'||(S.filter==='new'&&p.tags.some(t=>/New/.test(t)))||(S.filter==='late'&&isLate(p))||(S.filter==='dis'&&p.dis!=='Not set')||(S.filter==='griev'&&p.open>0)||(S.filter==='prefs'&&!p.prefs)||(S.filter==='vip'&&p.tags.includes('VIP')));
   if(S.sort==='room') rows=[...rows].sort((a,b)=>a.room.localeCompare(b.room)); else if(S.sort==='day') rows=[...rows].sort((a,b)=>b.day-a.day); else rows=[...rows].sort((a,b)=>b.attn-a.attn);
   const tr = rows.map((p,i)=>{ const a=AV[P.indexOf(p)%4]; const dn=stepsDone(p);
     return `<tr>
@@ -284,7 +297,7 @@ function list(){
     <td><span style="font-size:13px;font-weight:600;color:${p.attn?'#B54708':'#344054'}">${esc(p.next)}</span>${p.open?`<div style="font-size:12px;color:#667085;margin-top:3px">${p.open} open grievance${p.open>1?'s':''}</div>`:''}</td>
     <td style="text-align:right;padding-right:14px"><button class="take" data-open="${p.id}">View</button></td></tr>`; }).join('');
   return shell(`<main>
-    ${`<div class="bar"><div style="display:flex;flex-direction:column;gap:2px"><b style="font-size:18px">All inpatients</b><span style="font-size:13px;color:#667085">${P.length} patients · Gurgaon · all wards</span></div><div style="display:flex;gap:8px;flex-wrap:wrap"><input class="inp" type="search" placeholder="Type a name, room or UHID" aria-label="Search patients"><label class="btn" style="gap:6px">Ward <select aria-label="Ward" style="border:0;font:inherit;background:transparent"><option>All wards</option><option>Male ward</option><option>Female ward</option><option>Child ward</option></select></label><label class="btn" style="gap:6px">Sort <select aria-label="Sort" data-sortsel="1" style="border:0;font:inherit;background:transparent">${[['attn','Needs attention first'],['room','Room'],['day','Day of stay']].map(([k,l])=>`<option value="${k}" ${S.sort===k?'selected':''}>${l}</option>`).join('')}</select></label></div></div>
+    ${`<div class="bar"><div style="display:flex;flex-direction:column;gap:2px"><b style="font-size:18px">${CL?(CL.who==='__all'?'Whole hospital':CL.who==='__none'?'Not allocated':esc(CL.who)+'’s patients'):'All inpatients'}</b><span style="font-size:13px;color:#667085">${CL?(B.length+' of '+P.length+' patients'+(CL.floors?' · '+esc(CL.floors):'')+' · at most '+PXSplit.CAP+' each'):P.length+' patients · Gurgaon · all wards'}</span></div><div style="display:flex;gap:8px;flex-wrap:wrap">${CL?`<label class="btn" style="gap:6px">Caseload <select aria-label="Caseload" data-whosel="1" style="border:0;font:inherit;background:transparent">${CL.alloc.map(a=>`<option value="${esc(a.name)}"${CL.who===a.name?' selected':''}>${esc(a.name)} (${CL.o.count[a.name]||0})</option>`).join('')}${CL.o.unassigned?`<option value="__none"${CL.who==='__none'?' selected':''}>Not allocated (${CL.o.unassigned})</option>`:''}<option value="__all"${CL.who==='__all'?' selected':''}>Whole hospital (${P.length})</option></select></label>`:''}<input class="inp" type="search" placeholder="Type a name, room or UHID" aria-label="Search patients"><label class="btn" style="gap:6px">Ward <select aria-label="Ward" style="border:0;font:inherit;background:transparent"><option>All wards</option><option>Male ward</option><option>Female ward</option><option>Child ward</option></select></label><label class="btn" style="gap:6px">Sort <select aria-label="Sort" data-sortsel="1" style="border:0;font:inherit;background:transparent">${[['attn','Needs attention first'],['room','Room'],['day','Day of stay']].map(([k,l])=>`<option value="${k}" ${S.sort===k?'selected':''}>${l}</option>`).join('')}</select></label></div></div>
     <div class="chips">${F.map(([k,l])=>`<button class="chip" data-f="${k}" style="${S.filter===k?'background:#E8F1FE;border-color:#1E6CDB;color:#1E5BB8':''}"><span style="font-size:15px;font-weight:700">${counts[k]}</span> ${l}</button>`).join('')}</div>
     <div class="tw"><table><thead><tr><th style="padding-left:18px">PATIENT</th><th>ROOM</th><th>FAMILY</th><th>CARE TEAM</th><th>STAY STEPS</th><th>NEXT DUE</th><th></th></tr></thead><tbody>${tr}</tbody></table></div>
     <div class="key"><b style="font-size:11px;color:#667085;letter-spacing:.05em">STAY STEPS</b><span><i class="dot" style="background:#12B76A"></i>Done</span><span><i class="dot" style="background:#3B82F6"></i>Due today</span><span><i class="dot" style="background:#F5A524"></i>Late</span><span><i class="dot" style="background:#D0D5DD"></i>Upcoming</span><span style="color:#667085">Diagnosis, notes and medicines are not shown in the patient experience view.</span></div>`}
@@ -442,6 +455,7 @@ const PF_GROUPS=[
  ['Foreign national','Front desk · Admin (Chandraji) · Patient experience',[['Is the patient a foreign national?','sel',['Yes','No']],['Nationality','txt'],['Passport number','txt'],['Visa type and valid until','txt'],['FRRO C-form submitted?','sel',['Yes','No','Pending']],['Separate admission form (Chandraji)','sel',['Done','Pending']],['Embassy or consulate contact','txt'],['Language and interpreter needed','txt'],['Contact abroad (name, number with country code, time zone)','txt'],['How to update the family abroad','sel',['WhatsApp','Email','Video call','Phone call']],['Diet, religious or cultural needs','txt'],['Payment (currency, insurance, who pays)','sel',['Self, in India','Family abroad','Insurance','Embassy','Other']],['Where the passport is kept','sel',['With the patient','Locker','Front desk']],['Anything else for the admission','txt']]]];
 const FG=PF_GROUPS.length-1;
 document.addEventListener('change',e=>{const t=e.target.closest&&e.target.closest('[data-sortsel]');if(t)set({sort:t.value});});
+document.addEventListener('change',e=>{const t=e.target.closest&&e.target.closest('[data-whosel]');if(t)set({who:t.value});});
 function pfAll(){try{return JSON.parse(localStorage.getItem('px_prefs_v2')||'{}')||{};}catch(e){return {};}}
 function pfOpen(pid){ const p=P.find(x=>x.id===pid); if(!p)return; const cur=pfAll()[pid]||{}; document.getElementById('pfOv')&&document.getElementById('pfOv').remove();
   const o=document.createElement('div'); o.id='pfOv'; o.style.cssText='position:fixed;inset:0;background:#F6F8FB;z-index:80;overflow:auto;padding:0';

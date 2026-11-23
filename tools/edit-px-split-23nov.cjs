@@ -1,0 +1,23 @@
+/* 23 Nov 2026 (Nikita: at most 90 patients per Patient Experience person): Rounds and Patients use PXSplit (px/px-split.js). */
+const rep=require('./rep.cjs');
+rep('public/px/rounds-v2.js',[
+ ["    return P().filter(function (p) { var vip = !!c.vvip[p.id]; return a.who === 'all' || (a.who === 'vvip' ? vip : !vip); });\n  };",
+  "    /* 23 Nov: more than 90 patients -> each person's caseload comes from PXSplit (by floor, at most 90 each) */\n    if (window.PXSplit && P().length > window.PXSplit.CAP) { var o = window.PXSplit.owner(P(), c.alloc, c.vvip); return P().filter(function (p) { return o.byId[p.id] === a.name; }); }\n    return P().filter(function (p) { var vip = !!c.vvip[p.id]; return a.who === 'all' || (a.who === 'vvip' ? vip : !vip); });\n  };"],
+ ["  var split = function () { return P().length > 30; };","  var split = function () { return mineOf().length > 30; };"],
+ ["    var L = P(), key = L.length + ':'","    var L = mineOf(), key = L.length + ':'"],
+]);
+rep('public/px/rounds.html',[['<script src="/px/rounds-v2.js"></script>','<script src="/px/px-split.js"></script>\n<script src="/px/rounds-v2.js"></script>']]);
+/* Patients: over 90 inpatients, the list shows one person's caseload (the "Doing the round" person, pxme), with a drop-down for
+   the others, Whole hospital and Not allocated */
+rep('public/px/patients.html',[
+ ["function list(){\n  const counts = { all:P.length, new:P.filter(p=>p.tags.some(t=>/New/.test(t))).length, late:P.filter(isLate).length, dis:P.filter(p=>p.dis!=='Not set').length, griev:P.filter(p=>p.open>0).length, prefs:P.filter(p=>!p.prefs).length, vip:P.filter(p=>p.tags.includes('VIP')).length };",
+  "function caseload(){\n  if(!window.PXSplit||P.length<=PXSplit.CAP)return null;\n  let c={};try{c=JSON.parse(localStorage.getItem('px_rounds_cfg_v2')||'{}')||{};}catch(e){}\n  const alloc=(c.alloc&&c.alloc.length)?c.alloc:[{name:'Grisham',who:'nonvvip'},{name:'Prabh',who:'vvip'},{name:'Anurag',who:'all'}];\n  const o=PXSplit.owner(P,alloc,c.vvip||{});\n  let me='';try{me=localStorage.getItem('pxme')||'';}catch(e){}\n  const who=S.who||(alloc.some(a=>a.name===me)?me:alloc[0].name);\n  const base=who==='__all'?P:who==='__none'?P.filter(p=>!o.byId[p.id]):P.filter(p=>o.byId[p.id]===who);\n  const floors=o.groups.filter(g=>g.who===who).map(g=>g.label).join(', ');\n  return {alloc,o,who,base,floors};\n}\nfunction list(){\n  const CL=caseload(), B=CL?CL.base:P;\n  const counts = { all:B.length, new:B.filter(p=>p.tags.some(t=>/New/.test(t))).length, late:B.filter(isLate).length, dis:B.filter(p=>p.dis!=='Not set').length, griev:B.filter(p=>p.open>0).length, prefs:B.filter(p=>!p.prefs).length, vip:B.filter(p=>p.tags.includes('VIP')).length };"],
+ ["  let rows = P.filter(p=> S.filter==='all'","  let rows = B.filter(p=> S.filter==='all'"],
+ ['<b style="font-size:18px">All inpatients</b><span style="font-size:13px;color:#667085">${P.length} patients · Gurgaon · all wards</span></div>',
+  '<b style="font-size:18px">${CL?(CL.who===\'__all\'?\'Whole hospital\':CL.who===\'__none\'?\'Not allocated\':esc(CL.who)+\'\u2019s patients\'):\'All inpatients\'}</b><span style="font-size:13px;color:#667085">${CL?(B.length+\' of \'+P.length+\' patients\'+(CL.floors?\' · \'+esc(CL.floors):\'\')+\' · at most \'+PXSplit.CAP+\' each\'):P.length+\' patients · Gurgaon · all wards\'}</span></div>'],
+ ['<input class="inp" type="search" placeholder="Type a name, room or UHID" aria-label="Search patients">',
+  '${CL?`<label class="btn" style="gap:6px">Caseload <select aria-label="Caseload" data-whosel="1" style="border:0;font:inherit;background:transparent">${CL.alloc.map(a=>`<option value="${esc(a.name)}"${CL.who===a.name?\' selected\':\'\'}>${esc(a.name)} (${CL.o.count[a.name]||0})</option>`).join(\'\')}${CL.o.unassigned?`<option value="__none"${CL.who===\'__none\'?\' selected\':\'\'}>Not allocated (${CL.o.unassigned})</option>`:\'\'}<option value="__all"${CL.who===\'__all\'?\' selected\':\'\'}>Whole hospital (${P.length})</option></select></label>`:\'\'}<input class="inp" type="search" placeholder="Type a name, room or UHID" aria-label="Search patients">'],
+ ["document.addEventListener('change',e=>{const t=e.target.closest&&e.target.closest('[data-sortsel]');if(t)set({sort:t.value});});",
+  "document.addEventListener('change',e=>{const t=e.target.closest&&e.target.closest('[data-sortsel]');if(t)set({sort:t.value});});\ndocument.addEventListener('change',e=>{const t=e.target.closest&&e.target.closest('[data-whosel]');if(t)set({who:t.value});});"],
+ ['<script src="hms-patients.js"></script>','<script src="hms-patients.js"></script>\n<script src="px-split.js"></script>'],
+]);
