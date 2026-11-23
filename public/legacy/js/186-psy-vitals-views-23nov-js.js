@@ -13,7 +13,17 @@
   const E=s=>hesc(String(s==null?'':s));
   const LS='m23_vx_layout';
   const st=window.__vx=window.__vx||{lay:(()=>{try{return localStorage.getItem(LS)||'table';}catch(e){return 'table';}})(),range:'all',from:'',to:'',par:{}};
-  const P=[['bp','BP','mmHg'],['hr','Pulse','per min'],['rr','Resp. rate','per min'],['t','Temp','°F'],['o2','SpO2','%'],['sg','Sugar','mg/dL']];
+  /* 23 Nov meeting (Anu): only "One row a day" and "Trend" stay */
+  if(st.lay!=='day'&&st.lay!=='trend')st.lay='day';
+  const P0=[['bp','BP','mmHg'],['hr','Pulse','per min'],['rr','Resp. rate','per min'],['t','Temp','°F'],['o2','SpO2','%'],['sg','Sugar','mg/dL']];
+  /* 23 Nov meeting: every monitoring option, but only for the patients who have it (a reading, or an order in Order monitoring) */
+  const PEX=[['wt','Weight','kg','Weight'],['uo','Urine output','ml','Urine output']];
+  let P=P0;
+  function setP(R){
+    let ord=[];try{ord=(typeof monList==='function'&&S.pid?monList(S.pid):[]).map(x=>x[0]);}catch(e){}
+    P=P0.concat(PEX.filter(p=>ord.includes(p[3])||R.some(r=>ok(r[p[0]]))).map(p=>p.slice(0,3)));
+    Object.keys(st.par).forEach(k=>{if(!P.some(p=>p[0]===k))delete st.par[k];});
+  }
   const bad={bp:v=>{const m=String(v).match(/^(\d+)\/(\d+)/);return !!m&&(+m[1]>=140||+m[1]<90||+m[2]>=90);},hr:v=>+v>100||+v<50,rr:v=>+v>20||+v<12,t:v=>+v>=100.4||+v<96,o2:v=>+v<95,sg:v=>+v>180||+v<70};
   const MON={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
   function stamp(day,time){
@@ -28,7 +38,7 @@
   const ok=v=>v!=null&&v!==''&&v!=='—';
   function readings(){
     const R=[];
-    (Array.isArray(S.vit)?S.vit:[]).forEach(v=>{R.push({ts:stamp(v[0],v[7]),day:v[0],time:v[7]||'',by:v[9]||v[8]||'',bp:v[1],hr:v[2],t:v[3],o2:v[4],rr:v[10]||'',wt:v[5],sl:v[6]});});
+    (Array.isArray(S.vit)?S.vit:[]).forEach(v=>{R.push({ts:stamp(v[0],v[7]),day:v[0],time:v[7]||'',by:v[9]||v[8]||'',bp:v[1],hr:v[2],t:v[3],o2:v[4],rr:v[10]||'',wt:v[5],sl:v[6],uo:v[11]||''});});
     (Array.isArray(S.sugarNew)?S.sugarNew:[]).forEach(x=>{const a=String(x.at||'').split(',');R.push({ts:stamp(a[0],a[1]),day:a[0].trim(),time:(a[1]||'').trim(),by:x.by||'',sg:x.v,sgw:x.when||''});});
     return R.sort((a,b)=>b.ts-a.ts);
   }
@@ -68,20 +78,53 @@
     const mn=Math.min(...vals),mx=Math.max(...vals),sy=v=>h-6-(v-mn)/((mx-mn)||1)*(h-12),sx=i=>6+i*(w-12)/(vals.length-1);
     return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" aria-label="Trend"><polyline fill="none" stroke="#1e6cdb" stroke-width="2" points="${vals.map((v,i)=>sx(i)+','+sy(v)).join(' ')}"/>${xs.map((r,i)=>`<circle cx="${sx(i)}" cy="${sy(vals[i])}" r="3" fill="${bad[k](r[k])?'#b42318':'#1e6cdb'}"><title>${E(dayLbl(r.ts))} ${E(r.time||'')}: ${E(r[k])}</title></circle>`).join('')}</svg>`;
   }
+  /* 23 Nov meeting (Anu): BP is two lines, systolic and diastolic, dates across and mmHg up the side.
+     Every other vital is one dot per reading; several readings on one day stand in that day's column, each with its time. */
+  const NORM={bp:[[90,140],[60,90]],hr:[50,100],rr:[12,20],t:[96,100.4],o2:[95,100],sg:[70,180]};
+  const tmS=r=>String(r.time||'').replace(/\s/g,'').replace(/(am|pm)$/i,m=>m[0].toLowerCase());
+  function chart(k,xs){
+    const isBp=k==='bp';
+    const S1=isBp?[['Systolic','#c2410c',r=>+String(r.bp).split('/')[0]],['Diastolic','#1e6cdb',r=>+String(r.bp).split('/')[1]]]:[[k,'#1e6cdb',r=>+r[k]]];
+    const D=byDay(xs);if(!D.length)return '';/* xs is oldest first, so days and readings run left to right */
+    const all=[];S1.forEach(s=>xs.forEach(r=>{const v=s[2](r);if(isFinite(v))all.push(v);}));if(!all.length)return '';
+    const nr=NORM[k];let lo=Math.min(...all),hi=Math.max(...all);
+    if(nr){const a=isBp?[nr[0][0],nr[1][0]]:[nr[0]],b=isBp?[nr[0][1],nr[1][1]]:[nr[1]];lo=Math.min(lo,...a);hi=Math.max(hi,...b);}
+    const pad=(hi-lo||Math.abs(hi)||10)*.12;lo=Math.floor(lo-pad);hi=Math.ceil(hi+pad);
+    const colW=Math.max(64,Math.min(120,560/D.length)),L=46,T=14,H=isBp?220:170,W=L+colW*D.length+12,B=H-30;
+    const y=v=>T+(hi-v)/((hi-lo)||1)*(B-T);
+    const step=(()=>{const r=(hi-lo)/4,m=Math.pow(10,Math.floor(Math.log10(r||1)));return [1,2,2.5,5,10].map(f=>f*m).find(f=>f>=r)||r;})();
+    let g='';
+    for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step){const yy=y(v).toFixed(1);g+=`<line x1="${L}" x2="${W-8}" y1="${yy}" y2="${yy}" stroke="#eef1f5"/><text x="${L-8}" y="${(+yy+4).toFixed(1)}" text-anchor="end" class="vx-ax">${+v.toFixed(1)}</text>`;}
+    if(nr&&!isBp){g+=`<rect x="${L}" y="${y(nr[1]).toFixed(1)}" width="${W-8-L}" height="${(y(nr[0])-y(nr[1])).toFixed(1)}" fill="#12b76a" opacity=".07"/>`;}
+    if(isBp){[140,90].forEach(v=>{if(v>lo&&v<hi)g+=`<line x1="${L}" x2="${W-8}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="#f04438" stroke-dasharray="4 4" opacity=".45"/>`;});}
+    const pts=[];/* x of each reading: its day column, spread by time inside the column */
+    D.forEach((d,i)=>{const x0=L+i*colW,n=d.length;d.forEach((r,j)=>{pts.push({r,x:x0+colW*(n===1?.5:(.2+.6*j/(n-1))),i});});
+      g+=`<text x="${(x0+colW/2).toFixed(1)}" y="${H-12}" text-anchor="middle" class="vx-axd">${E(dayLbl(d[0].ts))}</text>`;
+      if(i)g+=`<line x1="${x0}" x2="${x0}" y1="${T}" y2="${B}" stroke="#f2f4f7"/>`;});
+    g+=`<line x1="${L}" x2="${L}" y1="${T}" y2="${B}" stroke="#d0d5dd"/><line x1="${L}" x2="${W-8}" y1="${B}" y2="${B}" stroke="#d0d5dd"/>`;
+    S1.forEach(([nm,c,f])=>{const P2=pts.map(p=>({p,v:f(p.r)})).filter(o=>isFinite(o.v));
+      if(isBp&&P2.length>1)g+=`<polyline fill="none" stroke="${c}" stroke-width="2.25" stroke-linejoin="round" points="${P2.map(o=>o.p.x.toFixed(1)+','+y(o.v).toFixed(1)).join(' ')}"/>`;
+      P2.forEach(o=>{const out=bad[k]&&bad[k](o.p.r[k]);const lbl=isBp?o.v:o.p.r[k];
+        g+=`<g class="vx-pt"><circle cx="${o.p.x.toFixed(1)}" cy="${y(o.v).toFixed(1)}" r="${isBp?3.6:4.6}" fill="${out&&!isBp?'#d92d20':c}" stroke="#fff" stroke-width="1.5"/><text x="${o.p.x.toFixed(1)}" y="${(y(o.v)-9).toFixed(1)}" text-anchor="middle" class="vx-pv${out&&!isBp?' bad':''}">${E(lbl)}</text>${!isBp&&tmS(o.p.r)?`<text x="${o.p.x.toFixed(1)}" y="${(y(o.v)+16).toFixed(1)}" text-anchor="middle" class="vx-pt-t">${E(tmS(o.p.r))}</text>`:''}<title>${E(dayLbl(o.p.r.ts))} ${E(o.p.r.time||'')}: ${isBp?nm+' ':''}${E(lbl)}${o.p.r.by?' · '+E(o.p.r.by):''}</title></g>`;});});
+    if(isBp)g+=`<text x="${L-8}" y="${T-2}" text-anchor="end" class="vx-ax">mmHg</text>`;
+    return `<div class="vx-cw"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${isBp?'Blood pressure, systolic and diastolic, by date':'Readings by date'}">${g}</svg></div>`;
+  }
   function vTrend(R,ps){
-    return `<div class="vx-tr">${ps.map(p=>{const xs=R.filter(r=>ok(r[p[0]])).slice().reverse();const L=xs[xs.length-1];
-      const vals=xs.map(r=>num(p[0],r[p[0]])).filter(n=>isFinite(n));
-      return `<div class="vx-tc"><div class="vx-th"><b>${p[1]}</b><small>${p[2]}</small><span style="flex:1"></span>${L?cell(p[0],L[p[0]]):''}</div>${xs.length?spark(p[0],xs)+`<div class="tiny muted">${xs.length} reading${xs.length>1?'s':''} · lowest ${Math.min(...vals)} · highest ${Math.max(...vals)}${p[0]==='bp'?' (systolic)':''} · latest ${E(dayLbl(L.ts))} ${E(L.time||'')}</div>`:'<div class="small muted" style="padding:20px 0">No readings</div>'}</div>`;}).join('')}</div>`;
+    return `<div class="vx-tr">${ps.map(p=>{const k=p[0],xs=R.filter(r=>ok(r[k])).slice().reverse();const L=xs[xs.length-1];
+      const vals=xs.map(r=>num(k,r[k])).filter(n=>isFinite(n));
+      const key=k==='bp'?'<span class="vx-key"><i style="background:#c2410c"></i>Systolic <i style="background:#1e6cdb"></i>Diastolic <i class="dash"></i>Usual limits</span>':NORM[k]?'<span class="vx-key"><i class="band"></i>Usual range</span>':'';
+      return `<div class="vx-tc${k==='bp'?' vx-wide':''}"><div class="vx-th"><b>${p[1]}</b><small>${p[2]}</small>${key}<span style="flex:1"></span>${L?cell(k,L[k]):''}</div>${xs.length?chart(k,xs)+`<div class="tiny muted">${xs.length} reading${xs.length>1?'s':''} · lowest ${Math.min(...vals)} · highest ${Math.max(...vals)}${k==='bp'?' (systolic)':''} · latest ${E(dayLbl(L.ts))} ${E(L.time||'')}</div>`:'<div class="small muted" style="padding:20px 0">No readings</div>'}</div>`;}).join('')}</div>`;
   }
 
-  const LAY=[['table','Table'],['day','One row a day'],['paper','Paper chart'],['trend','Trend']];
+  const LAY=[['day','One row a day'],['trend','Trend']];
   const RANGE=[['all','All dates'],['today','Today'],['7','Last 7 days'],['30','Last 30 days'],['custom','From – to']];
   function html(){
-    const R=filtered(),ps=pars(),all=readings().length;
+    const RA=readings();setP(RA);
+    const R=filtered(),ps=pars(),all=RA.length;
     const body=!all?'<div class="vx-empty"><b>No readings yet.</b><br>Tap <b>Record vitals</b> or <b>Record blood sugar</b> to add the first one.</div>'
       :!R.length?'<div class="vx-empty">No readings for this filter.</div>'
-      :({table:vTable,day:vDay,paper:vPaper,trend:vTrend}[st.lay]||vTable)(R,ps);
-    return `<div class="vx-bar"><div class="vx-seg" role="tablist" aria-label="Layout">${LAY.map(([k,l],i)=>`<button type="button" class="${st.lay===k?'on':''}" onclick="vxSet('lay','${k}')">${i+1}. ${l}</button>`).join('')}</div><span style="flex:1"></span>
+      :({day:vDay,trend:vTrend}[st.lay]||vDay)(R,ps);
+    return `<div class="vx-bar"><div class="vx-seg" role="tablist" aria-label="Layout">${LAY.map(([k,l])=>`<button type="button" class="${st.lay===k?'on':''}" onclick="vxSet('lay','${k}')">${l}</button>`).join('')}</div><span style="flex:1"></span>
         <button class="btn sm pri" onclick="vitalsModal()">+ Record vitals</button><button class="btn sm" onclick="sugarModal()">+ Record blood sugar</button></div>
       <div class="vx-flt">
         <div class="vx-g"><span class="vx-gl" id="vxDl">Dates</span><div class="vx-sg" role="group" aria-labelledby="vxDl">${RANGE.map(([k,l])=>`<button type="button" aria-pressed="${st.range===k}" onclick="vxSet('range','${k}')">${l}</button>`).join('')}</div>
@@ -110,7 +153,7 @@
     box.innerHTML=html();
   }
   /* 23 Nov (owner): filter icons, one per vital */
-  const VXI={bp:'<path d="M4 15a8 8 0 1 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.2"/>',hr:'<path d="M3 12h4l2-5 4 10 2-5h6"/>',rr:'<path d="M3 9h11a3 3 0 1 0-3-3"/><path d="M3 14h15a3 3 0 1 1-3 3"/>',t:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',o2:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M10 14.5a2 2 0 1 0 0 .1M14.5 16.5h1.5l-1.5 2h1.5"/>',sg:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M9.5 15a2.5 2.5 0 0 0 2.5 2.5"/>'};
+  const VXI={bp:'<path d="M4 15a8 8 0 1 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.2"/>',hr:'<path d="M3 12h4l2-5 4 10 2-5h6"/>',rr:'<path d="M3 9h11a3 3 0 1 0-3-3"/><path d="M3 14h15a3 3 0 1 1-3 3"/>',t:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',o2:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M10 14.5a2 2 0 1 0 0 .1M14.5 16.5h1.5l-1.5 2h1.5"/>',sg:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M9.5 15a2.5 2.5 0 0 0 2.5 2.5"/>',wt:'<path d="M6 8h12l2 12H4z"/><circle cx="12" cy="5.5" r="2"/>',uo:'<path d="M8 3h8l-1 4v12a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V7z"/><path d="M9 12h6"/>'};
   const css=document.createElement('style');css.id='m23-vx-css';
   css.textContent='#view .vm10 .vx-old,#view .vm10:has(#vxBox) .vd-mode{display:none!important}#vxBox{padding:4px 16px 16px;display:flex;flex-direction:column;gap:10px}'
     +'.vx-flt{display:flex;flex-direction:column;gap:12px;background:#f6f8fb;border:1px solid #e6ebf2;border-radius:14px;padding:12px 14px}'
@@ -139,8 +182,29 @@
     +'.vx-paper .vx-pin{position:sticky;left:0;background:#f5f8fc;z-index:2;min-width:120px}.vx-paper thead .vx-pin{z-index:3}.vx-paper td{min-width:110px;border-left:1px solid #eef2f6}'
     +'.vx-tr{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}.vx-tc{border:1px solid #e3eaf2;border-radius:12px;padding:12px 14px;background:#fff}'
     +'.vx-th{display:flex;align-items:baseline;gap:6px;margin-bottom:6px}.vx-th small{color:#667085;font-size:11px}.vx-th .vx-v{font-size:18px}'
+    +'.vx-tr{grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}.vx-tc.vx-wide{grid-column:1/-1}.vx-cw{overflow-x:auto;margin:4px 0 6px}.vx-cw svg{display:block;max-width:none}'
+    +'.vx-ax{font-size:11px;fill:#98a2b3}.vx-axd{font-size:11.5px;fill:#475467;font-weight:600}.vx-pv{font-size:11px;fill:#344054;font-weight:700}.vx-pv.bad{fill:#b42318}.vx-pt-t{font-size:10px;fill:#98a2b3}'
+    +'.vx-key{display:inline-flex;align-items:center;gap:5px;margin-left:10px;font-size:11.5px;color:#667085}.vx-key i{display:inline-block;width:14px;height:3px;border-radius:2px}.vx-key i.dash{border-top:2px dashed #f04438;height:0;opacity:.6}.vx-key i.band{height:10px;background:#12b76a;opacity:.18}'
     +'.vx-empty{padding:22px;border:1px dashed #cfd8d6;border-radius:12px;color:#475467;text-align:center}';
   document.head.appendChild(css);
+  /* 23 Nov meeting: urine output can be recorded with the vitals (psychiatrist's form; saved as the 12th field of the vitals row) */
+  if(typeof vitalsModal==='function'&&typeof vitalsSave==='function'){
+    const __vm=vitalsModal,__vs=vitalsSave;
+    window.vitalsModal=vitalsModal=function(){const o=__vm.apply(this,arguments);try{const g=document.querySelector('#modal .vq-more .vq-g');if(g&&!document.getElementById('vqUo')){const d=document.createElement('div');d.className='vq-c';d.innerHTML='<b class="vq-n">Urine output</b><span class="vq-u">ml</span><div class="vq-in"><input id="vqUo" inputmode="numeric" placeholder="optional"></div>';g.appendChild(d);const sm=document.querySelector('#modal .vq-more summary');if(sm)sm.textContent='If you have them: weight, sleep and urine output';}}catch(e){}return o;};
+    window.vitalsSave=vitalsSave=function(){
+      const uo=((document.getElementById('vqUo')||{}).value||'').trim();
+      if(uo&&(!isFinite(+uo)||+uo<0||+uo>10000)){toast('Check the urine output (0 to 10000 ml)');return;}
+      const n0=Array.isArray(S.vit)?S.vit.length:0;
+      const others=['vqS','vqD','vsHr','vsRr','vsT','vsO2','vsWt','vqSl'].some(id=>((document.getElementById(id)||{}).value||'').trim());
+      if(uo&&!others){const who=signer(),ini=String(who).replace(/^Dr\.\s+/,'').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase(),now=new Date();
+        if(!Array.isArray(S.vit))S.vit=[];
+        S.vit=S.vit.concat([[now.toLocaleDateString('en-IN',{day:'numeric',month:'short'}),'—','—','—','—','—','—',now.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}),ini,who,'',uo]]);
+        closeModal();render();toast('Urine output saved by '+who);return;}
+      const o=__vs.apply(this,arguments);
+      if(uo&&Array.isArray(S.vit)&&S.vit.length>n0){const r=S.vit[S.vit.length-1].slice();r[10]=r[10]||'';r[11]=uo;S.vit=S.vit.slice(0,-1).concat([r]);try{render();}catch(e){}}
+      return o;
+    };
+  }
   const __r=render;
   render=function(){const o=__r.apply(this,arguments);try{paint();}catch(e){}return o;};
   /* switching to the tab does not always call render */
