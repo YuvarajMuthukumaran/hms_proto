@@ -30,13 +30,21 @@
   const reaRows=pid=>reas(pid).map((r,i)=>`<tr><td><b>${E(r.at)}</b><div class="tiny muted">${E(r.by||'')}</div></td><td>${E(r.change||'')}${r.scale?`<div class="tiny muted">${E(r.scale)}</div>`:''}</td><td>${E(r.status||'')}</td><td style="text-align:right"><button class="btn sm" onclick="docReaOpen('${Q(pid)}',${i})">Open</button></td></tr>`).join('');
   const reaTable=pid=>`<div class="scroll"><table class="t"><thead><tr><th style="width:170px">When</th><th>Change in clinical status</th><th>Current clinical status</th><th></th></tr></thead><tbody>${reaRows(pid)||'<tr><td colspan="4" class="small muted">No re-assessment yet. It is due every week.</td></tr>'}</tbody></table></div>`;
 
+  /* 23 Nov 2026, second meeting (Anu): tabs instead of parts that fold open ("30 daily notes make a very long list and then to go
+     to rounds I have to close the daily notes"). One part shows at a time; each has Print (that part) and Print all. */
+  const KEYS=['dn','rd','cap','rea'];
+  const TAB=()=>KEYS.includes(OPEN.tab)?OPEN.tab:'dn';
+  const TT={dn:'daily notes',rd:'rounds',cap:'capacity assessments',rea:'re-assessments'};
   function part(pid,k,title,count,last,body,btns){
-    const on=!!OPEN[k];
-    return `<section class="card doc-part ${on?'on':''}" data-doc="${k}"><button type="button" class="doc-sum" aria-expanded="${on}" onclick="docToggle('${k}')"><span class="doc-car">${on?'▾':'▸'}</span><b>${E(title)}</b><span class="doc-n">${E(count)}</span>${last?`<span class="small muted">Latest ${E(last)}</span>`:''}<span style="flex:1"></span></button>
-      <div class="doc-act">${btns||''}<button class="btn sm" onclick="docPrint('${Q(pid)}','${k}')">Print</button></div>
-      <div class="doc-body" ${on?'':'hidden'}>${body}</div></section>`;
+    const on=TAB()===k;
+    return `<section class="card doc-part on" data-doc="${k}" id="docP_${k}" role="tabpanel" aria-labelledby="docT_${k}" ${on?'':'hidden'}><div class="doc-sum"><b>${E(title)}</b><span class="doc-n">${E(count)}</span>${last?`<span class="small muted">Latest ${E(last)}</span>`:''}<span style="flex:1"></span>
+      <div class="doc-act">${btns||''}<button class="btn sm" onclick="docPrint('${Q(pid)}','${k}')">Print ${TT[k]}</button><button class="btn sm" onclick="docPrint('${Q(pid)}','all')">Print all</button></div></div>
+      <div class="doc-body">${body}</div></section>`;
   }
-  window.docToggle=function(k){OPEN[k]=!OPEN[k];const s=document.querySelector(`#view .doc-part[data-doc="${k}"]`);if(!s)return render();s.classList.toggle('on',OPEN[k]);s.querySelector('.doc-body').hidden=!OPEN[k];s.querySelector('.doc-car').textContent=OPEN[k]?'▾':'▸';s.querySelector('.doc-sum').setAttribute('aria-expanded',String(OPEN[k]));};
+  window.docTab=window.docToggle=function(k){OPEN.tab=k;const w=document.getElementById('docWrap');if(!w)return render();
+    w.querySelectorAll('.doc-part').forEach(s=>{s.hidden=s.dataset.doc!==k;});
+    w.querySelectorAll('.doc-tab').forEach(b=>{const on=b.dataset.k===k;b.classList.toggle('on',on);b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1;});};
+  window.docTabKey=function(e){const i=KEYS.indexOf(TAB());let j=e.key==='ArrowRight'?i+1:e.key==='ArrowLeft'?i-1:-1;if(j<0&&e.key!=='ArrowLeft')return;j=(j+KEYS.length)%KEYS.length;e.preventDefault();docTab(KEYS[j]);const b=document.getElementById('docT_'+KEYS[j]);if(b)b.focus();};
 
   /* ---------- re-assessment ---------- */
   window.docReaNew=function(pid){
@@ -53,7 +61,7 @@
     x.reassess.unshift({at:atNow(),ts:Date.now(),by:signer(),status:g('status'),change:ch,scale:g('scale'),se:g('se'),inv:g('inv'),plan:g('plan'),other:g('other')});
     try{S.reassessDone=true;S.done=S.done||{};S.done.reassess=true;}catch(e){}
     try{V3.log(pid,S.role,'note','Re-assessment signed: '+ch);}catch(e){}
-    OPEN.rea=true;closeModal();render();toast('Re-assessment saved');
+    OPEN.tab='rea';closeModal();render();toast('Re-assessment saved');
   };
   const reaHtml=r=>RQ.map(([k,l])=>r[k]?`<div class="doc-kv"><b>${E(l)}</b><div>${E(r[k]).replace(/\n/g,'<br>')}</div></div>`:'').join('');
   window.docReaOpen=function(pid,i){const r=reas(pid)[i];if(!r)return;V3.modal('Re-assessment · '+E(r.at),'Signed by '+E(r.by||''),`<div class="doc-rea">${reaHtml(r)}</div>`,`<button class="btn" onclick="closeModal()">Close</button>`,'min(760px,100%)');};
@@ -85,9 +93,11 @@
     const old=[...host.children].slice([...host.children].indexOf(bar)+1).filter(e=>e.id!=='acrBody');
     const N=notes(pid),C=caps(pid),R=reas(pid);
     const wrap=document.createElement('div');wrap.id='docWrap';
-    wrap.innerHTML=`<div class="doc-top"><div><h3 style="margin:0">Documentation</h3><div class="small muted">Daily notes, rounds, capacity assessments and re-assessments. Open a part to read it.</div></div><button class="btn sm pri" onclick="docPrint('${Q(pid)}','all')">Print all</button></div>`
+    const RL=roundLog(pid),cnt={dn:N.length,rd:RL.length,cap:C.length,rea:R.length},LB={dn:'Daily notes',rd:'Rounds',cap:'Capacity assessment',rea:'Re-assessment'};
+    wrap.innerHTML=`<div class="doc-top"><div><h3 style="margin:0">Documentation</h3><div class="small muted">Daily notes, rounds, capacity assessments and re-assessments.</div></div></div>`
+      +`<div class="doc-tabs" role="tablist" aria-label="Documentation">${KEYS.map(k=>`<button type="button" role="tab" class="doc-tab ${TAB()===k?'on':''}" id="docT_${k}" data-k="${k}" aria-controls="docP_${k}" aria-selected="${TAB()===k}" tabindex="${TAB()===k?0:-1}" onclick="docTab('${k}')" onkeydown="docTabKey(event)">${LB[k]}<span class="doc-tc">${cnt[k]}</span></button>`).join('')}</div>`
       +part(pid,'dn','Daily notes',N.length+' note'+(N.length===1?'':'s'),N[0]?((N[0].d||'')+' '+(N[0].my||'')).trim():'','<div id="docDn"></div>','')
-      +part(pid,'rd','Rounds',roundLog(pid).length+' round'+(roundLog(pid).length===1?'':'s'),(roundLog(pid)[0]||{}).at||'',roundsTable(pid),'')
+      +part(pid,'rd','Rounds',RL.length+' round'+(RL.length===1?'':'s'),(RL[0]||{}).at||'',roundsTable(pid)||'<div class="small muted" style="padding:16px 4px">No rounds yet.</div>','')
       +part(pid,'cap','Capacity assessment',C.length+' done',C[0]?C[0].at:'',capTable(pid),`<button class="btn sm" onclick="acrCapNew('${Q(pid)}')">New assessment</button>`)
       +part(pid,'rea','Re-assessment',R.length+' done',R[0]?R[0].at:'',reaTable(pid),`<button class="btn sm" onclick="docReaNew('${Q(pid)}')">New re-assessment</button>`);
     old[0]?old[0].before(wrap):host.appendChild(wrap);
@@ -105,21 +115,27 @@
   const css=document.createElement('style');css.id='m23-doc-css';
   css.textContent='#docWrap{display:flex;flex-direction:column;gap:12px}'
     +'.doc-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:4px 2px}'
-    +'.doc-part{position:relative;padding:0}.doc-sum{display:flex;align-items:center;gap:12px;width:100%;padding:16px 20px;padding-right:300px;background:none;border:0;cursor:pointer;text-align:left;font:inherit;color:#101828}'
-    +'.doc-sum b{font-size:16px}.doc-car{font-size:14px;color:#1e6cdb;width:14px}.doc-n{font-size:12px;background:#eef4ff;color:#1e6cdb;border-radius:999px;padding:2px 10px;font-weight:600}'
-    +'.doc-act{position:absolute;right:16px;top:12px;display:flex;gap:8px}.doc-body{padding:0 16px 16px;border-top:1px solid #eef1f5}.doc-body>#docDn>section.card{box-shadow:none;border:0;margin:0}'
+    +'.doc-tabs{display:flex;gap:4px;border-bottom:1px solid #e4e7ec;overflow-x:auto;position:sticky;top:0;z-index:3;background:var(--bg,#f6f8fb)}'
+    +'.doc-tab{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:11px 16px;font-size:14px;font-weight:500;color:#475467;white-space:nowrap;transition:color .15s,box-shadow .15s}'
+    +'.doc-tab:hover{color:#101828}.doc-tab.on{color:#1849a9;box-shadow:inset 0 -2px 0 #1e6cdb;font-weight:600}.doc-tab:focus-visible{outline:2px solid #1e6cdb;outline-offset:-2px;border-radius:6px}'
+    +'.doc-tc{font-size:11.5px;min-width:20px;text-align:center;padding:1px 7px;border-radius:99px;background:#f2f4f7;color:#475467;font-weight:600}.doc-tab.on .doc-tc{background:#eef4ff;color:#1e6cdb}'
+    +'.doc-part{padding:0;animation:docIn .18s ease-out}@keyframes docIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}'
+    +'.doc-sum{display:flex;align-items:center;gap:12px;flex-wrap:wrap;width:100%;padding:14px 20px;box-sizing:border-box;color:#101828}'
+    +'.doc-sum b{font-size:16px}.doc-n{font-size:12px;background:#eef4ff;color:#1e6cdb;border-radius:999px;padding:2px 10px;font-weight:600}'
+    +'.doc-act{display:flex;gap:8px;flex-wrap:wrap}.doc-body{padding:0 16px 16px;border-top:1px solid #eef1f5}.doc-body>#docDn>section.card{box-shadow:none;border:0;margin:0}'
+    +'@media(prefers-reduced-motion:reduce){.doc-part{animation:none}.doc-tab{transition:none}}'
     +'.doc-h4{margin:16px 4px 8px;font-size:14px}.doc-rea .field{margin-bottom:12px}.doc-kv{padding:8px 0;border-bottom:1px solid #eef1f5}.doc-kv b{display:block;font-size:12px;color:#475467;margin-bottom:2px}'
     /* capacity pop-up: scrolls inside the window */
     +'#modal:has(#acrCapF){display:flex!important;flex-direction:column;max-height:calc(100vh - 40px)!important;overflow:hidden!important}'
     +'#modal:has(#acrCapF) .mb{flex:1 1 auto;min-height:0;overflow:auto!important;overscroll-behavior:contain}#modal:has(#acrCapF) .mh,#modal:has(#acrCapF) .mf{flex:none}'
     +'#modal #acrCapF{max-height:none!important;overflow:visible!important}'
-    +'@media(max-width:760px){.doc-sum{padding-right:20px}.doc-act{position:static;padding:0 16px 12px}}';
+    +'';
   document.head.appendChild(css);
 
   const __r=render;
   render=function(){
     const r0=route();
-    if(r0.pid&&(r0.sub==='rounds'||r0.sub==='capacity')){OPEN[r0.sub==='rounds'?'rd':'cap']=true;location.replace('#/patient/'+encodeURIComponent(r0.pid)+'/daily');}
+    if(r0.pid&&(r0.sub==='rounds'||r0.sub==='capacity')){OPEN.tab=r0.sub==='rounds'?'rd':'cap';location.replace('#/patient/'+encodeURIComponent(r0.pid)+'/daily');}
     const o=__r.apply(this,arguments);
     try{const {pid,sub}=route();const v=document.getElementById('view');if(pid&&v)tabs(v,pid,sub);}catch(e){}
     return o;
