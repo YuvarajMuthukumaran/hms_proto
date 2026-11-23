@@ -33,6 +33,12 @@
   const pt=pid=>{try{return ptFind(pid)||{};}catch(e){return {};}};
   const route=()=>{const m=String(location.hash||'').match(/^#\/patient\/([^/?]+)(?:\/([^/?]+))?/);return m?{pid:decodeURIComponent(m[1]),sub:m[2]||''}:{pid:'',sub:''};};
   const DAY=864e5,iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+  /* 23 Nov second meeting: the summary headings as written in the agreed format. Display only: the text is still saved under
+     the old label (psyx.dcs[old label]), so saved summaries keep loading. Psychiatrist and floor lead psychiatrist. */
+  const DCH={'Admitting diagnosis (provisional)':'Admitting Diagnosis (Provisional)','Discharge diagnosis':'Discharge Diagnosis','History and complaints':'History and Complaints','Examination, physical and MSE':'Examination Physical and MSE','Intervention during stay (medical and psychological)':'Intervention During Stay (Medical and Psychological)','Condition at the time of discharge':'Condition at the Time of Discharge','Treatment advice on discharge':'Treatment Advice On Discharge'};
+  const DCO=['Admitting diagnosis (provisional)','Discharge diagnosis','History and complaints','Allergy','Examination, physical and MSE','Intervention during stay (medical and psychological)','Condition at the time of discharge','Treatment advice on discharge','Suggestions'];
+  const dcHead=k=>DCH[String(k||'').trim()]||String(k||'').trim();
+  const dcRelabel=()=>{if(!DOC)return;document.querySelectorAll('#view label.field .lbl').forEach(l=>{const t=l.textContent.trim();if(DCH[t]&&l.closest('label.field').querySelector('textarea[data-dcs]'))l.textContent=DCH[t];});};
   const fmtD=s=>{if(!s)return '';const d=new Date(String(s).length<=10?s+'T00:00:00':s);return isNaN(d)?String(s):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});};
 
   const GROUPS=[
@@ -178,6 +184,27 @@
     const H=s=>E(s).replace(/\n/g,'<br>');
     const meds=medRows(pid).map((r,i)=>`<tr><td>${i+1}</td><td>${E(r.name)}</td><td>${E(r.s.freq||'')}</td><td>${E(r.s.food||'')}</td><td>${E(fmtD(r.s.start))}</td><td>${E(fmtD(r.s.end))}</td><td>${E(daysTxt(r.s.start,r.s.end))}</td><td>${E(r.s.note||'')}</td></tr>`).join('');
     const ama=/against medical advice/i.test(typeOf(pid)),l=px(pid).lama||{};
+    /* 23 Nov second meeting (psychiatrist, floor lead psychiatrist): the PDF follows the agreed discharge summary format
+       (public/forms/discharge-summary): the format's headings, Rx (No., Drug/Medicine Name, Dose, Duration) right after
+       Condition at the Time of Discharge, "Follow-up advised after N days", treating team as Role, Treating Team, Date, Day. */
+    const docPart=()=>{
+      /* every heading of the format, in its order: the text on screen if the summary is open, else the saved text */
+      const onScr={};document.querySelectorAll('#view label.field').forEach(l=>{const lb=l.querySelector('.lbl'),ta=l.querySelector('textarea');if(lb&&ta)onScr[dcHead(lb.textContent)]=ta.value;});
+      const sv=px(pid).dcs||{};
+      const fF=DCO.map(k=>[dcHead(k),onScr[dcHead(k)]!==undefined?onScr[dcHead(k)]:(sv[k]||'')]),ci=fF.findIndex(f=>/^Condition at the Time of Discharge/i.test(f[0]));
+      const fx=f=>`<div class="f"><b>${E(f[0])}:</b>${H(f[1]||'-')}</div>`;
+      const rows=medRows(pid).map((r,i)=>`<tr><td>${i+1}</td><td>${E(r.name)}</td><td>${E([r.s.freq,r.s.food].filter(Boolean).join(', ')||'-')}</td><td>${E(daysTxt(r.s.start,r.s.end)||'Till review')}</td></tr>`).join('');
+      const rx=`<div class="f"><b>Rx:</b></div>`+(rows?`<table><tr><th style="width:44px">No.</th><th>Drug/Medicine Name</th><th>Dose</th><th>Duration</th></tr>${rows}</table>`:'<div>No medicines at discharge.</div>');
+      const d0=s=>s?new Date(String(s).slice(0,10)+'T00:00:00'):null,A=d0(adm),Dd=d0(dd),F=d0(D.fu);
+      const fuN=F&&Dd?Math.round((F-Dd)/DAY):null,dayN=A&&Dd?Math.max(1,Math.round((Dd-A)/DAY)+1):null;
+      const sum=fF.slice(0,ci+1).map(fx).join('')+rx+fF.slice(ci+1).map(fx).join('');
+      return `<h2>Discharge summary</h2>${sum}
+        <div class="f"><b>${fuN!=null&&fuN>=0?'Follow-up advised after '+fuN+(fuN===1?' day':' days')+' ('+E(fmtD(D.fu))+').':'Follow-up: date not set yet.'}</b></div>
+        <h2>Therapy plan after discharge</h2><table><tr><th>Therapy plan</th><td>${E(t.mod||'-')}</td><th>How often</th><td>${E(t.freq||'-')}</td></tr><tr><th>Follow-up with the psychologist</th><td colspan="3">${E(fmtD(t.fu)||'-')}</td></tr></table>
+        <h2>Treating team</h2><table><tr><th>Role</th><th>Treating Team</th><th>Date</th><th>Day</th></tr>
+        <tr><td>Psychiatrist</td><td>${E(team.psy||'-')}</td><td>${E(fmtD(dd))}</td><td>${dayN?'Day '+dayN:'-'}</td></tr>
+        <tr><td>Psychologist</td><td>${E(team.psych||'-')}</td><td>${E(fmtD(dd))}</td><td>${dayN?'Day '+dayN:'-'}</td></tr></table>`;
+    };
     const html=`<!doctype html><html><head><meta charset="utf-8"><title>Discharge summary · ${E(p.name||'')}</title><style>
       body{font:13px/1.45 Arial,Helvetica,sans-serif;color:#111;margin:28px}h1{font-size:19px;margin:0}h2{font-size:14px;margin:18px 0 6px;border-bottom:1px solid #999;padding-bottom:3px}
       table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:5px 7px;text-align:left;vertical-align:top}th{background:#f2f2f2}
@@ -188,13 +215,13 @@
       <tr><th>Admission date</th><td>${E(fmtD(adm))}</td><th>Discharge date</th><td>${E(fmtD(dd))}</td></tr>
       <tr><th>Discharge type</th><td>${E(typeOf(pid)||'Not set')}</td><th>Room</th><td>${E(String(p.room||'').replace(/^Room\s*/i,''))}</td></tr></table>
       ${ama?`<h2>Discharge against medical advice</h2>${[['State of mental health',l.state],['Treatment proposed',l.prop],['Risks explained',l.risk]].map(x=>`<div class="f"><b>${x[0]}</b>${H(x[1]||'-')}</div>`).join('')}`:''}
-      <h2>Summary</h2>${fields.length?fields.map(f=>`<div class="f"><b>${E(f[0])}</b>${H(f[1]||'-')}</div>`).join(''):'<div>Summary not drafted yet.</div>'}
+      ${DOC?docPart():`<h2>Summary</h2>${fields.length?fields.map(f=>`<div class="f"><b>${E(f[0])}</b>${H(f[1]||'-')}</div>`).join(''):'<div>Summary not drafted yet.</div>'}
       <h2>Therapy plan after discharge</h2><table><tr><th>Therapy plan</th><td>${E(t.mod||'-')}</td><th>How often</th><td>${E(t.freq||'-')}</td></tr><tr><th>Follow-up with the psychologist</th><td colspan="3">${E(fmtD(t.fu)||'-')}</td></tr></table>
       <h2>Medications at discharge</h2>${meds?`<table><tr><th>No.</th><th>Medicine and dose</th><th>Frequency</th><th>Food</th><th>Start</th><th>End</th><th>Duration</th><th>Note</th></tr>${meds}</table>`:'<div>No medicines at discharge.</div>'}
       <div class="f"><b>Follow-up with the psychiatrist</b>${E(fmtD(D.fu)||'-')}</div>
       <h2>Treating team</h2><table><tr><th>Role</th><th>Treating team</th><th>From</th><th>To</th></tr>
       <tr><td>Psychiatrist</td><td>${E(team.psy||'')}</td><td>${E(fmtD(adm))}</td><td>${E(fmtD(dd))}</td></tr>
-      <tr><td>Psychologist</td><td>${E(team.psych||'')}</td><td>${E(fmtD(adm))}</td><td>${E(fmtD(dd))}</td></tr></table>
+      <tr><td>Psychologist</td><td>${E(team.psych||'')}</td><td>${E(fmtD(adm))}</td><td>${E(fmtD(dd))}</td></tr></table>`}
       <div class="sig"><div>Signature of the psychiatrist<br>${E(team.psy||'')}</div><div>Signature of the patient or relative<br>Name and relation</div></div>
       <script>window.onload=function(){setTimeout(function(){window.print();},200);};<\/script></body></html>`;
     const w=window.open('','_blank');
@@ -344,7 +371,7 @@
   const __r=render;
   render=function(){
     const o=__r.apply(this,arguments);
-    try{const {pid,sub}=route();if(pid){if(sub==='discharge'&&(DOC||PSG))paintDischarge(pid);if(sub==='prefs'){paintGriev(pid);setTimeout(()=>{try{if(route().sub==='prefs')paintGriev(route().pid);}catch(e){}},400);}paintNurse(pid,sub);}}catch(e){try{console.warn('m20 discharge',e);}catch(_){}}
+    try{const {pid,sub}=route();if(pid){if(sub==='discharge'&&(DOC||PSG)){paintDischarge(pid);dcRelabel();setTimeout(()=>{try{dcRelabel();}catch(e){}},360);}if(sub==='prefs'){paintGriev(pid);setTimeout(()=>{try{if(route().sub==='prefs')paintGriev(route().pid);}catch(e){}},400);}paintNurse(pid,sub);}}catch(e){try{console.warn('m20 discharge',e);}catch(_){}}
     return o;
   };
 })();
