@@ -1,9 +1,10 @@
 /* 21 Nov 2026, owner: patient header button column order for the psychiatrist and floor lead psychiatrist:
-   Round note (psychologist: Session note), Message caregiver, OPD record, Log event, Print file. */
+   Round note (psychologist: Session note), Message caregiver, Log event, OPD record, Print file.
+   23 Nov: Log event before OPD record, as the 21 Nov meeting listed it. */
 (function(){
   const ROLE=String((window.__TULASI__||{}).role||'');
   if(!/^(psychiatrist|floor-lead-psychiatrist|psychologist|floor-lead-psychologist)$/.test(ROLE))return;
-  const ORDER=[/^(Round note|Session note)$/i,/Message caregiver/i,/OPD record/i,/Log event/i,/Print file/i];
+  const ORDER=[/^(Round note|Session note)$/i,/Message caregiver/i,/Log event/i,/OPD record/i,/Print file/i];
   function reorder(){
     const col=document.querySelector('#view .dph .dpact');if(!col)return;
     const btns=[...col.querySelectorAll(':scope > button')];

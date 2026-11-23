@@ -97,7 +97,8 @@
   }
   function sessBar(kind){
     const btn=kind==='ind'&&!doc()?'<button class="btn pri" onclick="snOpen(S.pid,\'ind\')">+ New session note</button>':kind==='fam'?'<button class="btn pri" onclick="snOpen(S.pid,\'fam\')">+ Start family session</button>':'';
-    return barHtml(SESS_T[kind]||'Sessions',kind,[['all','All sessions'],['signed','Signed'],['draft','Draft'],['risk','Risk raised']],btn);
+    /* 23 Nov: family sessions have no risk check (21 Nov meeting), so no "Risk raised" filter there */
+    return barHtml(SESS_T[kind]||'Sessions',kind,[['all','All sessions'],['signed','Signed'],['draft','Draft']].concat(kind==='fam'?[]:[['risk','Risk raised']]),btn);
   }
   function attBar(){
     const btn=!doc()?'<button class="btn pri" onclick="tpAttend(S.pid)">+ Log attendance</button>':'';
@@ -106,9 +107,12 @@
   function sessions(pid,kind){
     kind=kind||'ind';
     const fv=sfv(kind),notes=(SNO(pid).notes||[]).filter(n=>kindOf(n)===kind).filter(n=>fv==='all'||(fv==='signed'&&n.status==='signed')||(fv==='draft'&&n.status!=='signed')||(fv==='risk'&&Object.values(n.risk||{}).some(v=>v==='yes'))),legacy=kind==='ind'&&fv==='all'?((px(pid).th||{}).ind||[]).filter(r=>!r.struct):[];
-    const rows=notes.map(n=>{const yes=Object.values(n.risk||{}).some(v=>v==='yes');return `<tr><td>${esc((n.at||'').split(',')[0])}</td><td>${esc(n.by)}</td><td>${esc(kind==='fam'?((n.blk||{}).who||n.mod):n.mod)}</td><td>${esc(n.mins||'')}</td><td>${yes?'<span class="chip c-red">Raised</span>':'<span class="chip c-green">None</span>'}</td><td>${n.status==='signed'?'<span class="chip c-green">Signed</span>':'<span class="chip c-amber">Draft</span>'}</td><td><button class="btn sm" onclick="snView('${n.id}')">Open</button></td></tr>`;}).concat(legacy.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.by)}</td><td>${esc(r.modality)}</td><td>${esc(r.mins)}</td><td class="muted">Before the new note</td><td></td><td></td></tr>`)).join('');
-    const third=kind==='fam'?'Visitor':kind==='grp'?'Group':'Therapy';
-    return sessBar(kind)+`<div class="scroll"><table><thead><tr><th>Date</th><th>Therapist</th><th>${third}</th><th>Min</th><th>Risk check</th><th></th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="muted">No '+(kind==='fam'?'family':kind==='grp'?'group':'individual')+' session yet.</td></tr>'}</tbody></table></div><div class="tiny muted" style="margin-top:8px">Open shows the locked signed note. Only an addendum can be added.</div>`;
+    /* 23 Nov (21 Nov meeting): the session history summary sits in the same table (Summary column); risk and status are plain
+       text (no-labels mode hides .chip, so those cells were blank); family sessions have no Risk check column */
+    const fam=kind==='fam',sumC=t=>`<td style="max-width:420px;white-space:normal;font-size:13px;line-height:1.35">${esc(String(t||'').slice(0,220))}</td>`;
+    const rows=notes.map(n=>{const yes=Object.values(n.risk||{}).some(v=>v==='yes');return `<tr><td>${esc((n.at||'').split(',')[0])}</td><td>${esc(n.by)}</td><td>${esc(fam?((n.blk||{}).who||n.mod):n.mod)}</td><td>${esc(n.mins||'')}</td>${sumC(n.summaryLine||n.summary)}${fam?'':`<td>${yes?'<b style="color:#b42318">Raised</b>':'<span style="color:#067647">None</span>'}</td>`}<td>${n.status==='signed'?'<span style="color:#067647;font-weight:600">Signed</span>':'<span style="color:#b54708;font-weight:600">Draft</span>'}</td><td><button class="btn sm" onclick="snView('${n.id}')">Open</button></td></tr>`;}).concat(legacy.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.by)}</td><td>${esc(r.modality)}</td><td>${esc(r.mins)}</td>${sumC(r.note)}<td class="muted">Before the new note</td><td></td><td></td></tr>`)).join('');
+    const third=fam?'Visitor':kind==='grp'?'Group':'Therapy',cols=fam?7:8;
+    return sessBar(kind)+`<div class="scroll"><table><thead><tr><th>Date</th><th>Therapist</th><th>${third}</th><th>Min</th><th>Summary</th>${fam?'':'<th>Risk check</th>'}<th>Status</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="'+cols+'" class="muted">No '+(fam?'family':kind==='grp'?'group':'individual')+' session yet.</td></tr>'}</tbody></table></div><div class="tiny muted" style="margin-top:8px">Open shows the locked signed note. Only an addendum can be added.</div>`;
   }
   function hwGrid(pid){
     const items=homework(pid),dys=days7();
