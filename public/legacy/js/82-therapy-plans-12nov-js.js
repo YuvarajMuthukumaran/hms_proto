@@ -59,7 +59,9 @@
       +'<i style="position:absolute;left:'+P(x.aim)+'%;top:-8px;bottom:-8px;width:0;border-left:2px dashed #15803d"></i>'
       +'<i style="position:absolute;left:'+P(x.start)+'%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fff;border:2px solid #64748b;box-sizing:border-box"></i>'
       +'<i style="position:absolute;left:'+P(n)+'%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:'+col+';border:3px solid #fff;box-shadow:0 1px 5px rgba(14,124,123,.45);box-sizing:border-box"></i>'
-      +lab(n,'Now '+n,true,col)+lab(x.start,'Start '+x.start,false,'#64748b')+lab(x.aim,'Aim '+x.aim,true,'#15803d')+'</span>';
+      /* 23 Nov: labels never overlap: now = aim is one label; an aim close to now goes below, unless the start label is there */
+      +(+n===+x.aim?lab(n,'Now '+n+', aim met',true,'#15803d'):lab(n,'Now '+n,true,col)+lab(x.aim,'Aim '+x.aim,Math.abs(P(n)-P(x.aim))>=16||Math.abs(P(x.start)-P(x.aim))<16,'#15803d'))
+      +(Math.abs(P(x.start)-P(x.aim))<16&&+n!==+x.aim&&Math.abs(P(n)-P(x.aim))<16?'':lab(x.start,'Start '+x.start,false,'#64748b'))+'</span>';
   }
   function progress(pid){
     const g=defGoals(pid),sug=suggestions(pid),rg=rung(pid);
