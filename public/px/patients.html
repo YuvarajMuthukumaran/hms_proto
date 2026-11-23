@@ -471,7 +471,7 @@ function pfOpen(pid){ const p=P.find(x=>x.id===pid); if(!p)return; const cur=pfA
   document.body.appendChild(o);
   o.querySelector('#pfB').onclick=o.querySelector('#pfC').onclick=()=>o.remove();
   {const fgS=o.querySelector('[data-pf="'+FG+'.0"]'),sec=fgS&&fgS.closest('section');if(fgS&&sec){const tg=()=>{sec.querySelectorAll('label').forEach((l,i)=>{if(i>0)l.style.display=fgS.value==='Yes'?'':'none';});};fgS.onchange=tg;tg();}}o.querySelector('#pfS2').onclick=()=>o.querySelector('#pfS').click();
-  o.querySelector('#pfS').onclick=()=>{const all=pfAll(),v={};o.querySelectorAll('[data-pf]').forEach(e=>{if(e.value.trim())v[e.dataset.pf]=e.value.trim();});v.__at=new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});all[pid]=v;try{localStorage.setItem('px_prefs_v2',JSON.stringify(all));}catch(e){}o.remove();render();};
+  o.querySelector('#pfS').onclick=()=>{const all=pfAll(),v={};o.querySelectorAll('[data-pf]').forEach(e=>{if(e.value.trim())v[e.dataset.pf]=e.value.trim();});v.__at=new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});v.__ts=Date.now();all[pid]=v;try{localStorage.setItem('px_prefs_v2',JSON.stringify(all));}catch(e){}o.remove();render();};
 }
 /* 23 Nov 2026 (owner): Preferences are folding sections on the tab itself, like the psych pages. A section with nothing in it opens
    in fill view; a closed section shows its read view (what was recorded). Saves as you type into the same px_prefs_v2 record. */
@@ -489,7 +489,7 @@ function prefs(p){
       return `<label class="pf-f"${hide?' hidden':''}>${esc(x[0])}${x[1]==='sel'?`<select data-pfi="${k}" data-pid="${P}"><option value=""></option>${x[2].map(o=>`<option${v===o?' selected':''}>${esc(o)}</option>`).join('')}</select>`:`<textarea rows="2" data-pfi="${k}" data-pid="${P}">${esc(v)}</textarea>`}</label>`;}).join('');
     return `<details class="pf-s" data-pid="${P}" data-gi="${gi}"${open?' open':''}><summary><span class="pf-h"><b>${esc(g[0])}</b><span class="pf-st${read.length?' ok':''}">${read.length?read.length+' filled':'Empty'}</span><span class="pf-seen">Seen by ${esc(g[1])}</span><span class="pf-chev" aria-hidden="true"></span></span>${rv}</summary><div class="pf-fill">${fields}<div class="pf-done"><button type="button" class="btn" data-pfclose="1">Done</button></div></div></details>`;}).join('')+'</div>';
 }
-function pfSave(pid,k,v){const all=pfAll(),cur=all[pid]||{};if(v)cur[k]=v;else delete cur[k];cur.__at=new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});all[pid]=cur;try{localStorage.setItem('px_prefs_v2',JSON.stringify(all));}catch(e){}}
+function pfSave(pid,k,v){const all=pfAll(),cur=all[pid]||{};if(v)cur[k]=v;else delete cur[k];cur.__at=new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});cur.__ts=Date.now();all[pid]=cur;try{localStorage.setItem('px_prefs_v2',JSON.stringify(all));}catch(e){}}
 document.addEventListener('input',e=>{const t=e.target.closest&&e.target.closest('[data-pfi]');if(!t)return;pfSave(t.dataset.pid,t.dataset.pfi,t.value.trim());
   if(t.dataset.pfi===FG+'.0')t.closest('.pf-fill').querySelectorAll('.pf-f').forEach((l,i)=>{if(i>0)l.hidden=t.value!=='Yes';});});
 document.addEventListener('toggle',e=>{const d=e.target;if(!d.classList||!d.classList.contains('pf-s'))return;const O=window.__pfO[d.dataset.pid]=window.__pfO[d.dataset.pid]||{};O[d.dataset.gi]=d.open;if(!d.open){const y=window.scrollY;render();window.scrollTo(0,y);}},true);

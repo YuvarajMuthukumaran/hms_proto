@@ -25,7 +25,7 @@
   }
   function save(id, d) {
     var f = F(d);
-    ITEMS.forEach(function (it) { var k = it[0], on = done(k, f), was = d[k] && d[k].on; if (on && !was) d[k] = { on: true, by: 'Patient Experience Lead', at: when() }; else if (!on && was) d[k] = { on: false, by: 'Patient Experience Lead', at: when() }; });
+    ITEMS.forEach(function (it) { var k = it[0], on = done(k, f), was = d[k] && d[k].on; if (on && !was) { d[k] = { on: true, by: 'Patient Experience Lead', at: when() }; if (k === 'fb') d.fbTs = Date.now(); } else if (!on && was) d[k] = { on: false, by: 'Patient Experience Lead', at: when() }; });
     try { localStorage.setItem('px_dc_' + id, JSON.stringify(d)); } catch (e) {}
     ITEMS.forEach(function (it) { var el = document.getElementById('pxDcSt_' + it[0]); if (el) el.outerHTML = stat(d, it[0]); });
     var c = document.getElementById('pxDcCnt'); if (c) c.textContent = cnt(d);
