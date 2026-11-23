@@ -115,10 +115,13 @@
     /* 23 Nov (owner): one step at a time, with a step bar like the Admission steps, not one long page */
     const lis=[...tl.children];window.__dcStep=window.__dcStep||{};let cur=Math.min(window.__dcStep[pid]||0,lis.length-1);
     let bar=W.querySelector('.m23-sb');
-    if(!bar){bar=document.createElement('div');bar.className='m23-sb';tl.before(bar);}
+    if(!bar){bar=document.createElement('nav');bar.className='m23-sb';bar.setAttribute('aria-label','Discharge summary steps');bar.innerHTML='<div class="m23-sbr"></div><div class="m23-sbt"><i></i></div>';tl.before(bar);}
     bar.style.display=isC?'none':'';
-    bar.innerHTML=lis.map((li,i)=>{const t=(li.querySelector('.m23-tlh')||{}).textContent||'';const st=i<cur?'done':i===cur?'on':'';
-      return '<button type="button" class="m23-sbi '+st+'" onclick="m23DcStep(\''+Q(pid)+'\','+i+')"><span class="d">'+(i<cur?'✓':(i+1))+'</span><span class="s">Step '+(i+1)+'</span><span class="t">'+t+'</span></button>';}).join('');
+    const SBI={'Discharge type':'<path d="M14 4h5v16h-5"/><path d="M4 12h11M11 8l4 4-4 4"/>','Summary':'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>','Medication plan':'<rect x="3" y="9" width="18" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><path d="M9.5 9l4.5 6.5"/>','Therapy plan':'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>'};
+    const ok='<path d="M5 12.5l4.5 4.5L19 7.5"/>',svg=d=>'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
+    bar.querySelector('.m23-sbr').innerHTML=lis.map((li,i)=>{const t=(li.querySelector('.m23-tlh')||{}).textContent||'';const st=i<cur?'done':i===cur?'on':i===cur+1?'next':'';
+      return '<button type="button" class="m23-sbi '+st+'" '+(i===cur?'aria-current="step" ':'')+'onclick="m23DcStep(\''+Q(pid)+'\','+i+')"><span class="qic">'+svg(i<cur?ok:(SBI[t]||''))+'</span><span class="qtx"><span class="qst">Step '+(i+1)+' of '+lis.length+'</span><span class="qtt">'+t+'</span><span class="qws">'+(i<cur?'Done':i===cur?'You are here':i===cur+1?'Up next':'Later')+'</span></span></button>';}).join('');
+    const fill=bar.querySelector('.m23-sbt i');requestAnimationFrame(()=>{fill.style.width=((cur+1)/lis.length*100)+'%';});
     lis.forEach((li,i)=>{li.style.display=i===cur?'':'none';});
     tl.classList.add('m23-one');
     let nv=W.querySelector('.m23-snav');
@@ -172,14 +175,25 @@
   css.textContent=
     '.m23-dcw .m20n .m20n-t{display:none!important}.m23-dcw .m20n{background:none;padding:0;justify-content:flex-end}'+
     '.m23-tl{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column}'+
-    '.m23-sb{display:grid;grid-template-columns:repeat(4,1fr);margin:6px 0 16px;position:relative}'+
-    '.m23-sbi{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;padding:0 6px;text-align:center}'+
-    '.m23-sbi:focus-visible{outline:2px solid #1e6cdb;border-radius:6px}'+
-    '.m23-sbi:not(:last-child)::after{content:"";position:absolute;top:18px;left:calc(50% + 22px);right:calc(-50% + 22px);height:2px;background:#e4e7ec}'+
-    '.m23-sbi.done:not(:last-child)::after{background:#1e6cdb}'+
-    '.m23-sbi .d{width:36px;height:36px;border-radius:50%;border:2px solid #d0d5dd;background:#fff;color:#475467;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}'+
-    '.m23-sbi.on .d{border-color:#1e6cdb;color:#1e6cdb}.m23-sbi.done .d{background:#1e6cdb;border-color:#1e6cdb;color:#fff}'+
-    '.m23-sbi .s{font-size:11px;color:#98a2b3;font-weight:600;margin-top:4px}.m23-sbi .t{font-size:14px;color:#101828;font-weight:500}.m23-sbi.on .t{color:#1e6cdb;font-weight:600}'+
+    '.m23-sb{display:block;margin:4px 0 18px;background:#fff;border:1px solid #e4e8ee;border-radius:14px;overflow:hidden}'+
+    '.m23-sbr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}'+
+    '.m23-sbi{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 16px;min-width:0;position:relative;transition:background .2s}'+
+    '.m23-sbi+.m23-sbi{border-left:1px solid #eef1f5}'+
+    '.m23-sbi:hover{background:#f8fafc}.m23-sbi:focus-visible{outline:2px solid #1e6cdb;outline-offset:-2px}'+
+    '.m23-sbi .qic{flex:none;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:#f2f4f7;color:#667085;transition:background .25s,color .25s,transform .25s}'+
+    '.m23-sbi .qtx{display:flex;flex-direction:column;flex:1 1 auto;min-width:0}'+
+    '.m23-sbi .qst{font-size:11.5px;color:#98a2b3;font-weight:500;line-height:1.2}'+
+    '.m23-sbi .qtt{font-size:14px;font-weight:600;color:#344054;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
+    '.m23-sbi .qws{font-size:12px;color:#98a2b3;line-height:1.3}'+
+    '.m23-sbi.on{background:#f0f5fe}.m23-sbi.on .qic{background:#1e6cdb;color:#fff;transform:scale(1.04);box-shadow:0 4px 12px -4px rgba(30,108,219,.55)}.m23-sbi.on .qtt{color:#1849a9}.m23-sbi.on .qws{color:#1e6cdb;font-weight:600}'+
+    '.m23-sbi.done .qic{background:#ecfdf3;color:#067647}.m23-sbi.done .qws{color:#067647;font-weight:500}.m23-sbi.done .qtt{color:#101828}'+
+    '.m23-sbi.next .qws{color:#475467}'+
+    '.m23-sbt{height:3px;background:#eef1f5}.m23-sbt i{display:block;height:100%;width:0;background:linear-gradient(90deg,#12b76a,#1e6cdb);border-radius:0 3px 3px 0;transition:width .45s cubic-bezier(.3,.7,.2,1)}'+
+    '.m23-one>.m23-tls:not([style*="none"]){animation:m23In .22s ease-out}'+
+    '@keyframes m23In{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}'+
+    '@media(max-width:900px){.m23-sbi{gap:8px;padding:12px 10px}.m23-sbi .qst{display:none}.m23-sbi .qic{width:32px;height:32px}}'+
+    '@media(max-width:560px){.m23-sbi .qst,.m23-sbi .qtt{display:none}.m23-sbi{align-items:center}}'+
+    '@media(prefers-reduced-motion:reduce){.m23-sbt i,.m23-sbi,.m23-sbi .qic{transition:none}.m23-one>.m23-tls{animation:none!important}}'+
     '.m23-one .m23-tls{grid-template-columns:minmax(0,1fr)!important;padding-bottom:0}.m23-one .m23-tld,.m23-one .m23-tlh,.m23-one .m23-tls::before{display:none!important}'+
     '.m23-snav{display:flex;justify-content:space-between;margin:14px 0 4px}'+
     '.m23-tls{position:relative;display:grid;grid-template-columns:34px minmax(0,1fr);gap:14px;padding-bottom:18px}'+

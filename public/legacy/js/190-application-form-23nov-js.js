@@ -181,5 +181,5 @@
   ['nadCancel'].forEach(n=>{const o=window[n];if(typeof o==='function')window[n]=function(){window.__appDraft=null;return o.apply(this,arguments);};});
 
   const __r=render;
-  render=function(){const r=__r.apply(this,arguments);try{decorate();decorateNew();}catch(e){}setTimeout(()=>{try{decorate();decorateNew();}catch(e){}},300);return r;};
+  render=function(){/* 23 Nov (owner): the discharge summary opens as the full form, no Draft summary step */try{if(/^#\/patient\/[^/]+\/discharge/.test(location.hash)&&!S.dischargeDrafted){S.dischargeDrafted=true;S.draftBy=S.draftBy||signer();}}catch(e){}const r=__r.apply(this,arguments);try{decorate();decorateNew();}catch(e){}setTimeout(()=>{try{decorate();decorateNew();}catch(e){}},300);return r;};
 })();

@@ -83,10 +83,12 @@
       :({table:vTable,day:vDay,paper:vPaper,trend:vTrend}[st.lay]||vTable)(R,ps);
     return `<div class="vx-bar"><div class="vx-seg" role="tablist" aria-label="Layout">${LAY.map(([k,l],i)=>`<button type="button" class="${st.lay===k?'on':''}" onclick="vxSet('lay','${k}')">${i+1}. ${l}</button>`).join('')}</div><span style="flex:1"></span>
         <button class="btn sm pri" onclick="vitalsModal()">+ Record vitals</button><button class="btn sm" onclick="sugarModal()">+ Record blood sugar</button></div>
-      <div class="vx-bar"><span class="vx-l">Dates</span>${RANGE.map(([k,l])=>`<button type="button" class="vx-c ${st.range===k?'on':''}" onclick="vxSet('range','${k}')">${l}</button>`).join('')}
-        ${st.range==='custom'?`<input type="date" class="input vx-d" value="${E(st.from)}" onchange="vxSet('from',this.value)"><span class="small muted">to</span><input type="date" class="input vx-d" value="${E(st.to)}" onchange="vxSet('to',this.value)">`:''}</div>
-      <div class="vx-bar"><span class="vx-l">Show</span><button type="button" class="vx-c ${!P.some(p=>st.par[p[0]])?'on':''}" onclick="vxSet('par','')">All</button>${P.map(p=>`<button type="button" class="vx-c ${st.par[p[0]]?'on':''}" onclick="vxSet('par','${p[0]}')">${p[1]}</button>`).join('')}
-        <span style="flex:1"></span><span class="small muted">${R.length} of ${all} reading${all===1?'':'s'} · out of range in red</span></div>
+      <div class="vx-flt">
+        <div class="vx-g"><span class="vx-gl" id="vxDl">Dates</span><div class="vx-sg" role="group" aria-labelledby="vxDl">${RANGE.map(([k,l])=>`<button type="button" aria-pressed="${st.range===k}" onclick="vxSet('range','${k}')">${l}</button>`).join('')}</div>
+          ${st.range==='custom'?`<span class="vx-cd"><input type="date" class="input vx-d" aria-label="From" value="${E(st.from)}" onchange="vxSet('from',this.value)"><span>to</span><input type="date" class="input vx-d" aria-label="To" value="${E(st.to)}" onchange="vxSet('to',this.value)"></span>`:''}</div>
+        <div class="vx-g"><span class="vx-gl" id="vxPl">Show</span><div class="vx-tg" role="group" aria-labelledby="vxPl"><button type="button" class="vx-all" aria-pressed="${!P.some(p=>st.par[p[0]])}" onclick="vxSet('par','')">All</button>${P.map(p=>`<button type="button" aria-pressed="${!!st.par[p[0]]}" onclick="vxSet('par','${p[0]}')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${VXI[p[0]]||''}</svg>${p[1]}</button>`).join('')}</div>
+          <span class="vx-cnt"><span><b>${R.length}</b> of ${all} reading${all===1?'':'s'}</span><span class="vx-red">Out of range shows in red</span></span></div>
+      </div>
       ${body}`;
   }
   window.vxSet=function(k,v){
@@ -107,8 +109,25 @@
     }
     box.innerHTML=html();
   }
+  /* 23 Nov (owner): filter icons, one per vital */
+  const VXI={bp:'<path d="M4 15a8 8 0 1 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.2"/>',hr:'<path d="M3 12h4l2-5 4 10 2-5h6"/>',rr:'<path d="M3 9h11a3 3 0 1 0-3-3"/><path d="M3 14h15a3 3 0 1 1-3 3"/>',t:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',o2:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M10 14.5a2 2 0 1 0 0 .1M14.5 16.5h1.5l-1.5 2h1.5"/>',sg:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M9.5 15a2.5 2.5 0 0 0 2.5 2.5"/>'};
   const css=document.createElement('style');css.id='m23-vx-css';
   css.textContent='#view .vm10 .vx-old,#view .vm10:has(#vxBox) .vd-mode{display:none!important}#vxBox{padding:4px 16px 16px;display:flex;flex-direction:column;gap:10px}'
+    +'.vx-flt{display:flex;flex-direction:column;gap:12px;background:#f6f8fb;border:1px solid #e6ebf2;border-radius:14px;padding:12px 14px}'
+    +'.vx-g{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.vx-gl{font-size:12.5px;font-weight:600;color:#475467;width:44px;flex:none}'
+    +'.vx-sg{display:inline-flex;flex-wrap:wrap;gap:2px;background:#e9eef5;border-radius:10px;padding:3px}'
+    +'.vx-sg button{all:unset;cursor:pointer;padding:6px 13px;border-radius:8px;font-size:13px;color:#475467;transition:background .18s,color .18s,box-shadow .18s}'
+    +'.vx-sg button:hover{color:#101828}.vx-sg button[aria-pressed=true]{background:#fff;color:#1849a9;font-weight:600;box-shadow:0 1px 2px rgba(16,24,40,.08),0 1px 6px -2px rgba(30,108,219,.25)}'
+    +'.vx-tg{display:inline-flex;flex-wrap:wrap;gap:6px}'
+    +'.vx-tg button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:9px;border:1px solid #dbe2ec;background:#fff;font-size:13px;color:#344054;transition:background .18s,border-color .18s,color .18s,transform .12s}'
+    +'.vx-tg button svg{color:#98a2b3;transition:color .18s}.vx-tg button:hover{border-color:#b9c6d8}.vx-tg button:active{transform:scale(.97)}'
+    +'.vx-tg button[aria-pressed=true]{background:#1e6cdb;border-color:#1e6cdb;color:#fff;font-weight:600}.vx-tg button[aria-pressed=true] svg{color:#fff}'
+    +'.vx-tg .vx-all[aria-pressed=true]{background:#101828;border-color:#101828}'
+    +'.vx-sg button:focus-visible,.vx-tg button:focus-visible{outline:2px solid #1e6cdb;outline-offset:2px}'
+    +'.vx-cd{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#667085}.vx-cd .vx-d{width:auto}'
+    +'.vx-cnt{margin-left:auto;font-size:12.5px;color:#667085;display:flex;flex-direction:column;align-items:flex-end;line-height:1.35}.vx-cnt b{color:#101828}.vx-red{color:#b42318;font-size:11.5px}'
+    +'@media(max-width:700px){.vx-gl{width:100%}.vx-cnt{margin-left:0;align-items:flex-start}}'
+    +'@media(prefers-reduced-motion:reduce){.vx-sg button,.vx-tg button,.vx-tg button svg{transition:none}}'
     +'.vx-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.vx-l{font-size:12px;font-weight:700;color:#475467;min-width:44px}'
     +'.vx-seg{display:inline-flex;border:1px solid #d5e1ef;border-radius:10px;overflow:hidden}.vx-seg button{border:0;background:#fff;padding:8px 14px;font-size:13px;cursor:pointer;color:#475467}.vx-seg button+button{border-left:1px solid #e3eaf2}.vx-seg button.on{background:#1e6cdb;color:#fff;font-weight:600}'
     +'.vx-c{border:1px solid #d5e1ef;background:#fff;border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;color:#344054}.vx-c.on{background:#eaf2ff;border-color:#1e6cdb;color:#1e4fa8;font-weight:600}'
