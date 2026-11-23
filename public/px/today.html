@@ -533,9 +533,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(state.eye||state.o
 window.addEventListener('scroll',()=>{if(state.open)setState({open:null});},true);
 function placeMenu(){const m=document.querySelector('.menu[role=menu]');if(!m)return;const b=m.parentElement&&m.parentElement.querySelector('.take');if(!b)return;const r=b.getBoundingClientRect(),w=m.offsetWidth||260,h=m.offsetHeight;let top=r.bottom+6;if(top+h>innerHeight-8&&r.top-h-6>8)top=r.top-h-6;m.style.position='fixed';m.style.top=top+'px';m.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w))+'px';m.style.zIndex='70';}
 function render(){
+  const ae=document.activeElement,keep=ae&&ae.id==='pxSearch'?[ae.selectionStart,ae.selectionEnd]:null;
   document.getElementById('root').innerHTML = state.view==='today'?today():state.view==='cmp'?cmp():trk();
   document.querySelectorAll('.rev button').forEach(b=>b.classList.toggle('on',b.dataset.v===state.view));
   try{placeMenu();}catch(e){}
+  if(keep){const s=document.getElementById('pxSearch');if(s){s.focus();try{s.setSelectionRange(keep[0],keep[1]);}catch(e){}}}
 }
 /* every chip and name does something: it jumps to the rows it counts, or opens the page that holds the detail */
 const CHIPTIP={late:'Jump to the first late row',safety:'Open Grievances (safety concerns are on top)',griev:'Open Grievances',disch:'Jump to patients going home today',nps:'Open Reports',calls:'Jump to the first random call that is due',team:'Jump to the first row where the team is late'};
@@ -546,6 +548,7 @@ function chipGo(k){
   if(state.chip===k){setState({chip:''});return;}
   /* For chips that navigate away, don't filter */
   if(k==='griev'||k==='safety'){if(!navShell('grievances')){const trs=[...document.querySelectorAll('.tw tbody tr')];flashRow(trs.find(tr=>/safety|grievance/i.test(tr.innerText||'')));}return;}
+  if(k==='adm'){navShell('patients');return;}
   if(k==='nps'){if(!navShell('reports'))window.scrollTo({top:0,behavior:'smooth'});return;}
   /* For all other chips, filter the rows */
   setState({chip:k});

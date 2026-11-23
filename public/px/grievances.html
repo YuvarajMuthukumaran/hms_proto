@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script src="/auth-shim.js"></script><script src="/px/px-real.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tulasi · Patient Experience · Grievances</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- 23 Nov 2026 (Nikita's "HMS Grievances redesign"): ticket list on the left, the grievance on the right with a stage bar
+     (Logged, Investigating, Resolved, Confirmed with family, Closed), safety steps for serious ones, each issue the family raised
+     with its own status and asks, an investigation log, people, and why it happened. It reads and writes the same concerns as
+     the lead app (parent PXG.self: seeded list + extraConcerns, patches in concernStatus), so PX Today, Reports and the
+     clinical portal keep working; new fields: g2 (stage), issues, safety, log, root, staff. Opened standalone it shows
+     synthetic sample grievances only. -->
+<style>
+:root{--ink:#101828;--mute:#667085;--line:#E4E7EC;--blue:#1E6CDB;--bg:#F4F6FA;--red:#B42318;--green:#067647;--amber:#B54708}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,system-ui,sans-serif}
+button{font:inherit;cursor:pointer}input,select,textarea{font:inherit;color:inherit}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#fff;border-bottom:1px solid var(--line)}
+.top h1{margin:0;font-size:20px}.top h1 small{font-size:13px;color:var(--mute);font-weight:500;margin-left:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:9px;border:1px solid #D0D5DD;background:#fff;font-weight:600;color:#344054}
+.btn:hover{background:#F9FAFB}.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}.btn.pri:hover{background:#185BBD}
+.btn.ic{width:36px;padding:0;justify-content:center}.btn.sm{height:30px;padding:0 10px;font-size:13px}
+.btn:focus-visible,.tab:focus-visible,.tk:focus-visible,.stp:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.wrap{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;padding:16px}
+.bar{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.srch{display:flex;align-items:center;gap:8px;width:300px;height:40px;padding:0 12px;background:#fff;border:1px solid #D0D5DD;border-radius:10px}
+.srch input{border:0;outline:0;flex:1;background:none}
+.tabs{display:flex;gap:2px;background:#EAECF0;border-radius:10px;padding:3px}
+.tab{border:0;background:none;padding:7px 12px;border-radius:8px;font-weight:600;color:#475467}.tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(16,24,40,.08)}
+.tab b{margin-left:4px;color:var(--blue)}.tab.ser{color:var(--red)}.tab.ser b{color:var(--red)}
+.list{display:flex;flex-direction:column;gap:10px;align-self:start;position:sticky;top:10px;max-height:calc(100vh - 90px);overflow:auto;padding:2px}
+.tk{text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.tk.on{border-color:var(--blue);box-shadow:0 0 0 2px #D5E4FB;background:#F8FBFF}
+.tk .h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.tk .h b{font-size:15px}
+.tk .s{font-size:12px;color:var(--mute)}.tk .is{font-size:13px;color:#344054}
+.tk .f{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);border-top:1px solid #F2F4F7;padding-top:6px;margin-top:2px}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;border-radius:99px;padding:2px 9px;white-space:nowrap}
+.pill.red{background:#FEF3F2;color:var(--red)}.pill.green{background:#ECFDF3;color:var(--green)}.pill.blue{background:#EFF4FF;color:#1E5BB8}.pill.amber{background:#FFFAEB;color:var(--amber)}.pill.grey{background:#F2F4F7;color:#475467}
+.det{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.card h3{margin:0;font-size:15px}.ch{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.main{display:flex;flex-direction:column;gap:14px;min-width:0}.side{display:flex;flex-direction:column;gap:14px}
+.hd h2{margin:0;font-size:22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.meta{font-size:13px;color:var(--mute);margin:6px 0 12px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.stages{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px}
+.stp{border:0;background:none;padding:0;text-align:left;font-size:12px;color:var(--mute)}
+.stp i{display:block;height:4px;border-radius:2px;background:#EAECF0;margin-bottom:6px}
+.stp.done i{background:var(--blue)}.stp.cur{color:var(--ink);font-weight:700}.stp.cur i{background:var(--blue)}.stp.cur.ser i{background:#D92D20}
+.warn{color:var(--red);font-size:13px;font-weight:600;margin-top:10px}
+.safety{border-color:#FDA29B;background:#FFFBFA}.safety h3{color:var(--red)}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chk{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 12px;text-align:left}
+.chk .bx{width:18px;height:18px;border-radius:5px;border:1.5px solid #98A2B3;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.chk.on{background:#ECFDF3;border-color:#ABEFC6}.chk.on .bx{background:#12B76A;border-color:#12B76A;color:#fff}.chk.on span.t{text-decoration:line-through;color:var(--mute)}
+.chk small{display:block;font-size:11px;color:var(--mute);text-decoration:none}
+.iss{border-top:1px solid #F2F4F7;padding:14px 0}.iss:first-of-type{border-top:0;padding-top:2px}
+.iss .ih{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.ltr{width:24px;height:24px;border-radius:6px;background:var(--ink);color:#fff;font-weight:700;font-size:12px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.iss h4{margin:0;font-size:15px}.iss .sub{font-size:12px;color:var(--mute)}
+.seg{display:inline-flex;background:#F2F4F7;border-radius:8px;padding:2px}.seg button{border:0;background:none;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;color:#475467}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(16,24,40,.08)}
+.iss ul{margin:8px 0 8px 34px;padding:0;color:#344054}.iss li{margin:2px 0}
+.asks{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:34px;font-size:13px;color:var(--mute)}
+.ask{border:1px solid #FEDF89;background:#FFFAEB;color:var(--amber);border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600}
+.ask.ok{border-color:#ABEFC6;background:#ECFDF3;color:var(--green)}
+.own{display:flex;justify-content:space-between;align-items:center;margin:10px 0 0 34px;font-size:13px}
+.av{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:#FFF1E6;color:var(--amber);flex:none}
+.frm{display:grid;grid-template-columns:1fr 1fr;gap:10px;border:1px dashed #B2CCFF;background:#F8FBFF;border-radius:10px;padding:12px;margin-top:10px}
+.frm label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:#344054}.frm .w{grid-column:1/-1}
+.inp{border:1px solid #D0D5DD;border-radius:8px;padding:7px 10px;background:#fff;width:100%}
+textarea.inp{resize:vertical;min-height:60px}
+.log{display:flex;flex-direction:column}.le{display:flex;gap:10px;padding:10px 0;border-top:1px solid #F2F4F7}.le:first-child{border-top:0}
+.le .k{font-size:12px;color:var(--mute)}.le .x{color:#344054;margin-top:2px}
+.cmp{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.cmp .r{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--mute);text-transform:uppercase;margin-bottom:8px}
+.per{display:flex;align-items:center;gap:10px;padding:6px 0}.per .n{flex:1;min-width:0}.per .n b{display:block}.per .n span{font-size:12px;color:var(--mute)}
+.lnk{border:0;background:none;color:var(--blue);font-weight:600;padding:0}
+.tags{display:flex;gap:6px;flex-wrap:wrap}.tag{background:#F2F4F7;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600;color:#344054;border:0}
+.tag.add{background:#fff;border:1px dashed #98A2B3;color:var(--blue)}
+.note{background:#F9FAFB;border-radius:10px;padding:10px 12px;font-size:12px;color:var(--mute);margin-top:12px}
+.kv{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}.kv span{color:var(--mute)}
+.empty{padding:40px;text-align:center;color:var(--mute);background:#fff;border:1px solid var(--line);border-radius:14px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#101828;color:#fff;border-radius:10px;padding:10px 16px;font-size:13px;z-index:99}
+html.embed .top{display:none}html.embed body{background:transparent}
+@media(max-width:1100px){.det{grid-template-columns:1fr}}
+@media(max-width:820px){.wrap{grid-template-columns:1fr}.list{position:static;max-height:none}.sgrid,.frm{grid-template-columns:1fr}}
+@media print{.top,.bar,.list,.acts,.cmp,.side .lnk,.seg,.btn{display:none!important}.wrap,.det{display:block}.card{break-inside:avoid;margin-bottom:10px}}
+</style>
+<script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');</script>
+<script src="hms-patients.js"></script>
+</head>
+<body>
+<header class="top"><h1>Grievances<small>Patient experience</small></h1><button class="btn pri" data-a="log">+ Log a grievance</button></header>
+<div id="root"></div>
+<script>
+(function(){
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const STAGES=['Logged','Investigating','Resolved','Confirmed with family','Closed'];
+const SAFETY=['Chandra ji and medical director told','CCTV for the time window saved','Written statements from staff on duty','Restraint and injection recorded in chart','Patient checked for injuries by a doctor','Family given an update within 24 h'];
+const ROOTS=['Not known yet','Staff conduct','Ward rule not followed','Call centre gave wrong information','Charges not explained at admission','Maintenance fault','Policy not explained to family','Food','Other'];
+const CATS=['Staff conduct','Ward rules','Billing and charges','Room and housekeeping','Food','Maintenance','Communication','Safety','Rights','Other'];
+const QUICK=['Spoke to family','CCTV reviewed','Staff statement taken'];
+const ME='Patient Experience';
+/* standalone (opened on its own, for testing): synthetic sample grievances, never saved */
+const LOCAL={concernStatus:{},extraConcerns:[
+  {id:'G-9001',type:'grievance',pid:'',pname:'Test Patient One',room:'101',title:'Alleged rough handling during restraint',raisedBy:'Husband and family',via:'Family came in',owner:'Floor lead psychiatrist',category:'Safety',logged:'Mon 10:40 am',status:'Open',desc:'Family says the patient was handled roughly.',at:Date.now()-3*36e5},
+  {id:'G-9002',type:'concern',pid:'',pname:'Test Patient Two',room:'102',title:'Blood test charges disputed',raisedBy:"Patient's family",via:'Front desk',owner:'Billing',category:'Billing and charges',logged:'Mon 9:10 am',status:'Open',desc:'Family was told tests were free.',at:Date.now()-5*36e5}]};
+function host(){try{const P=window.parent!==window&&window.parent.PXG;return (P&&P.self)||null;}catch(e){return null;}}
+function hs(){const h=host();return h?h.state:LOCAL;}
+/* patients: the app's own list first (its demo ids are p1, p2...), then the shared HMS list */
+function pts(){let L=[];try{const h=host();if(h&&h.data)L=(h.data().P||[]).slice();}catch(e){}return L.concat((window.HMS_PATIENTS&&window.HMS_PATIENTS.patients)||[]);}
+function all(){
+  const s=hs(),cs=s.concernStatus||{},seen={},out=[];let seed=[];try{seed=(host()&&window.parent.PXG.seedList)||[];}catch(e){}
+  seed.concat(s.extraConcerns||[]).forEach(c=>{if(!c||!c.id||seen[c.id])return;seen[c.id]=1;
+    const x=Object.assign({},c,cs[c.id]||{}),p=pts().find(q=>q.id===c.pid)||{};
+    x.name=p.name||c.pname||'Patient';x.room=p.room||c.room||'';x.ini=p.ini||'';
+    x.ser=x.type==='grievance'||/safety|rights|security/i.test(x.category||'')||!!x.serious;
+    x.st=typeof x.g2==='number'?x.g2:/Closed/i.test(x.status||'')?4:/Resolved/i.test(x.status||'')||x.stage==='confirm'?2:(x.findings&&x.findings.length)||(x.log&&x.log.length)?1:0;
+    x.iss=(x.issues&&x.issues.length)?x.issues:[{t:x.title||'Concern',cat:x.category||'',when:x.logged||'',st:'Open',what:x.desc||'',fam:'',asks:[],owner:x.owner||''}];
+    out.push(x);});
+  return out;
+}
+function patch(id,p,msg){
+  const h=host(),s=hs(),cs=Object.assign({},s.concernStatus||{});cs[id]=Object.assign({},cs[id]||{},p);
+  if(h)h.setState({concernStatus:cs});else LOCAL.concernStatus=cs;
+  if(msg)toast(msg);draw();
+}
+function stamp(){const d=new Date();return d.toLocaleDateString('en-IN',{weekday:'short'})+' '+d.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}).toLowerCase();}
+function addLog(c,k,t,extra){const e={k:k,t:t,by:ME,at:stamp(),ts:Date.now()};const log=(c.log||[]).concat([e]);
+  const p=Object.assign({log:log,latest:(k==='Note'?'':k+': ')+t,latestBy:ME,latestAt:e.at},extra||{});
+  if(/^Finding/.test(k))p.findings=(c.findings||[]).concat([{t:t,by:ME,at:e.at}]);
+  if(c.st===0&&/^(Finding|Note)/.test(k)){p.g2=1;p.status=c.escalated?'Escalated':'Open';}
+  return p;}
+function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2600);}
+const ini=s=>String(s||'').split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
+const V={f:'open',q:'',sel:'',form:null,about:'General',note:'',staffAdd:false,staffTxt:''};
+function filt(L){return L.filter(c=>V.f==='open'?c.st<=1:V.f==='serious'?c.ser&&c.st<4:V.f==='confirm'?c.st===2||c.st===3:c.st===4)
+  .filter(c=>{const q=V.q.trim().toLowerCase();return !q||(c.name+' '+c.room+' '+c.id).toLowerCase().indexOf(q)>=0;});}
+function pillOf(c){return c.st>=4?'<span class="pill grey">Closed</span>':c.st>=2?'<span class="pill green">Resolved</span>':c.ser?'<span class="pill red">Serious</span>':'<span class="pill blue">Open</span>';}
+function tickets(L){
+  if(!L.length)return '<div class="empty">Nothing here.</div>';
+  return L.map(c=>'<button class="tk'+(c.id===V.sel?' on':'')+'" data-sel="'+esc(c.id)+'"><div class="h"><div><b>'+esc(c.name)+'</b><div class="s">'+(c.room?'Room '+esc(String(c.room).replace(/^Room\s*/,''))+' · ':'')+esc(c.raisedBy||'')+'</div></div>'+pillOf(c)+'</div>'
+    +'<div class="is">'+c.iss.map((i,k)=>esc(String.fromCharCode(65+k)+'. '+i.t)).join(' ')+'</div>'
+    +'<div class="f"><span>'+c.iss.length+' issue'+(c.iss.length===1?'':'s')+' · '+STAGES[c.st]+'</span><span>'+esc(c.id)+'</span></div></button>').join('');
+}
+function issue(c,i,k){
+  const L=String.fromCharCode(65+k),F=V.form&&V.form.k===k?V.form:null;
+  if(F)return '<div class="iss">'+form(F)+'</div>';
+  return '<div class="iss"><div class="ih"><div style="display:flex;gap:10px"><span class="ltr">'+L+'</span><div><h4>'+esc(i.t)+'</h4><div class="sub">'+esc([i.cat,i.when].filter(Boolean).join(' · '))+'</div></div></div>'
+    +'<div class="seg" role="group" aria-label="Issue '+L+' status">'+['Open','Resolved','Declined'].map(s=>'<button class="'+(i.st===s?'on':'')+'" data-ist="'+k+'" data-v="'+s+'">'+s+'</button>').join('')+'</div></div>'
+    +((i.what||i.fam)?'<ul>'+(i.what?'<li>'+esc(i.what)+'</li>':'')+(i.fam?'<li>'+esc(i.fam)+'</li>':'')+'</ul>':'<div style="height:6px"></div>')
+    +((i.asks||[]).length?'<div class="asks">They asked for '+i.asks.map((a,j)=>'<button class="ask'+(a.ok?' ok':'')+'" data-ask="'+k+':'+j+'" title="Tap to mark '+(a.ok?'pending':'done')+'">● '+esc(a.t)+' · '+(a.ok?'Done':'Pending')+'</button>').join('')+'</div>':'')
+    +'<div class="own"><span style="display:flex;align-items:center;gap:8px"><span class="av">'+esc(ini(i.owner))+'</span>Owner: <b>'+esc(i.owner||'Not set')+'</b></span><button class="btn sm" data-ied="'+k+'">Edit</button></div></div>';
+}
+function form(F){
+  const o=(v,L)=>L.map(x=>'<option'+(x===v?' selected':'')+'>'+esc(x)+'</option>').join('');
+  return '<div class="frm"><label class="w">What the family raised<input class="inp" data-ff="t" value="'+esc(F.t)+'" placeholder="For example: Washroom not working"></label>'
+    +'<label>About<select class="inp" data-ff="cat">'+o(F.cat,['',...CATS])+'</select></label><label>When it happened<input class="inp" data-ff="when" value="'+esc(F.when)+'" placeholder="Mon, 9:30 to 10:00 am"></label>'
+    +'<label class="w">What happened<textarea class="inp" data-ff="what">'+esc(F.what)+'</textarea></label>'
+    +'<label class="w">What the family says<textarea class="inp" data-ff="fam">'+esc(F.fam)+'</textarea></label>'
+    +'<label>They asked for (comma between)<input class="inp" data-ff="asks" value="'+esc(F.asks)+'" placeholder="CCTV checked, Apology"></label><label>Owner<input class="inp" data-ff="owner" value="'+esc(F.owner)+'" placeholder="Nursing in-charge"></label>'
+    +'<div class="w" style="display:flex;gap:8px;justify-content:flex-end"><button class="btn sm" data-a="fcancel">Cancel</button><button class="btn sm pri" data-a="fsave">Save issue</button></div></div>';
+}
+function detail(c){
+  if(!c)return '<div class="empty">Pick a grievance on the left.</div>';
+  const S=c.safety||{},nS=SAFETY.filter((x,i)=>S[i]).length;
+  const log=[{k:'Raised',t:(c.ser?'Marked serious. ':'')+(c.desc||c.title||''),by:'System',at:c.logged||''}]
+    .concat((c.findings||[]).filter(f=>!(c.log||[]).some(e=>e.t===f.t)).map(f=>({k:'Finding',t:f.t,by:f.by||'',at:f.at||''}))).concat(c.log||[]);
+  const opts=['General'].concat(c.iss.map((x,k)=>'Issue '+String.fromCharCode(65+k)));
+  const head='<div class="card hd"><h2>'+esc(c.name)+(c.ser?' <span class="pill red">⚠ Serious'+(c.category?': '+esc(String(c.category).toLowerCase()):'')+'</span>':'')+'</h2>'
+    +'<div class="meta">'+[esc(c.id),c.room?'Room '+esc(String(c.room).replace(/^Room\s*/,'')):'',c.raisedBy?'From '+esc(c.raisedBy):'',c.escalated?'Raised to Chandra ji':'',c.logged?'Logged '+esc(c.logged)+(c.via?' · '+esc(c.via):''):''].filter(Boolean).join(' · ')+'</div>'
+    +'<div class="acts"><button class="btn ic" data-a="remind" title="Remind '+esc(c.owner||'the owner')+'" aria-label="Remind the owner">🔔</button><button class="btn ic" data-a="esc" title="Raise to Chandra ji" aria-label="Raise to Chandra ji" style="color:var(--red)">↑</button><button class="btn" data-a="print">Report</button><button class="btn pri" data-a="call">Call family</button></div>'
+    +'<div class="stages" role="group" aria-label="Stage">'+STAGES.map((s,i)=>'<button class="stp'+(i<c.st?' done':'')+(i===c.st?' cur'+(c.ser?' ser':''):'')+'" data-stg="'+i+'"><i></i>'+s+'</button>').join('')+'</div>'
+    +(c.reminded?'<div class="meta" style="margin:8px 0 0">Reminded '+c.reminded+' time'+(c.reminded>1?'s':'')+', last '+esc(c.remindedAt||'')+'</div>':'')
+    +(c.ser&&c.st<4?'<div class="warn">Serious: Chandra ji and the medical director are told on logging. Update the family within 24 h.</div>':'')+'</div>';
+  const saf=c.ser?'<div class="card safety"><div class="ch"><h3>Safety steps</h3><b style="color:var(--red);font-size:13px">'+nS+' of '+SAFETY.length+' done</b></div><div class="sgrid">'
+    +SAFETY.map((x,i)=>'<button class="chk'+(S[i]?' on':'')+'" data-saf="'+i+'"><span class="bx">'+(S[i]?'✓':'')+'</span><span><span class="t">'+esc(x)+'</span>'+(S[i]?'<small>'+esc(S[i].by+', '+S[i].at)+'</small>':'')+'</span></button>').join('')+'</div></div>':'';
+  const iss='<div class="card"><div class="ch"><h3>What the family raised</h3><button class="btn sm" data-a="addiss">+ Add issue</button></div>'
+    +c.iss.map((i,k)=>issue(c,i,k)).join('')+(V.form&&V.form.k===-1?'<div class="iss">'+form(V.form)+'</div>':'')+'</div>';
+  const lg='<div class="card"><div class="ch"><h3>Investigation and action taken</h3><span style="font-size:13px;color:var(--mute)">'+log.length+' entr'+(log.length===1?'y':'ies')+'</span></div><div class="log">'
+    +log.map(e=>'<div class="le"><span class="av" style="background:#EFF4FF;color:#1E5BB8">'+esc(e.by==='System'?'HM':ini(e.by))+'</span><div><div class="k"><b style="color:var(--ink)">'+esc(e.by)+'</b> · '+esc(e.k)+(e.at?' · '+esc(e.at):'')+'</div><div class="x">'+esc(e.t)+'</div></div></div>').join('')+'</div>'
+    +'<div class="cmp"><div class="r"><span style="font-size:12px;color:var(--mute)">About</span><div class="seg">'+opts.map(o=>'<button class="'+(V.about===o?'on':'')+'" data-about="'+esc(o)+'">'+esc(o.replace('Issue ',''))+'</button>').join('')+'</div></div>'
+    +'<div class="r">'+QUICK.map(q=>'<button class="tag add" data-quick="'+esc(q)+'">+ '+esc(q)+'</button>').join('')+'</div>'
+    +'<div class="r"><input class="inp" id="gNote" style="flex:1" placeholder="Note: what was found or done" value="'+esc(V.note)+'"><button class="btn pri sm" data-a="note">Add</button></div></div></div>';
+  const fam=c.raisedBy||'Family';
+  const side='<div class="card"><div class="lbl">People</div><div class="per"><span class="av" style="background:#EFF4FF;color:#1E5BB8">'+esc(c.ini||ini(c.name))+'</span><div class="n"><b>'+esc(c.name)+'</b><span>Patient'+(c.room?' · Room '+esc(String(c.room).replace(/^Room\s*/,'')):'')+'</span></div><button class="lnk" data-a="chart">Chart ↗</button></div>'
+    +'<div class="per"><span class="av">'+esc(ini(fam))+'</span><div class="n"><b>'+esc(fam)+'</b><span>Raised it</span></div><button class="btn ic sm" data-a="call" aria-label="Call the family">📞</button></div></div>'
+    +'<div class="card"><div class="lbl">Why it happened</div><label style="font-size:13px;font-weight:600">Root cause<select class="inp" id="gRoot" style="margin-top:6px">'+ROOTS.map(r=>'<option'+((c.root||'Not known yet')===r?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select></label>'
+    +'<div style="font-size:13px;font-weight:600;margin:12px 0 6px">Staff or team involved</div><div class="tags">'+(c.staff||[]).map((s,i)=>'<button class="tag" data-unstaff="'+i+'" title="Tap to remove">'+esc(s)+' ×</button>').join('')
+    +(V.staffAdd?'<input class="inp" id="gStaff" style="width:150px;height:28px;padding:2px 8px" placeholder="Team or person" value="'+esc(V.staffTxt)+'"><button class="btn sm pri" data-a="staffok">Add</button>':'<button class="tag add" data-a="staffadd">+ Add</button>')+'</div>'
+    +'<div class="note">Root causes roll up into a monthly view, so repeat problems (for example the call centre promising free tests) reach the team that can fix them.</div></div>'
+    +'<div class="card"><div class="kv"><span>Logged by</span><b>'+esc(c.loggedBy||(/Logged by (.*)/.exec(c.via||'')||[])[1]||ME)+'</b></div><div class="kv"><span>Came in as</span><b>'+esc(c.via||c.src||'')+'</b></div><div class="kv"><span>Owner</span><b>'+esc(c.owner||'')+'</b></div><div class="kv"><span>Reference</span><b>'+esc(c.id)+'</b></div></div>';
+  return '<div class="det"><div class="main">'+head+saf+iss+lg+'</div><div class="side">'+side+'</div></div>';
+}
+function draw(){
+  const L=all(),F=filt(L);
+  if(!F.some(c=>c.id===V.sel))V.sel=F[0]?F[0].id:'';
+  const cur=L.find(c=>c.id===V.sel);
+  const n=k=>{const o=V.f;V.f=k;const r=filt(L).length;V.f=o;return r;};
+  const tabs=[['open','Open'],['serious','Serious'],['confirm','To confirm with family'],['closed','Closed']].map(t=>'<button class="tab'+(t[0]==='serious'?' ser':'')+(V.f===t[0]?' on':'')+'" data-f="'+t[0]+'">'+t[1]+((t[0]==='open'||t[0]==='serious')&&n(t[0])?'<b>'+n(t[0])+'</b>':'')+'</button>').join('');
+  const ae=document.activeElement,keep=ae&&ae.id?[ae.id,ae.selectionStart,ae.selectionEnd]:null;
+  document.getElementById('root').innerHTML='<div class="wrap"><div class="bar"><label class="srch"><span aria-hidden="true">🔍</span><input id="gQ" placeholder="Search patient, room or G-number" aria-label="Search grievances" value="'+esc(V.q)+'"></label><div class="tabs" role="tablist">'+tabs+'</div></div>'
+    +'<div class="list">'+tickets(F)+'</div><div>'+(L.length?detail(cur):'<div class="empty">No grievances logged yet. Use “Log a call or concern” at the top to log one.</div>')+'</div></div>';
+  if(keep){const e=document.getElementById(keep[0]);if(e){e.focus();try{e.setSelectionRange(keep[1],keep[2]);}catch(x){}}}
+}
+function cur(){return all().find(c=>c.id===V.sel);}
+function setIss(c,iss,msg){patch(c.id,{issues:iss},msg);}
+document.addEventListener('input',e=>{const t=e.target;
+  if(t.id==='gQ'){V.q=t.value;draw();return;}
+  if(t.id==='gNote')V.note=t.value;if(t.id==='gStaff')V.staffTxt=t.value;
+  if(t.dataset.ff&&V.form)V.form[t.dataset.ff]=t.value;});
+document.addEventListener('change',e=>{const t=e.target;if(t.id==='gRoot'){const c=cur();if(c)patch(c.id,{root:t.value},'Root cause saved');}if(t.dataset.ff&&V.form)V.form[t.dataset.ff]=t.value;});
+document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id==='gNote'){e.preventDefault();act('note');}if(e.target.id==='gStaff'){e.preventDefault();act('staffok');}});
+function act(a,t){
+  const c=cur(),h=host();
+  if(a==='log'){if(h)h.setState({logOpen:true});else toast('Log a grievance from the app');return;}
+  if(!c)return;
+  if(a==='remind'){const n=(c.reminded||0)+1,at=stamp();patch(c.id,Object.assign(addLog(c,'Reminder','Reminded '+(c.owner||'the owner')+' to finish'),{reminded:n,remindedAt:at}),'Reminder sent to '+(c.owner||'the owner'));return;}
+  if(a==='esc'){if(c.escalated){toast('Already raised to Chandra ji');return;}patch(c.id,Object.assign(addLog(c,'Escalated','Raised to Chandra ji (GM Operations)'),{escalated:true,escalatedAt:stamp(),status:c.st<2?'Escalated':c.status}),'Raised to Chandra ji');return;}
+  if(a==='print'){window.print();return;}
+  if(a==='call'){if(h)h.setState({logOpen:true,form:Object.assign({},h.state.form||{},{pid:c.pid||''})});else toast('Opens Log a call in the app');return;}
+  if(a==='chart'){try{if(window.parent!==window){window.parent.postMessage({pxNav:'patients',pxOpen:c.name},'*');return;}}catch(x){}toast('Opens the patient record in the app');return;}
+  if(a==='addiss'){V.form={k:-1,t:'',cat:'',when:'',what:'',fam:'',asks:'',owner:''};draw();return;}
+  if(a==='fcancel'){V.form=null;draw();return;}
+  if(a==='fsave'){const F=V.form;if(!F||!F.t.trim()){toast('Write what the family raised first');return;}
+    const it={t:F.t.trim(),cat:F.cat,when:F.when,what:F.what,fam:F.fam,owner:F.owner,asks:String(F.asks||'').split(',').map(s=>s.trim()).filter(Boolean).map(s=>{const old=F.k>=0?(c.iss[F.k].asks||[]).find(a=>a.t===s):null;return {t:s,ok:!!(old&&old.ok)};}),st:F.k>=0?c.iss[F.k].st:'Open'};
+    const iss=c.iss.slice();if(F.k>=0)iss[F.k]=it;else iss.push(it);V.form=null;setIss(c,iss,F.k>=0?'Issue saved':'Issue added');return;}
+  if(a==='note'){const t=String(V.note||'').trim();if(!t){toast('Write the note first');return;}V.note='';
+    const k=V.about==='General'?'Note':'Finding · '+V.about.replace('Issue ','');patch(c.id,addLog(c,k,t),'Added');return;}
+  if(a==='staffadd'){V.staffAdd=true;V.staffTxt='';draw();const e=document.getElementById('gStaff');if(e)e.focus();return;}
+  if(a==='staffok'){const t=String(V.staffTxt||'').trim();V.staffAdd=false;if(!t){draw();return;}patch(c.id,{staff:(c.staff||[]).concat([t])});return;}
+}
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const c=cur(),d=t.dataset;
+  if(d.f){V.f=d.f;V.form=null;draw();return;}
+  if(d.sel){V.sel=d.sel;V.form=null;V.about='General';draw();return;}
+  if(d.a){act(d.a,t);return;}
+  if(!c)return;
+  if(d.stg!==undefined){const i=+d.stg;if(i===c.st)return;V.f=i>=4?'closed':i>=2?'confirm':(V.f==='serious'&&c.ser?'serious':'open');patch(c.id,Object.assign(addLog(c,'Stage','Moved to '+STAGES[i],{g2:i}),{g2:i,status:i<2?(c.escalated?'Escalated':'Open'):i<4?'Resolved':'Closed'}),STAGES[i]);return;}
+  if(d.saf!==undefined){const S=Object.assign({},c.safety||{}),i=+d.saf;if(S[i])delete S[i];else S[i]={by:ME,at:stamp()};patch(c.id,{safety:S});return;}
+  if(d.ist!==undefined){const iss=c.iss.map(x=>Object.assign({},x));iss[+d.ist].st=d.v;setIss(c,iss,'Issue '+String.fromCharCode(65+ +d.ist)+': '+d.v);return;}
+  if(d.ask){const p=d.ask.split(':'),iss=c.iss.map(x=>Object.assign({},x,{asks:(x.asks||[]).map(a=>Object.assign({},a))})),a=iss[+p[0]].asks[+p[1]];a.ok=!a.ok;setIss(c,iss);return;}
+  if(d.ied!==undefined){const i=c.iss[+d.ied];V.form={k:+d.ied,t:i.t||'',cat:i.cat||'',when:i.when||'',what:i.what||'',fam:i.fam||'',asks:(i.asks||[]).map(a=>a.t).join(', '),owner:i.owner||''};draw();return;}
+  if(d.about){V.about=d.about;draw();return;}
+  if(d.quick){V.note=d.quick+(V.note?': '+V.note:'');draw();const e=document.getElementById('gNote');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length);}return;}
+  if(d.unstaff!==undefined){const s=(c.staff||[]).slice();s.splice(+d.unstaff,1);patch(c.id,{staff:s});return;}
+});
+/* the app may hand over which grievance to open */
+window.addEventListener('message',e=>{const d=e&&e.data;if(d&&d.gOpen){V.sel=d.gOpen;V.f='open';const c=all().find(x=>x.id===d.gOpen);if(c)V.f=c.st>=4?'closed':c.st>=2?'confirm':'open';draw();}});
+/* new grievances from other computers arrive in the app every 20 s: redraw, unless something is being typed */
+setInterval(()=>{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;draw();},5000);
+draw();
+})();
+</script>
+</body>
+</html>
