@@ -42,6 +42,17 @@
     Object.keys(GATE).forEach(id=>{const on=!!v[GATE[id]]||(!!v[id]&&!au[id]);
       document.querySelectorAll('.cdf-page [oninput*="cdfSet(\'' +id+'\'"],.cdf-page [onchange*="cdfSet(\'' +id+'\'"]').forEach(e=>{e.style.visibility=on?'':'hidden';});});}
   try{const __c=cdfCheck;cdfCheck=function(){const r=__c.apply(this,arguments);try{gate();}catch(e){}return r;};}catch(e){}
+  /* 24 Nov (owner): MECT anaesthesia consent line 1 was wrong: the dotted line after '1' (the patient) held the doctor's
+     name, 'authorize Dr ___' had no blank, and the anaesthesia blank sat after 'anesthesia to me'. Now: m199mn patient
+     name on line 1, m199dr doctor after 'authorize Dr', p5f12 (type of anaesthesia) before 'anesthesia to me'. */
+  (function(){const m=CDF_FORMS['mect-final'],pg=m&&m.pages&&m.pages[4];if(!pg||pg.__m199a)return;pg.__m199a=1;
+    pg.fields=pg.fields.filter(x=>x.id!=='p5f11');
+    pg.fields.forEach(x=>{if(x.id==='p5f12'){x.x=67;x.w=142;x.label='Type of anaesthesia';}});
+    pg.fields.push({kind:'line',id:'m199mn',label:'Patient',x:63,y:139.4,w:463.4,h:11.9,size:9.5},
+      {kind:'line',id:'m199dr',label:'Dr',x:118,y:157.5,w:146,h:12.3,size:9.5});
+    /* page 9: Date and Name of Senior Consultant had no blanks; both fill themselves (today, treating psychiatrist) and stay editable */
+    const p9=m.pages[8];if(p9)p9.fields.push({kind:'line',id:'m199d9',label:'Date of signing',x:80,y:253,w:200,h:12.3,size:9.5},{kind:'line',id:'m199sc',label:'Consultant psychiatrist',x:175,y:272.5,w:200,h:12.3,size:9.5});
+  })();
   const st=document.createElement('style');
   st.textContent='.cdf-page .cdf-f.cdf-opt:not(.cdf-ro){box-shadow:none!important;border:1px solid rgba(46,144,250,.6)!important;background:rgba(46,144,250,.035)!important}'
     +'.cdf-page .cdf-f.cdf-opt.on{background:#2e90fa!important;color:#fff!important}';
