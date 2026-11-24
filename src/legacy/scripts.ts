@@ -195,4 +195,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/194-therapy-plans-redesign-24nov-js.js',
   '/legacy/js/195-signature-center-24nov-js.js',
   '/legacy/js/196-forms-reformat-24nov-js.js',
+  '/legacy/js/197-form-autofill-24nov-js.js',
 ];
