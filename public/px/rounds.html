@@ -101,6 +101,22 @@ const CG=[
 const SAFE=RG[0][1];const TODAY=[...RG,...CG].flatMap(g=>g[1]);
 /* Patient concerns: [topic, owner, grievance category, [specific options], safety options] */
 const AB=[
+ ['Doctor communication','Treating psychiatrist','Doctor communication',['Wants to talk to the doctor','Doctor not seen today','Not told about the diagnosis','Wants a second opinion']],
+ ['Treatment progress','Treating psychiatrist','Treatment progress',['Medicine side effects','Not feeling better','Wants to know when they go home','Unhappy with the treatment plan']],
+ ['Therapist continuity','Psychology team lead','Therapist continuity',['Therapy sessions missed','Therapist changed','Wants more sessions']],
+ ['Family updates','Psychology team lead','Family updates',['Wants to call family','Wants a visit','Family not getting updates','Does not want a certain visitor']],
+ ['Nursing care','Nursing in-charge','Nursing care',['Ignored when asked for help','Medicine given late','Cannot sleep','Spoke rudely']],
+ ['Food and dietary','Kitchen supervisor','Food and dietary',['Food served cold','Not the diet I asked for','Not enough, still hungry','Meal times','Taste or quality','Drinking water']],
+ ['Room and housekeeping','Housekeeping supervisor','Room and housekeeping',['Not clean','Bathroom','Too noisy at night','Too hot or cold, AC','Bed or bedding','Light, fan or TV not working','Disturbed by roommate']],
+ ['Attendants and security','Floor supervisor','Attendants and security',['Attendant spoke rudely','Argument with another patient','Wants a room change','Felt threatened by another patient'],['Felt threatened by another patient']],
+ ['Belongings','Front desk','Belongings',['Item missing','Laundry not returned','Needs things from home','Wants phone or money back']],
+ ['Billing and insurance','Billing desk','Billing and insurance',['Billing question','Charges not explained','Insurance or TPA']],
+ ['Medicines at discharge','Pharmacy desk','Medicines at discharge',['Medicines not ready','Prescription not clear']],
+ ['Rights','Kanika and Chandraji','Rights',['Wants to leave now','Does not know why they are here','Wants to make a formal complaint','Wants to see own records']],
+ ['Safety','Chandraji and treating doctor','Safety',['Rough handling or force','Felt unsafe with a staff member','Felt threatened by another patient','Talks of self-harm'],['Rough handling or force','Felt unsafe with a staff member','Felt threatened by another patient','Talks of self-harm']],
+ ['Other','You','Other',['Nothing to do, bored','Wants outdoor time','Wants yoga, gym or games','Something else']]
+];
+const AB_OLD=[
  ['Food','Kitchen supervisor','Food and dietary',['Food served cold','Not the diet I asked for','Not enough, still hungry','Meal times','Taste or quality','Drinking water']],
  ['Room','Housekeeping supervisor','Room and housekeeping',['Not clean','Bathroom','Too noisy at night','Too hot or cold, AC','Bed or bedding','Light, fan or TV not working']],
  ['Sleep','Nursing in-charge','Other',['Cannot sleep','Disturbed by roommate','Lights on at night','Woken too early']],
@@ -380,7 +396,7 @@ document.addEventListener('change',e=>{ const t=e.target;
     if(L.AB){AB.length=0;L.AB.forEach(g=>AB.push(g));ABOUT.length=0;AB.forEach(x=>ABOUT.push([x[0],x[1]]));}
     SAFE.length=0;(RG[0]?RG[0][1]:[]).forEach(x=>SAFE.push(x));
     TODAY.length=0;[...RG,...CG].forEach(g=>g[1].forEach(x=>TODAY.push(x)));}
-  try{const L=JSON.parse(localStorage.getItem(LKEY)||'null');if(L&&L.RG&&L.CG&&L.AB)applyLists(L);}catch(e){}
+  try{const L=JSON.parse(localStorage.getItem(LKEY)||'null');if(L&&L.RG&&L.CG&&L.AB){if(!L.AB.some(x=>x[0]==='Safety'))delete L.AB;applyLists(L);}}catch(e){}
   /* today's rotation: one section a day, six days */
   try{window.DAY_ROT=Math.floor(Date.now()/86400000)%6;}catch(e){}
   load();

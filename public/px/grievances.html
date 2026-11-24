@@ -172,7 +172,7 @@ function detail(c){
   const opts=['General'].concat(c.iss.map((x,k)=>'Issue '+String.fromCharCode(65+k)));
   const head='<div class="card hd"><h2>'+esc(c.name)+(c.ser?' <span class="pill red">⚠ Serious'+(c.category?': '+esc(String(c.category).toLowerCase()):'')+'</span>':'')+'</h2>'
     +'<div class="meta">'+[esc(c.id),c.room?'Room '+esc(String(c.room).replace(/^Room\s*/,'')):'',c.raisedBy?'From '+esc(c.raisedBy):'',c.escalated?'Raised to Chandra ji':'',c.logged?'Logged '+esc(c.logged)+(c.via?' · '+esc(c.via):''):''].filter(Boolean).join(' · ')+'</div>'
-    +'<div class="acts"><button class="btn ic" data-a="remind" title="Remind '+esc(c.owner||'the owner')+'" aria-label="Remind the owner">🔔</button><button class="btn ic" data-a="esc" title="Raise to Chandra ji" aria-label="Raise to Chandra ji" style="color:var(--red)">↑</button><button class="btn" data-a="print">Report</button><button class="btn pri" data-a="call">Call family</button></div>'
+    +'<div class="acts"><button class="btn" data-a="remind" title="Send a reminder to '+esc(c.owner||'the owner')+' to finish this">🔔 Remind owner</button><button class="btn" data-a="esc" title="Raise it to Chandra ji (GM Operations)" style="color:var(--red)">↑ Raise to Chandra ji</button><button class="btn" data-a="print">Report</button><button class="btn pri" data-a="call">Call family</button></div>'
     +'<div class="stages" role="group" aria-label="Stage">'+STAGES.map((s,i)=>'<button class="stp'+(i<c.st?' done':'')+(i===c.st?' cur'+(c.ser?' ser':''):'')+'" data-stg="'+i+'"><i></i>'+s+'</button>').join('')+'</div>'
     +(c.reminded?'<div class="meta" style="margin:8px 0 0">Reminded '+c.reminded+' time'+(c.reminded>1?'s':'')+', last '+esc(c.remindedAt||'')+'</div>':'')
     +(c.ser&&c.st<4?'<div class="warn">Serious: Chandra ji and the medical director are told on logging. Update the family within 24 h.</div>':'')+'</div>';
@@ -247,7 +247,9 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
   if(d.quick){V.note=d.quick+(V.note?': '+V.note:'');draw();const e=document.getElementById('gNote');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length);}return;}
   if(d.unstaff!==undefined){const s=(c.staff||[]).slice();s.splice(+d.unstaff,1);patch(c.id,{staff:s});return;}
 });
-/* the app may hand over which grievance to open */
+/* the app may hand over which grievance to open (Reports sets px_gopen before switching here) */
+function gOpen(id){V.sel=id;const c=all().find(x=>x.id===id);V.f=c?(c.st>=4?'closed':c.st>=2?'confirm':'open'):'open';}
+try{const g=localStorage.getItem('px_gopen');if(g){localStorage.removeItem('px_gopen');gOpen(g);}}catch(e){}
 window.addEventListener('message',e=>{const d=e&&e.data;if(d&&d.gOpen){V.sel=d.gOpen;V.f='open';const c=all().find(x=>x.id===d.gOpen);if(c)V.f=c.st>=4?'closed':c.st>=2?'confirm':'open';draw();}});
 /* new grievances from other computers arrive in the app every 20 s: redraw, unless something is being typed */
 setInterval(()=>{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;draw();},5000);

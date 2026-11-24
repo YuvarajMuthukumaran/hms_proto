@@ -75,7 +75,7 @@ main{padding:14px 16px 48px;display:flex;flex-direction:column;gap:14px}
 .row.tot .n{font-weight:700}
 
 /* Bottom two columns */
-.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}.two>.card{margin:0}.two .row{grid-template-columns:150px minmax(0,1fr) 96px;gap:12px}.sub-att .go{cursor:pointer}.sub-att .go:hover{background:#EEF4FD}.sub-att .go:hover span:first-child{color:#1e6cdb;text-decoration:underline}
 .li{display:flex;justify-content:space-between;gap:12px;padding:11px 18px;border-top:1px solid var(--track);font-size:14px}
 .li:first-child{border-top:0}
 .li span:last-child{color:var(--ink2);white-space:nowrap}
@@ -169,10 +169,11 @@ if(window.PX_REAL){
   KEYS.forEach(k=>{PREV[k]=[null,null];});
   const nm=h=>esc(h.name||'Patient')+(h.room?' · Room '+esc(String(h.room).replace(/^Room\s*/,'')):'');
   const open=con.filter(c=>!/Resolved|Closed/i.test(c.status||''));
-  ATT[0].items=open.filter(c=>c.at&&now-c.at>6*36e5).map(c=>[esc(c.id+' · '+(c.pname||'')),esc((c.owner||'owner')+' · '+Math.round((now-c.at-6*36e5)/36e5)+' h over')]);
-  ATT[1].items=open.filter(c=>/safety|rights|serious/i.test((c.category||'')+' '+(c.severity||''))).map(c=>[esc(c.id+' · '+(c.pname||'')),esc(c.owner||'')]);
-  ATT[2].items=pts.filter(h=>{const a=admT(h);return !isNaN(a)&&now-a>=7*D&&!called(h.id,now-7*D,now+1);}).map(h=>[nm(h),'no call in 7 days']);
-  ATT[3].items=pts.filter(h=>{const a=admT(h);return !isNaN(a)&&now-a<2*D&&!steps[h.id+0];}).map(h=>[nm(h),'admitted '+Math.max(1,Math.round((now-admT(h))/36e5))+' h ago']);
+  const pn=c=>{const h=pts.find(x=>x.id===c.pid);return c.id+' · '+((h&&h.name)||c.pname||'Patient')+((h&&h.room)?' · Room '+String(h.room).replace(/^Room\s*/,''):'');};
+  ATT[0].items=open.filter(c=>c.at&&now-c.at>6*36e5).map(c=>[esc(pn(c)),esc((c.owner||'owner')+' · '+Math.round((now-c.at-6*36e5)/36e5)+' h over'),'g:'+c.id]);
+  ATT[1].items=open.filter(c=>/safety|rights|serious/i.test((c.category||'')+' '+(c.severity||''))).map(c=>[esc(pn(c)),esc(c.owner||''),'g:'+c.id]);
+  ATT[2].items=pts.filter(h=>{const a=admT(h);return !isNaN(a)&&now-a>=7*D&&!called(h.id,now-7*D,now+1);}).map(h=>[nm(h),'no call in 7 days','p:'+(h.name||'')]);
+  ATT[3].items=pts.filter(h=>{const a=admT(h);return !isNaN(a)&&now-a<2*D&&!steps[h.id+0];}).map(h=>[nm(h),'admitted '+Math.max(1,Math.round((now-admT(h))/36e5))+' h ago','p:'+(h.name||'')]);
   RAISE.length=0; ROOT.length=0; COMPL.length=0;
 }
 
@@ -242,7 +243,7 @@ function render(){
       '<span class="c"><span class="k" style="color:'+countColor+'">'+n+'</span>'+CH+'</span>'+
     '</button>'+
     '<div class="sub-att" id="sub'+i+'">'+
-      (n?a.items.map(x=>'<div><span>'+x[0]+'</span><span>'+x[1]+'</span></div>').join(''):'<div><span style="color:var(--mute)">None</span><span></span></div>')+
+      (n?a.items.map(x=>'<div'+(x[2]?' class="go" role="button" tabindex="0" data-go="'+esc(x[2])+'" title="'+(x[2][0]==='g'?'Open this grievance':'Open the patient')+'"':'')+'><span>'+x[0]+'</span><span>'+x[1]+(x[2]?' ›':'')+'</span></div>').join(''):'<div><span style="color:var(--mute)">None</span><span></span></div>')+
     '</div>';
   }).join('');
 
@@ -261,7 +262,7 @@ function render(){
 
   const totA=tot(k), totPct=pc(totA[0],totA[1]);
   const teamTotal='<div class="row tot"><span class="n">Team</span>'+bar(totA,t)+'<span class="v"><small>'+totA[0]+' of '+totA[1]+'</small>'+totPct+'%</span></div>';
-  const teamLegend='<div class="row" style="padding-top:8px;padding-bottom:12px"><span></span><span style="font-size:12.5px;color:var(--mute)">The line is the '+t+'% target. Orange is below it.</span><span></span></div>';
+  const teamLegend='<div style="padding:8px 18px 12px;font-size:12.5px;color:var(--mute)">The line is the '+t+'% target. Orange is below it.</div>';
 
   /* What families keep raising */
   const raiseRows=RAISE.map(r=>{
@@ -292,6 +293,7 @@ function render(){
 
   '<div class="kpis">'+kpis+'</div>'+
 
+  '<div class="two">'+
   '<div class="card">'+
     '<div class="ch"><h3>Needs attention now</h3><small>Click to see the list</small></div>'+
     '<div id="att">'+attRows+'</div>'+
@@ -300,6 +302,7 @@ function render(){
   '<div class="card">'+
     '<div class="ch"><h3>Team</h3><div class="tabs" role="radiogroup" aria-label="Measure">'+tabBtns+'</div></div>'+
     '<div id="team">'+teamRows+teamTotal+teamLegend+'</div>'+
+  '</div>'+
   '</div>'+
 
   '<div class="two">'+
@@ -316,6 +319,11 @@ function render(){
 
 /* ── events ── */
 document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]');
+  if(g){const v=g.dataset.go,id=v.slice(2);
+    if(v[0]==='g'){try{localStorage.setItem('px_gopen',id);}catch(x){}try{if(window.parent!==window){window.parent.postMessage({pxNav:'grievances'},'*');return;}}catch(x){}location.href='grievances.html';}
+    else{try{if(window.parent!==window){window.parent.postMessage({pxNav:'patients',pxOpen:id},'*');return;}}catch(x){}try{localStorage.setItem('pxopen',id);}catch(x){}location.href='patients.html';}
+    return;}
   const t=e.target.closest('[data-seg],[data-att],[data-mtab],[data-dl]');
   if(!t) {
     /* KPI card expand/collapse */
