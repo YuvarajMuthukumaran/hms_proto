@@ -22,7 +22,7 @@
       ['Spouse','Shown by the marital status',[['sp','Name of the spouse','',6],['spAge','Age, if alive','',2],['spDem','Age at time of demise','',2],['spOcc','Occupation','',4],['spLive','Living together or separate','live',12],['spAddr','Address of the spouse','area',12]]],
       ['Children','',[['kids','Number of children','kidsN',12],['#k','Children','']]],
       /* Trello 226: the guardian is asked with the spouse and children; picking Spouse, Son or Daughter fills that person in */
-      ['Nominated Representative','The person applying for the patient. Use "Make as guardian" on the spouse or a child, or fill in',[['gRel','Relationship to the patient','rel',12],['gTitle','Title','title',3],['gFirst','First name','',3],['gMiddle','Middle name','',3],['gSur','Surname','',3],['gAddr','Address','area',8],['gPh','Phone numbers','',4],['gCaddr','Correspondence address','area',12,'gAddr']]]
+      ['Nominated Representative','The person applying for the patient. Tick "Nominated Representative?" on the spouse or a child, or fill in',[['gRel','Relationship to the patient','rel',12],['gTitle','Title','title',3],['gFirst','First name','',3],['gMiddle','Middle name','',3],['gSur','Surname','',3],['gAddr','Address','area',8],['gPh','Phone numbers','',4],['gCaddr','Correspondence address','area',12,'gAddr']]]
     ]],
     ['Psychiatric data',[
       ['Psychiatric data','For office use. Filled by the treating psychiatrist',[['dur','Duration of illness','',4],['doc','Examined by (Dr)','',4],['exDate','Examined on','date',2],['exTime','Time','time',2],['sym','Current symptoms','area',12],['dx','Diagnosis','area',6],['rem','Remarks','area',6]]]
@@ -45,7 +45,7 @@
   .apf-add{all:unset;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--apf-b);padding:6px 0}
   .apf-add:focus-visible{outline:2px solid var(--apf-b);border-radius:3px}
   .apf-mg{all:unset;cursor:pointer;font-size:12px;font-weight:600;color:#344054;border:1px solid #d0d5dd;border-radius:99px;padding:3px 12px;background:#fff}
-  .apf-mg[aria-pressed=true]{background:#ecfdf3;border-color:#12b76a;color:#067647}
+  .apf-mg{display:inline-flex;align-items:center;gap:7px}.apf-mg .bx{width:14px;height:14px;border:1.5px solid #98a2b3;border-radius:4px;display:grid;place-items:center;font-size:10px;line-height:1;box-sizing:border-box}.apf-mg[aria-pressed=true]{background:#ecfdf3;border-color:#12b76a;color:#067647}.apf-mg[aria-pressed=true] .bx{background:#079455;border-color:#079455;color:#fff}
   .apf-mg:focus-visible{outline:2px solid var(--apf-b);outline-offset:1px}
   .apf-kh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 10px}
   .apf-kh h5{margin:0!important}
@@ -133,14 +133,16 @@
     if(m==='Separated'||m==='Divorced')return k==='spLive';
     if(m==='Widowed')return k==='spAddr'||k==='spLive'||k==='spAge';
     return false;};
-  const hid=f=>spHide(f[0],cur.v);
-  const mg=who=>{const nm=String(cur.v[who]||'').trim();if(!nm)return '';const on=cur.v.gFrom===who;return '<button type="button" class="apf-mg" aria-pressed="'+on+'" onclick="apfMg(\''+who+'\')">'+(on?'✓ Guardian':'Make as guardian')+'</button>';};
+  /* 24 Nov (owner): when the spouse or a child is ticked as the nominated representative, that section is not asked */
+  const NRF=/^(gRel|gTitle|gFirst|gMiddle|gSur|gAddr|gPh|gCaddr)$/;
+  const hid=f=>spHide(f[0],cur.v)||(!!cur.v.gFrom&&NRF.test(f[0]));
+  const mg=who=>{const nm=String(cur.v[who]||'').trim();if(!nm)return '';const on=cur.v.gFrom===who;return '<button type="button" class="apf-mg" aria-pressed="'+on+'" onclick="apfMg(\''+who+'\')">'+'<span class="bx" aria-hidden="true">'+(on?'✓':'')+'</span>Nominated Representative?</button>';};
   const filled=pg=>{const fs=fieldsOf(pg).filter(f=>!hid(f));return [fs.filter(f=>String(cur.v[f[0]]||'').trim()).length,fs.length];};
   function show(){V3.modal(NAME,'Fill what you know. The rest can be added later.','<div id="apfBox" class="apf"></div>','');const m=document.getElementById('modal');if(m)m.classList.add('apf-m');draw2();}
   function draw2(){
     const pg=PAGES[cur.page],last=cur.page===PAGES.length-1;
     const steps='<nav class="apf-steps" aria-label="Form pages">'+PAGES.map((p,i)=>{const c=filled(p);return '<button type="button" class="apf-step'+(i===cur.page?' on':'')+(c[0]===c[1]?' full':'')+'" '+(i===cur.page?'aria-current="step" ':'')+'onclick="apfGo('+i+')"><span class="n">'+(i+1)+'</span><span><b>'+E(p[0])+'</b><small>'+c[0]+' of '+c[1]+' filled</small></span></button>';}).join('')+'</nav>';
-    const secs='<div class="apf-body">'+pg[1].map(s=>'<section class="apf-sec'+(s[0]==='Psychiatric data'?' office':'')+'"><div><h4>'+E(s[0])+'</h4>'+(s[1]?'<p>'+E(s[1])+'</p>':'')+'</div><div class="apf-grid">'+(s[0]==='Spouse'&&!s[2].some(f=>!hid(f))?'<p style="grid-column:span 12;margin:0;font-size:12.5px;color:#667085">'+(cur.v.marital==='Single'?'Not asked: single.':'Pick the marital status above.')+'</p>':'')+s[2].filter(f=>!hid(f)).map(f=>input(f,cur.v)).join('')+'</div></section>').join('')+'</div>';
+    const secs='<div class="apf-body">'+pg[1].filter(s=>!(s[0]==='Nominated Representative'&&!s[2].some(f=>!hid(f)))).map(s=>'<section class="apf-sec'+(s[0]==='Psychiatric data'?' office':'')+'"><div><h4>'+E(s[0])+'</h4>'+(s[1]?'<p>'+E(s[1])+'</p>':'')+'</div><div class="apf-grid">'+(s[0]==='Spouse'&&!s[2].some(f=>!hid(f))?'<p style="grid-column:span 12;margin:0;font-size:12.5px;color:#667085">'+(cur.v.marital==='Single'?'Not asked: single.':'Pick the marital status above.')+'</p>':'')+s[2].filter(f=>!hid(f)).map(f=>input(f,cur.v)).join('')+'</div></section>').join('')+'</div>';
     const foot='<div class="apf-foot"><span class="sp">Pages 4 to 11 (declaration and signatures) are on the <a href="'+PDF+'" target="_blank" rel="noopener">paper form</a>.</span>'
       +(cur.page>0?'<button class="btn" onclick="apfGo('+(cur.page-1)+')">Back</button>':'<button class="btn" onclick="closeModal()">Cancel</button>')
       +(last?'<button class="btn pri" onclick="apfSave()">Save form</button>':'<button class="btn" onclick="apfSave(1)">Save</button><button class="btn pri" onclick="apfGo('+(cur.page+1)+')">Next: '+E(PAGES[cur.page+1][0])+'</button>')+'</div>';
@@ -177,7 +179,7 @@
     v.gFrom=who;v.gRel=who==='sp'?'Spouse':(v[who+'r']==='Other'?'Other relative':(v[who+'r']||'Son'));
     gFill(v.gRel);toast('Nominated representative: '+(v[who]||''));draw2();};
   window.apfSave=function(stay){
-    grab();
+    grab();if(cur.v.gFrom&&cur.v.gRel)try{gFill(cur.v.gRel);}catch(e){}
     const rec={v:Object.assign({},cur.v),by:signer(),at:atNow(),ts:Date.now(),role:String((window.__TULASI__||{}).role||'')};
     if(cur.pid){const x=px(cur.pid);x.appForm=rec;try{V3.log(cur.pid,S.role,'form',NAME+' saved');}catch(e){}}
     else window.__appDraft=rec;
