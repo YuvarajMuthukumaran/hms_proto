@@ -16,7 +16,7 @@
   Object.keys(DROP).forEach(fid=>{const m=CDF_FORMS[fid];if(!m||!m.pages)return;const d=DROP[fid];
     m.pages.forEach(pg=>{if(pg.fields)pg.fields=pg.fields.filter(f=>!(f.kind==='choice'&&d.includes(f.id)));});});
   const st=document.createElement('style');
-  st.textContent='.cdf-page .cdf-f.cdf-opt:not(.cdf-ro){background:transparent!important;box-shadow:none!important;border:1px dashed rgba(46,144,250,.45)!important}'
-    +'.cdf-page .cdf-f.cdf-opt.on{border:1.5px solid #1e6cdb!important}';
+  st.textContent='.cdf-page .cdf-f.cdf-opt:not(.cdf-ro){box-shadow:none!important;border:1.5px solid #2e90fa!important;background:#d9eaff!important}'
+    +'.cdf-page .cdf-f.cdf-opt.on{background:#2e90fa!important;color:#fff!important}';
   document.head.appendChild(st);
 })();
