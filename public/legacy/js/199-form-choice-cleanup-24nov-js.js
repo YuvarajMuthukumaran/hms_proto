@@ -43,7 +43,7 @@
       document.querySelectorAll('.cdf-page [oninput*="cdfSet(\'' +id+'\'"],.cdf-page [onchange*="cdfSet(\'' +id+'\'"]').forEach(e=>{e.style.visibility=on?'':'hidden';});});}
   try{const __c=cdfCheck;cdfCheck=function(){const r=__c.apply(this,arguments);try{gate();}catch(e){}return r;};}catch(e){}
   const st=document.createElement('style');
-  st.textContent='.cdf-page .cdf-f.cdf-opt:not(.cdf-ro){box-shadow:none!important;border:1px solid rgba(46,144,250,.85)!important;background:rgba(46,144,250,.10)!important}'
+  st.textContent='.cdf-page .cdf-f.cdf-opt:not(.cdf-ro){box-shadow:none!important;border:1px solid rgba(46,144,250,.6)!important;background:rgba(46,144,250,.035)!important}'
     +'.cdf-page .cdf-f.cdf-opt.on{background:#2e90fa!important;color:#fff!important}';
   /* 24 Nov (owner): text inside a blank was cut off (bold font taller than the blank). Every one-line blank gets a
      font that fits its own height, centred, dark and bold, so what is typed or filled in is always readable. */
