@@ -194,7 +194,7 @@
       scribeBar() + cards(D) + '<div class="rv-fl">' + [['to', 'To see'], ['seen', 'Seen'], ['flag', 'Flagged'], ['all', 'Everyone on this round']].map(function (f) { return '<button class="rv-ch ' + (state.v === f[0] ? 'on' : '') + '" onclick="RV2.filter(\'' + f[0] + '\')">' + f[1] + '</button>'; }).join('') + '<input type="text" placeholder="Search name or room" oninput="RV2.q(this.value)" value="' + esc(state.q || '') + '" style="border:1px solid #D6DEE8;border-radius:99px;padding:5px 12px;font:inherit;margin-left:auto"></div>' +
       '<div class="rv-main"><div class="rv-list" id="rvList">' + rows(D) + '</div>' + panel(D) + '</div></main></div></div>';
   }
-  function draw() { var root = $('root'); if (!root) return; var keep = ($('rvW') || {}).value; root.innerHTML = view(); if ($('rvW') && keep != null) $('rvW').value = keep; }
+  function draw() { if (window.RV3) return window.RV3.draw(true); var root = $('root'); if (!root) return; var keep = ($('rvW') || {}).value; root.innerHTML = view(); if ($('rvW') && keep != null) $('rvW').value = keep; }
   /* 19 Nov: one AI scribe for the whole round. Start it once; it records continuously, and each time you open another patient (or save) the part for the
      previous patient is sent to the scribe and comes back as a draft on THAT patient. Nothing is filled in until "Use this". */
   var SR = { on: false, stream: null, mr: null, msg: '', busy: 0 };
@@ -271,6 +271,9 @@
     if (!navigator.mediaDevices || !window.MediaRecorder) { SR.msg = 'This device cannot record.'; draw(); return; }
     navigator.mediaDevices.getUserMedia({ audio: true }).then(function (s) { SR.stream = s; SR.on = true; SR.msg = 'Recording the round. Open a patient to start their part.'; srSeg(); draw(); }).catch(function () { SR.msg = 'Allow the microphone to record.'; draw(); });
   };
+
+  /* 24 Nov: the redesigned round screen (rounds-v3.js) uses these */
+  RV2._ = { state: state, cfg: cfg, mineOf: mineOf, onRound: onRound, split: split, slotOf: slotOf, day: day, ST: ST, nextId: nextId, jget: jget, jset: jset, toast: toast, me: me, P: P, passed: passed, why: why, curRound: curRound, SR: SR, KEY: KEY, RV: RV, CFG: CFG };
 
   /* ---------- Setting: times, allocation, backup person, VVIP ---------- */
   function settings() {
