@@ -25,6 +25,8 @@
     fses:P+'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>',
     due:P+'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
     lock:P+'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'};
+  /* admission day from the ward list (p.day = day of stay) */
+  const admOf=pid=>{const p=(typeof ptFind==='function'&&ptFind(pid))||null,n=p&&+p.day;if(!p||isNaN(n)||p.day===''||p.day==null)return null;const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-n);return d;};
   const kOf=d=>d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();
   function dayOf(r){
     if(r&&r.ts)return new Date(r.ts);
@@ -57,7 +59,7 @@
     const x=psyPx(pid)||{},rows=((x.sn||{}).grp||[]).concat(((x.th||{}).grp)||[]),names=[],by={},tot={};
     rows.forEach(r=>{const nm=r.group||'Group';if(names.indexOf(nm)<0)names.push(nm);const d=dayOf(r);if(!d)return;
       const t=String(r.took||''),v=/refus|not attend/i.test(t)?0:/part|left/i.test(t)?.5:1;const k=kOf(d);(by[k]=by[k]||[]).push({i:names.indexOf(nm),v,r});
-      tot[nm]=tot[nm]||[0,0];tot[nm][1]++;if(v)tot[nm][0]++;});
+      tot[nm]=tot[nm]||[0,0];tot[nm][1]++;if(v===1)tot[nm][0]++;   /* left early does not count (Nikita doc) */});
     return {names,by,tot};
   }
   function fam(pid){
@@ -80,6 +82,7 @@
     const t=day(),first=new Date(cm.y,cm.m,1),n=new Date(cm.y,cm.m+1,0).getDate(),lead=(first.getDay()+6)%7,sel=ST['s'+pid];
     let h=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="tp4-dow">${d}</div>`).join('')+'<div class="tp4-blank"></div>'.repeat(lead);
     for(let i=1;i<=n;i++){const d=new Date(cm.y,cm.m,i),k=kOf(d);
+      const pre=admOf(pid)&&d<admOf(pid);if(pre){h+=`<div class="tp4-day pre" style="--i:${i}" title="Before admission"><span class="n">${i}</span></div>`;continue;}
       const c=cell(d,k);h+=`<button type="button" style="--i:${i}" class="tp4-day${c?' has':''}${d.getDay()%6===0?' we':''}${d>t?' fut':''}${+d===+t?' today':''}${sel===k?' sel':''}" onclick="tp4Day('${Q(pid)}','${k}')" aria-label="${fmtD(d)}"><span class="n">${i}${+d===+t?'<em>Today</em>':''}</span>${c}</button>`;}
     return `<div class="tp4-nav"><button type="button" class="btn sm" onclick="tp4Mon('${Q(pid)}',-1)" aria-label="Previous month">‹</button><b>${MN[cm.m]} ${cm.y}</b><button type="button" class="btn sm" onclick="tp4Mon('${Q(pid)}',1)" aria-label="Next month">›</button></div><div class="tp4-cal">${h}</div>`;
   }
@@ -93,18 +96,21 @@
     const D=ind(pid),x=psyPx(pid)||{},th=x.th||{},S0=selDay(pid);
     if(!D.goals.length&&!D.notes.length)return due(pid)+`<div class="tp4-card tp4-empty">${IC.ses}<h4>No therapy plan yet</h4><p>${PSY?'Write the first session note to start the plan and goals.':"The psychologist's plan, goals and session notes show here once they start."}</p>${PSY&&typeof window.snOpen==='function'?`<button class="btn sm pri" style="margin-top:10px" onclick="snOpen('${Q(pid)}','ind')">New session note</button>`:''}</div>`;
     /* a goal not met on 3 or more of the last 5 days it was logged */
-    const warn=D.goals.map((g,i)=>{const L=Object.keys(D.by).map(k=>({k,v:D.by[k].g[i]})).filter(o=>o.v).sort((a,b)=>{const p=s=>s.split('-').map(Number);const A=p(a.k),B=p(b.k);return new Date(B[0],B[1],B[2])-new Date(A[0],A[1],A[2]);}).slice(0,5);const no=L.filter(o=>o.v.r===0).length;return no>=3?`"${E(g.t)}" not met ${no} of the last ${L.length} days`:'';}).filter(Boolean);
+    const warn=D.goals.map((g,i)=>{const L=Object.keys(D.by).map(k=>({k,v:D.by[k].g[i]})).filter(o=>o.v).sort((a,b)=>{const p=s=>s.split('-').map(Number);const A=p(a.k),B=p(b.k);return new Date(B[0],B[1],B[2])-new Date(A[0],A[1],A[2]);}).slice(0,4);const no=L.filter(o=>o.v.r===0).length;return no>=2?`"${E(g.t)}" not met at ${no} of the last ${L.length} sessions. Review the goal.`:'';}).filter(Boolean);
     const cell=(d,k)=>{const o=D.by[k];if(!o)return '';
       return o.ses.map(n=>tag(n.status==='signed'?'#334155':'#b45309','ses',n.mod||'Session')).join('')+(Object.keys(o.g).length?`<span class="tp4-ms">${Object.keys(o.g).map(i=>mk(GC[i%GC.length],o.g[i].r)).join('')}</span>`:'');};
     const legend=D.goals.map((g,i)=>`<span>${mk(GC[i%GC.length],1)}${E(g.t)}</span>`).join('')+`<span>${mk('#64748b',.5)}part</span><span>${mk('#64748b',0)}not met</span>`;
     const signed=D.notes.filter(n=>n.status==='signed'),last=D.notes[0]||{};
     const o=D.by[S0.k]||{ses:[],g:{}};
-    const body=(o.ses.length?o.ses.map(n=>{const risk=Object.values(n.risk||{}).some(v=>v==='yes');return `<div class="tp4-li${n.id&&typeof window.snView==='function'?` tp4-click" role="button" tabindex="0" title="Open the full note" onclick="snView('${Q(n.id)}')"`:'"'}><span class="tp4-ic">${IC.ses}</span><span style="flex:1"><b>${E(n.mod||'Session')}</b><div class="tp4-sub">${E([n.by,n.mins?n.mins+' min':''].filter(Boolean).join(' · '))}</div></span><span class="tp4-chip ${risk?'amb':'grn'}">${risk?'Risk raised':'No risk'}</span></div><div class="tp4-txt">${E(n.summaryLine||n.summary||'')}</div>${n.status==='signed'?`<div class="tp4-lock">${IC.lock} Signed and locked. Read only.${n.id?` <button type="button" class="tp4-lk" onclick="tp4PrintNote('${Q(n.id)}')">Print note</button>`:''}</div>`:'<div class="tp4-lock">Draft, not signed yet.</div>'}`;}).join(''):'<div class="tp4-sub">No session this day.</div>')
+    const body=(o.ses.length?o.ses.map(n=>{const lvl=(n.risk||{}).level||'',risk=Object.values(n.risk||{}).some(v=>v==='yes');return `<div class="tp4-li${n.id&&typeof window.snView==='function'?` tp4-click" role="button" tabindex="0" title="Open the full note" onclick="snView('${Q(n.id)}')"`:'"'}><span class="tp4-ic">${IC.ses}</span><span style="flex:1"><b>${E(n.mod||'Session')}</b><div class="tp4-sub">${E([n.by,n.mins?n.mins+' min':''].filter(Boolean).join(' · '))}</div></span><span class="tp4-chip ${risk?'amb':'grn'}">${lvl?E(lvl)+(lvl==='No risk'?'':' risk'):risk?'Risk raised':'No risk'}</span></div><div class="tp4-txt">${E(n.summaryLine||n.summary||'')}</div>${n.status==='signed'?`<div class="tp4-lock">${IC.lock} Signed and locked. Read only.${n.id?` <button type="button" class="tp4-lk" onclick="tp4PrintNote('${Q(n.id)}')">Print note</button>`:''}</div>`:'<div class="tp4-lock">Draft, not signed yet.</div>'}`;}).join(''):'<div class="tp4-sub">No session this day.</div>')
       +(Object.keys(o.g).length?`<div class="tp4-l" style="margin:12px 0 4px">Goals</div>`+Object.keys(o.g).map(i=>{const v=o.g[i];return `<div class="tp4-li${gClick(pid,i)}><span style="display:flex;gap:7px;align-items:center">${mk(GC[i%GC.length],v.r)}${E((D.goals[i]||{}).t)}</span><span class="tp4-sub">${v.r===1?'Met':v.r===.5?'Part way':'Not met'} · ${E(v.raw)}</span></div>`;}).join(''):'');
     return (warn.length?`<div class="tp4-alert">${IC.goal}<span>${warn.join('<br>')}</span></div>`:'')+`<div class="tp4-grid">${card(IC.ses+' Sessions and goals',`<div class="tp4-legend">${legend}</div>`,calendar(pid,'ind',cell))}
       <div class="tp4-col">${card('Plan',`<span class="tp4-sub">${E(last.by||'')}</span>`,li('Therapy',E(th.mod||last.mod||'Not set'))+li('Frequency',E(th.freq||'Not set'))+li('Sessions',signed.length+' signed'+(D.notes.length>signed.length?' · '+(D.notes.length-signed.length)+' draft':''))+(D.goals.map((g,i)=>`<div class="tp4-li${gClick(pid,i)}><span style="display:flex;gap:7px;align-items:center">${mk(GC[i%GC.length],1)}${E(g.t)}</span><span class="tp4-sub">${PSY?'Edit':'History'}</span></div>`).join('')))}
       ${card(dayHead(S0.d),'',body)}</div></div>`;
   }
+  /* Tulasi's daily group roster (Nikita, 24 Nov) */
+  const GRS=[[/prayer/i,'10 am'],[/crt|cognitive|addiction/i,'10:30 to 11:30 am'],[/psychoeducation/i,'12 to 12:45 pm'],[/recreation|dance|art|music/i,'2 to 3 pm'],[/yoga/i,'4 to 5 pm']];
+  const gOrd=n=>{const i=GRS.findIndex(g=>g[0].test(n));return i<0?99:i;},gTime=n=>{const g=GRS.find(g=>g[0].test(n));return g?g[1]:'';};
   function vGrp(pid){
     const D=grp(pid),S0=selDay(pid);
     if(!D.names.length)return `<div class="tp4-card tp4-empty">${IC.grp}<h4>Not in any group yet</h4><p>${PSY?'Log attendance to add the patient to a group.':'The psychologist adds the patient to groups once the plan is set.'}</p>${PSY&&typeof window.tpAttend==='function'?`<button class="btn sm pri" style="margin-top:10px" onclick="tpAttend('${Q(pid)}')">Log attendance</button>`:''}</div>`;
@@ -113,16 +119,16 @@
     const L=D.by[S0.k]||[];
     const body=L.length?L.map(o=>`<div class="tp4-li"><span style="display:flex;gap:7px;align-items:center">${mk(GC[o.i%GC.length],o.v)}${E(D.names[o.i])}</span><span class="tp4-sub">${o.v===1?'Attended':o.v===.5?'Left early':'Did not attend'}${o.r.leader||o.r.by?' · '+E(o.r.leader||o.r.by):''}</span></div>${o.r.note?`<div class="tp4-txt">${E(o.r.note)}</div>`:''}`).join(''):'<div class="tp4-sub">No groups logged.</div>';
     return `<div class="tp4-grid">${card(IC.grp+' Group attendance',`<div class="tp4-legend">${legend}</div>`,calendar(pid,'grp',cell))}
-      <div class="tp4-col">${card('Groups','',D.names.map((n,i)=>`<div class="tp4-li tp4-click" role="button" tabindex="0" title="See attendance for this group" onclick="tp4Grp('${E(Q(pid))}','${E(Q(n))}')"><span style="display:flex;gap:7px;align-items:center">${mk(GC[i%GC.length],1)}<b>${E(n)}</b></span><b>${(D.tot[n]||[0,0])[0]}/${(D.tot[n]||[0,0])[1]}</b></div>`).join(''))}
+      <div class="tp4-col">${card('Groups','<span class="tp4-sub">Daily roster</span>',D.names.slice().sort((a,b)=>gOrd(a)-gOrd(b)).map(n=>[n,D.names.indexOf(n)]).map(([n,i])=>`<div class="tp4-li tp4-click" role="button" tabindex="0" title="See attendance for this group" onclick="tp4Grp('${E(Q(pid))}','${E(Q(n))}')"><span style="display:flex;gap:7px;align-items:center">${mk(GC[i%GC.length],1)}<b>${E(n)}</b>${gTime(n)?`<span class="tp4-sub">${gTime(n)}</span>`:''}</span><b>${(D.tot[n]||[0,0])[0]}/${(D.tot[n]||[0,0])[1]}</b></div>`).join(''))}
       ${card(dayHead(S0.d),'',body)}</div></div>`;
   }
   function vFam(pid){
     const D=fam(pid),S0=selDay(pid),t=day();
     const IK={call:'call',miss:'call',wa:'wa',ses:'fses'},LB={call:'Call',miss:'Not reached',wa:'WhatsApp',ses:'Session'};
-    const reached=D.all.filter(o=>o.t!=='miss'),wk=reached.filter(o=>t-o.d<=7*864e5);
+    const reached=D.all.filter(o=>o.t!=='miss'),wk=reached.filter(o=>o.t==='call'&&t-o.d<=7*864e5),waT=D.all.filter(o=>o.t==='wa'&&+new Date(o.d.getFullYear(),o.d.getMonth(),o.d.getDate())===+t);
     const c24=reached.find(o=>o.c24)||reached.slice().sort((a,b)=>a.d-b.d)[0],fs=reached.find(o=>o.t==='ses');
     const pxn=D.all.filter(o=>/\bPX\b|experience/i.test(o.s||'')).length;
-    const req=[[c24?'done':'due','24-hour family call',c24?'Done '+fmtD(c24.d):'Not logged yet',c24?kOf(c24.d):''],[wk.length?'done':'due','Weekly update',wk.length?'Last '+fmtD(wk.sort((a,b)=>b.d-a.d)[0].d):'Due this week',wk.length?kOf(wk[0].d):''],[fs?'done':'later','Family session',fs?'Done '+fmtD(fs.d):'Not held yet',fs?kOf(fs.d):''],['later','PX calls',pxn+' logged this stay','']];
+    const req=[[c24?'done':'due','24-hour family call',c24?'Done '+fmtD(c24.d):'Not logged yet',c24?kOf(c24.d):''],[wk.length?'done':'due','Weekly update (a call)',wk.length?'Last call '+fmtD(wk.sort((a,b)=>b.d-a.d)[0].d):'Due this week',wk.length?kOf(wk[0].d):''],[waT.length?'done':'due','WhatsApp update every day',waT.length?'Sent today (psychologist)':'Not sent today (psychologist)',waT.length?kOf(t):''],[fs?'done':'later','Family session',fs?'Done '+fmtD(fs.d):'Not held yet',fs?kOf(fs.d):''],['later','PX calls',pxn+' logged this stay','']];
     const cell=(d,k)=>{const L=D.by[k]||[];let h=L.map(o=>tag(FK[o.t],IK[o.t],LB[o.t])).join('');if(+d===+t&&!wk.length)h+=tag('#b45309','due','Update due',1);return h;};
     const legend=[['call','Call'],['wa','WhatsApp'],['ses','Session'],['miss','Not reached']].map(x=>`<span><span class="tp4-li-ic" style="color:${FK[x[0]]}">${IC[IK[x[0]]]}</span>${x[1]}</span>`).join('');
     const L=D.by[S0.k]||[];
@@ -147,7 +153,7 @@
   function tp4Bar(pid,seg){
     const b=(a,t)=>'<button type="button" class="btn sm" onclick="'+a+'">'+t+'</button>';
     let h='';
-    if(seg==='fam'){h+=b("tp4Print('"+Q(pid)+"','fam')",'Print contact log');if(PSY&&typeof window.snOpen==='function')h+=b("snOpen('"+Q(pid)+"','fam')",'Start family session');}
+    if(seg==='fam'){h+=b("tp4Print('"+Q(pid)+"','fam')",'Print contact log');if(typeof window.snOpen==='function')h+=b("snOpen('"+Q(pid)+"','fam')",'Start family session');}
     return h+b("tp4Print('"+Q(pid)+"','stay')",'Print stay record');
   }
   window.tp4Pick=function(pid,k){ST['s'+pid]=k;render();};
@@ -243,7 +249,7 @@
     '.tp4-cal{gap:6px}.tp4-dow{font-size:12.5px;color:#334155;text-transform:uppercase;letter-spacing:.04em;padding:4px 0 6px}',
     '.tp4-day{min-height:96px;padding:7px 8px;gap:5px;border-radius:10px}.tp4-day .n{font-size:14px;display:flex;justify-content:space-between;align-items:center}',
     '.tp4-day .n em{font-style:normal;font-size:10.5px;font-weight:700;color:#fff;background:#0f172a;border-radius:99px;padding:1px 7px}',
-    '.tp4-day.we:not(.has):not(.sel){background:#fafbfc}',
+    '.tp4-day.we:not(.has):not(.sel){background:#fafbfc}','.tp4-day.pre{background:#f1f3f6;border-color:#eef0f3;cursor:default}.tp4-day.pre .n{color:#c0c6d0}.tp4-day.pre:hover{transform:none;box-shadow:none}',
     '.tp4-cal .tp4-mk{width:13px;height:13px}.tp4-ms{gap:5px}.tp4-tag{font-size:11.5px;padding:2px 6px}.tp4-tag svg{width:11px;height:11px}',
     '.tp4-legend{font-size:12.5px}.tp4-legend .tp4-mk{width:11px;height:11px}.tp4-nav b{font-size:15px}.tp4-ch h3{font-size:15px}',
     '@media(max-width:960px){.tp4-grid{grid-template-columns:minmax(0,1fr)}}',

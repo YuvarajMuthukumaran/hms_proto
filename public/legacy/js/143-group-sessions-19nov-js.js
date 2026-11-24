@@ -7,7 +7,8 @@
   const ROLE=String((window.__TULASI__||{}).role||'');
   if(!/^(psychologist|floor-lead-psychologist)$/.test(ROLE))return;
   const E=s=>hesc(String(s==null?'':s));
-  const TYPES=['Anxiety and stress group','Relapse prevention group','Yoga and relaxation','Social skills group','Psychoeducation group','Occupational therapy','Art and music therapy','Family psychoeducation group','Other'];
+  const TYPES=['Prayer','Cognitive retraining (CRT)','Addiction session','Psychoeducation','Recreation','Dance and movement','Art therapy','Music therapy','Yoga','Other'];
+  const TIME={'Prayer':'10 am','Cognitive retraining (CRT)':'10:30 to 11:30 am','Addiction session':'10:30 to 11:30 am','Psychoeducation':'12 to 12:45 pm','Recreation':'2 to 3 pm','Dance and movement':'2 to 3 pm','Art therapy':'2 to 3 pm','Music therapy':'2 to 3 pm','Yoga':'4 to 5 pm'};
   const TOOK=[['Attended','Attended'],['Attended in part','Part of it'],['Refused','Refused'],['Did not attend','Did not attend']];
   const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   const G={type:TYPES[0],other:'',date:iso(new Date()),by:'',note:'',q:'',marks:{},lines:{}};
@@ -45,7 +46,7 @@
     return `<nav class="crumb"><a href="#/myday">Inpatients</a> / <strong>Group sessions</strong></nav>
       <div class="row" style="justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px"><div><h2 style="font-size:26px">Group sessions</h2><div class="muted" style="margin-top:4px">Pick the session, mark who attended. It shows in each patient's Therapy Plans under Group.</div></div></div>
       <section class="card" style="margin-top:14px"><div class="hd"><h3>Session</h3></div><div class="pad grid2">
-        <label class="field"><span class="lbl">Session type</span><select class="input" onchange="gsSet('type',this.value)">${TYPES.map(t=>`<option ${G.type===t?'selected':''}>${t}</option>`).join('')}</select></label>
+        <label class="field"><span class="lbl">Session type</span><select class="input" onchange="gsSet('type',this.value)">${TYPES.map(t=>`<option value="${t}" ${G.type===t?'selected':''}>${t}${TIME[t]?' · '+TIME[t]:''}</option>`).join('')}</select></label>
         ${G.type==='Other'?`<label class="field"><span class="lbl">Name of the session</span><input class="input" value="${E(G.other)}" oninput="gsSet('other',this.value,1)"></label>`:''}
         <label class="field"><span class="lbl">Date</span><input class="input" type="date" max="${iso(new Date())}" value="${E(G.date)}" onchange="gsSet('date',this.value)"></label>
         <label class="field"><span class="lbl">Led by</span><input class="input" value="${E(G.by)}" oninput="gsSet('by',this.value,1)"></label>

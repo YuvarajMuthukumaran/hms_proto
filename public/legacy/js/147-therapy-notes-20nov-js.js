@@ -29,7 +29,7 @@
   const nowTime=()=>new Date().toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}).toLowerCase();
   const MOODS=()=>{try{if(typeof PSY_F!=='undefined'&&PSY_F.mood&&PSY_F.mood.o)return PSY_F.mood.o.map(o=>o[0]);}catch(e){}return ['Calmer','Anxious','Irritable','Low','Elated'];};
   const AIMS=['Symptom relief','Insight into the illness','Coping skills','Emotional regulation','Motivation for treatment','Relapse prevention','Exposure for OCD','Rapport building'];
-  const INTV=['CBT','ERP for OCD','Behavioural activation','DBT skills','ACT','Motivational interviewing','Relapse prevention','Psychoeducation / supportive','Relaxation training'];
+  const INTV=['CBT','ERP for OCD','Behavioural activation','DBT skills','ACT','Motivational interviewing','Relapse prevention','Psychoeducation / supportive','Relaxation training','Ventilation'];
   const DUR=[30,45,60,90];
   const RELS=['Father','Mother','Spouse','Son','Daughter','Brother','Sister','Guardian','Other relative'];
   const AGENDA=['What the illness is','How reassurance feeds it','Responding at home','Medicines','Relapse signs','Stigma','Caregiver self-care','Discharge plan','Progress update','Family conflict'];
@@ -59,6 +59,8 @@
 
   window.tnS=(k,v)=>{D[k]=v;autoSum();};
   window.tnT=(k,v)=>{D[k]=D[k]===v?'':v;autoSum();draw();};
+  /* 24 Nov (Nikita): risk level; Moderate or High also sets riskSeen 'yes' so older readers still see the risk */
+  window.tnRisk=l=>{D.riskLvl=D.riskLvl===l?'':l;D.riskSeen=/Moderate|High/.test(D.riskLvl)?'yes':D.riskLvl?'no':'';autoSum();draw();};
   window.tnM=(k,v)=>{const a=D[k]||[];D[k]=a.includes(v)?a.filter(x=>x!==v):a.concat(v);autoSum();draw();};
   window.tnDur=v=>{D.mins=String(v);draw();};
   window.tnMod=v=>{D.mod=D.mod===v?'':v;D.blk=D.mod==='ERP for OCD'||D.mod==='Relapse prevention'?D.blk:{};autoSum();draw();};
@@ -110,7 +112,7 @@
       +q('Intervention','',one(INTV,D.mod,'tnMod')+ta('intv','What was done in the session',3)+blk)
       +q('Outcome','',`<div class="tn-g"><div class="field"><span class="lbl">Mood (same tags as the daily note)</span>${one(MOODS(),D.moodT,"tnT.bind(null,'moodT')")}</div><div class="field"><span class="lbl">Engagement</span>${one(['Engaged','Partial','Withdrawn'],D.eng,"tnT.bind(null,'eng')")}</div></div>`
         +ta('outcome','How the patient responded, what changed',3)
-        +`<div class="sn-yn"><span>Risk noticed in this session? <span class="tiny muted">(optional; Yes alerts the psychiatrist)</span></span><div class="sn-chips"><button type="button" class="sn-c bad ${D.riskSeen==='yes'?'on':''}" onclick="tnT('riskSeen','yes')">Yes</button><button type="button" class="sn-c ${D.riskSeen==='no'?'on':''}" onclick="tnT('riskSeen','no')">No</button></div></div>${D.riskSeen==='yes'?ta('riskNote','What was said or seen'):''}`)
+        +`<div class="sn-yn"><span>Risk check <span class="tiny muted">(Moderate or High alerts the psychiatrist)</span></span><div class="sn-chips">${['No risk','Low','Moderate','High'].map(l=>`<button type="button" class="sn-c${/Mod|High/.test(l)?' bad':''} ${D.riskLvl===l?'on':''}" onclick="tnRisk('${l}')">${l}</button>`).join('')}</div></div>${D.riskLvl&&D.riskLvl!=='No risk'?ta('riskNote','What was said or seen'):''}`)
       +q('Goals','Rate each goal the way it was set up',window.goalNoteInputs?window.goalNoteInputs(sn(PID).goals||[],D.goalR,'tnGoal'):'')
       +q('Plan for next session','',ta('plan','What comes next')+`<!-- 23 Nov: no Homework field (21 Nov meeting); Plan for next session replaces it -->
         <div class="tn-g"><label class="field"><span class="lbl">Next session date</span><input class="input" type="date" value="${A(D.next||'')}" onchange="tnS('next',this.value)"></label><label class="field"><span class="lbl">Time</span><input class="input" type="time" value="${A(D.nextT||'10:00')}" onchange="tnS('nextT',this.value)"></label></div><div class="tiny muted">A next session date books it on the Calendar and caseload.</div>`)
@@ -201,7 +203,7 @@
   function persist(signed){
     const s=sn(PID);
     const aim=[(D.aimT||[]).join(', '),D.aim].filter(Boolean).join('. ');
-    const risk=KIND==='fam'?{}:{seen:D.riskSeen||'no'};
+    const risk=KIND==='fam'?{}:{seen:D.riskSeen||'no',level:D.riskLvl||''};
     const note=Object.assign({},D,{id:'n'+Date.now(),ts:Date.now(),fmt:'tulasi-20nov',status:signed?'signed':'draft',at:todayTxt()+', '+nowTime(),by:signer(),signedBy:signed?signer():'',signedAt:signed?atNow():'',kind:KIND,addenda:[],summaryLine:D.summary,risk,aimText:aim,mood:D.moodT||''});
     delete note.touched;
     if(!note.mod)note.mod=KIND==='fam'?'Family therapy':'Supportive session';
@@ -216,7 +218,7 @@
       if(D.mod==='Relapse prevention'&&KIND==='ind')s.relapse={trig:D.blk.trig||'',ews:D.blk.ews||'',cope:D.blk.cope||'',sup:D.blk.sup||'',by:signer(),at:atNow()};
       if(D.next){S.pgc=S.pgc||{tab:'cal',flt:'all',wk:0,extra:[],cols:{}};S.pgc.extra=S.pgc.extra||[];const [h,m]=String(D.nextT||'10:00').split(':').map(Number);S.pgc.extra.push({id:'n'+Date.now(),date:D.next,h:Math.min(17,Math.max(9,h||10)),m:m||0,kind:KIND,pid:PID,label:(KIND==='fam'?'Family · ':'')+pat(PID).name});}
       if(KIND==='fam'&&D.blk.grv&&String(D.blk.fcom||'').trim()){try{S.pgriev=S.pgriev||[];S.pgriev.unshift({from:'Family',t:String(D.blk.fcom).slice(0,90),via:'Family session',own:'Patient experience team',st:'Open',sla:'6 h left',src:'family',cat:'Psychologist',...whoAt()});}catch(e){}}
-      if(riskAny()){try{V3.alert({pid:PID,sev:'urgent',title:'Therapy session: risk noticed',detail:(D.riskNote||'See the session note')+'. Session note signed by '+signer()+'.',src:WHO==='psychiatrist'?'Psychiatrist':'Psychologist',by:signer()});}catch(e){}}
+      if(riskAny()){try{V3.alert({pid:PID,sev:'urgent',title:'Therapy session: '+(D.riskLvl||'risk')+' risk',detail:(D.riskNote||'See the session note')+'. Session note signed by '+signer()+'.',src:WHO==='psychiatrist'?'Psychiatrist':'Psychologist',by:signer()});}catch(e){}}
     }
     return note;
   }

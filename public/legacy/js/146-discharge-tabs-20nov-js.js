@@ -165,7 +165,7 @@
   const fuDocOf=pid=>{const D=dcrx(pid);return String(D.fuDoc!=null?D.fuDoc:fuDocDefault(pid)).trim();};
   window.dc2FuDoc=function(pid,v){dcrx(pid).fuDoc=String(v||'').trim();};
   /* 24 Nov 2026 (Anu, meeting): the psychiatrist fills the therapy plan like the OPD format: therapy type, how often, how long */
-  const TMODS=['Individual therapy','Group therapy','Family therapy','Cognitive behavioural therapy','Supportive therapy','Psychoeducation','Relapse prevention','Motivational interviewing','Behavioural activation','Exposure and response prevention','Relaxation training'];
+  const TMODS=['Ventilation','Individual therapy','Group therapy','Family therapy','Cognitive behavioural therapy','Supportive therapy','Psychoeducation','Relapse prevention','Motivational interviewing','Behavioural activation','Exposure and response prevention','Relaxation training'];
   const TFR=['Weekly','Every 2 weeks','Monthly','As needed'],TDUR=['1 month','3 months','6 months','Until next review'];
   window.dc2ThSet=function(pid,f,v){const D=dcrx(pid);D.th=D.th||{};if(typeof window.dcThSet==='function'&&f!=='dur')return dcThSet(pid,f,v);D.th[f]=v;render();};
   window.dc2ThFu=function(pid,v){const D=dcrx(pid);D.th=D.th||{};D.th.fu=v;D.th.fuOver=true;};
