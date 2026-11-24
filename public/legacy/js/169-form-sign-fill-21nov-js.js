@@ -32,7 +32,7 @@
     'form-c':{patient:{name:'p1f12',date:'p1f13'},family:{name:'p1f12',date:'p1f13'}},
     'high-risk-consent':{patient:{name:'p1f10',date:'p1f11'},family:{name:'p1f10',date:'p1f11'}},
     'mect-final':{patient:{name:'p8f16',date:'p8f18'},family:{name:'p8f19',date:'p8f21'}},
-    'outing-consent':{patient:{},family:{name:'p1f3',date:'p1f11'}},
+    'outing-consent':{patient:{date:'p1f11'},family:{name:'p1f3',date:'m196oc5'}},
     'clozapine-consent':{patient:{date:'p1f19'},family:{date:'p1f20'}}
   };
   /* 23 Nov (meeting): the signing date shows today as soon as the window opens and can be changed (family members often sign later) */

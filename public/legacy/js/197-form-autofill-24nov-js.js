@@ -35,7 +35,7 @@
     if(l==='designation'&&fid==='mect-final')return 'Consultant Psychiatrist';
     if(/^(patient s name|patient|name of the assessed person|name of the patient signing|i the undersigned mr mrs|i the undersigned)$/.test(l))return p.name;
     if(/^(name of (the )?(guardian|family member|family member\/ nr|accompanying person|accompanied person|nominated representative)|nominated representative name|family member|name of the family member nr|the nominated representative)$/.test(l))return I.nr;
-    if(/^(relation(ship)? (with|of|to) (the )?(patient|accompanying person)|relation relative signing|specify relationship|relation)$/.test(l))return I.nrRel;
+    if(/^(relation(ship)? (with|of|to) (the )?(patient|accompanying person|guardian)|relation relative signing|specify relationship|relation)$/.test(l))return I.nrRel;
     if(/^contact details$/.test(l))return I.nrPh;
     if(/^(mobile no|mobile|phone|phone no|contact no)$/.test(l))return nrForm?I.nrPh:I.phone;
     if(/^address$/.test(l))return nrForm?I.nrAddr:I.addr;

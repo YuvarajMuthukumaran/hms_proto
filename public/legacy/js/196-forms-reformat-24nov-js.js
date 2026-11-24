@@ -63,6 +63,20 @@
   /* page 8 of the admission terms ends before the checklist (image cut at the checklist heading) */
   try{const T=CDF_FORMS['adm-terms'];if(T&&T.pages&&!T.m196){T.m196=1;T.pages.forEach(pg=>{if(/adm-terms\/p8\.png/.test(pg.img)){pg.img='forms/adm-terms/p8.png?v=196';pg.h=649.9;pg.fields=pg.fields.filter(f=>!/^p8f[56]$/.test(f.id));}});}}catch(e){}
 
+  /* Outing consent: one page (page 2 was blank, empty bottom cut), blanks added for the right-hand column
+     (relation, e-mail, IP No., time and date of entry), the guardian's date and time and Yes / No; the duplicate
+     patient-name box and the two empty boxes over the "For patient / For guardian" text removed. */
+  try{const T=CDF_FORMS['outing-consent'];if(T&&T.pages&&!T.m196){T.m196=1;
+    T.pages=T.pages.filter(pg=>!/outing-consent\/p2\.png/.test(pg.img));const pg=T.pages[0];
+    pg.img='forms/outing-consent/p1.png?v=196';pg.h=600;
+    pg.fields=pg.fields.filter(f=>!/^p1f(2|9|10|12)$/.test(f.id));
+    pg.fields.forEach(f=>{if(f.id==='p1f8')f.label='Remarks of the psychiatrist / psychologist';});
+    const L=(id,x,y,w,label)=>pg.fields.push({kind:'line',id,x,y,w,h:13,label,size:9.5});
+    L('m196oc1',492,83,56,'Relation of the guardian');L('m196oc2',423,101,125,'Email ID');L('m196oc3',413,120,135,'IP No.');
+    L('m196oc4',474,139,74,'Time & date of entry');L('m196oc5',251,514,286,'Guardian date & time');
+    pg.fields.push({kind:'choice',id:'m196oc6',x:409,y:490,w:27,h:12,label:'Guardian aware the patient will be checked on return (Yes / No)',
+      opts:[{t:'Yes',x:408,y:489,w:15,h:13},{t:'No',x:424,y:489,w:13,h:13}]});}}catch(e){}
+
   const pno=img=>+((img.getAttribute('src')||'').match(/\/p(\d+)\.png/)||[])[1];
   const head=pg=>{const h=pg.previousElementSibling;return h&&h.classList.contains('m24-mh')?h:pg;};
   function fix(){
