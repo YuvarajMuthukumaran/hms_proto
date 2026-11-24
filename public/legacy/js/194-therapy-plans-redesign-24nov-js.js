@@ -88,10 +88,10 @@
   const dayHead=(d)=>`${fmtD(d)}${+d===+day()?' <span class="tp4-sub">· Today</span>':''}`;
   const li=(a,b)=>`<div class="tp4-li"><span class="tp4-l">${a}</span><b>${b}</b></div>`;
 
-  const gClick=(pid,i)=>PSY&&typeof window.tpGoal==='function'?` tp4-click" role="button" tabindex="0" title="Edit or log this goal" onclick="tpGoal('${Q(pid)}',${+i})"`:'"';
+  const gClick=(pid,i)=>PSY&&typeof window.tpGoal==='function'?` tp4-click" role="button" tabindex="0" title="Edit or log this goal" onclick="tpGoal('${Q(pid)}',${+i})"`:` tp4-click" role="button" tabindex="0" title="See this goal's history" onclick="tp4Goal('${Q(pid)}',${+i})"`;
   function vInd(pid){
     const D=ind(pid),x=psyPx(pid)||{},th=x.th||{},S0=selDay(pid);
-    if(!D.goals.length&&!D.notes.length)return `<div class="tp4-card tp4-empty">${IC.ses}<h4>No therapy plan yet</h4><p>${PSY?'Write the first session note to start the plan and goals.':"The psychologist's plan, goals and session notes show here once they start."}</p>${PSY&&typeof window.snOpen==='function'?`<button class="btn sm pri" style="margin-top:10px" onclick="snOpen('${Q(pid)}','ind')">New session note</button>`:''}</div>`;
+    if(!D.goals.length&&!D.notes.length)return due(pid)+`<div class="tp4-card tp4-empty">${IC.ses}<h4>No therapy plan yet</h4><p>${PSY?'Write the first session note to start the plan and goals.':"The psychologist's plan, goals and session notes show here once they start."}</p>${PSY&&typeof window.snOpen==='function'?`<button class="btn sm pri" style="margin-top:10px" onclick="snOpen('${Q(pid)}','ind')">New session note</button>`:''}</div>`;
     /* a goal not met on 3 or more of the last 5 days it was logged */
     const warn=D.goals.map((g,i)=>{const L=Object.keys(D.by).map(k=>({k,v:D.by[k].g[i]})).filter(o=>o.v).sort((a,b)=>{const p=s=>s.split('-').map(Number);const A=p(a.k),B=p(b.k);return new Date(B[0],B[1],B[2])-new Date(A[0],A[1],A[2]);}).slice(0,5);const no=L.filter(o=>o.v.r===0).length;return no>=3?`"${E(g.t)}" not met ${no} of the last ${L.length} days`:'';}).filter(Boolean);
     const cell=(d,k)=>{const o=D.by[k];if(!o)return '';
@@ -99,10 +99,10 @@
     const legend=D.goals.map((g,i)=>`<span>${mk(GC[i%GC.length],1)}${E(g.t)}</span>`).join('')+`<span>${mk('#64748b',.5)}part</span><span>${mk('#64748b',0)}not met</span>`;
     const signed=D.notes.filter(n=>n.status==='signed'),last=D.notes[0]||{};
     const o=D.by[S0.k]||{ses:[],g:{}};
-    const body=(o.ses.length?o.ses.map(n=>{const risk=Object.values(n.risk||{}).some(v=>v==='yes');return `<div class="tp4-li${n.id&&typeof window.snView==='function'?` tp4-click" role="button" tabindex="0" title="Open the full note" onclick="snView('${Q(n.id)}')"`:'"'}><span class="tp4-ic">${IC.ses}</span><span style="flex:1"><b>${E(n.mod||'Session')}</b><div class="tp4-sub">${E([n.by,n.mins?n.mins+' min':''].filter(Boolean).join(' · '))}</div></span><span class="tp4-chip ${risk?'amb':'grn'}">${risk?'Risk raised':'No risk'}</span></div><div class="tp4-txt">${E(n.summaryLine||n.summary||'')}</div>${n.status==='signed'?`<div class="tp4-lock">${IC.lock} Signed and locked. Read only.</div>`:'<div class="tp4-lock">Draft, not signed yet.</div>'}`;}).join(''):'<div class="tp4-sub">No session this day.</div>')
+    const body=(o.ses.length?o.ses.map(n=>{const risk=Object.values(n.risk||{}).some(v=>v==='yes');return `<div class="tp4-li${n.id&&typeof window.snView==='function'?` tp4-click" role="button" tabindex="0" title="Open the full note" onclick="snView('${Q(n.id)}')"`:'"'}><span class="tp4-ic">${IC.ses}</span><span style="flex:1"><b>${E(n.mod||'Session')}</b><div class="tp4-sub">${E([n.by,n.mins?n.mins+' min':''].filter(Boolean).join(' · '))}</div></span><span class="tp4-chip ${risk?'amb':'grn'}">${risk?'Risk raised':'No risk'}</span></div><div class="tp4-txt">${E(n.summaryLine||n.summary||'')}</div>${n.status==='signed'?`<div class="tp4-lock">${IC.lock} Signed and locked. Read only.${n.id?` <button type="button" class="tp4-lk" onclick="tp4PrintNote('${Q(n.id)}')">Print note</button>`:''}</div>`:'<div class="tp4-lock">Draft, not signed yet.</div>'}`;}).join(''):'<div class="tp4-sub">No session this day.</div>')
       +(Object.keys(o.g).length?`<div class="tp4-l" style="margin:12px 0 4px">Goals</div>`+Object.keys(o.g).map(i=>{const v=o.g[i];return `<div class="tp4-li${gClick(pid,i)}><span style="display:flex;gap:7px;align-items:center">${mk(GC[i%GC.length],v.r)}${E((D.goals[i]||{}).t)}</span><span class="tp4-sub">${v.r===1?'Met':v.r===.5?'Part way':'Not met'} · ${E(v.raw)}</span></div>`;}).join(''):'');
     return (warn.length?`<div class="tp4-alert">${IC.goal}<span>${warn.join('<br>')}</span></div>`:'')+`<div class="tp4-grid">${card(IC.ses+' Sessions and goals',`<div class="tp4-legend">${legend}</div>`,calendar(pid,'ind',cell))}
-      <div class="tp4-col">${card('Plan',`<span class="tp4-sub">${E(last.by||'')}</span>`,li('Therapy',E(th.mod||last.mod||'Not set'))+li('Frequency',E(th.freq||'Not set'))+li('Sessions',signed.length+' signed'+(D.notes.length>signed.length?' · '+(D.notes.length-signed.length)+' draft':''))+(PSY?D.goals.map((g,i)=>`<div class="tp4-li${gClick(pid,i)}><span style="display:flex;gap:7px;align-items:center">${mk(GC[i%GC.length],1)}${E(g.t)}</span><span class="tp4-sub">Edit</span></div>`).join(''):li('Goals',D.goals.length)))}
+      <div class="tp4-col">${card('Plan',`<span class="tp4-sub">${E(last.by||'')}</span>`,li('Therapy',E(th.mod||last.mod||'Not set'))+li('Frequency',E(th.freq||'Not set'))+li('Sessions',signed.length+' signed'+(D.notes.length>signed.length?' · '+(D.notes.length-signed.length)+' draft':''))+(D.goals.map((g,i)=>`<div class="tp4-li${gClick(pid,i)}><span style="display:flex;gap:7px;align-items:center">${mk(GC[i%GC.length],1)}${E(g.t)}</span><span class="tp4-sub">${PSY?'Edit':'History'}</span></div>`).join('')))}
       ${card(dayHead(S0.d),'',body)}</div></div>`;
   }
   function vGrp(pid){
@@ -111,9 +111,9 @@
     const cell=(d,k)=>{const L=D.by[k];return L?`<span class="tp4-ms">${L.map(o=>mk(GC[o.i%GC.length],o.v)).join('')}</span>`:'';};
     const legend=D.names.map((n,i)=>`<span>${mk(GC[i%GC.length],1)}${E(n)}</span>`).join('')+`<span>${mk('#64748b',.5)}left early</span><span>${mk('#64748b',0)}did not attend</span>`;
     const L=D.by[S0.k]||[];
-    const body=L.length?L.map(o=>`<div class="tp4-li"><span style="display:flex;gap:7px;align-items:center">${mk(GC[o.i%GC.length],o.v)}${E(D.names[o.i])}</span><span class="tp4-sub">${o.v===1?'Attended':o.v===.5?'Left early':'Did not attend'}${o.r.leader||o.r.by?' · '+E(o.r.leader||o.r.by):''}</span></div>`).join(''):'<div class="tp4-sub">No groups logged.</div>';
+    const body=L.length?L.map(o=>`<div class="tp4-li"><span style="display:flex;gap:7px;align-items:center">${mk(GC[o.i%GC.length],o.v)}${E(D.names[o.i])}</span><span class="tp4-sub">${o.v===1?'Attended':o.v===.5?'Left early':'Did not attend'}${o.r.leader||o.r.by?' · '+E(o.r.leader||o.r.by):''}</span></div>${o.r.note?`<div class="tp4-txt">${E(o.r.note)}</div>`:''}`).join(''):'<div class="tp4-sub">No groups logged.</div>';
     return `<div class="tp4-grid">${card(IC.grp+' Group attendance',`<div class="tp4-legend">${legend}</div>`,calendar(pid,'grp',cell))}
-      <div class="tp4-col">${card('Groups','',D.names.map((n,i)=>`<div class="tp4-li"><span style="display:flex;gap:7px;align-items:center">${mk(GC[i%GC.length],1)}<b>${E(n)}</b></span><b>${(D.tot[n]||[0,0])[0]}/${(D.tot[n]||[0,0])[1]}</b></div>`).join(''))}
+      <div class="tp4-col">${card('Groups','',D.names.map((n,i)=>`<div class="tp4-li tp4-click" role="button" tabindex="0" title="See attendance for this group" onclick="tp4Grp('${E(Q(pid))}','${E(Q(n))}')"><span style="display:flex;gap:7px;align-items:center">${mk(GC[i%GC.length],1)}<b>${E(n)}</b></span><b>${(D.tot[n]||[0,0])[0]}/${(D.tot[n]||[0,0])[1]}</b></div>`).join(''))}
       ${card(dayHead(S0.d),'',body)}</div></div>`;
   }
   function vFam(pid){
@@ -121,16 +121,65 @@
     const IK={call:'call',miss:'call',wa:'wa',ses:'fses'},LB={call:'Call',miss:'Not reached',wa:'WhatsApp',ses:'Session'};
     const reached=D.all.filter(o=>o.t!=='miss'),wk=reached.filter(o=>t-o.d<=7*864e5);
     const c24=reached.find(o=>o.c24)||reached.slice().sort((a,b)=>a.d-b.d)[0],fs=reached.find(o=>o.t==='ses');
-    const req=[[c24?'done':'due','24-hour family call',c24?'Done '+fmtD(c24.d):'Not logged yet'],[wk.length?'done':'due','Weekly update',wk.length?'Last '+fmtD(wk.sort((a,b)=>b.d-a.d)[0].d):'Due this week'],[fs?'done':'later','Family session',fs?'Done '+fmtD(fs.d):'Not held yet']];
+    const pxn=D.all.filter(o=>/\bPX\b|experience/i.test(o.s||'')).length;
+    const req=[[c24?'done':'due','24-hour family call',c24?'Done '+fmtD(c24.d):'Not logged yet',c24?kOf(c24.d):''],[wk.length?'done':'due','Weekly update',wk.length?'Last '+fmtD(wk.sort((a,b)=>b.d-a.d)[0].d):'Due this week',wk.length?kOf(wk[0].d):''],[fs?'done':'later','Family session',fs?'Done '+fmtD(fs.d):'Not held yet',fs?kOf(fs.d):''],['later','PX calls',pxn+' logged this stay','']];
     const cell=(d,k)=>{const L=D.by[k]||[];let h=L.map(o=>tag(FK[o.t],IK[o.t],LB[o.t])).join('');if(+d===+t&&!wk.length)h+=tag('#b45309','due','Update due',1);return h;};
     const legend=[['call','Call'],['wa','WhatsApp'],['ses','Session'],['miss','Not reached']].map(x=>`<span><span class="tp4-li-ic" style="color:${FK[x[0]]}">${IC[IK[x[0]]]}</span>${x[1]}</span>`).join('');
     const L=D.by[S0.k]||[];
     const body=L.length?L.map(o=>`<div class="tp4-ev"><span class="tp4-ic" style="color:${FK[o.t]}">${IC[IK[o.t]]}</span><span><b>${E(o.h)}</b><span class="tp4-sub">${E(o.s)}</span></span></div>`).join(''):'<div class="tp4-sub">No family contact this day.</div>';
     return `<div class="tp4-grid">${card(IC.call+' Family contact',`<div class="tp4-legend">${legend}</div>`,calendar(pid,'fam',cell))}
-      <div class="tp4-col">${card('Required contact','',req.map(r=>`<div class="tp4-req ${r[0]}"><span class="tp4-tick ${r[0]}">${r[0]==='done'?'✓':''}</span><span><b>${r[1]}</b><span class="tp4-sub">${E(r[2])}</span></span></div>`).join(''))}
+      <div class="tp4-col">${card('Required contact','',req.map(r=>`<div class="tp4-req ${r[0]}${r[3]?' tp4-click':''}"${r[3]?` role="button" tabindex="0" onclick="tp4Pick('${E(Q(pid))}','${r[3]}')"`:''}><span class="tp4-tick ${r[0]}">${r[0]==='done'?'✓':''}</span><span><b>${r[1]}</b><span class="tp4-sub">${E(r[2])}</span></span></div>`).join(''))}
       ${card(dayHead(S0.d),'',body)}</div></div>`;
   }
 
+  /* 24 Nov, "Therapy Plans redesignn.html": what the combined prototype adds: print buttons, goal and group history pop-ups,
+     family required-contact rows open their day, PX calls row, Start family session, a "Due" card before the plan exists */
+  const ptP=pid=>(typeof ptFind==='function'&&ptFind(pid))||null;
+  const rt=v=>v===1?'Met':v===.5?'Part way':'Not met';
+  const pdf=(t,h,pid)=>{if(typeof psyPdf==='function')psyPdf(t,h,ptP(pid));else window.print();};
+  const tbl=(h,r)=>'<table style="width:100%"><tr>'+h.map(c=>'<th>'+E(c)+'</th>').join('')+'</tr>'+r.map(a=>'<tr>'+a.map(c=>'<td>'+E(c)+'</td>').join('')+'</tr>').join('')+'</table>';
+  const noteHtml=n=>'<div class="n"><div class="h"><span>'+E(n.mod||'Session')+'</span><span>'+E(n.at||'')+'</span></div><div class="m">'+E([n.by,n.mins?n.mins+' min':'',n.status==='signed'?'Signed '+(n.signedAt||''):'Draft'].filter(Boolean).join(' · '))+'</div><div class="s">'+E(n.summaryLine||n.summary||n.outcome||'')+'</div>'+((n.addenda||[]).map(a=>'<div class="s"><b>Addendum, '+E(a.by)+', '+E(a.at)+'</b>'+E(a.text)+'</div>').join(''))+'</div>';
+  const famRows=pid=>fam(pid).all.slice().sort((a,b)=>a.d-b.d).map(o=>[fmtD(o.d),{call:'Call',miss:'Not reached',wa:'WhatsApp',ses:'Family session'}[o.t],o.h,o.s]);
+  const lastOf=(D,i)=>Object.keys(D.by).filter(k=>D.by[k].g[i]).map(k=>{const p=k.split('-').map(Number);return {d:new Date(p[0],p[1],p[2]),v:D.by[k].g[i]};}).sort((a,b)=>b.d-a.d);
+  function due(pid){
+    return `<div class="tp4-card tp4-due"><div class="tp4-ch"><h3>${IC.due} Due</h3></div><div class="tp4-cb"><div class="tp4-req due"><span class="tp4-tick due"></span><span><b>Detailed history</b><span class="tp4-sub">Within 72 hours of admission</span></span></div><div class="tp4-req"><span class="tp4-tick later"></span><span><b>Therapy plan and goals</b><span class="tp4-sub">Within 1 week of admission</span></span></div></div></div>`;
+  }
+  function tp4Bar(pid,seg){
+    const b=(a,t)=>'<button type="button" class="btn sm" onclick="'+a+'">'+t+'</button>';
+    let h='';
+    if(seg==='fam'){h+=b("tp4Print('"+Q(pid)+"','fam')",'Print contact log');if(PSY&&typeof window.snOpen==='function')h+=b("snOpen('"+Q(pid)+"','fam')",'Start family session');}
+    return h+b("tp4Print('"+Q(pid)+"','stay')",'Print stay record');
+  }
+  window.tp4Pick=function(pid,k){ST['s'+pid]=k;render();};
+  window.tp4PrintNote=function(id){
+    const x=((((psyPx(S.pid)||{}).sn||{}).notes)||[]).find(q=>q.id===id);
+    if(!x||x.status!=='signed'){toast('Sign the note first. Drafts cannot be printed.');return;}
+    pdf('Session note',noteHtml(x),S.pid);
+  };
+  window.tp4Print=function(pid,kind){
+    if(kind==='fam'){const r=famRows(pid);pdf('Family contact log','<h2>Family contact</h2>'+(r.length?tbl(['Date','Type','What','Who / notes'],r):'<p>No family contact logged yet.</p>'),pid);return;}
+    const I=ind(pid),G=grp(pid),x=psyPx(pid)||{},th=x.th||{},signed=I.notes.filter(n=>n.status==='signed').slice().reverse();
+    const gr=I.goals.map((g,i)=>{const L=lastOf(I,i);return [g.t,L.length+' logged',L[0]?rt(L[0].v.r)+' ('+fmtD(L[0].d)+')':'Not logged yet'];});
+    const att=G.names.map(n=>[n,(G.tot[n]||[0,0])[0]+' of '+(G.tot[n]||[0,0])[1]]);
+    const fr=famRows(pid);
+    pdf('Therapy record for the stay',
+      '<h2>Therapy plan</h2>'+tbl(['Therapy','How often','Sessions'],[[th.mod||(I.notes[0]||{}).mod||'Not set',th.freq||'Not set',signed.length+' signed'+(I.notes.length>signed.length?', '+(I.notes.length-signed.length)+' draft':'')]])
+      +'<h2>Goals</h2>'+(gr.length?tbl(['Goal','Logged','Latest'],gr):'<p>No goals set yet.</p>')
+      +'<h2>Group attendance</h2>'+(att.length?tbl(['Group','Attended'],att):'<p>No group attendance logged yet.</p>')
+      +'<h2>Family contact</h2>'+(fr.length?tbl(['Date','Type','What','Who / notes'],fr):'<p>No family contact logged yet.</p>')
+      +'<h2>Session notes</h2>'+(signed.length?signed.map(noteHtml).join(''):'<p>No signed session notes yet.</p>'),pid);
+  };
+  window.tp4Goal=function(pid,i){
+    const D=ind(pid),g=D.goals[i];if(!g)return;const L=lastOf(D,i);
+    V3.modal(E(g.t),'Goal history · read only',
+      '<div class="pin-sum"><div class="pin-r"><span>Logged</span><b>'+L.length+' times</b></div><div class="pin-r"><span>Met</span><b>'+L.filter(o=>o.v.r===1).length+'</b></div><div class="pin-r"><span>Latest</span><b>'+(L[0]?rt(L[0].v.r):'Not logged yet')+'</b></div></div>'
+      +(L.length?'<div class="scroll" style="margin-top:10px">'+tbl(['Date','Rating','Value','By'],L.map(o=>[fmtD(o.d),rt(o.v.r),o.v.raw,o.v.by||'']))+'</div>':'<div class="tp4-sub" style="margin-top:10px">Not logged yet.</div>'),
+      '<button class="btn" onclick="closeModal()">Close</button>');
+  };
+  window.tp4Grp=function(pid,name){
+    const x=psyPx(pid)||{},R=(((x.sn||{}).grp)||[]).concat(((x.th||{}).grp)||[]).filter(r=>(r.group||'Group')===name);
+    V3.modal(E(name),'Attendance and notes',R.length?'<div class="scroll">'+tbl(['Date','Took part','Marked by','Note'],R.map(r=>[r.date||'',r.took||'',r.leader||r.by||'',r.note||'']))+'</div>':'<div class="tp4-sub">Nothing logged yet.</div>','<button class="btn" onclick="closeModal()">Close</button>');
+  };
   window.tp4Day=function(pid,k){ST['s'+pid]=k;render();};
   window.tp4Mon=function(pid,dir){const c=ST['m'+pid];if(!c)return;let m=c.m+dir,y=c.y;if(m<0){m=11;y--;}if(m>11){m=0;y++;}ST['m'+pid]={y,m};render();};
 
@@ -141,7 +190,7 @@
     const seg=(S.tp&&S.tp.seg)||'ind',segs=body.querySelector('.tp-segs');
     const act=seg==='fam'?`<span style="display:flex;gap:8px">${typeof window.tpCommAdd==='function'?`<button class="btn sm" onclick="tpCommAdd('${Q(pid)}')">Log a contact</button>`:''}${typeof window.faCall==='function'?`<button class="btn sm pri" onclick="faCall('${Q(pid)}','wk')">${IC.call} Call family</button>`:''}</span>`:PSY?(seg==='grp'&&typeof window.tpAttend==='function'?`<button class="btn sm" onclick="tpAttend('${Q(pid)}')">${IC.grp} Log attendance</button>`:''):`<span class="tp4-sub tp4-ro">${IC.lock} Read only for the psychiatrist</span>`;
     let html='';try{html=seg==='grp'?vGrp(pid):seg==='fam'?vFam(pid):vInd(pid);}catch(e){return;}
-    const an=ST.last!==pid+seg;ST.last=pid+seg;body.classList.toggle('tp4-anim',an);body.innerHTML=`<div class="tp4-bar">${segs?segs.outerHTML:''}${act}</div>${html}`;
+    const an=ST.last!==pid+seg;ST.last=pid+seg;body.classList.toggle('tp4-anim',an);body.innerHTML=`<div class="tp4-bar">${segs?segs.outerHTML:''}<span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${act}${tp4Bar(pid,seg)}</span></div>${html}`;
   }
   const __r=render;render=function(){const r=__r.apply(this,arguments);try{place();}catch(e){}return r;};
 
@@ -177,6 +226,7 @@
     '.tp4-tick{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:700;flex:none}.tp4-tick.done{background:#15803d;color:#fff}.tp4-tick.due{box-shadow:inset 0 0 0 2px #f59e0b}.tp4-tick.later{box-shadow:inset 0 0 0 2px #cbd5e1}',
     '.tp4-ev{display:flex;gap:9px;padding:9px 0;border-top:1px solid #e5e9f0}.tp4-ev:first-child{border-top:0;padding-top:0}.tp4-ev b{display:block}',
     '.tp4-alert{display:flex;gap:8px;align-items:center;background:#fff6e6;border:1px solid #f5c26b;color:#b45309;border-radius:9px;padding:8px 12px;margin-bottom:12px;font-weight:500}',
+    '.tp4-lk{margin-left:auto;border:0;background:none;color:#2563eb;font-weight:600;cursor:pointer;font-size:12px}','.tp4-due{margin-bottom:12px}',
     '.tp4-empty{text-align:center;padding:30px 20px;color:#64748b}.tp4-empty>svg{width:26px;height:26px;color:#2563eb}.tp4-empty h4{margin:6px 0 4px;font-size:14px;color:#0f172a}.tp4-empty p{margin:0 auto;max-width:360px}',
     /* calm motion: hover lift, tinted days with entries, one staggered fade-in when the patient or segment changes */
     '.tp4-day{transition:border-color .18s,box-shadow .18s,transform .18s,background .18s}.tp4-day:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(15,23,42,.07)}',

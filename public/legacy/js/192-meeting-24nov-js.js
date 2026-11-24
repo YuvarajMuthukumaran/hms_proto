@@ -184,6 +184,10 @@
       pg.fields.forEach(f=>{if(f.id==='p1f4')f.label='UHID';if(/^p1f(9|10|11)$/.test(f.id))f.y=+(f.y-18.5).toFixed(1);
         /* Contact details was a box under the table: it goes into its own cell, next to Email ID */
         if(f.id==='p1f12')Object.assign(f,{kind:'line',x:145,y:166.6,w:170,h:12.3,size:9.5});});}
+    /* 24 Nov: the e-signature was never drawn on this form (no field with "signature" in its label, which blocks 141/145 look for): two signature lines, patient and guardian */
+    if(pg&&!pg.fields.some(f=>f.id==='dcSigP')){
+      pg.fields.push({kind:'line',id:'dcSigP',x:150,y:520.5,w:250,h:12.3,size:9.5,label:'Signature of Patient'});
+      pg.fields.push({kind:'line',id:'dcSigG',x:156,y:575.5,w:250,h:12.3,size:9.5,label:'Guardian Signature (relative)'});}
     if(CD_TEMPLATES['discharge-consent']&&CD_TEMPLATES['discharge-consent'].html)CD_TEMPLATES['discharge-consent'].html=CD_TEMPLATES['discharge-consent'].html.split('OUTING CONSENT').join('DISCHARGE CONSENT');
   }catch(e){}
 
