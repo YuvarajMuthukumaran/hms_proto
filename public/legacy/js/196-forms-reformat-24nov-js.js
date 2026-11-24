@@ -39,7 +39,60 @@
   }
   window.m196Doc=function(i){if(cur()!=='adm-terms')return;const k='m196doc'+(i+1);cdfSet(k,vals('adm-terms')[k]?'':'✓',null);redraw();};
 
+  /* ---- Capacity assessment: the whole form on screen (the paper blanks sat on the printed questions) ---- */
+  const CA='capacity-assessment',YNC=['Yes','No','Cannot assess'],YN=['Yes','No'];
+  const CAQ=[
+    ['0','Obvious lack of capacity','Is he/she in a condition where no meaningful conversation is possible (violent, excited, catatonic, stuporous, delirious, under alcohol or substance intoxication, severe withdrawal, or any other)?',YN,'If yes, go to 4. If no, go to 1.'],
+    ['1a','1 · Understanding the information relevant to a decision on treatment, admission or personal assistance','A. Is the individual oriented to time, place and person?',YNC],
+    ['1b','','B. Has he/she been provided relevant information about mental healthcare and treatment for the illness in question?',YN],
+    ['1c','','C. Is he/she able to follow simple commands, like (i) show your tongue (ii) close your eyes?',YNC],
+    ['1d','','D. Does he/she acknowledge that he/she has a mental illness?',YNC],
+    ['2a','2 · Appreciating reasonably foreseeable consequences of a decision or lack of decision on treatment, admission or personal assistance','A. Does the individual agree to receive the treatment suggested by the treating team?',YNC,'If yes, go to 2B. If no, go to 2C. If cannot assess, go to 3.'],
+    ['2b','','B. Does he/she explain why he/she has agreed to receive treatment?',YNC],
+    ['2c','','C. Does he/she explain why he/she does not agree to receive treatment?',YN],
+    ['3a','3 · Communicating the decision by speech, expression, gesture or any other means','A. Is the individual able to communicate his/her decision by speech, writing, expression, gesture or any other means?',YNC]];
+  const CAD=[['name','Name of the patient',6],['age','Age',2],['sex','Sex',2],['uhid','Patient ID No',2],['date','Date of assessment',3],['time','Time',3],['place','Place of assessment',6],
+    ['nr','Nominated representative: Name',6],['nrid','ID',3],['dx','Diagnosis (provisional)',3]];
+  const CAL={name:'Name of the patient',age:'Age',sex:'Sex',uhid:'UHID',date:'Date',time:'Time',place:'Place of assessment',nr:'Nominated representative name',dx:'Diagnosis',doc:'Name of the psychiatrist'};
+  const ck=k=>'m196ca.'+k;
+  function caSkip(v){const s={},g=k=>v[ck(k)]||'';
+    if(g('0')==='Yes')['1a','1b','1c','1d','2a','2b','2c','3a'].forEach(k=>s[k]='Obvious lack of capacity: go to 4');
+    else{const a=g('2a');if(a==='Yes')s['2c']='2A is yes';if(a==='No')s['2b']='2A is no';if(a==='Cannot assess'){s['2b']=s['2c']='2A cannot assess: go to 3';}}
+    return s;}
+  function caPrefill(v){const key=S.cdEntryKey,pid=String(key).split('|')[0],clr=v.__clr||{};let p=null;
+    try{p=((typeof PTS!=='undefined'&&PTS)||[]).find(x=>x.id===pid)||(typeof ptFind==='function'&&ptFind(pid));}catch(e){}if(!p)return;
+    const ep=((typeof CD_DATA!=='undefined'&&CD_DATA.episodes)||{})[pid]||{};let ch=false;
+    Object.keys(CAL).forEach(k=>{if(v[ck(k)]||clr[ck(k)])return;let a='';try{a=k==='doc'?((ptCtxOf(pid)||{}).team||{}).psy||'':cdfAuto(CAL[k],p,ep)||'';}catch(e){}if(a){v[ck(k)]=a;ch=true;}});
+    if(ch){try{cdfTouch(key);}catch(e){}}}
+  function caHtml(ed){
+    const v=vals(CA);if(ed)caPrefill(v);const g=k=>v[ck(k)]||'',sk=caSkip(v);
+    const inp=(k,ph,wide)=>`<input class="m196-in${wide?' w':''}" value="${esc(g(k))}" placeholder="${esc(ph||'')}"${ed?` oninput="m196CaSet('${k}',this.value)"`:' disabled'}>`;
+    const btns=(k,opts)=>opts.map(o=>`<button type="button" class="m196-b${g(k)===o?' on '+(o==='Yes'?'y':o==='No'?'n':'c'):''}"${ed?` onclick="m196CaPick('${k}','${o}')"`:' disabled'} aria-pressed="${g(k)===o}">${o}</button>`).join('');
+    let need=0,done=0;
+    const det=`<div class="m196-grid">${CAD.map(d=>`<label style="grid-column:span ${d[2]}"><span>${d[1]}</span>${inp(d[0])}</label>`).join('')}
+      <div style="grid-column:span 6"><span>Purpose of this assessment</span><div class="m196-row">${btns('purpose',['Admission','Treatment','Advance directive','Any other'])}</div></div>
+      <div style="grid-column:span 6"><span>Advance directive</span><div class="m196-row">${btns('ad',['Present','Absent'])}</div></div></div>
+      <p class="m196-note">If admitted under Section 102/103 of MHA 2017, the rest of the assessment can happen in the ward. Provide an explanation for each question.</p>`;
+    let last='';
+    const qs=CAQ.map(q=>{const [k,sec,t,opts,hint]=q,s=sk[k];if(!s){need++;if(g(k))done++;}
+      const h=sec&&sec!==last?`<h4 class="m196-sec">${esc(sec)}</h4>`:'';if(sec)last=sec;
+      return h+`<div class="m196-q${s?' skip':''}"><div class="m196-qt">${esc(t)}${hint?`<small>${esc(hint)}</small>`:''}${s?`<small class="sk">Not needed · ${esc(s)}</small>`:''}</div>
+        <div class="m196-row">${btns(k,opts)}</div>${inp(k+'x',k==='1b'?'If no, provide explanation':'Explanation',1)}</div>`;}).join('');
+    need++;if(g('c4'))done++;
+    const nm=g('name')||'the patient',nr=g('nr')||'';
+    const concl=`<h4 class="m196-sec">4 · Conclusion</h4><p class="m196-note">Based on the examination and relevant history, behavioural observation, clinical findings and mental status examination findings noted in the medical records, I believe that ${esc(nm)}:</p>
+      <div class="m196-row col">${[['A','Has capacity for treatment decisions including admission'],['B','Needs 100% support from his/her nominated representative in making treatment decisions including admission']].map(o=>`<button type="button" class="m196-b wide${g('c4')===o[0]?' on y':''}"${ed?` onclick="m196CaPick('c4','${o[0]}')"`:' disabled'}><b>4${o[0]}</b> ${o[1]}</button>`).join('')}</div>
+      ${g('c4')==='A'?`<div class="m196-st"><b>5 · Patient's statement (4A)</b><br>I, ${esc(nm)}, agree to make decisions in respect of my mental healthcare and treatment. <i>The patient signs with Collect e-signature.</i></div>`:''}
+      ${g('c4')==='B'?`<div class="m196-st"><b>6 · Nominated representative's statement (4B)</b><br>I, ${esc(nr||'__________')}, the nominated representative of ${esc(nm)}, agree to make decisions with respect of his/her treatment. <i>The nominated representative signs with Collect e-signature.</i></div>`:''}
+      <div class="m196-grid" style="margin-top:12px"><label style="grid-column:span 6"><span>Name of the psychiatrist / mental health professional / medical practitioner</span>${inp('doc')}</label></div>
+      ${v.__esign&&v.__esign.sig?`<div class="m196-sig"><img src="${esc(v.__esign.sig)}" alt="Signature"><small>Signed by ${esc(v.__esign.by||'')}${v.__esign.as?' ('+esc(v.__esign.as)+')':''} · ${esc(v.__esign.at||'')}</small></div>`:''}`;
+    return `<div class="m196-top"><b>Capacity assessment for treatment decisions including admission</b><span>${done} of ${need} answered</span></div>${det}${qs}${concl}`;
+  }
+  window.m196CaSet=function(k,val){if(cur()!==CA)return;cdfSet(ck(k),val,null);};
+  window.m196CaPick=function(k,o){if(cur()!==CA)return;const v=vals(CA);cdfSet(ck(k),v[ck(k)]===o?'':o,null);redraw();};
+
   const FORMS={
+    'capacity-assessment':{fold:[1,2,3,4],np:1,bar:'<b>Paper layout</b> · the same form as 4 scanned pages, for reference',what:'paper layout',ck:caHtml,before:1,ckFirst:1,list:1},
     'mect-final':{fold:[1,2,3,4],bar:'<b>Information sheet</b> · pages 1 to 4, read only, for the patient and family',what:'information sheet',ck:mectHtml,before:5},
     'adm-terms':{fold:[5,6],bar:'<b>Terms 9 to 25</b> · pages 5 and 6, read only (fees, belongings, safety, tests, rules)',what:'terms 9 to 25',ck:docHtml,after:8}};
 
@@ -57,7 +110,14 @@
     +'.m196-fb{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#f8f9fc;border:1px solid #d0d5dd;border-radius:10px;padding:10px 14px;margin:0 auto 12px;box-sizing:border-box;font-size:13.5px}'
     +'.m196-fb button{border:1px solid #d0d5dd;background:#fff;border-radius:6px;padding:5px 12px;font:inherit;cursor:pointer;white-space:nowrap}'
     +'.m196-fold.m196-shut{display:none!important}'
-    +'@media print{.m196-fold.m196-shut{display:block!important}.m24-mh.m196-fold.m196-shut{display:flex!important}.m196-fb{display:none}.m196-b:not(.on){opacity:.5}}';
+    +'.m196-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px 12px;margin:6px 0 4px}.m196-grid label,.m196-grid>div{display:flex;flex-direction:column;gap:4px;min-width:0}.m196-grid span{font-size:12.5px;color:#344054;font-weight:600}'
+    +'.m196-in{padding:6px 9px;border:1px solid #d0d5dd;border-radius:6px;font:inherit;font-size:13.5px;min-width:0;background:rgba(254,240,138,.22)}.m196-in.w{width:100%;box-sizing:border-box;margin-top:6px;background:#fff}.m196-in:focus{outline:2px solid #1e6cdb;background:#fff}'
+    +'.m196-row{display:flex;gap:6px;flex-wrap:wrap}.m196-row.col{flex-direction:column;align-items:stretch}.m196-b.wide{text-align:left;padding:8px 12px;font-size:13.5px}.m196-b.on.c{background:#fef0c7;border-color:#fdb022;color:#93370d;font-weight:700}'
+    +'.m196-note{font-size:12.5px;color:#475467;margin:8px 0}.m196-sec{font-size:14px;margin:16px 0 6px;color:#101828;border-top:1px solid #eaecf0;padding-top:12px}'
+    +'.m196-q{display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:start;padding:8px 0;border-bottom:1px dashed #eaecf0}.m196-q .m196-in.w{grid-column:1/-1;margin-top:0}.m196-qt{font-size:13.5px;color:#101828}.m196-qt small{display:block;color:#667085;font-size:12px;margin-top:2px}.m196-qt small.sk{color:#b54708}'
+    +'.m196-q.skip{opacity:.5}.m196-st{background:#f8f9fc;border:1px solid #d0d5dd;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13.5px;line-height:1.5}.m196-st i{color:#667085;font-size:12.5px}'
+    +'.m196-sig{margin-top:10px}.m196-sig img{max-height:70px;display:block}.m196-sig small{color:#667085}'
+    +'@media print{.m196-fold.m196-shut{display:block!important}.m24-mh.m196-fold.m196-shut{display:flex!important}.m196-fold.m196-np.m196-shut{display:none!important}.m196-fb{display:none}.m196-b:not(.on){opacity:.5}.m196-q.skip{display:none}}';
   document.head.appendChild(css);
 
   /* page 8 of the admission terms ends before the checklist (image cut at the checklist heading) */
@@ -80,6 +140,11 @@
   const pno=img=>+((img.getAttribute('src')||'').match(/\/p(\d+)\.png/)||[])[1];
   const head=pg=>{const h=pg.previousElementSibling;return h&&h.classList.contains('m24-mh')?h:pg;};
   function fix(){
+    /* clinical documentation page, list view: a form with its own on-screen layout replaces the list of blanks */
+    document.querySelectorAll('.cdf-form').forEach(fl=>{const fid=cur(),F=FORMS[fid];if(!F||!F.list||fl.dataset.m196)return;
+      fl.dataset.m196='1';const ed=!!fl.querySelector('input:not([disabled]),textarea:not([disabled]),select:not([disabled])');
+      const ck=document.createElement('div');ck.className='m196-ck';ck.dataset.fid=fid;ck.dataset.ed=ed?'1':'0';ck.innerHTML=F.ck(ed);
+      fl.style.display='none';fl.parentNode.insertBefore(ck,fl);});
     Object.keys(FORMS).forEach(fid=>{const F=FORMS[fid];
       const imgs=[...document.querySelectorAll('.cdf-page>img[src*="forms/'+fid+'/p"]')];if(!imgs.length)return;
       new Set(imgs.map(i=>i.parentElement.parentNode)).forEach(box=>{
@@ -87,7 +152,7 @@
         const at=n=>pages.find(pg=>pno(pg.querySelector('img'))===n);
         const w=pages[0].style.width||'',ed=cur()===fid&&!!box.querySelector('.cdf-f:not(.cdf-ro)');
         const open=box.dataset.m196open==='1';
-        F.fold.forEach(n=>{const pg=at(n);if(!pg)return;[pg,head(pg)].forEach(e=>{e.classList.add('m196-fold');e.classList.toggle('m196-shut',!open);});});
+        F.fold.forEach(n=>{const pg=at(n);if(!pg)return;[pg,head(pg)].forEach(e=>{e.classList.add('m196-fold');if(F.np)e.classList.add('m196-np');e.classList.toggle('m196-shut',!open);});});
         const f1=at(F.fold[0]);
         if(f1&&!box.querySelector(':scope>.m196-fb')){const fb=document.createElement('div');fb.className='m196-fb';fb.style.width=w;
           const lab=()=>(box.dataset.m196open==='1'?'Hide ':'Show ')+F.what;
@@ -96,7 +161,8 @@
           box.insertBefore(fb,head(f1));}
         if(!box.querySelector(':scope>.m196-ck')){const ref=F.before?at(F.before):at(F.after);if(!ref)return;
           const ck=document.createElement('div');ck.className='m196-ck';ck.style.width=w;ck.dataset.fid=fid;ck.dataset.ed=ed?'1':'0';ck.innerHTML=F.ck(ed);
-          if(F.before)box.insertBefore(ck,head(ref));else box.insertBefore(ck,ref.nextSibling);}
+          const fb=box.querySelector(':scope>.m196-fb');
+          if(F.ckFirst&&fb)box.insertBefore(ck,fb);else if(F.before)box.insertBefore(ck,head(ref));else box.insertBefore(ck,ref.nextSibling);}
       });
     });
   }
