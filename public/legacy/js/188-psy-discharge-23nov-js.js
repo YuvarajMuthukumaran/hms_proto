@@ -172,7 +172,13 @@
     /* 24 Nov meeting: the summary review and the patient/family signature are items of the psychiatrist's own list */
     if(g){S2.querySelectorAll('label.check[data-m23]').forEach(l=>{if(g.contains(l))return;const nx=l.nextElementSibling&&l.nextElementSibling.classList.contains('m23-dcb')?l.nextElementSibling:null;
       l.classList.add('m24-in');const t=l.querySelector('.grow > span:first-child,.grow b,.grow strong');if(t&&/^Summary reviewed/.test(t.textContent.trim()))t.textContent='Review discharge summary';
-      g.appendChild(l);if(nx)g.appendChild(nx);});}
+      g.appendChild(l);if(nx)g.appendChild(nx);});
+      /* 24 Nov (owner): Form C goes into the psychiatrist's list too; the emptied "Other items before signing" card goes, and the
+         Review, confirm and sign card loses its step number */
+      S2.querySelectorAll('label.check').forEach(l=>{if(g.contains(l)||!/^Form C signed by the patient/.test((l.textContent||'').trim()))return;
+        const card=l.closest('section.card');l.classList.add('m24-in');g.appendChild(l);
+        if(card&&![...card.querySelectorAll('label.check')].some(x=>!x.classList.contains('m20-hide')))card.classList.add('m20-hide');});
+      S2.querySelectorAll('section.card .hd h3').forEach(h=>{if(/Review, confirm and sign$/.test(h.textContent.trim())){const n=h.querySelector('.pg-stepn');if(n)n.remove();}});}
     S2.querySelectorAll('.small.muted').forEach(d=>{if(/^Belongings, bill clearance and bed release/.test((d.textContent||'').trim()))d.textContent='Billing and belongings are in the Admin group above.';});
   }
 
