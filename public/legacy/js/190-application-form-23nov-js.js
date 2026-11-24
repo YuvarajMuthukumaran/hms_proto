@@ -20,10 +20,11 @@
     ['Spouse and children',[
       ['Work and marriage','',[['occ','Occupation','',6],['marital','Marital status','marital',12]]],
       ['Spouse','Leave empty if single',[['sp','Name of the spouse','',6],['spAge','Age, if alive','',2],['spOcc','Occupation','',4],['spLive','Living together or separate','live',12],['spAddr','Address of the spouse','area',12]]],
-      ['Children','',[['kids','Number of children','',4],['#k','Children','']]]
+      ['Children','',[['kids','Number of children','',4],['#k','Children','']]],
+      /* Trello 226: the guardian is asked with the spouse and children; picking Spouse, Son or Daughter fills that person in */
+      ['Relative or guardian','The person applying for the patient',[['gRel','Relationship to the patient','rel',12],['gTitle','Title','title',3],['gFirst','First name','',3],['gMiddle','Middle name','',3],['gSur','Surname','',3],['gAddr','Address','area',8],['gPh','Phone numbers','',4],['gCaddr','Correspondence address','area',12,'gAddr']]]
     ]],
-    ['Guardian and psychiatric data',[
-      ['Relative or guardian','The person applying for the patient',[['gRel','Relationship to the patient','rel',12],['gTitle','Title','title',3],['gFirst','First name','',3],['gMiddle','Middle name','',3],['gSur','Surname','',3],['gAddr','Address','area',8],['gPh','Phone numbers','',4],['gCaddr','Correspondence address','area',12,'gAddr']]],
+    ['Psychiatric data',[
       ['Psychiatric data','For office use. Filled by the treating psychiatrist',[['dur','Duration of illness','',4],['doc','Examined by (Dr)','',4],['exDate','Examined on','date',2],['exTime','Time','time',2],['sym','Current symptoms','area',6],['dx','Diagnosis','area',6],['rem','Remarks','area',12]]]
     ]]
   ];
@@ -134,7 +135,17 @@
     show();
   };
   window.apfGo=function(i){grab();cur.page=Math.max(0,Math.min(PAGES.length-1,i));draw2();};
-  window.apfPick=function(k,o){grab();cur.v[k]=cur.v[k]===o?'':o;draw2();};
+  function gFill(o){
+    const v=cur.v,put=(k,x)=>{if(String(x||'').trim())v[k]=String(x).trim();};
+    let nm='',ad='',ph='',ti='';
+    if(o==='Spouse'){nm=v.sp;ad=v.spLive==='Living together'?v.paddr:v.spAddr;ph=v.spLive==='Living together'?v.pph:'';ti=v.sex==='Male'?'Mrs':v.sex==='Female'?'Mr':'';}
+    else if(o==='Son'||o==='Daughter'){const n=String(v.c1||'').trim()||!String(v.c2||'').trim()?1:2;nm=v['c'+n];ad=v['c'+n+'a'];ph=v['c'+n+'p'];ti=o==='Son'?'Mr':'Ms';}
+    else return;
+    if(!String(nm||'').trim()){toast('No '+(o==='Spouse'?'spouse':'child')+' name above yet');return;}
+    const p=String(nm).trim().split(/\s+/);v.gFirst=p[0];v.gMiddle=p.length>2?p.slice(1,-1).join(' '):'';v.gSur=p.length>1?p[p.length-1]:'';
+    put('gTitle',ti);put('gAddr',ad);put('gPh',ph);
+  }
+  window.apfPick=function(k,o){grab();cur.v[k]=cur.v[k]===o?'':o;if(k==='gRel'&&cur.v.gRel)gFill(o);draw2();};
   window.apfSave=function(stay){
     grab();
     const rec={v:Object.assign({},cur.v),by:signer(),at:atNow(),ts:Date.now(),role:String((window.__TULASI__||{}).role||'')};
