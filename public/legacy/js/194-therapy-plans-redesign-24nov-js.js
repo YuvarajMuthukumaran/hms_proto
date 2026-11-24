@@ -80,7 +80,7 @@
     const t=day(),first=new Date(cm.y,cm.m,1),n=new Date(cm.y,cm.m+1,0).getDate(),lead=(first.getDay()+6)%7,sel=ST['s'+pid];
     let h=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="tp4-dow">${d}</div>`).join('')+'<div class="tp4-blank"></div>'.repeat(lead);
     for(let i=1;i<=n;i++){const d=new Date(cm.y,cm.m,i),k=kOf(d);
-      const c=cell(d,k);h+=`<button type="button" style="--i:${i}" class="tp4-day${c?' has':''}${d>t?' fut':''}${+d===+t?' today':''}${sel===k?' sel':''}" onclick="tp4Day('${Q(pid)}','${k}')" aria-label="${fmtD(d)}"><span class="n">${i}</span>${c}</button>`;}
+      const c=cell(d,k);h+=`<button type="button" style="--i:${i}" class="tp4-day${c?' has':''}${d.getDay()%6===0?' we':''}${d>t?' fut':''}${+d===+t?' today':''}${sel===k?' sel':''}" onclick="tp4Day('${Q(pid)}','${k}')" aria-label="${fmtD(d)}"><span class="n">${i}${+d===+t?'<em>Today</em>':''}</span>${c}</button>`;}
     return `<div class="tp4-nav"><button type="button" class="btn sm" onclick="tp4Mon('${Q(pid)}',-1)" aria-label="Previous month">‹</button><b>${MN[cm.m]} ${cm.y}</b><button type="button" class="btn sm" onclick="tp4Mon('${Q(pid)}',1)" aria-label="Next month">›</button></div><div class="tp4-cal">${h}</div>`;
   }
   const card=(title,right,body)=>`<div class="tp4-card"><div class="tp4-ch"><h3>${title}</h3>${right||''}</div><div class="tp4-cb">${body}</div></div>`;
@@ -189,6 +189,13 @@
     '.tp4-anim .tp4-cal .tp4-mk,.tp4-anim .tp4-cal .tp4-tag{animation:tp4Pop .3s cubic-bezier(.3,1.4,.6,1) both;animation-delay:calc(var(--i)*12ms + .2s)}',
     '.tp4-day.sel .tp4-mk{animation:tp4Pop .25s cubic-bezier(.3,1.4,.6,1)}',
     '@media(prefers-reduced-motion:reduce){.tp4-day,.tp4-card,.tp4-mk,.tp4-tag{animation:none!important;transition:none!important}.tp4-day:hover{transform:none}}',
+    /* owner 24 Nov: calendar slightly bigger and easier to read */
+    '.tp4-cal{gap:6px}.tp4-dow{font-size:12.5px;color:#334155;text-transform:uppercase;letter-spacing:.04em;padding:4px 0 6px}',
+    '.tp4-day{min-height:96px;padding:7px 8px;gap:5px;border-radius:10px}.tp4-day .n{font-size:14px;display:flex;justify-content:space-between;align-items:center}',
+    '.tp4-day .n em{font-style:normal;font-size:10.5px;font-weight:700;color:#fff;background:#0f172a;border-radius:99px;padding:1px 7px}',
+    '.tp4-day.we:not(.has):not(.sel){background:#fafbfc}',
+    '.tp4-cal .tp4-mk{width:13px;height:13px}.tp4-ms{gap:5px}.tp4-tag{font-size:11.5px;padding:2px 6px}.tp4-tag svg{width:11px;height:11px}',
+    '.tp4-legend{font-size:12.5px}.tp4-legend .tp4-mk{width:11px;height:11px}.tp4-nav b{font-size:15px}.tp4-ch h3{font-size:15px}',
     '@media(max-width:960px){.tp4-grid{grid-template-columns:minmax(0,1fr)}}',
     '@media(max-width:600px){.tp4-day{min-height:50px}.tp4-tag{display:none}}'
   ].join('');
