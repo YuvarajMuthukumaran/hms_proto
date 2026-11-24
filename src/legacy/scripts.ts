@@ -197,4 +197,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/196-forms-reformat-24nov-js.js',
   '/legacy/js/197-form-autofill-24nov-js.js',
   '/legacy/js/198-orders-consents-24nov-js.js',
+  '/legacy/js/199-form-choice-cleanup-24nov-js.js',
 ];

@@ -48,7 +48,7 @@
     /* vitals trend: no green marks */
     '.vx-st.ok{display:none!important}',
     /* forms: blanks stand apart */
-    '.cdf-page .cdf-f:not(.cdf-ro){background:#eaf4ff!important;box-shadow:inset 0 -1px 0 rgba(46,144,250,.6)!important;color:#101828!important}',
+    '.cdf-page .cdf-f:not(.cdf-ro){background:rgba(46,144,250,.05)!important;box-shadow:inset 0 -1px 0 rgba(46,144,250,.55)!important;color:#101828!important}',
     '.cdf-page .cdf-f:not(.cdf-ro):focus{background:#fff!important;box-shadow:0 0 0 2px #1e6cdb!important}',
     '.cdf-page .cdf-chk.on{background:#dcfae6!important;color:#067647}',
     '.m24-mh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:12px auto 6px;padding:8px 12px;border-radius:10px;background:#eef4ff;border:1px solid #c7d7fe;font-size:13px;color:#1d2939;box-sizing:border-box}',
