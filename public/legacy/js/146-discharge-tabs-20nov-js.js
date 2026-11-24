@@ -173,7 +173,7 @@
     const D=dcrx(pid);D.th=D.th||{};const t=D.th,rel=((px(pid).sn||{}).relapse)||null;
     const sel=(f,list,ph)=>`<select class="input" onchange="dc2ThSet('${Q(pid)}','${f}',this.value)"><option value="">${ph}</option>${list.concat(t[f]&&!list.includes(t[f])?[t[f]]:[]).map(o=>`<option ${o===t[f]?'selected':''}>${E(o)}</option>`).join('')}</select>`;
     return `<section class="card m20-col" id="m20Th"><div class="hd"><div><h3>Therapy plan after discharge</h3><div class="small muted" style="margin-top:4px">As on the OPD prescription: therapy, how often, how long.</div></div></div>
-      <div class="pad m20-stack"><label class="field"><span class="lbl">Therapy type</span>${sel('mod',TMODS,'Pick a therapy')}</label>
+      <div class="pad m20-stack"><label class="field"><span class="lbl">Therapy type</span>${sel('mod',TMODS,'Pick a therapy')}</label>${((ctx(pid)||{}).team||{}).psych?`<div class="small"><span class="muted">Psychologist:</span> <b>${E(ctx(pid).team.psych)}</b></div>`:''}
       <div class="m20-g2"><label class="field"><span class="lbl">How often</span>${sel('freq',TFR,'Frequency')}</label><label class="field"><span class="lbl">Duration</span>${sel('dur',TDUR,'Duration')}</label></div>
       <label class="field"><span class="lbl">Follow-up with the psychologist</span><input class="input" type="date" value="${E(t.fu||'')}" onchange="dc2ThFu('${Q(pid)}',this.value)"></label>
       ${rel?`<div class="box small"><div class="lbl">Relapse prevention plan</div>${[['Triggers',rel.trig],['Early warning signs',rel.ews],['Coping plan',rel.cope],['Support contacts',rel.sup]].filter(x=>x[1]).map(x=>`<div style="margin-top:4px"><b>${x[0]}:</b> ${E(x[1])}</div>`).join('')}</div>`:''}</div></section>`;
@@ -184,7 +184,7 @@
     const t=dcrx(pid).th||{},rel=((px(pid).sn||{}).relapse)||null;
     const row=(l,v)=>`<div class="box small"><div class="lbl">${l}</div><div style="margin-top:4px">${v?E(v):'<span class="muted">Not set yet</span>'}</div></div>`;
     return `<section class="card m20-col" id="m20Th"><div class="hd"><div><h3>Therapy plan after discharge</h3><div class="small muted" style="margin-top:4px">Set by the psychologist.</div></div></div>
-      <div class="pad m20-stack">${row('Therapy plan',t.mod)}${row('How often',t.freq)}${t.dur?row('Duration',t.dur):''}${row('Follow-up with the psychologist',fmtD(t.fu))}
+      <div class="pad m20-stack">${row('Therapy plan',t.mod)}${row('How often and duration',[t.freq,t.dur?'for '+t.dur:''].filter(Boolean).join(' '))}${((ctx(pid)||{}).team||{}).psych?row('Psychologist',ctx(pid).team.psych):''}${row('Follow-up with the psychologist',fmtD(t.fu))}
       ${rel?`<div class="box small"><div class="lbl">Relapse prevention plan</div>${[['Triggers',rel.trig],['Early warning signs',rel.ews],['Coping plan',rel.cope],['Support contacts',rel.sup]].filter(x=>x[1]).map(x=>`<div style="margin-top:4px"><b>${x[0]}:</b> ${E(x[1])}</div>`).join('')}</div>`:''}</div></section>`;
   }
 
@@ -235,7 +235,7 @@
       const fuN=F&&Dd?Math.round((F-Dd)/DAY):null;
       const onScr={};document.querySelectorAll('#view label.field').forEach(l=>{const lb=l.querySelector('.lbl'),ta=l.querySelector('textarea');if(lb&&ta)onScr[dcHead(lb.textContent)]=ta.value;});
       const sv=px(pid).dcs||{},fF=DCO.map(k=>[dcHead(k),onScr[dcHead(k)]!==undefined?onScr[dcHead(k)]:(sv[k]||'')]),ci=fF.findIndex(f=>/^Condition at the Time of Discharge/i.test(f[0]));
-      const sec=f=>`<h3>${E(f[0])}:</h3><div class="tx">${H(f[1]||'-')}</div>`;
+      const sec=f=>String(f[1]||'').trim()?`<h3>${E(f[0])}:</h3><div class="tx">${H(f[1])}</div>`:'';
       const rows=medRows(pid).map((r,i)=>`<tr><td>${i+1}) ${E(r.name)}</td><td>${E([r.s.freq,r.s.food].filter(Boolean).join(', ')||'-')}</td><td>${E(daysTxt(r.s.start,r.s.end)||'Till review')}</td></tr>`).join('');
       const rx=`<h3>Rx:</h3>`+(rows?`<table class="rx"><tr><td>Drug/Medicine Name</td><td>Dose</td><td>Duration</td></tr>${rows}</table>`:'<div class="tx">No medicines at discharge.</div>');
       const ty=typeOf(pid)||'',TY=[['Treatment Completed',/complet/i],['Transferred to other institution',/transfer/i],['Discharge on Request (DOR)',/request|\bDOR\b/i],['Leave Against Medical Advice (LAMA)',/against|\bLAMA\b/i],['Absconding',/abscond/i]];
@@ -257,7 +257,8 @@
         table.ty{border-collapse:collapse;width:480px}.ty td{border:1px solid #c8cfd8;padding:5px 10px}.ty tr.on td{background:#dbe6f6;color:#1f3c88;font-weight:700;border-left:3px solid #1f3c88}
         .yn{width:110px;text-align:center;white-space:nowrap}.p{display:inline-block;border:1px solid #bbb;border-radius:10px;padding:0 9px;margin:0 2px;font-size:10.5px;color:#aaa}.p.y{background:#1f3c88;border-color:#1f3c88;color:#fff;font-weight:700}.p.n{color:#111;font-weight:700;border-color:#555}
         table.rx{border-collapse:collapse;width:470px}.rx td{border:1.5px solid #111;padding:2px 6px}
-        .fu{display:grid;grid-template-columns:2fr 2fr 1fr;font-size:11.5px}.team{font-weight:700;margin-top:6px;font-size:12.5px}
+        table.fut{border-collapse:collapse;width:100%;margin-top:6px;font-size:11.5px}.fut th,.fut td{border:1px solid #c8cfd8;padding:4px 8px;text-align:left}.fut th{background:#f1f4f9;color:#1f3c88}
+        .sgn{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:36px;font-size:11.5px}.sgn .sl{border-bottom:1px solid #333;height:44px;margin-bottom:6px}.sgn b{display:block;font-size:12.5px}.sgn span{display:block;color:#555}.sgn .st{font-size:10.5px;color:#888;margin-top:2px}
         .foot{border-top:1.5px solid #999;margin-top:22px;padding-top:12px;text-align:center}.foot .r{color:#e00;font-weight:700}.foot i{display:block;color:#555;margin-top:10px}
         *{-webkit-print-color-adjust:exact;print-color-adjust:exact}@media print{body{margin:10mm 12mm}}</style></head><body>
         <div class="top"><div class="addr"><p>Sector-64, Opp: M3M Urbana,<br>Gurgaon - 122102</p><p>2/6 Sarvpriya Vihar, Near Hauzkhas Metro,<br>New Delhi - 110016</p><p><b>Appointments:8800000255</b></p></div>
@@ -270,13 +271,12 @@
         ${ama?[['State of mental health',l.state],['Treatment proposed',l.prop],['Risks explained',l.risk]].map(x=>sec([x[0],x[1]])).join(''):''}
         ${body}
         <h3>Suggestions</h3><div class="tx"><b>${fuN!=null&&fuN>=0?'Follow-up advised after '+fuN+(fuN===1?' day':' days')+'.':'Follow-up: date not set yet.'}</b></div>
-        <div class="fu"><span>Psychiatrist</span><span>Follow-up Date</span><span>Day</span>
-          <span>${E(fuDocOf(pid)||team.psy||'-')}</span><span>${F?E(fdt(D.fu)):'---'}</span><span>${F?wk(F):'---'}</span>
-          <span>Psychologist</span><span>Follow-up Date</span><span>Day</span>
-          <span>${E(team.psych||'-')}</span><span>${T?E(fdt(t.fu)):'---'}</span><span>${T?wk(T):'---'}</span></div>
-        ${t.mod||t.freq||t.dur?`<div class="tx" style="margin-top:6px">Therapy plan: ${E([t.mod,t.freq,t.dur].filter(Boolean).join(' · '))}</div>`:''}
-        <div class="team">${E(team.psy||'')}</div>
-        <div class="foot"><div class="r">For urgent help, call 8800000255 or 7707070002 (24x7)</div><div class="r">If the patient shows suicidal thoughts or self-harm, severe agitation or aggression, a severe panic attack, an overdose or withdrawal symptoms, or signs of mania.</div><i>This is a digitally generated document; signature is not required.</i></div>
+        <table class="fut"><tr><th>Follow-up with</th><th>Name</th><th>Follow-up date</th><th>Day</th></tr>
+          <tr><td>Psychiatrist</td><td>${E(fuDocOf(pid)||team.psy||'-')}</td><td>${F?E(fdt(D.fu)):'---'}</td><td>${F?wk(F):'---'}</td></tr>
+          <tr><td>Psychologist</td><td>${E(team.psych||'-')}</td><td>${T?E(fdt(t.fu)):'---'}</td><td>${T?wk(T):'---'}</td></tr></table>
+        ${t.mod||t.freq||t.dur?`<h3>Therapy plan:</h3><div class="tx">${E(t.mod||'Therapy')}${t.freq||t.dur?' · '+E([t.freq,t.dur?'for '+t.dur:''].filter(Boolean).join(' ')):''}${team.psych?' · Psychologist: '+E(team.psych):''}</div>`:''}
+        <div class="sgn">${[['Psychiatrist',team.psy],['Psychologist',team.psych]].map(x=>`<div><div class="sl"></div><b>${E(x[1]||'')}</b><span>${x[0]}, Tulasi Healthcare</span><span class="st">Signature and stamp</span></div>`).join('')}</div>
+        <div class="foot"><div class="r">For urgent help, call 8800000255 or 7707070002 (24x7)</div><div class="r">If the patient shows suicidal thoughts or self-harm, severe agitation or aggression, a severe panic attack, an overdose or withdrawal symptoms, or signs of mania.</div></div>
         <script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>`;
       const w=window.open('','_blank');
       if(!w){toast('Allow pop-ups for this site to download the PDF');return;}

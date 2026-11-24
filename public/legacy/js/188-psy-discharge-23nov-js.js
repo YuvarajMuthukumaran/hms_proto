@@ -105,8 +105,9 @@
     if(!tl){
       W.querySelectorAll('.m20p[data-k="plan"],.m20p[data-k="griev"],.m20-griev,#dcPlan').forEach(e=>e.remove());
       tl=document.createElement('ol');tl.className='m23-tl';
-      [['type','Discharge type'],['summary','Summary'],['meds','Medication plan'],['therapy','Therapy plan']].forEach(([k,t])=>{const p=W.querySelector('.m20p[data-k="'+k+'"]');if(!p)return;
-        const li=document.createElement('li');li.className='m23-tls';li.innerHTML='<span class="m23-tld">'+(tl.children.length+1)+'</span><div class="m23-tlb"><div class="m23-tlh">'+t+'</div></div>';li.querySelector('.m23-tlb').appendChild(p);tl.appendChild(li);});
+      /* 24 Nov meeting: discharge type and summary are one step */
+      [['type summary','Discharge summary'],['meds','Medication plan'],['therapy','Therapy plan']].forEach(([k,t])=>{const ps=k.split(' ').map(x=>W.querySelector('.m20p[data-k="'+x+'"]')).filter(Boolean);if(!ps.length)return;const p=ps[0];
+        const li=document.createElement('li');li.className='m23-tls';li.innerHTML='<span class="m23-tld">'+(tl.children.length+1)+'</span><div class="m23-tlb"><div class="m23-tlh">'+t+'</div></div>';ps.forEach(x=>li.querySelector('.m23-tlb').appendChild(x));tl.appendChild(li);});
       const nav=W.querySelector('.m20n');if(nav)nav.after(tl);else W.appendChild(tl);
     }
     W.classList.add('m23-dcw');
@@ -117,7 +118,7 @@
     let bar=W.querySelector('.m23-sb');
     if(!bar){bar=document.createElement('nav');bar.className='m23-sb';bar.setAttribute('aria-label','Discharge summary steps');bar.innerHTML='<div class="m23-sbr"></div><div class="m23-sbt"><i></i></div>';tl.before(bar);}
     bar.style.display=isC?'none':'';
-    const SBI={'Discharge type':'<path d="M14 4h5v16h-5"/><path d="M4 12h11M11 8l4 4-4 4"/>','Summary':'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>','Medication plan':'<rect x="3" y="9" width="18" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><path d="M9.5 9l4.5 6.5"/>','Therapy plan':'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>'};
+    const SBI={'Discharge summary':'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>','Discharge type':'<path d="M14 4h5v16h-5"/><path d="M4 12h11M11 8l4 4-4 4"/>','Summary':'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>','Medication plan':'<rect x="3" y="9" width="18" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><path d="M9.5 9l4.5 6.5"/>','Therapy plan':'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>'};
     const ok='<path d="M5 12.5l4.5 4.5L19 7.5"/>',svg=d=>'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
     bar.querySelector('.m23-sbr').innerHTML=lis.map((li,i)=>{const t=(li.querySelector('.m23-tlh')||{}).textContent||'';const st=i<cur?'done':i===cur?'on':i===cur+1?'next':'';
       return '<button type="button" class="m23-sbi '+st+'" '+(i===cur?'aria-current="step" ':'')+'onclick="m23DcStep(\''+Q(pid)+'\','+i+')"><span class="qic">'+svg(i<cur?ok:(SBI[t]||''))+'</span><span class="qtx"><span class="qst">Step '+(i+1)+' of '+lis.length+'</span><span class="qtt">'+t+'</span><span class="qws">'+(i<cur?'Done':i===cur?'You are here':i===cur+1?'Up next':'Later')+'</span></span></button>';}).join('');
@@ -168,6 +169,10 @@
         const sub=l.querySelector('.grow');if(sub){const s2=sub.querySelectorAll('span');const last=s2[s2.length-1];if(last&&s2.length>1)last.textContent='Signed by the family (sometimes the patient). Print it, or collect the e-signature here.';}
       }
     });
+    /* 24 Nov meeting: the summary review and the patient/family signature are items of the psychiatrist's own list */
+    if(g){S2.querySelectorAll('label.check[data-m23]').forEach(l=>{if(g.contains(l))return;const nx=l.nextElementSibling&&l.nextElementSibling.classList.contains('m23-dcb')?l.nextElementSibling:null;
+      l.classList.add('m24-in');const t=l.querySelector('.grow > span:first-child,.grow b,.grow strong');if(t&&/^Summary reviewed/.test(t.textContent.trim()))t.textContent='Review discharge summary';
+      g.appendChild(l);if(nx)g.appendChild(nx);});}
     S2.querySelectorAll('.small.muted').forEach(d=>{if(/^Belongings, bill clearance and bed release/.test((d.textContent||'').trim()))d.textContent='Billing and belongings are in the Admin group above.';});
   }
 
@@ -176,7 +181,7 @@
     '.m23-dcw .m20n .m20n-t{display:none!important}.m23-dcw .m20n{background:none;padding:0;justify-content:flex-end}'+
     '.m23-tl{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column}'+
     '.m23-sb{display:block;margin:4px 0 18px;background:#fff;border:1px solid #e4e8ee;border-radius:14px;overflow:hidden}'+
-    '.m23-sbr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}'+
+    '.m23-sbr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}'+
     '.m23-sbi{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 16px;min-width:0;position:relative;transition:background .2s}'+
     '.m23-sbi+.m23-sbi{border-left:1px solid #eef1f5}'+
     '.m23-sbi:hover{background:#f8fafc}.m23-sbi:focus-visible{outline:2px solid #1e6cdb;outline-offset:-2px}'+

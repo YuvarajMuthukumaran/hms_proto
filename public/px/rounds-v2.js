@@ -23,7 +23,7 @@
     ['A', 'Afternoon', 'How did the morning go?', 'How did the morning go? Was what we talked about earlier sorted?'],
     ['E', 'Evening', 'How was your day?', 'How was your day? Is there anything before tonight?']];
   var ANS = [['good', 'All good', '#067647', '#ECFDF3'], ['notgood', 'Not good', '#B42318', '#FEF3F2'], ['tell', 'Wants to tell us', '#B54708', '#FFFAEB'], ['na', 'Not available', '#475467', '#F2F4F7']];
-  var GOES = { Food: 'Kitchen supervisor · 4 h', Room: 'Housekeeping supervisor · 4 h', Sleep: 'Nursing in-charge · 4 h', 'Family and calls': 'Psychologist · 6 h', Staff: 'Patient experience lead · 6 h', Treatment: 'Treating psychiatrist · 6 h', 'Other patients': 'Nursing in-charge · 6 h', 'Belongings and laundry': 'Housekeeping supervisor · 6 h', Activities: 'Patient experience (you) · 6 h', 'Leaving or rights': 'Treating psychiatrist now, DAMA flag on Today', Rights: 'Kanika and Chandraji · 6 h, DAMA flag on Today if leaving', Safety: 'Chandraji and the treating doctor · now', 'Something else': 'Patient experience (you) · 6 h' };
+  var GOES = { Food: 'Kitchen supervisor · 4 h', Room: 'Housekeeping supervisor · 4 h', Sleep: 'Nursing in-charge · 4 h', 'Family and calls': 'Psychologist · 6 h', Staff: 'Patient experience lead · 6 h', Treatment: 'Treating psychiatrist · 6 h', 'Other patients': 'Nursing in-charge · 6 h', 'Belongings and laundry': 'Housekeeping supervisor · 6 h', Activities: 'Patient experience (you) · 6 h', 'Leaving or rights': 'Treating psychiatrist now, DAMA flag on Today', Rights: 'Kanika and Mr. S. Chandra · 6 h, DAMA flag on Today if leaving', Safety: 'Mr. S. Chandra and the treating doctor · now', 'Something else': 'Patient experience (you) · 6 h' };
   var gAB = function () { return typeof AB !== 'undefined' ? AB : []; };
   var gTODAY = function () { return typeof TODAY !== 'undefined' ? TODAY : []; };
   var P = function () { return (window.HMS_PATIENTS && window.HMS_PATIENTS.patients) || []; };
@@ -110,7 +110,7 @@
       if (!sp) { toast('Pick the exact issue'); return null; }
       if (!words) { toast('Write what they said, in their words'); return null; }
       var safe = !!(T[4] && T[4].indexOf(sp) >= 0), leaving = sp === 'Wants to leave now';
-      var owner = safe ? 'Chandraji and the treating doctor' : sp === 'Billing question' ? 'Billing desk' : sp === 'Wants to make a formal complaint' ? 'Kanika and Chandraji' : leaving ? 'Treating psychiatrist and Chandraji' : T[1];
+      var owner = safe ? 'Mr. S. Chandra and the treating doctor' : sp === 'Billing question' ? 'Billing desk' : sp === 'Wants to make a formal complaint' ? 'Kanika and Mr. S. Chandra' : leaving ? 'Treating psychiatrist and Mr. S. Chandra' : T[1];
       var title = topic + ': ' + sp + ' · "' + words + '"';
       if (topic === 'Sleep') add({ kind: 'note', id: nextId('N'), patient: p.name, room: room, title: title, owner: 'Nursing in-charge', cat: T[2] });
       else if (topic === 'Activities') add({ kind: 'request', id: nextId('Q'), patient: p.name, room: room, title: title, owner: 'Patient experience (you)', cat: T[2] });
@@ -129,7 +129,7 @@
     jset(RV, D); jset(KEY, S);
     try { window.PXRounds && window.PXRounds.read(); } catch (e) {}
     var g = made.filter(function (e) { return e.kind === 'grievance'; }), sg = made.filter(function (e) { return e.safety; });
-    toast(p.name.split(' ')[0] + ' saved.' + (g.length ? ' ' + g[0].id + ' sent to ' + g[0].owner + '.' : '') + (sg.length ? ' Safety: Chandraji told.' : '') + (!navigator.onLine ? ' No signal: kept on this device.' : ''));
+    toast(p.name.split(' ')[0] + ' saved.' + (g.length ? ' ' + g[0].id + ' sent to ' + g[0].owner + '.' : '') + (sg.length ? ' Safety: Mr. S. Chandra told.' : '') + (!navigator.onLine ? ' No signal: kept on this device.' : ''));
     return p;
   }
   function toast(m) { var t = $('toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; t.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0F172A;color:#fff;padding:12px 18px;border-radius:12px;z-index:90;max-width:90vw;font-size:14px'; document.body.appendChild(t); } t.textContent = m; t.style.display = 'block'; clearTimeout(t._t); t._t = setTimeout(function () { t.style.display = 'none'; }, 4200); }
@@ -172,7 +172,7 @@
     var earlier = ['M', 'A', 'E'].filter(function (k) { return v[k]; }).map(function (k) { var e = v[k]; return '<div style="font-size:13px"><b>' + ({ M: 'Morning', A: 'Afternoon', E: 'Evening' }[k]) + ' ' + hhmm(e.at) + ':</b> ' + ({ good: 'all good', notgood: 'not good', tell: 'wanted to tell us', na: 'not available' }[e.a]) + (e.topic ? ' · ' + esc(e.topic + ': ' + e.sp) : '') + (e.words ? ' · "' + esc(e.words) + '"' : '') + '</div>'; }).join('');
     var T = gAB().filter(function (x) { return x[0] === state.topic; })[0];
     var step2 = (state.ans === 'notgood' || state.ans === 'tell') ? '<div><h4>Step 2 · what is it about?</h4><div class="rv-fl" style="margin-top:6px">' + gAB().map(function (x) { return '<button class="rv-ch ' + (state.topic === x[0] ? 'on' : '') + '" onclick="RV2.topic(\'' + esc(x[0]).replace(/\'/g, "\\'") + '\')">' + esc(x[0]) + '</button>'; }).join('') + '</div>' +
-      (T ? '<h4 style="margin-top:12px">Step 3 · ' + esc(T[0]) + ': what exactly?</h4><div class="rv-fl" style="margin-top:6px">' + (T[3] || []).map(function (o) { return '<button class="rv-ch ' + (state.sp === o ? 'on' : '') + '" onclick="RV2.sp(this.dataset.o)" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join('') + '</div><div style="margin-top:6px;font-size:13px;color:#475467"><b>Goes to:</b> ' + esc(state.sp === 'Wants to leave now' ? GOES['Leaving or rights'] : (T[4] && T[4].indexOf(state.sp) >= 0) ? 'Chandraji and the treating doctor · now' : (GOES[T[0]] || (T[1] === 'You' ? 'Patient experience (you)' : T[1]) + ' · 6 h')) + '</div>' : '') +
+      (T ? '<h4 style="margin-top:12px">Step 3 · ' + esc(T[0]) + ': what exactly?</h4><div class="rv-fl" style="margin-top:6px">' + (T[3] || []).map(function (o) { return '<button class="rv-ch ' + (state.sp === o ? 'on' : '') + '" onclick="RV2.sp(this.dataset.o)" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join('') + '</div><div style="margin-top:6px;font-size:13px;color:#475467"><b>Goes to:</b> ' + esc(state.sp === 'Wants to leave now' ? GOES['Leaving or rights'] : (T[4] && T[4].indexOf(state.sp) >= 0) ? 'Mr. S. Chandra and the treating doctor · now' : (GOES[T[0]] || (T[1] === 'You' ? 'Patient experience (you)' : T[1]) + ' · 6 h')) + '</div>' : '') +
       '<textarea rows="3" id="rvW" placeholder="What they said, in their words" oninput="RV2.words(this.value)">' + esc(state.words) + '</textarea></div>' : '';
     var dr = state.drafts && state.drafts[p.id];
     var scr = dr ? '<div style="background:#F2F7FF;border:1px solid #D5E4FB;border-radius:10px;padding:8px 10px;font-size:13px"><b>AI scribe draft</b><div style="margin:4px 0">' + esc(dr) + '</div><div class="rv-btns"><button class="rv-b pri" onclick="RV2.useDraft()">Use this</button><button class="rv-b" onclick="RV2.discardDraft()">Discard</button></div></div>'

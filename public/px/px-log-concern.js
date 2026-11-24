@@ -10,15 +10,15 @@
     ['Belongings', 'Low'], ['Billing and insurance', 'Low'], ['Medicines at discharge', 'Medium'], ['Rights', 'High'], ['Safety', 'High'], ['Other', 'Low']];
   var CLIN = ['Doctor communication', 'Treatment progress', 'Family updates', 'Therapist continuity'];
   var SEV = ['Low', 'Medium', 'High'];
-  var BY = ['Patient', 'Family member', 'Staff', 'Anonymous'];
+  var BY = ['Patient', 'Family member', 'Staff', 'Another team', 'Anonymous'];
   var REL = ['Father', 'Mother', 'Spouse', 'Son', 'Daughter', 'Brother', 'Sister', 'Other'];
   var SRC = ['Phone call', 'Came in person', 'Floor round', 'Ward meeting', 'Front desk', 'At discharge', 'WhatsApp or email'];
   var ESC = ['', 'Clinical team', 'Nursing', 'Front desk', 'Floor supervisor', 'Another team'];
   var WHEN = ['Today', 'Yesterday', 'This week', 'Earlier'];
   var ACT = [['yes', 'Yes, it needs action'], ['no', 'No, just a note'], ['praise', 'Compliment']];
-  var HINT = { Low: 'Low: due in 6 hours. It goes to S Chandra at 6 hours if it is still open.',
-    Medium: 'Medium: the owner is reminded at 3 hours. It goes to S Chandra at 6 hours if it is still open.',
-    High: 'High: S Chandra is told now. Due in 6 hours.' };
+  var HINT = { Low: 'Low: due in 6 hours. It goes to Mr. S. Chandra at 6 hours if it is still open.',
+    Medium: 'Medium: the owner is reminded at 3 hours. It goes to Mr. S. Chandra at 6 hours if it is still open.',
+    High: 'High: Mr. S. Chandra is told now. Due in 6 hours.' };
   var self = null, F = null, root = null;
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var pts = function () { var L = []; try { L = (self.data().P || []).filter(function (p) { return p && p.id; }); } catch (e) {} return L; };
@@ -26,20 +26,23 @@
   var room = function (p) { var r = p && p.room ? String(p.room).replace(/^Room\s*/, '') : ''; return /\d/.test(r) ? r : ''; };
   var sevOf = function (cat) { var c = CATS.filter(function (x) { return x[0] === cat; })[0]; return c ? c[1] : 'Low'; };
   var minSev = function () { var m = 0; F.issues.forEach(function (i) { if (i.cat) m = Math.max(m, SEV.indexOf(sevOf(i.cat))); }); return SEV[m]; };
-  var sev = function () { var m = minSev(); return F.sev && SEV.indexOf(F.sev) > SEV.indexOf(m) ? F.sev : m; };
+  /* 24 Nov meeting: severity is worked out from the categories; the person logging can change it either way */
+  var sev = function () { return F.sevSet && F.sev ? F.sev : minSev(); };
   var mainCat = function () { var best = null; F.issues.forEach(function (i) { if (i.cat && (!best || SEV.indexOf(sevOf(i.cat)) > SEV.indexOf(sevOf(best)))) best = i.cat; }); return best || 'Other'; };
   var route = function () {
     var cat = mainCat(), R = {}; try { R = self.routes(); } catch (e) {}
-    var r = sev() === 'High' ? (CLIN.indexOf(cat) >= 0 ? ['Floor lead psychiatrist', 'Clinical team'] : ['S Chandra', 'GM Operations']) : (R[cat] || R.Other || ['Kanika', 'Patient experience']);
+    var r = sev() === 'High' ? (CLIN.indexOf(cat) >= 0 ? ['Floor lead psychiatrist', 'Clinical team'] : ['Mr. S. Chandra', 'GM Operations']) : (R[cat] || R.Other || ['Kanika', 'Patient experience']);
     var o = r[0]; if (o === 'Treating psychiatrist') { var p = pt(F.pid); if (p && (p.doctor || p.dr)) o = p.doctor || p.dr; }
     return [o, r[1]];
   };
+  /* 24 Nov meeting: no phone box; the number comes from the patient record */
+  var contactOf = function () { var p = pt(F.pid); if (!p) return null; var ph = p.phone || p.mobile || p.gPhone || ''; if (!ph || F.by === 'Staff' || F.by === 'Another team' || F.by === 'Anonymous') return null; return [F.by === 'Family member' ? (p.gName || 'the family') + (F.rel ? ' (' + F.rel.toLowerCase() + ')' : '') : 'the patient', ph]; };
   var owners = function () {
     var R = {}, seen = {}, out = []; try { R = self.routes(); } catch (e) {}
     var add = function (o, r) { if (o && !seen[o]) { seen[o] = 1; out.push([o, r]); } };
     var auto = route(); add(auto[0], auto[1]);
     Object.keys(R).forEach(function (k) { add(R[k][0], R[k][1]); });
-    add('S Chandra', 'GM Operations'); add('Floor lead psychiatrist', 'Clinical team');
+    add('Mr. S. Chandra', 'GM Operations'); add('Floor lead psychiatrist', 'Clinical team');
     return out;
   };
   /* 24 Nov (Nikita): every choice is a drop-down that starts blank */
@@ -65,43 +68,46 @@
       + '.pxl-iss .pxl-g{gap:10px 14px}.pxl-lnk{border:0;background:none;color:#1e6cdb;font:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:4px 0}.pxl-lnk.rm{color:#667085;font-weight:500}'
       + '.pxl-note{color:#667085;font-size:13.5px;margin-top:6px}.pxl-row{display:flex;gap:10px;align-items:center}.pxl-row select{flex:1}'
       + '.pxl-ft{display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid #EAECF0}.pxl-b{border:1px solid #D0D5DD;background:#fff;border-radius:10px;padding:10px 18px;font:inherit;font-size:15px;font-weight:600;cursor:pointer}.pxl-b.pri{background:#1e6cdb;border-color:#1e6cdb;color:#fff}'
+      + '.pxl-g3{display:grid;grid-template-columns:1.4fr 1fr .8fr;gap:10px 14px}.pxl-sel{width:100%;text-align:left;border:1px solid #D0D5DD;border-radius:10px;padding:9px 12px;font:inherit;font-size:14.5px;background:#fff;cursor:pointer;color:#101828}.pxl-iss{padding:10px 0 12px;border:0;border-bottom:1px solid #EAECF0;border-radius:0;margin:0}'
       + '.pxl-err{color:#B42318;font-size:13.5px;margin-top:10px}';
     document.head.appendChild(s);
   }
 
   function draw() {
     if (!root) return;
-    var p = pt(F.pid), act = F.act, yes = act === 'yes' || !act;
+    var p = pt(F.pid), act = 'yes', yes = true;
     var q = F.q.toLowerCase(), list = pts().filter(function (x) { return !q || (x.name + ' ' + room(x) + ' ' + (x.uhid || '')).toLowerCase().indexOf(q) >= 0; }).slice(0, 60);
     var focus = document.activeElement && root.contains(document.activeElement) ? document.activeElement.getAttribute('data-k') : null;
     var h = '<div class="pxl" role="dialog" aria-label="Log a concern">'
       + '<div class="pxl-top"><div><h3>Someone raised a concern</h3><div class="sub">Log it once. It is saved to the patient record.</div></div><button type="button" class="pxl-lnk" data-x="back">Back</button></div>'
-      + '<div class="pxl-g"><div class="pxl-f"><label>Does anything need action?</label>' + sel('act', act, ACT) + '</div><div></div></div>'
       /* patient: one searchable drop-down */
       + '<div class="pxl-f"><label>Patient and room</label><div class="pxl-cb"><input data-k="q" placeholder="Search by name, room or UHID" value="' + esc(p && !F.ddOpen ? p.name + (room(p) ? ' · Room ' + room(p) : '') : F.q) + '" autocomplete="off">'
       + (F.ddOpen ? '<div class="pxl-dd">' + (list.length ? list.map(function (x) { return '<button type="button" data-pid="' + esc(x.id) + '" class="' + (x.id === F.pid ? 'on' : '') + '">' + esc(x.name) + ' <small>' + (room(x) ? 'Room ' + esc(room(x)) : 'No room yet') + (x.uhid ? ' · ' + esc(x.uhid) : '') + '</small></button>'; }).join('') : '<div style="padding:10px 12px;color:#667085">No admitted patient matches.</div>') + '</div>' : '')
       + '</div></div>'
       + '<div class="pxl-g"><div class="pxl-f"><label>Raised by</label>' + sel('by', F.by, BY) + '</div>'
-      + '<div class="pxl-f">' + (F.by === 'Family member' ? '<label>Relation with the patient</label>' + sel('rel', F.rel, REL) : '') + '</div></div>'
-      + '<div class="pxl-g"><div class="pxl-f"><label>Came in as</label>' + sel('src', F.src, SRC) + '</div>'
-      + '<div class="pxl-f"><label>Escalated by <small>(if another team passed it on)</small></label>' + sel('escBy', F.escBy, ['Not escalated'].concat(ESC.filter(Boolean))) + '</div></div>';
+      + '<div class="pxl-f">' + (F.by === 'Family member' ? '<label>Relation with the patient</label>' + sel('rel', F.rel, REL) : F.by === 'Staff' ? '<label>Staff name</label><input data-k="staff" value="' + esc(F.staff) + '" placeholder="Name of the staff member">' : F.by === 'Another team' ? '<label>Which team</label>' + sel('escBy', F.escBy, ESC.filter(Boolean)) : '') + '</div></div>'
+      + '<div class="pxl-g"><div class="pxl-f"><label>How it reached us</label>' + sel('src', F.src, SRC) + '</div>'
+      + '<div class="pxl-f"><label>Logged by <small>(your name)</small></label><input data-k="me" value="' + esc(F.me) + '" placeholder="Your name"></div></div>';
     if (yes) {
-      h += '<div class="pxl-f"><span class="pxl-l">Issues <small>(at least one; each complaint or request on its own)</small></span>'
+      /* 24 Nov meeting: one plain row per issue (no A/B/C boxes); category list always opens downwards */
+      h += '<div class="pxl-f"><span class="pxl-l">What is it about? <small>(add one line for each separate complaint)</small></span>'
         + F.issues.map(function (i, k) {
-          return '<div class="pxl-iss"><div class="pxl-iss-h"><span>' + String.fromCharCode(65 + k) + '.</span>' + (F.issues.length > 1 ? '<button type="button" class="pxl-lnk rm" data-rm="' + k + '">Remove</button>' : '') + '</div>'
-            + '<div class="pxl-g"><div><span class="pxl-l">Title</span><input data-k="t" data-i="' + k + '" value="' + esc(i.t) + '" placeholder="e.g. Food served cold"></div>'
-            + '<div><span class="pxl-l">Category</span>' + sel('cat', i.cat, CATS.map(function (c) { return c[0]; }), ' data-i="' + k + '"') + '</div></div>'
-            + '<div class="pxl-g" style="margin-top:10px"><div><span class="pxl-l">When</span>' + sel('when', i.when, WHEN, ' data-i="' + k + '"') + '</div><div></div></div>'
+          var cl = F.catOpen === k ? '<div class="pxl-dd">' + CATS.map(function (c) { return '<button type="button" data-catv="' + k + ':' + esc(c[0]) + '" class="' + (i.cat === c[0] ? 'on' : '') + '">' + esc(c[0]) + '</button>'; }).join('') + '</div>' : '';
+          return '<div class="pxl-iss">' + (F.issues.length > 1 ? '<div class="pxl-iss-h"><span>Issue ' + (k + 1) + '</span><button type="button" class="pxl-lnk rm" data-rm="' + k + '">Remove</button></div>' : '')
+            + '<div class="pxl-g3"><div><span class="pxl-l">Title</span><input data-k="t" data-i="' + k + '" value="' + esc(i.t) + '" placeholder="e.g. Food served cold"></div>'
+            + '<div class="pxl-cb"><span class="pxl-l">Category</span><button type="button" class="pxl-sel" data-catopen="' + k + '">' + (i.cat ? esc(i.cat) : '<span style="color:#98A2B3">Select</span>') + '</button>' + cl + '</div>'
+            + '<div><span class="pxl-l">When</span>' + sel('when', i.when, WHEN, ' data-i="' + k + '"') + '</div></div>'
             + '<div style="margin-top:10px"><span class="pxl-l">What they said</span><textarea data-k="what" data-i="' + k + '" placeholder="In their words">' + esc(i.what) + '</textarea></div></div>';
         }).join('')
         + '<button type="button" class="pxl-lnk" data-x="add">+ Add another issue</button></div>';
       var hasCat = F.issues.some(function (i) { return i.cat; });
       var ms = minSev(), sv = sev(), rt = route(), go = F.owner || (hasCat ? rt[0] : '');
-      h += '<div class="pxl-g"><div class="pxl-f"><label>Severity</label><select data-k="sev"><option value="">Select</option>' + SEV.map(function (s) { return '<option value="' + s + '"' + (F.sev === s ? ' selected' : '') + (hasCat && SEV.indexOf(s) < SEV.indexOf(ms) ? ' disabled' : '') + '>' + s + '</option>'; }).join('') + '</select>'
-        + '<div class="pxl-note">' + (hasCat ? 'At least ' + ms + ' for this category. You can raise it, not lower it.' : 'Choose a category first.') + '</div></div>'
-        + '<div class="pxl-f"><label>Contact for updates' + (F.by === 'Anonymous' ? ' <small>(optional)</small>' : '') + '</label><input data-k="contact" type="tel" value="' + esc(F.contact) + '" placeholder="Phone of the person who raised it"></div></div>'
-        + '<div class="pxl-f"><label>Goes to</label><div class="pxl-row"><select data-k="owner">' + (go ? '' : '<option value="" selected>Select (or choose a category)</option>') + owners().map(function (o) { return '<option value="' + esc(o[0]) + '"' + (go === o[0] ? ' selected' : '') + '>' + esc(o[0]) + ' · ' + esc(o[1]) + '</option>'; }).join('') + '</select></div>'
-        + '<div class="pxl-note">Picked from the category and severity. ' + (F.sev ? HINT[sv] : '') + '</div></div>';
+      var ph = contactOf();
+      h += '<div class="pxl-g"><div class="pxl-f"><label>Severity</label><select data-k="sev"><option value="">Select</option>' + SEV.map(function (s) { return '<option value="' + s + '"' + (hasCat && sv === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>'
+        + '<div class="pxl-note">' + (hasCat ? (F.sevSet && sv !== ms ? 'Changed by you (worked out: ' + ms + ').' : 'Worked out from the category. You can change it.') : 'Set by itself once a category is picked.') + '</div></div>'
+        + '<div class="pxl-f"><label>Goes to</label><select data-k="owner">' + (go ? '' : '<option value="" selected>Picked from the category</option>') + owners().map(function (o) { return '<option value="' + esc(o[0]) + '"' + (go === o[0] ? ' selected' : '') + '>' + esc(o[0]) + ' · ' + esc(o[1]) + '</option>'; }).join('') + '</select>'
+        + '<div class="pxl-note">' + (hasCat ? HINT[sv] : '') + '</div></div></div>'
+        + (ph ? '<div class="pxl-note">Updates go to ' + esc(ph[0]) + ' on ' + esc(ph[1]) + ' (from the patient record).</div>' : '');
     } else {
       h += '<div class="pxl-f"><label>What did they say?</label><textarea data-k="note" placeholder="In their words">' + esc(F.note) + '</textarea><div class="pxl-note">' + (act === 'praise' ? 'Saved to the patient record and shown in Reports under Compliments.' : 'Saved to the patient record only. No owner and no clock.') + '</div></div>';
     }
@@ -123,17 +129,17 @@
     if (!F.by) miss.push('who raised it');
     if (F.by === 'Family member' && !F.rel) miss.push('the relation');
     if (!F.src) miss.push('how it came in');
-    if (!F.act) miss.push('whether it needs action');
-    var act = F.act, iss = F.issues.filter(function (i) { return i.t.trim() || i.cat || i.what.trim(); });
+    if (F.by === 'Staff' && !String(F.staff).trim()) miss.push('the staff name');
+    if (F.by === 'Another team' && !F.escBy) miss.push('which team');
+    var act = 'yes', iss = F.issues.filter(function (i) { return i.t.trim() || i.cat || i.what.trim(); });
     if (act === 'yes') {
       if (!iss.length) miss.push('at least one issue');
       iss.forEach(function (i, k) { if (!i.t.trim() || !i.cat) miss.push('issue ' + String.fromCharCode(65 + k) + ' title and category'); });
-      if (!F.sev) miss.push('the severity');
-      if (F.by !== 'Anonymous' && !String(F.contact).trim()) miss.push('a contact phone for updates');
     } else if (!String(F.note).trim()) miss.push('what they said');
     if (miss.length) { F.err = 'Please add ' + miss.join(', ') + '.'; draw(); return; }
     var st = self.state, pid = F.pid, calls = Object.assign({}, st.calls), L = (calls[pid] || []).slice();
-    var by = F.by === 'Family member' ? 'Family (' + F.rel + ')' : F.by;
+    var by = F.by === 'Family member' ? 'Family (' + F.rel + ')' : F.by === 'Staff' ? 'Staff: ' + String(F.staff).trim() : F.by === 'Another team' ? F.escBy : F.by;
+    try { if (String(F.me).trim()) localStorage.setItem('px_me_name', String(F.me).trim()); } catch (e) {}
     var time = new Date().toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
     var how = F.src + ', from ' + by.toLowerCase();
     if (act !== 'yes') {
@@ -144,7 +150,7 @@
     var id = window.PXG ? window.PXG.nid(self) : 'G-0' + (143 + (st.extraConcerns || []).length), ty = sv === 'High' ? 'grievance' : 'concern';
     var issues = iss.map(function (i) { return { t: i.t.trim(), cat: i.cat, when: i.when || 'Not said', st: 'Open', what: i.what.trim(), fam: '', asks: [], owner: owner }; });
     var desc = issues.map(function (i) { return i.what; }).filter(Boolean).join(' ') || 'No description added.';
-    var c = { id: id, type: ty, pid: pid, title: issues[0].t.slice(0, 70), raisedBy: by, raisedRel: F.rel || '', via: F.src, src: F.src, escalatedBy: F.escBy === 'Not escalated' ? '' : (F.escBy || ''), contact: String(F.contact || '').trim(),
+    var c = { id: id, type: ty, pid: pid, title: issues[0].t.slice(0, 70), raisedBy: by, raisedRel: F.rel || '', via: F.src, src: F.src, escalatedBy: F.by === 'Another team' ? F.escBy : '', staffName: F.by === 'Staff' ? String(F.staff).trim() : '', loggedBy: String(F.me || '').trim() || 'Patient Experience', contact: (contactOf() || ['', ''])[1],
       tag: 'General admin', owner: owner, ownerRole: role, category: mainCat(), severity: sv, sev: sv, issues: issues,
       sla: '6 h left', at: Date.now(), slaTone: 'grey', logged: 'just now', status: ty === 'grievance' ? 'Pending' : 'Open', desc: desc };
     L.unshift({ d: window.PXDay ? window.PXDay() : '', what: F.src + ' logged', who: 'Patient Experience', time: time, how: how, note: desc, tag: 'concern' }); calls[pid] = L;
@@ -163,6 +169,9 @@
       if (e.target === root) { close(); return; }
       if (!t) { if (F.ddOpen) { F.ddOpen = false; draw(); } return; }
       var d = t.dataset;
+      if (d.catopen != null) { F.catOpen = F.catOpen === +d.catopen ? null : +d.catopen; draw(); var dd = root.querySelector('.pxl-dd'); if (dd) dd.scrollIntoView({ block: 'nearest' }); return; }
+      if (d.catv) { var cv = d.catv.split(':'); F.issues[+cv[0]].cat = cv.slice(1).join(':'); F.catOpen = null; F.owner = ''; F.sevSet = false; F.err = ''; draw(); return; }
+      if (F.catOpen != null && !t.closest('.pxl-dd')) F.catOpen = null;
       if (d.k === 'q') { if (!F.ddOpen) { F.ddOpen = true; F.q = ''; draw(); var i = root.querySelector('[data-k="q"]'); if (i) i.focus(); } return; }
       if (d.pid) { setPid(d.pid); F.err = ''; draw(); return; }
       if (F.ddOpen && !t.closest('.pxl-dd')) F.ddOpen = false;
@@ -184,6 +193,8 @@
       if (k === 'q') { F.q = t.value; F.ddOpen = true; draw(); return; }
       if (k === 'contact') { F.contact = t.value; F.contactTyped = true; return; }
       if (k === 'note') { F.note = t.value; return; }
+      if (k === 'staff') { F.staff = t.value; return; }
+      if (k === 'me') { F.me = t.value; return; }
       if (k === 't' || k === 'what') { F.issues[+i][k] = t.value; return; }
     });
     root.addEventListener('change', function (e) {
@@ -193,9 +204,9 @@
       else if (k === 'act') { F.act = t.value; F.err = ''; draw(); }
       else if (k === 'src') F.src = t.value;
       else if (k === 'rel') F.rel = t.value;
-      else if (k === 'sev') { F.sev = t.value; F.owner = ''; draw(); }
+      else if (k === 'sev') { F.sev = t.value; F.sevSet = !!t.value; F.owner = ''; draw(); }
       else if (k === 'by') { F.by = t.value; if (F.by !== 'Family member') F.rel = ''; if (!F.contactTyped) { var p = pt(F.pid); F.contact = F.by === 'Family member' && p ? (p.phone || '') : ''; if (F.by === 'Family member' && p && p.gRel && REL.indexOf(p.gRel) >= 0) F.rel = p.gRel; } F.err = ''; draw(); }
-      else if (k === 'escBy') F.escBy = t.value;
+      else if (k === 'escBy') { F.escBy = t.value; F.err = ''; }
       else if (k === 'owner') F.owner = t.value;
     });
     root.addEventListener('keydown', function (e) {
@@ -207,7 +218,8 @@
   window.PXLog = {
     open: function (app, pid) {
       self = app; close(); css();
-      F = { act: '', pid: '', q: '', ddOpen: false, by: '', rel: '', src: '', escBy: '', issues: [{ t: '', cat: '', when: '', what: '' }], sev: '', owner: '', contact: '', contactTyped: false, note: '', err: '', fi: null };
+      F = { act: '', pid: '', q: '', ddOpen: false, by: '', rel: '', src: '', escBy: '', issues: [{ t: '', cat: '', when: '', what: '' }], sev: '', owner: '', contact: '', contactTyped: false, note: '', err: '', fi: null, staff: '', me: '', sevSet: false, catOpen: null };
+      try { F.me = localStorage.getItem('px_me_name') || ''; } catch (e) {}
       if (pid && pt(pid)) setPid(pid);
       root = document.createElement('div'); root.className = 'pxl-ov'; document.body.appendChild(root);
       bind(); document.addEventListener('keydown', onKey); draw();

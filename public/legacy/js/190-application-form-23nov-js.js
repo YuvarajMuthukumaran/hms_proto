@@ -8,7 +8,7 @@
   const FID='app-form',NAME='Application form for admission',PDF='/forms/admission-application/application-form.pdf';
   const E=s=>hesc(String(s==null?'':s));
   const Q=s=>String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  const OPTS={title:['Mr','Mrs','Ms'],sex:['Male','Female','Other'],marital:['Single','Married','Separated','Divorced','Widowed'],live:['Living together','Separate'],rel:['Father','Mother','Spouse','Son','Daughter','Guardian','Other relative'],kidsN:['0','1','2','3','4','5','6'],sd:['Son','Daughter']};
+  const OPTS={title:['Mr','Mrs','Ms'],sex:['Male','Female','Other'],marital:['Single','Married','Divorced','Widowed'],live:['Living together','Separate'],rel:['Father','Mother','Spouse','Son','Daughter','Guardian','Other relative'],kidsN:['0','1','2','3','4','5','6'],sd:['Son','Daughter','Other']};
   /* page > sections [title, note, fields]; field [key, label, type, span of 12, same-as key] */
   const PAGES=[
     ['Personal data',[
@@ -19,13 +19,13 @@
     ]],
     ['Spouse and children',[
       ['Work and marriage','',[['occ','Occupation','',6],['marital','Marital status','marital',12]]],
-      ['Spouse','Shown by the marital status',[['sp','Name of the spouse','',6],['spAge','Age, if alive','',2],['spOcc','Occupation','',4],['spLive','Living together or separate','live',12],['spAddr','Address of the spouse','area',12]]],
+      ['Spouse','Shown by the marital status',[['sp','Name of the spouse','',6],['spAge','Age, if alive','',2],['spDem','Age at time of demise','',2],['spOcc','Occupation','',4],['spLive','Living together or separate','live',12],['spAddr','Address of the spouse','area',12]]],
       ['Children','',[['kids','Number of children','kidsN',12],['#k','Children','']]],
       /* Trello 226: the guardian is asked with the spouse and children; picking Spouse, Son or Daughter fills that person in */
       ['Nominated Representative','The person applying for the patient. Use "Make as guardian" on the spouse or a child, or fill in',[['gRel','Relationship to the patient','rel',12],['gTitle','Title','title',3],['gFirst','First name','',3],['gMiddle','Middle name','',3],['gSur','Surname','',3],['gAddr','Address','area',8],['gPh','Phone numbers','',4],['gCaddr','Correspondence address','area',12,'gAddr']]]
     ]],
     ['Psychiatric data',[
-      ['Psychiatric data','For office use. Filled by the treating psychiatrist',[['dur','Duration of illness','',4],['doc','Examined by (Dr)','',4],['exDate','Examined on','date',2],['exTime','Time','time',2],['sym','Current symptoms','area',6],['dx','Diagnosis','area',6],['rem','Remarks','area',12]]]
+      ['Psychiatric data','For office use. Filled by the treating psychiatrist',[['dur','Duration of illness','',4],['doc','Examined by (Dr)','',4],['exDate','Examined on','date',2],['exTime','Time','time',2],['sym','Current symptoms','area',12],['dx','Diagnosis','area',6],['rem','Remarks','area',6]]]
     ]]
   ];
   /* 24 Nov 2026 (Anu, meeting): son or daughter per child, children shown by the number picked, addresses optional */
@@ -118,16 +118,17 @@
     const opts=OPTS[t];
     if(opts)return '<div class="apf-f" style="'+col+'"><span id="'+id+'_l">'+E(l)+'</span><div class="apf-seg" role="group" aria-labelledby="'+id+'_l">'+opts.map(o=>'<button type="button" aria-pressed="'+(val===o)+'" onclick="apfPick(\''+k+'\',\''+Q(o)+'\')">'+E(o)+'</button>').join('')+'</div></div>';
     const lab='<span><label for="'+id+'">'+E(l)+'</label>'+(k==='sp'?mg('sp'):'')+(same?'<button type="button" class="apf-same" onclick="apfSame(\''+k+'\',\''+same+'\')">Same as above</button>':'')+'</span>';
-    const el=t==='area'?'<textarea class="input" id="'+id+'" rows="2">'+E(val)+'</textarea>':'<input class="input" id="'+id+'" type="'+(t==='date'||t==='time'||t==='email'?t:'text')+'" value="'+E(val)+'">';
+    const el=t==='area'?'<textarea class="input" id="'+id+'" rows="'+(k==='sym'?6:2)+'">'+E(val)+'</textarea>':'<input class="input" id="'+id+'" type="'+(t==='date'||t==='time'||t==='email'?t:'text')+'" value="'+E(val)+'">';
     return '<div class="apf-f" style="'+col+'">'+lab+el+'</div>';
   }
   function grab(){fieldsOf(PAGES[cur.page]).forEach(f=>{const el=document.getElementById('apf_'+f[0]);if(el)cur.v[f[0]]=el.value.trim();});}
   /* Trello 226: living together = same address, so the spouse's address is not asked */
   /* 24 Nov 2026 (Anu, meeting): Single, no spouse; Married, name and living together (address only when separate);
      Separated or divorced, the spouse's address; Widowed, no address */
-  const SPF=/^(sp|spAge|spOcc|spLive|spAddr)$/;
+  const SPF=/^(sp|spAge|spDem|spOcc|spLive|spAddr)$/;
   const spHide=(k,v)=>{const m=v.marital||'';if(!SPF.test(k))return false;
     if(!m||m==='Single')return true;
+    if(k==='spDem')return m!=='Widowed';   /* 24 Nov meeting: age at time of demise next to the occupation, widowed only; Separated removed */
     if(m==='Married')return k==='spAddr'&&v.spLive!=='Separate';
     if(m==='Separated'||m==='Divorced')return k==='spLive';
     if(m==='Widowed')return k==='spAddr'||k==='spLive'||k==='spAge';
@@ -173,7 +174,7 @@
   /* "Make as guardian": that person becomes the nominated representative (press again to undo) */
   window.apfMg=function(who){grab();const v=cur.v;
     if(v.gFrom===who){v.gFrom='';v.gRel='';['gTitle','gFirst','gMiddle','gSur','gAddr','gPh'].forEach(k=>v[k]='');draw2();return;}
-    v.gFrom=who;v.gRel=who==='sp'?'Spouse':(v[who+'r']||'Son');
+    v.gFrom=who;v.gRel=who==='sp'?'Spouse':(v[who+'r']==='Other'?'Other relative':(v[who+'r']||'Son'));
     gFill(v.gRel);toast('Nominated representative: '+(v[who]||''));draw2();};
   window.apfSave=function(stay){
     grab();

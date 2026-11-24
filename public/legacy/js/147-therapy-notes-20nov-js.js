@@ -107,15 +107,13 @@
   function indBody(){
     const blk=D.mod==='ERP for OCD'?erpBlock():D.mod==='Relapse prevention'?rpBlock():'';
     return q('Session','Filled in for you',header())
-      +q('Aim of the intervention','',many(AIMS,D.aimT,"tnM.bind(null,'aimT')")+ta('aim','In your words (optional if a bubble says it)'))
-      +q('Duration','',`<div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><div class="sn-chips">${DUR.map(m=>`<button type="button" class="sn-c ${String(D.mins)===String(m)?'on':''}" onclick="tnDur(${m})">${m} min</button>`).join('')}</div><input class="input" type="number" min="1" placeholder="Other" value="${A(D.mins||'')}" oninput="tnS('mins',this.value)" style="width:110px"><span class="small muted">minutes</span></div>`)
-      +q('Intervention','',one(INTV,D.mod,'tnMod')+ta('intv','What was done in the session',3)+blk)
+      +q('Aim and intervention','',`<div class="row" style="gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><span class="lbl" style="margin:0">Duration</span><div class="sn-chips">${DUR.map(m=>`<button type="button" class="sn-c ${String(D.mins)===String(m)?'on':''}" onclick="tnDur(${m})">${m} min</button>`).join('')}</div><input class="input" type="number" min="1" placeholder="Other" value="${A(D.mins||'')}" oninput="tnS('mins',this.value)" style="width:110px"><span class="small muted">minutes</span></div>`
+        +`<div class="tn-g"><div class="field"><span class="lbl">Aim</span>${many(AIMS,D.aimT,"tnM.bind(null,'aimT')")}${ta('aim','In your words (optional if a bubble says it)')}</div><div class="field"><span class="lbl">Intervention</span>${one(INTV,D.mod,'tnMod')}${ta('intv','What was done in the session',3)}</div></div>`+blk)
       +q('Outcome','',`<div class="tn-g"><div class="field"><span class="lbl">Mood (same tags as the daily note)</span>${one(MOODS(),D.moodT,"tnT.bind(null,'moodT')")}</div><div class="field"><span class="lbl">Engagement</span>${one(['Engaged','Partial','Withdrawn'],D.eng,"tnT.bind(null,'eng')")}</div></div>`
         +ta('outcome','How the patient responded, what changed',3)
         +`<div class="sn-yn"><span>Risk check <span class="tiny muted">(Moderate or High alerts the psychiatrist)</span></span><div class="sn-chips">${['No risk','Low','Moderate','High'].map(l=>`<button type="button" class="sn-c${/Mod|High/.test(l)?' bad':''} ${D.riskLvl===l?'on':''}" onclick="tnRisk('${l}')">${l}</button>`).join('')}</div></div>${D.riskLvl&&D.riskLvl!=='No risk'?ta('riskNote','What was said or seen'):''}`)
-      +q('Goals','Rate each goal the way it was set up',window.goalNoteInputs?window.goalNoteInputs(sn(PID).goals||[],D.goalR,'tnGoal'):'')
-      +q('Plan for next session','',ta('plan','What comes next')+`<!-- 23 Nov: no Homework field (21 Nov meeting); Plan for next session replaces it -->
-        <div class="tn-g"><label class="field"><span class="lbl">Next session date</span><input class="input" type="date" value="${A(D.next||'')}" onchange="tnS('next',this.value)"></label><label class="field"><span class="lbl">Time</span><input class="input" type="time" value="${A(D.nextT||'10:00')}" onchange="tnS('nextT',this.value)"></label></div><div class="tiny muted">A next session date books it on the Calendar and caseload.</div>`)
+      +q('My Goals','From the therapy plan. Rating them in this session is optional',window.goalNoteInputs?window.goalNoteInputs(sn(PID).goals||[],D.goalR,'tnGoal'):'')
+      +q('Plan for next session','',ta('plan','What comes next'))
       +q('One line for the psychiatrist','Shows on Rounds. Drafted from the note, edit it',`<textarea class="input" id="tnSum" rows="2" oninput="tnSumTouch(this.value)">${E(D.summary||'')}</textarea>`)
       +`<div class="small muted">Name and signature of the ${WHO}: added when you press Sign and lock.</div>`;
   }

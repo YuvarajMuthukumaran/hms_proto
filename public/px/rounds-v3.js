@@ -21,7 +21,7 @@
     ['meds', 'Medicines', 'Care', 'Nursing in-charge and pharmacy', 4], ['family', 'Family updates', 'Care', 'Treating psychologist', 24],
     ['food', 'Food', 'Stay', 'Kitchen supervisor', 6], ['room', 'Room', 'Stay', 'Housekeeping supervisor', 4], ['noise', 'Noise', 'Stay', 'Floor supervisor', 2],
     ['att', 'Attendants', 'Stay', 'Floor supervisor', 4], ['belong', 'Belongings', 'Stay', 'Front desk', 24], ['bill', 'Billing', 'Stay', 'Billing desk', 24],
-    ['safety', 'Safety', 'Serious', 'Chandraji and treating doctor', 1], ['rights', 'Rights or dignity', 'Serious', 'Chandraji and Kanika', 2], ['leave', 'Wants to leave', 'Serious', 'Treating psychiatrist and nursing in-charge', 1]
+    ['safety', 'Safety', 'Serious', 'Mr. S. Chandra and treating doctor', 1], ['rights', 'Rights or dignity', 'Serious', 'Mr. S. Chandra and Kanika', 2], ['leave', 'Wants to leave', 'Serious', 'Treating psychiatrist and nursing in-charge', 1]
   ].map(function (c) { return { id: c[0], label: c[1], g: c[2], owner: c[3], sla: c[4], alert: c[2] === 'Serious' }; });
   var catBy = function (id) { return CATS.filter(function (c) { return c.id === id; })[0]; };
   /* old grievance categories (Rounds before 24 Nov, Log a concern) mapped to the new ones, so "Still a problem" keeps the category */
@@ -37,7 +37,7 @@
 
   /* section 6: room check, grouped by who fixes it */
   var ROOM = [
-    ['safety', 'Safety · goes to Chandraji now', 'Chandraji and maintenance', [['tie', 'Something to tie or hang from'], ['sharp', 'Sharp or broken item'], ['grill', 'Window or grill loose'], ['chem', 'Chemicals or medicines left out']]],
+    ['safety', 'Safety · goes to Mr. S. Chandra now', 'Mr. S. Chandra and maintenance', [['tie', 'Something to tie or hang from'], ['sharp', 'Sharp or broken item'], ['grill', 'Window or grill loose'], ['chem', 'Chemicals or medicines left out']]],
     ['clean', 'Clean · Housekeeping', 'Housekeeping supervisor', [['floor', 'Floor not mopped or stained'], ['linen', 'Linen not changed or stained'], ['dust', 'Dusty furniture or cobwebs'], ['bin', 'Bin full or bad smell']]],
     ['fix', 'Broken · Maintenance', 'Maintenance', [['elec', 'Light, fan, AC or socket'], ['civil', 'Door, wall or window'], ['tv', 'TV or remote']]],
     ['disp', 'Displayed · You', 'You (patient experience)', [['rights', 'Patient rights not up'], ['tariff', 'Grievance number or tariff not up']]]
@@ -71,7 +71,7 @@
     (S.ent || []).forEach(function (e) { if (e.id === id) { if (patch.status) e.status = patch.status; if (patch.latest) e.latest = patch.latest; } });
   }
 
-  var V = { k: '', pid: '', screen: 'list', out: '', cat: '', note: '', edited: false, marks: {}, floor: null, mob: window.innerWidth < 900 };
+  var V = { k: '', pid: '', screen: 'list', out: '', cat: '', note: '', edited: false, marks: {}, floor: null, mob: window.innerWidth < 720 };
   try { V.floor = localStorage.getItem('px_rounds_floor'); } catch (e) {}
 
   /* section 1 and 2: who is on the round, and who to see first */
@@ -146,7 +146,7 @@
     if (raise && c) {
       if (o === 'still' && md.g) L.push(['#1D5FD1', md.g.id + ' reopens with ' + (md.g.owner || ownerText(c, p)) + ', and GM Operations is added.']);
       else L.push(['#1D5FD1', 'New grievance to ' + ownerText(c, p) + '. Reply due in ' + c.sla + ' h.' + (o === 'still' ? ' GM Operations is added.' : '')]);
-      if (c.alert) L.push(['#B42318', 'Severity set to Serious. Shows red on Today and in Reports, and Chandraji is told now.']);
+      if (c.alert) L.push(['#B42318', 'Severity set to Serious. Shows red on Today and in Reports, and Mr. S. Chandra is told now.']);
       var n7 = (B.S.ent || []).filter(function (e) { return e.kind === 'grievance' && e.rcat === c.id && String(e.floor || '') === String(p.floor || '') && Date.now() - e.t0 < 7 * 864e5; }).length;
       if (n7 >= 2) L.push(['#B54708', c.label + ' has come up ' + (n7 + 1) + ' times on this floor this week. Flagged as a repeat issue for GM Operations.']);
       L.push(['#067647', 'Added to ' + nx + ' round to check again.']);
@@ -183,7 +183,7 @@
         if (ser) S.saf.unshift({ id: e.id, patient: p.name, room: room, what: e.title, t0: t0, last: t0, n: 1, ack: false });
         if (e.queued) S.queue.push(e.id);
         if (c.id === 'leave') { var dm = X.jget('px_dama', {}); dm[p.name] = t0; X.jset('px_dama', dm); }
-        msg.push(e.id + ' sent to ' + c.owner + (ser ? '. Chandraji told' : ''));
+        msg.push(e.id + ' sent to ' + c.owner + (ser ? '. Mr. S. Chandra told' : ''));
         rec.gid = e.id;
       }
       rec.cat = c.id; rec.topic = c.label; rec.words = note;
@@ -227,7 +227,7 @@
     });
     D.rooms = D.rooms || {}; D.rooms[room] = { by: by, at: t0, n: n };
     X.jset(X.RV, D); X.jset(X.KEY, S);
-    X.toast(n ? n + ' room issue' + (n > 1 ? 's' : '') + ' sent to the teams.' + (saf ? ' Safety: Chandraji told.' : '') : 'Room ' + room + ' checked: fine.');
+    X.toast(n ? n + ' room issue' + (n > 1 ? 's' : '') + ' sent to the teams.' + (saf ? ' Safety: Mr. S. Chandra told.' : '') : 'Room ' + room + ' checked: fine.');
     V.marks = {}; V.screen = 'patient'; draw();
   }
 
@@ -310,7 +310,7 @@
     }).join('') + '</div></div>';
     if (raise) {
       b += '<div class="r3-sec">' + GL('What is it about?') + ['Care', 'Stay', 'Serious'].map(function (g) {
-        return '<div class="r3-cg"><div' + (g === 'Serious' ? ' style="color:#B42318"' : '') + '>' + (g === 'Serious' ? 'Serious · Chandraji is told the moment you save' : g) + '</div><div class="r3-chips">' + CATS.filter(function (x) { return x.g === g; }).map(function (x) {
+        return '<div class="r3-cg"><div' + (g === 'Serious' ? ' style="color:#B42318"' : '') + '>' + (g === 'Serious' ? 'Serious · Mr. S. Chandra is told the moment you save' : g) + '</div><div class="r3-chips">' + CATS.filter(function (x) { return x.g === g; }).map(function (x) {
           return '<button class="' + (x.alert ? 'sr ' : '') + (x.id === catSel ? 'on' : '') + '" onclick="RV3.cat(\'' + x.id + '\')">' + esc(x.label) + '</button>';
         }).join('') + '</div></div>';
       }).join('') + '</div>';
@@ -323,7 +323,7 @@
     var R = V.out ? route(B, p, md) : [];
     if (R.length) b += '<div class="r3-card2" style="border-color:' + (catBy(catSel) && catBy(catSel).alert ? '#FDA29B' : '#E2E8F0') + '">' + GL('What happens when you save') + R.map(function (x) { return '<div class="r3-rl"><i style="background:' + x[0] + '"></i><span>' + esc(x[1]) + '</span></div>'; }).join('') + '</div>';
     var can = !!V.out && (!raise || !!catSel), nx = B.walk.filter(function (x) { return !res(B, x) && x.id !== p.id; })[0];
-    return h + bodyW(b) + foot('<button class="r3-b" ' + (can ? '' : 'disabled') + ' onclick="RV3.save(false)">Save</button><button class="r3-b r3-pri" style="flex:1" ' + (can ? '' : 'disabled') + ' onclick="RV3.save(true)">' + (can ? (nx ? 'Save, next: ' + esc(roomOf(nx)) : 'Save and finish') : (V.out ? 'Pick what it is about' : 'Pick an answer')) + '</button>');
+    return h + bodyW(b + '<div class="r3-inl"><button class="r3-b" ' + (can ? '' : 'disabled') + ' onclick="RV3.save(false)">Save</button><button class="r3-b r3-pri" style="flex:1" ' + (can ? '' : 'disabled') + ' onclick="RV3.save(true)">' + (can ? (nx ? 'Save, next: ' + esc(roomOf(nx)) : 'Save and finish') : (V.out ? 'Pick what it is about' : 'Pick an answer')) + '</button></div>');
   }
 
   function list(B) {
@@ -334,14 +334,17 @@
       return '<span class="r3-st" style="color:#475569;font-weight:400">To see</span>';
     };
     var h = '<div class="r3-lh"><span>See first · ' + B.prio.length + '</span><small>Sorted by the rules</small></div><div class="r3-pl">';
-    h += B.prio.map(function (p) {
+    var shut = function (p) { return !!res(B, p) && !(p.id === V.pid && V.screen !== 'list') && !V.showDone; };
+    var nDone = B.prio.concat(B.rest).filter(shut).length;
+    h += B.prio.filter(function (p) { return !shut(p); }).map(function (p) {
       var sel = !V.mob && p.id === V.pid && V.screen !== 'summary', done = !!res(B, p), t = p.__r[0];
       return '<button class="r3-card' + (done ? ' done' : '') + '" style="border-color:' + (sel ? '#1D5FD1' : LV[p.__s][1]) + ';background:' + (sel ? '#EAF1FE' : done ? '#F8FAFC' : '#fff') + '" onclick="RV3.open(\'' + q(p.id) + '\')"><span class="r3-rm">' + esc(roomOf(p)) + '</span><span class="r3-nm"><b>' + esc(p.name) + '</b><span style="color:' + LV[t.lvl][0] + '">' + esc(t.text) + '</span></span>' + st(p) + '</button>';
     }).join('') || '<div class="r3-mut">Nobody needs to be seen first.</div>';
-    h += '</div><div class="r3-lh"><span>Walk order · ' + B.rest.length + '</span><small>Room order</small></div><div class="r3-pl"><div class="r3-box">' + B.rest.map(function (p) {
+    h += '</div><div class="r3-lh"><span>Walk order · ' + B.rest.length + '</span><small>Room order</small></div><div class="r3-pl"><div class="r3-box">' + B.rest.filter(function (p) { return !shut(p); }).map(function (p) {
       var sel = !V.mob && p.id === V.pid && V.screen !== 'summary', done = !!res(B, p);
       return '<button class="r3-row" style="background:' + (sel ? '#EAF1FE' : done ? '#F8FAFC' : '#fff') + ';color:' + (done ? '#475569' : '#0F172A') + '" onclick="RV3.open(\'' + q(p.id) + '\')"><span class="r3-rm">' + esc(roomOf(p)) + '</span><span class="r3-nm1">' + esc(p.name) + '</span>' + st(p) + '</button>';
     }).join('') + '</div></div>';
+    if (nDone || V.showDone) h += '<button class="r3-fold" onclick="RV3.toggleDone()">' + (V.showDone ? 'Hide the patients already seen' : 'Seen this round: ' + nDone + ' (tap to show)') + '</button>';
     return h;
   }
 
@@ -357,9 +360,9 @@
       (V.k === X.curRound() ? '<span class="r3-pill">Picked by time</span>' : '<button class="r3-pill" onclick="RV3.slot(\'' + X.curRound() + '\')">Back to ' + SLOT[X.curRound()].toLowerCase() + '</button>') + '</div>' +
       '<div class="r3-ctl"><div class="r3-seg">' + ['M', 'A', 'E'].map(function (k) { return '<button class="' + (V.k === k ? 'on' : '') + '" onclick="RV3.slot(\'' + k + '\')">' + SLOT[k] + '</button>'; }).join('') + '</div>' +
       '<select onchange="RV3.floor(this.value)" aria-label="Floor"><option value="all">All floors</option>' + B.FL.map(function (f) { return '<option value="' + esc(f) + '"' + (B.fl === f ? ' selected' : '') + '>' + esc(flName(f)) + '</option>'; }).join('') + '</select>' +
-      '<select onchange="RV2.me(this.value)" aria-label="Doing the round">' + c.alloc.map(function (a) { return '<option' + (a.name === cur ? ' selected' : '') + '>' + esc(a.name) + '</option>'; }).join('') + '</select></div>' +
+      (X.me() ? '' : '<select onchange="RV2.me(this.value)" aria-label="Doing the round">' + c.alloc.map(function (a) { return '<option' + (a.name === cur ? ' selected' : '') + '>' + esc(a.name) + '</option>'; }).join('') + '</select>') + '</div>' +
       '<div class="r3-bar"><i style="width:' + (B.walk.length ? Math.round(done.length / B.walk.length * 100) : 0) + '%"></i></div>' +
-      '<div class="r3-t2"><span>' + seen + ' seen · ' + raised + ' raised · ' + left + ' to go</span><span>About ' + left * 3 + ' min left</span></div>' +
+      '<div class="r3-t2"><span>' + seen + ' seen · ' + raised + ' raised · ' + left + ' to go</span></div>' +
       '<button class="r3-scr' + (X.SR.on ? ' on' : '') + '" onclick="RV2.scribe()">' + mic + '<span>' + (X.SR.on ? 'AI scribe on. It drafts notes for each patient you open. You confirm. Tap to stop.' : 'AI scribe off. Tap to start. Tell patients first; only text is kept.') + (X.SR.msg ? ' ' + esc(X.SR.msg) : '') + '</span></button></div>';
     var h = '<div class="r3' + (V.mob ? ' mob' : '') + '">';
     if (showList) h += '<div class="r3-left"><div class="r3-scroll">' + head + list(B) + '</div><div class="r3-foot"><button class="r3-b" onclick="RV3.end()">End round</button><button class="r3-b r3-pri" style="flex:1" onclick="' + (firstOpen ? 'RV3.open(\'' + q(firstOpen.id) + '\')' : 'RV3.end()') + '">' + (firstOpen ? 'Next: ' + esc(roomOf(firstOpen)) : 'See summary') + '</button></div></div>';
@@ -379,6 +382,7 @@
   var css = document.createElement('style');
   css.textContent = 'html,body{margin:0}.r3{display:flex;height:100vh;background:#F4F6FA;color:#0F172A;font-family:Inter,system-ui,sans-serif;font-size:14px;overflow:hidden}' +
     '.r3 button{font-family:inherit;cursor:pointer}.r3-left{width:400px;flex-shrink:0;border-right:1px solid #E2E8F0;display:flex;flex-direction:column;min-height:0;background:#F4F6FA}.r3-scroll{flex:1;min-height:0;overflow-y:auto}' +
+    '.r3-inl{display:flex;gap:10px;margin:14px 0 8px}.r3-fold{display:block;width:100%;text-align:left;border:0;background:none;color:#475569;font:inherit;font-size:13.5px;font-weight:600;padding:8px 12px;cursor:pointer}' +
     '.r3-right{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}' +
     '.r3-head{background:#fff;padding:16px;border-bottom:1px solid #E2E8F0;display:flex;flex-direction:column;gap:10px}.r3-hr{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.r3-title{font-size:20px;font-weight:700}.r3-sub{font-size:12px;color:#475569;margin-top:2px}' +
     '.r3-pill{font-size:11px;font-weight:600;color:#1D5FD1;background:#EAF1FE;padding:4px 8px;border-radius:99px;border:0;white-space:nowrap}' +
@@ -424,6 +428,7 @@
     back: function () { V.screen = V.mob ? 'list' : 'patient'; draw(); },
     out: function (o) { V.out = o; V.cat = ''; draw(); },
     cat: function (c) { V.cat = c; draw(); },
+    toggleDone: function () { V.showDone = !V.showDone; draw(); },
     note: function (t) { V.note = t; V.edited = true; },
     room: function () { V.marks = {}; V.screen = 'room'; draw(); },
     mark: function (k) { V.marks[k] = !V.marks[k]; draw(); },
@@ -431,7 +436,7 @@
     save: save,
     end: function () { var D = X.day(); D.ended = D.ended || {}; D.ended[V.k] = Date.now(); X.jset(X.RV, D); V.screen = 'summary'; draw(); }
   };
-  window.addEventListener('resize', function () { var m = window.innerWidth < 900; if (m !== V.mob) { V.mob = m; if (!m && V.screen === 'list') V.screen = 'patient'; draw(); } });
+  window.addEventListener('resize', function () { var m = window.innerWidth < 720; if (m !== V.mob) { V.mob = m; if (!m && V.screen === 'list') V.screen = 'patient'; draw(); } });
   if (!V.mob) V.screen = 'patient';
   draw();
 })();
