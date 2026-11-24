@@ -54,6 +54,19 @@
   function markNew(){const d=document.getElementById('termsNewRow');if(!d)return;d.querySelectorAll('[onclick^="nadForm"],[onclick^="admForm"]').forEach(b=>b.classList.toggle('pri',!!window.__termsPick&&b.getAttribute('onclick').indexOf("'"+window.__termsPick+"'")>0));}
   ['nadCancel','admCancel'].forEach(n=>{const o=window[n];if(typeof o==='function')window[n]=function(){window.__termsPick=null;return o.apply(this,arguments);};});
 
+  /* 24 Nov 2026 (owner): Collect e-signature shows pages 3 to 8 above the signature box, like the other forms */
+  const __eo=window.psyEsignOpen;
+  if(typeof __eo==='function'){
+    window.psyEsignOpen=function(fid){
+      const r=__eo.apply(this,arguments);
+      if(fid===FID){const mb=document.querySelector('#modal .mb');
+        if(mb&&!mb.querySelector('.es-form')){const m=document.getElementById('modal');if(m)m.style.width='min(940px,100%)';
+          const pg=[3,4,5,6,7,8].map(n=>'<img src="/forms/admission-application/terms-p'+n+'.png" alt="Page '+n+'" draggable="false" style="display:block;width:760px;max-width:100%;margin:0 auto 10px;background:#fff;box-shadow:0 1px 3px rgba(16,24,40,.12)">').join('');
+          mb.insertAdjacentHTML('afterbegin','<div class="es-form" tabindex="0" aria-label="The admission terms to read before signing"><div>'+pg+'</div></div><div class="lbl" style="margin:2px 0 8px">Sign below, after reading pages 3 to 8</div>');}}
+      return r;};
+    Object.keys(__eo).forEach(k=>{if(k.indexOf('__')===0)window.psyEsignOpen[k]=__eo[k];});
+  }
+
   const css=document.createElement('style');css.id='m23-terms-css';
   css.textContent='#consentCard .ct-a,#formcCard .ct-a{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}'
     +'#consentCard .ct-a .btn,#formcCard .ct-a .btn{background:#fff;color:#344054;border:1px solid #d0d5dd;box-shadow:none;font-weight:500}'
