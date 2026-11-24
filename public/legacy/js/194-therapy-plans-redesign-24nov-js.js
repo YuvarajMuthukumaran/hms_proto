@@ -76,7 +76,7 @@
     const t=day(),first=new Date(cm.y,cm.m,1),n=new Date(cm.y,cm.m+1,0).getDate(),lead=(first.getDay()+6)%7,sel=ST['s'+pid];
     let h=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="tp4-dow">${d}</div>`).join('')+'<div class="tp4-blank"></div>'.repeat(lead);
     for(let i=1;i<=n;i++){const d=new Date(cm.y,cm.m,i),k=kOf(d);
-      h+=`<button type="button" class="tp4-day${d>t?' fut':''}${+d===+t?' today':''}${sel===k?' sel':''}" onclick="tp4Day('${Q(pid)}','${k}')" aria-label="${fmtD(d)}"><span class="n">${i}</span>${cell(d,k)}</button>`;}
+      const c=cell(d,k);h+=`<button type="button" style="--i:${i}" class="tp4-day${c?' has':''}${d>t?' fut':''}${+d===+t?' today':''}${sel===k?' sel':''}" onclick="tp4Day('${Q(pid)}','${k}')" aria-label="${fmtD(d)}"><span class="n">${i}</span>${c}</button>`;}
     return `<div class="tp4-nav"><button type="button" class="btn sm" onclick="tp4Mon('${Q(pid)}',-1)" aria-label="Previous month">‹</button><b>${MN[cm.m]} ${cm.y}</b><button type="button" class="btn sm" onclick="tp4Mon('${Q(pid)}',1)" aria-label="Next month">›</button></div><div class="tp4-cal">${h}</div>`;
   }
   const card=(title,right,body)=>`<div class="tp4-card"><div class="tp4-ch"><h3>${title}</h3>${right||''}</div><div class="tp4-cb">${body}</div></div>`;
@@ -136,7 +136,7 @@
     const seg=(S.tp&&S.tp.seg)||'ind',segs=body.querySelector('.tp-segs');
     const act=seg==='fam'?`<span style="display:flex;gap:8px">${typeof window.tpCommAdd==='function'?`<button class="btn sm" onclick="tpCommAdd('${Q(pid)}')">Log a contact</button>`:''}${typeof window.faCall==='function'?`<button class="btn sm pri" onclick="faCall('${Q(pid)}','wk')">${IC.call} Call family</button>`:''}</span>`:`<span class="tp4-sub tp4-ro">${IC.lock} Read only for the psychiatrist</span>`;
     let html='';try{html=seg==='grp'?vGrp(pid):seg==='fam'?vFam(pid):vInd(pid);}catch(e){return;}
-    body.innerHTML=`<div class="tp4-bar">${segs?segs.outerHTML:''}${act}</div>${html}`;
+    const an=ST.last!==pid+seg;ST.last=pid+seg;body.classList.toggle('tp4-anim',an);body.innerHTML=`<div class="tp4-bar">${segs?segs.outerHTML:''}${act}</div>${html}`;
   }
   const __r=render;render=function(){const r=__r.apply(this,arguments);try{place();}catch(e){}return r;};
 
@@ -173,6 +173,16 @@
     '.tp4-ev{display:flex;gap:9px;padding:9px 0;border-top:1px solid #e5e9f0}.tp4-ev:first-child{border-top:0;padding-top:0}.tp4-ev b{display:block}',
     '.tp4-alert{display:flex;gap:8px;align-items:center;background:#fff6e6;border:1px solid #f5c26b;color:#b45309;border-radius:9px;padding:8px 12px;margin-bottom:12px;font-weight:500}',
     '.tp4-empty{text-align:center;padding:30px 20px;color:#64748b}.tp4-empty>svg{width:26px;height:26px;color:#2563eb}.tp4-empty h4{margin:6px 0 4px;font-size:14px;color:#0f172a}.tp4-empty p{margin:0 auto;max-width:360px}',
+    /* calm motion: hover lift, tinted days with entries, one staggered fade-in when the patient or segment changes */
+    '.tp4-day{transition:border-color .18s,box-shadow .18s,transform .18s,background .18s}.tp4-day:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(15,23,42,.07)}',
+    '.tp4-day.has{background:#f8fbff}.tp4-day.has.sel,.tp4-day.sel{background:#eef3ff}',
+    '.tp4-card{transition:box-shadow .2s}.tp4-card:hover{box-shadow:0 6px 18px rgba(15,23,42,.06)}',
+    '.tp-segs button{transition:background .18s,color .18s}',
+    '@keyframes tp4In{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes tp4Pop{from{transform:scale(0)}to{transform:scale(1)}}',
+    '.tp4-anim .tp4-day{animation:tp4In .4s ease both;animation-delay:calc(var(--i)*12ms)}.tp4-anim .tp4-col>.tp4-card{animation:tp4In .45s ease both}.tp4-anim .tp4-col>.tp4-card+.tp4-card{animation-delay:.08s}',
+    '.tp4-anim .tp4-cal .tp4-mk,.tp4-anim .tp4-cal .tp4-tag{animation:tp4Pop .3s cubic-bezier(.3,1.4,.6,1) both;animation-delay:calc(var(--i)*12ms + .2s)}',
+    '.tp4-day.sel .tp4-mk{animation:tp4Pop .25s cubic-bezier(.3,1.4,.6,1)}',
+    '@media(prefers-reduced-motion:reduce){.tp4-day,.tp4-card,.tp4-mk,.tp4-tag{animation:none!important;transition:none!important}.tp4-day:hover{transform:none}}',
     '@media(max-width:960px){.tp4-grid{grid-template-columns:minmax(0,1fr)}}',
     '@media(max-width:600px){.tp4-day{min-height:50px}.tp4-tag{display:none}}'
   ].join('');
