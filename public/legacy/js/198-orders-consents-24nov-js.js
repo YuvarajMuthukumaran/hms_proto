@@ -162,7 +162,7 @@
     let mineN=0,oth=0,em=0;act.forEach(o=>{const op=tplOf(o).tasks.filter(t=>!(o.done||{})[t.id]&&!blocked(o,t));if(op.some(isMine))mineN++;else if(op.length)oth++;if(tplOf(o).emergency&&op.length)em++;});
     const old=(px(pid).tmp||[]).filter(o=>o&&o.steps);
     return `<div class="o2-head"><div><h3>Orders and consents</h3><div class="small muted">Active orders first. Consent is a task inside each order.</div></div>
-      <div class="o2-btns"><button class="btn o2-red-o" onclick="o2New('res')">Restraint now</button><button class="btn pri" onclick="o2Pick()">+ New order</button></div></div>
+      <div class="o2-btns"><button class="btn o2-hb o2-rn" onclick="o2New('res')">${ico('res',16)}<span>Restraint now</span></button><button class="btn pri o2-hb" onclick="o2Pick()">New order</button></div></div>
       <div class="o2-kpis"><div class="o2-kpi"><span class="n amber">${mineN}</span><span><b>Need you</b><span class="small muted">orders waiting on your step</span></span></div>
         <div class="o2-kpi"><span class="n blue">${oth}</span><span><b>With others</b><span class="small muted">RMO, psychologist, nurse</span></span></div>
         <div class="o2-kpi"><span class="n ${em?'red':''}">${em}</span><span><b>Emergency</b><span class="small muted">${em?'restraint running now':'none running'}</span></span></div></div>
@@ -263,7 +263,7 @@
   css.textContent='#o2Root{display:flex;flex-direction:column;gap:12px}'
     +'.o2-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.o2-head h3{margin:0 0 4px}'
     +'.o2-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}'
-    +'.o2-red{background:#d92d20!important;border-color:#d92d20!important;color:#fff!important}.o2-red-o{color:#b42318!important;border-color:#fda29b!important}'
+    +'.o2-red{background:#d92d20!important;border-color:#d92d20!important;color:#fff!important}.o2-hb{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;font-size:14px;font-weight:600;border-radius:10px;box-sizing:border-box}.o2-rn{color:#b42318!important}.o2-rn svg{flex:none}'
     +'.o2-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}@media(max-width:760px){.o2-kpis{grid-template-columns:1fr}}'
     +'.o2-kpi{display:flex;gap:12px;align-items:center;border:1px solid #e4e7ec;border-radius:12px;background:#fff;padding:12px 14px}.o2-kpi .n{font-size:26px;font-weight:700;color:#667085;min-width:26px}.o2-kpi .n.amber{color:#b54708}.o2-kpi .n.blue{color:#1e6cdb}.o2-kpi .n.red{color:#b42318}.o2-kpi b{display:block;font-size:14px}'
     +'.o2-sec{display:flex;align-items:baseline;gap:10px;margin-top:6px}.o2-sec h4{margin:0;font-size:15px}'
