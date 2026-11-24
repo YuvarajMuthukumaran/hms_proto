@@ -214,24 +214,6 @@
   var reset = function () { V.out = ''; V.cat = ''; V.note = ''; V.edited = false; V.marks = {}; };
   function open(id) { reset(); V.pid = id; V.screen = 'patient'; X.state.sel = id; try { window.RV2.open(id); } catch (e) { draw(); } }
 
-  /* section 6: room check */
-  function roomScreen(B, p) {
-    var room = roomOf(p), rc = (B.D.rooms || {})[room], due = V.k === 'M' && !rc;
-    var openIss = (B.S.iss || []).filter(function (x) { return x.room === room && x.st !== 'done' && x.st !== 'closed'; });
-    var n = Object.keys(V.marks).filter(function (k) { return V.marks[k]; }).length;
-    var h = '<div class="r3-dh"><button class="r3-b" onclick="RV3.back()">‹ Back</button><div><b>Room check · ' + esc(room) + '</b><div class="r3-mut">' + esc(p.name) + '</div></div></div>' +
-      '<div class="r3-ban" style="' + (due ? 'color:#B54708;background:#FFFAEB' : 'color:#334155;background:#EEF2F7') + '">' + (due ? 'Due now: first room check of the day. Takes under a minute.' : rc ? 'Checked today by ' + esc(rc.by) + ' at ' + hhmm(rc.at) + '. Only tap if you see something new.' : 'Not checked today yet. Tap anything that is wrong.') + '</div>';
-    ROOM.forEach(function (g) {
-      var ser = g[0] === 'safety';
-      h += '<div class="r3-gl" style="color:' + (ser ? '#B42318' : '#334155') + '">' + g[1] + '</div><div class="r3-box" style="border-color:' + (ser ? '#FECDCA' : '#E2E8F0') + '">' + g[3].map(function (it) {
-        var known = openIss.filter(function (x) { return x.what === it[1]; })[0], on = !!V.marks[it[0]];
-        return '<button class="r3-it' + (on ? ' on' : '') + (known ? ' kn' : '') + '" ' + (known ? 'disabled' : 'onclick="RV3.mark(\'' + it[0] + '\')"') + '><span>' + esc(it[1]) + (known ? '<small>Already reported ' + hhmm(known.t0) + ', still open with ' + esc(known.team) + '</small>' : '') + '</span><i class="r3-tk' + (on ? ' on' : '') + (known ? ' kn' : '') + '">' + (on ? '✓' : '') + '</i></button>';
-      }).join('') + '</div>';
-    });
-    h += '<div class="r3-mut" style="margin-top:4px">' + (n ? n + ' issue' + (n > 1 ? 's' : '') + ' · each goes to its team with a reply time' : 'Nothing tapped means the room is fine.') + '</div>' +
-      '<div class="r3-foot"><button class="r3-b r3-pri" style="flex:1" onclick="RV3.sendRoom()">' + (n ? 'Send ' + n + ', back to patient' : 'Room is fine, back to patient') + '</button></div>';
-    return h;
-  }
   function sendRoom() {
     var B = build(), p = B.L.filter(function (x) { return x.id === V.pid; })[0]; if (!p) return;
     var S = B.S, D = B.D, room = roomOf(p), t0 = Date.now(), by = X.me() || 'Patient experience', n = 0, saf = 0;
@@ -249,66 +231,99 @@
     V.marks = {}; V.screen = 'patient'; draw();
   }
 
-  /* section 7: end of round */
+  /* 24 Nov (owner: "doesn't look same"): markup follows the design file closely. Two panes, each scrolling on its own:
+     left = round header + See first + Walk order + End round / Next; right = white patient band, grey body, sticky save bar. */
+  var GL = function (t) { return '<div class="r3-gl">' + t + '</div>'; };
+  var band = function (inner) { return '<div class="r3-band">' + inner + '</div>'; };
+  var bodyW = function (inner) { return '<div class="r3-body">' + inner + '</div>'; };
+  var foot = function (inner) { return '<div class="r3-foot">' + inner + '</div>'; };
+  var prefNote = function (p) {
+    try { var a = JSON.parse(localStorage.getItem('px_prefs_v2') || '{}') || {}, o = a[p.id] || a[p.name]; if (!o || typeof o !== 'object') return ''; var v = Object.keys(o).filter(function (k) { return k.indexOf('__') !== 0 && typeof o[k] === 'string' && o[k].trim(); }).map(function (k) { return o[k].trim(); }); return v.slice(0, 2).join('. '); } catch (e) { return ''; }
+  };
+
+  function roomScreen(B, p) {
+    var room = roomOf(p), rc = (B.D.rooms || {})[room], due = V.k === 'M' && !rc;
+    var openIss = (B.S.iss || []).filter(function (x) { return x.room === room && x.st !== 'done' && x.st !== 'closed'; });
+    var n = Object.keys(V.marks).filter(function (k) { return V.marks[k]; }).length;
+    var h = band('<button class="r3-lnk" onclick="RV3.back()">Back to ' + esc(room) + '</button><div class="r3-big">Room check · ' + esc(room) + '</div>' +
+      '<div class="r3-ban" style="' + (due ? 'color:#B54708;background:#FFFAEB' : 'color:#334155;background:#EEF2F7') + '">' + (due ? 'Due now: first room check of the day. Takes under a minute.' : rc ? 'Checked today by ' + esc(rc.by) + ' at ' + hhmm(rc.at) + '. Only tap if you see something new.' : 'Not checked today yet. Only tap what is wrong.') + '</div>');
+    var b = '<div class="r3-mut">Everything counts as fine unless you tap it.</div>';
+    ROOM.forEach(function (g) {
+      var ser = g[0] === 'safety';
+      b += '<div class="r3-sec"><div class="r3-gl" style="color:' + (ser ? '#B42318' : '#334155') + '">' + g[1] + '</div><div class="r3-box" style="border-color:' + (ser ? '#FECDCA' : '#E2E8F0') + '">' + g[3].map(function (it) {
+        var known = openIss.filter(function (x) { return x.what === it[1]; })[0], on = !!V.marks[it[0]];
+        return '<button class="r3-it' + (on ? ' on' : '') + (known ? ' kn' : '') + '" ' + (known ? 'disabled' : 'onclick="RV3.mark(\'' + it[0] + '\')"') + '><span>' + esc(it[1]) + (known ? '<small>Already reported ' + hhmm(known.t0) + ', still open with ' + esc(known.team) + '</small>' : '') + '</span><i class="r3-tk' + (on ? ' on' : '') + (known ? ' kn' : '') + '">' + (on ? '✓' : '') + '</i></button>';
+      }).join('') + '</div></div>';
+    });
+    return h + bodyW(b) + '<div class="r3-foot col"><div class="r3-mut">' + (n ? n + ' issue' + (n > 1 ? 's' : '') + ' · each goes to its team with a reply time' : 'Nothing tapped means the room is fine.') + '</div><button class="r3-b r3-pri" onclick="RV3.sendRoom()">' + (n ? 'Send ' + n + ', back to patient' : 'Room is fine, back to patient') + '</button></div>';
+  }
+
   function summary(B) {
     var seen = 0, raised = [], missed = [], t = V.k;
     B.walk.forEach(function (p) {
       var r = res(B, p);
       if (r && r.a !== 'na') seen++;
-      if (r && r.gid) { var c = catBy(r.cat) || { label: r.topic || 'Issue', owner: '', sla: '' }; raised.push('<div class="r3-sr"><b style="color:' + (c.alert ? '#B42318' : '#0F172A') + '">' + esc(roomOf(p)) + ' · ' + esc(c.label) + '</b><span class="r3-mut">' + esc(c.owner) + (c.sla ? ' · ' + c.sla + ' h' : '') + '</span><div style="font-size:13px">' + esc(r.words || 'No note') + '</div></div>'); }
-      if (!r || r.a === 'na') missed.push('<div class="r3-mr"><b>' + esc(roomOf(p)) + '</b> ' + esc(p.name) + '<span class="r3-mut">' + (!r ? 'Not reached' : r.o === 'out' ? 'Not in room' : 'Asleep or busy') + '</span></div>');
+      if (r && r.gid) { var c = catBy(r.cat) || { label: r.topic || 'Issue', owner: '', sla: '' }; raised.push('<div class="r3-li"><div class="r3-lt" style="color:' + (c.alert ? '#B42318' : '#0F172A') + '"><span>' + esc(roomOf(p)) + ' · ' + esc(c.label) + '</span><small>' + esc(c.owner) + (c.sla ? ' · ' + c.sla + ' h' : '') + '</small></div><div class="r3-mut">' + esc(r.words || 'No note') + '</div></div>'); }
+      if (!r || r.a === 'na') missed.push('<div class="r3-li r3-row2"><b>' + esc(roomOf(p)) + ' · ' + esc(p.name) + '</b><span class="r3-mut">' + (!r ? 'Not reached' : r.o === 'out' ? 'Not in room' : 'Asleep or busy') + '</span></div>');
     });
     var rooms = Object.keys(B.D.rooms || {}).reduce(function (a, k) { return a + (B.D.rooms[k].n || 0); }, 0), pc = B.walk.length ? seen / B.walk.length : 1;
-    return '<div class="r3-dh"><button class="r3-b" onclick="RV3.back()">‹ Back</button><div><b>' + SLOT[t] + ' round summary</b><div class="r3-mut">' + esc(B.fl === 'all' ? 'All floors' : flName(B.fl)) + ' · ' + esc(X.me() || X.cfg().alloc[0].name) + '</div></div></div>' +
-      '<div class="r3-stats"><div><b>' + seen + '</b><span>seen</span></div><div><b>' + raised.length + '</b><span>raised</span></div><div><b>' + missed.length + '</b><span>not seen</span></div></div>' +
-      '<div class="r3-gl">Raised</div>' + (raised.join('') || '<div class="r3-mut">Nothing raised on this round.</div>') +
-      '<div class="r3-gl">Not seen</div>' + (missed.join('') || '<div class="r3-mut">Everyone was seen.</div>') +
-      '<div class="r3-gl">What happens on its own</div><ul class="r3-auto">' +
-      '<li>' + missed.length + ' patient' + (missed.length === 1 ? '' : 's') + ' go to the top of ' + NEXT[t] + ' round.</li>' +
-      '<li>' + raised.length + ' grievance' + (raised.length === 1 ? '' : 's') + ' sent with owners and reply times. ' + rooms + ' room issue' + (rooms === 1 ? '' : 's') + ' sent.</li>' +
-      '<li>The round shows on Today' + (pc < 0.85 ? ', and as amber in Reports (under 85% seen).' : ' and counts as on time in Reports (85% or more seen).') + '</li></ul>' +
-      '<div class="r3-foot"><button class="r3-b r3-pri" style="flex:1" onclick="RV3.back()">Back to the list</button></div>';
+    var who = esc(B.fl === 'all' ? 'All floors' : flName(B.fl)) + ' · ' + esc(X.me() || X.cfg().alloc[0].name);
+    return band('<div class="r3-mut">' + SLOT[t] + ' round · ' + who + '</div><div class="r3-big">Round summary</div>') +
+      bodyW('<div class="r3-stats"><div><b>' + seen + '</b><span>Seen</span></div><div><b style="color:#B42318">' + raised.length + '</b><span>Raised</span></div><div><b style="color:#B54708">' + missed.length + '</b><span>Carried over</span></div></div>' +
+        '<div class="r3-sec">' + GL('Raised and routed') + '<div class="r3-box">' + (raised.join('') || '<div class="r3-li r3-mut">Nothing raised on this round.</div>') + '</div></div>' +
+        '<div class="r3-sec">' + GL('Carried to the next round automatically') + '<div class="r3-box">' + (missed.join('') || '<div class="r3-li r3-mut">Everyone was seen.</div>') + '</div></div>' +
+        '<div class="r3-sec">' + GL('Done for you') + '<div class="r3-card2">' +
+        '<div>' + missed.length + ' patient' + (missed.length === 1 ? '' : 's') + ' go to the top of ' + NEXT[t] + ' round.</div>' +
+        '<div>' + raised.length + ' grievance' + (raised.length === 1 ? '' : 's') + ' sent with owners and reply times. ' + rooms + ' room issue' + (rooms === 1 ? '' : 's') + ' sent.</div>' +
+        '<div>' + (pc < 0.85 ? 'Round under 85% seen, so it shows as amber in Reports.' : 'Round 85% or more seen, counts as on time in Reports.') + '</div></div></div>') +
+      foot('<button class="r3-b" onclick="RV3.back()">Back to round</button>');
   }
 
   function detail(B) {
     var p = B.L.filter(function (x) { return x.id === V.pid; })[0] || B.walk.filter(function (x) { return !res(B, x); })[0] || B.walk[0];
-    if (!p) return '<div class="r3-empty">' + (X.mineOf().length ? 'Nobody on this round.' : 'No patients are allocated to you yet. Ask the admin to set the allocation in Setting.') + '</div>';
+    if (!p) return bodyW('<div class="r3-mut">' + (X.mineOf().length ? 'Nobody on this round.' : 'No patients are allocated to you yet. Ask the admin to set the allocation in Setting.') + '</div>');
     V.pid = p.id;
     if (V.screen === 'room') return roomScreen(B, p);
     var md = modeOf(p), r0 = res(B, p), v = B.D.v[p.id] || {}, c = X.cfg(), room = roomOf(p), rc = (B.D.rooms || {})[room];
     var raise = V.out === 'notgood' || V.out === 'still', catSel = V.cat || (V.out === 'still' ? prevCat(md) : '');
-    var hist = ['M', 'A', 'E'].filter(function (k) { return v[k]; }).map(function (k) { var e = v[k]; return '<div><span>' + SLOT[k] + ' ' + hhmm(e.at) + '</span>' + esc(({ good: 'All good', sorted: 'Confirmed fixed', notgood: 'Not good', still: 'Still a problem', asleep: 'Asleep or busy', out: 'Not in room', tell: 'Wanted to tell us', na: 'Not available' })[e.o || e.a] || e.a) + (e.topic ? ' · ' + esc(e.topic) : '') + (e.words ? ': "' + esc(e.words) + '"' : '') + '</div>'; });
+    var WORD = { good: 'All good', sorted: 'Confirmed fixed', notgood: 'Not good', still: 'Still a problem', asleep: 'Not seen, was asleep or busy', out: 'Not seen, not in room', tell: 'Wanted to tell us', na: 'Not seen' };
+    var hist = ['M', 'A', 'E'].filter(function (k) { return v[k]; }).map(function (k) { var e = v[k]; return [SLOT[k], (WORD[e.o || e.a] || e.a) + (e.words ? ': "' + e.words + '"' : e.topic ? ' · ' + e.topic : '')]; });
+    var pk = PREV[V.k];
+    if (pk && !v[pk]) hist.unshift([SLOT[pk], onR(p, pk) ? (X.passed(pk) ? 'Not seen' : 'Not seen yet') : 'Not on that round']);
+    if (!hist.length) hist.push(['Last round', +p.day <= 1 ? 'Admitted ' + (+p.day === 0 ? 'today' : 'yesterday') : 'Nothing logged today']);
     var G = p.__g || [];
-    hist.push('<div><span>Open</span>' + (G.length ? G.map(function (g) { return esc(g.id + ' · ' + g.title + (g.fixed ? ' · marked fixed' : ' · with ' + (g.owner || 'owner'))); }).join('<br>') : 'Nothing open') + '</div>');
+    hist.push(['Open', G.length ? G.map(function (g) { return g.id + ' · ' + g.title + (g.fixed ? ' · marked fixed' : ' · with ' + (g.owner || 'owner')); }).join('\n') : 'Nothing open']);
+    hist.push(['Note', prefNote(p) || 'No preferences logged yet']);
     var idx = B.walk.indexOf(p) + 1;
-    var h = '<div class="r3-dh">' + (V.mob ? '<button class="r3-b" onclick="RV3.back()">‹ List</button>' : '') + '<div style="flex:1;min-width:0"><div class="r3-mut">' + idx + ' of ' + B.walk.length + ' · ' + SLOT[V.k] + ' round</div><div class="r3-pn"><b>' + esc(room) + '</b> ' + esc(p.name) + (c.vvip[p.id] ? ' <span class="r3-tag">VVIP</span>' : '') + '</div>' +
-      '<div class="r3-mut">Day ' + esc(p.day) + (p.doctor ? ' · Psychiatrist ' + esc(p.doctor) : '') + (p.psych ? ' · Psychologist ' + esc(p.psych) : '') + '</div></div>' +
-      '<div class="r3-hb"><button class="r3-b' + (V.k === 'M' && !rc ? ' r3-due' : '') + '" onclick="RV3.room()">' + (rc ? 'Room checked' : V.k === 'M' ? 'Room check due' : 'Room check') + '</button><button class="r3-b" onclick="RV2.record()">Open record</button><button class="r3-b" onclick="RV2.vvip()">' + (c.vvip[p.id] ? 'Remove VVIP' : 'Mark VVIP') + '</button></div></div>';
-    if ((p.__r || []).length) h += '<div class="r3-rs">' + p.__r.map(function (x) { return '<div style="color:' + LV[x.lvl][0] + ';background:' + LV[x.lvl][2] + '">' + esc(x.text) + '</div>'; }).join('') + '</div>';
-    h += '<div class="r3-hist">' + hist.join('') + '</div>';
-    if (r0) h += '<div class="r3-ban" style="color:#067647;background:#ECFDF3">Saved on this round at ' + hhmm(r0.at) + '. Answer again only if something changed.</div>';
-    h += '<div class="r3-gl">Ask</div><div class="r3-q">' + esc(ask(p, md)) + '</div><div class="r3-ans">' + answers(md).map(function (a) {
+    var h = band('<div class="r3-bt">' + (V.mob ? '<button class="r3-lnk" onclick="RV3.back()">Back to round</button>' : '') + '<span class="r3-mut">' + idx + ' of ' + B.walk.length + '</span><button class="r3-sb' + (V.k === 'M' && !rc ? ' r3-due' : '') + '" onclick="RV3.room()">' + (rc ? 'Room checked' : V.k === 'M' ? 'Room check due' : 'Room check') + '</button></div>' +
+      '<div class="r3-big">' + esc(room) + ' · ' + esc(p.name) + (c.vvip[p.id] ? ' <span class="r3-tag">VVIP</span>' : '') + '</div>' +
+      '<div class="r3-mut">Day ' + esc(p.day) + (p.doctor ? ' · ' + esc(p.doctor) : '') + (p.psych ? ' · ' + esc(p.psych) + ' (psychologist)' : '') +
+      ' <span class="r3-links"><button onclick="RV2.record()">Open record</button><button onclick="RV2.vvip()">' + (c.vvip[p.id] ? 'Remove VVIP' : 'Mark VVIP') + '</button></span></div>');
+    var b = '';
+    if ((p.__r || []).length) b += '<div class="r3-sec">' + GL('Why on this round') + p.__r.map(function (x) { return '<div class="r3-why" style="color:' + LV[x.lvl][0] + ';background:' + LV[x.lvl][2] + '">' + esc(x.text) + '</div>'; }).join('') + '</div>';
+    b += '<div class="r3-card2">' + GL('Since the last round') + hist.map(function (x) { return '<div class="r3-kv"><span>' + esc(x[0]) + '</span><span>' + esc(x[1]).replace(/\n/g, '<br>') + '</span></div>'; }).join('') + '</div>';
+    if (rc && rc.n) b += '<div class="r3-ok">Room check sent: ' + rc.n + ' issue' + (rc.n > 1 ? 's' : '') + ' routed to the right teams.</div>';
+    if (r0) b += '<div class="r3-ok">Saved on this round at ' + hhmm(r0.at) + '. Answer again only if something changed.</div>';
+    b += '<div class="r3-sec">' + GL('Ask · chosen for this patient') + '<div class="r3-q">' + esc(ask(p, md)) + '</div><div class="r3-ans">' + answers(md).map(function (a) {
       var on = V.out === a[0], cc = COL[a[0]];
       return '<button style="color:' + cc[0] + ';' + (on ? 'border:2px solid ' + cc[0] + ';background:' + cc[1] + ';font-weight:700' : '') + '" onclick="RV3.out(\'' + a[0] + '\')">' + a[1] + '</button>';
-    }).join('') + '</div>';
+    }).join('') + '</div></div>';
     if (raise) {
-      h += '<div class="r3-gl">What is it about?</div>' + ['Care', 'Stay', 'Serious'].map(function (g) {
-        return '<div class="r3-cg"><div style="' + (g === 'Serious' ? 'color:#B42318' : '') + '">' + (g === 'Serious' ? 'Serious · Chandraji is told the moment you save' : g) + '</div><div class="r3-chips">' + CATS.filter(function (x) { return x.g === g; }).map(function (x) {
-          var on = x.id === catSel, sr = x.alert;
-          return '<button class="' + (sr ? 'sr ' : '') + (on ? 'on' : '') + '" onclick="RV3.cat(\'' + x.id + '\')">' + esc(x.label) + '</button>';
+      b += '<div class="r3-sec">' + GL('What is it about?') + ['Care', 'Stay', 'Serious'].map(function (g) {
+        return '<div class="r3-cg"><div' + (g === 'Serious' ? ' style="color:#B42318"' : '') + '>' + (g === 'Serious' ? 'Serious · Chandraji is told the moment you save' : g) + '</div><div class="r3-chips">' + CATS.filter(function (x) { return x.g === g; }).map(function (x) {
+          return '<button class="' + (x.alert ? 'sr ' : '') + (x.id === catSel ? 'on' : '') + '" onclick="RV3.cat(\'' + x.id + '\')">' + esc(x.label) + '</button>';
         }).join('') + '</div></div>';
-      }).join('');
+      }).join('') + '</div>';
     }
-    if (V.out && V.out !== 'asleep' && V.out !== 'out') {
+    if (V.out && V.out !== 'asleep' && V.out !== 'out' && (!raise || catSel)) {
       var dr = !V.edited && (X.state.drafts || {})[p.id];
-      h += '<div class="r3-gl">' + (raise ? 'What they said' : 'Note (optional)') + '</div><textarea id="rvN" rows="3" placeholder="In their words" oninput="RV3.note(this.value)">' + esc(noteOf(p)) + '</textarea>' +
-        '<div class="r3-mut">' + (dr ? 'Drafted by the AI scribe. Edit if anything is off.' : V.edited ? 'Edited by you.' : X.SR.on ? 'The AI scribe is listening; its draft appears here.' : 'Type it, or start the AI scribe.') + '</div>';
+      b += '<div class="r3-sec"><label class="r3-gl" for="rvN">In their words</label><textarea id="rvN" rows="3" placeholder="What they said" oninput="RV3.note(this.value)">' + esc(noteOf(p)) + '</textarea>' +
+        '<div class="r3-mut">' + (dr ? 'Drafted by the AI scribe. Edit if anything is off.' : V.edited ? 'Edited by you.' : X.SR.on ? 'The AI scribe is listening; its draft appears here.' : 'Type it, or start the AI scribe.') + '</div></div>';
     }
     var R = V.out ? route(B, p, md) : [];
-    if (R.length) h += '<div class="r3-gl">When you save</div><div class="r3-route" style="border-color:' + (catBy(catSel) && catBy(catSel).alert ? '#FDA29B' : '#E2E8F0') + '">' + R.map(function (x) { return '<div><i style="background:' + x[0] + '"></i>' + esc(x[1]) + '</div>'; }).join('') + '</div>';
+    if (R.length) b += '<div class="r3-card2" style="border-color:' + (catBy(catSel) && catBy(catSel).alert ? '#FDA29B' : '#E2E8F0') + '">' + GL('What happens when you save') + R.map(function (x) { return '<div class="r3-rl"><i style="background:' + x[0] + '"></i><span>' + esc(x[1]) + '</span></div>'; }).join('') + '</div>';
     var can = !!V.out && (!raise || !!catSel), nx = B.walk.filter(function (x) { return !res(B, x) && x.id !== p.id; })[0];
-    h += '<div class="r3-foot"><button class="r3-b" ' + (can ? '' : 'disabled') + ' onclick="RV3.save(false)">Save</button><button class="r3-b r3-pri" style="flex:1" ' + (can ? '' : 'disabled') + ' onclick="RV3.save(true)">' + (can ? (nx ? 'Save, next: ' + esc(roomOf(nx)) : 'Save and finish') : (V.out ? 'Pick what it is about' : 'Pick an answer')) + '</button></div>';
-    return h;
+    return h + bodyW(b) + foot('<button class="r3-b" ' + (can ? '' : 'disabled') + ' onclick="RV3.save(false)">Save</button><button class="r3-b r3-pri" style="flex:1" ' + (can ? '' : 'disabled') + ' onclick="RV3.save(true)">' + (can ? (nx ? 'Save, next: ' + esc(roomOf(nx)) : 'Save and finish') : (V.out ? 'Pick what it is about' : 'Pick an answer')) + '</button>');
   }
 
   function list(B) {
@@ -316,18 +331,17 @@
       var r = res(B, p);
       if (r) { var o = r.o || r.a, cc = COL[o] || COL.asleep; return '<span class="r3-st" style="color:' + cc[0] + ';background:' + cc[1] + '">' + ({ good: 'All good', sorted: 'Closed', notgood: 'Raised', still: 'Escalated', asleep: 'Moved', out: 'Moved', na: 'Moved', tell: 'Raised' }[o] || 'Seen') + '</span>'; }
       if (p.id === V.pid && V.screen !== 'list') return '<span class="r3-st" style="color:#1D5FD1;font-weight:700">Open</span>';
-      return '<span class="r3-st" style="color:#475569">To see</span>';
+      return '<span class="r3-st" style="color:#475569;font-weight:400">To see</span>';
     };
-    var who = function (p) { return [p.doctor, p.psych].filter(Boolean).map(esc).join(' · '); };
-    var h = '<div class="r3-lh"><span>See first · ' + B.prio.length + '</span><span>Sorted by the rules</span></div>';
+    var h = '<div class="r3-lh"><span>See first · ' + B.prio.length + '</span><small>Sorted by the rules</small></div><div class="r3-pl">';
     h += B.prio.map(function (p) {
-      var sel = !V.mob && p.id === V.pid, done = !!res(B, p), t = p.__r[0];
-      return '<button class="r3-card' + (sel ? ' sel' : '') + (done ? ' done' : '') + '" style="border-color:' + (sel ? '#1D5FD1' : LV[p.__s][1]) + '" onclick="RV3.open(\'' + q(p.id) + '\')"><b class="r3-rm">' + esc(roomOf(p)) + '</b><span class="r3-nm"><b>' + esc(p.name) + '</b><span style="color:' + LV[t.lvl][0] + '">' + esc(t.text) + '</span>' + (who(p) ? '<small>' + who(p) + '</small>' : '') + '</span>' + st(p) + '</button>';
-    }).join('') || '<div class="r3-mut" style="padding:4px 2px 8px">Nobody needs to be seen first.</div>';
-    h += '<div class="r3-lh"><span>Walk order · ' + B.rest.length + '</span><span>Room order</span></div><div class="r3-walk">' + B.rest.map(function (p) {
-      var sel = !V.mob && p.id === V.pid, done = !!res(B, p);
-      return '<button class="r3-row' + (sel ? ' sel' : '') + (done ? ' done' : '') + '" onclick="RV3.open(\'' + q(p.id) + '\')"><b class="r3-rm">' + esc(roomOf(p)) + '</b><span class="r3-nm">' + esc(p.name) + (who(p) ? '<small>' + who(p) + '</small>' : '') + '</span>' + st(p) + '</button>';
-    }).join('') + '</div>';
+      var sel = !V.mob && p.id === V.pid && V.screen !== 'summary', done = !!res(B, p), t = p.__r[0];
+      return '<button class="r3-card' + (done ? ' done' : '') + '" style="border-color:' + (sel ? '#1D5FD1' : LV[p.__s][1]) + ';background:' + (sel ? '#EAF1FE' : done ? '#F8FAFC' : '#fff') + '" onclick="RV3.open(\'' + q(p.id) + '\')"><span class="r3-rm">' + esc(roomOf(p)) + '</span><span class="r3-nm"><b>' + esc(p.name) + '</b><span style="color:' + LV[t.lvl][0] + '">' + esc(t.text) + '</span></span>' + st(p) + '</button>';
+    }).join('') || '<div class="r3-mut">Nobody needs to be seen first.</div>';
+    h += '</div><div class="r3-lh"><span>Walk order · ' + B.rest.length + '</span><small>Room order</small></div><div class="r3-pl"><div class="r3-box">' + B.rest.map(function (p) {
+      var sel = !V.mob && p.id === V.pid && V.screen !== 'summary', done = !!res(B, p);
+      return '<button class="r3-row" style="background:' + (sel ? '#EAF1FE' : done ? '#F8FAFC' : '#fff') + ';color:' + (done ? '#475569' : '#0F172A') + '" onclick="RV3.open(\'' + q(p.id) + '\')"><span class="r3-rm">' + esc(roomOf(p)) + '</span><span class="r3-nm1">' + esc(p.name) + '</span>' + st(p) + '</button>';
+    }).join('') + '</div></div>';
     return h;
   }
 
@@ -338,58 +352,68 @@
     var done = B.walk.filter(function (p) { return res(B, p); }), seen = done.filter(function (p) { return res(B, p).a !== 'na'; }).length, raised = done.filter(function (p) { return res(B, p).gid; }).length;
     var left = B.walk.length - done.length, firstOpen = B.walk.filter(function (p) { return !res(B, p); })[0];
     var showList = !V.mob || V.screen === 'list', showDet = !V.mob || V.screen !== 'list';
-    var h = '<div class="r3"><div class="r3-top"><div class="r3-t1"><div><h2>' + SLOT[V.k] + ' round' + (V.k === X.curRound() ? ' <span class="r3-pill">Picked by time</span>' : '') + '</h2>' +
-      '<div class="r3-mut">' + new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' + esc(B.fl === 'all' ? 'All floors' : flName(B.fl)) + ' · ' + esc(cur) + ' · ' + B.walk.length + ' patients · ' + esc((c.times[V.k] || '').replace('-', ' to ')) + '</div></div>' +
+    var mic = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0M12 17v5"></path></svg>';
+    var head = '<div class="r3-head"><div class="r3-hr"><div><div class="r3-title">' + SLOT[V.k] + ' round</div><div class="r3-sub">' + new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' + esc(B.fl === 'all' ? 'All floors' : flName(B.fl)) + ' · ' + esc(cur) + ' · ' + B.walk.length + ' patients</div></div>' +
+      (V.k === X.curRound() ? '<span class="r3-pill">Picked by time</span>' : '<button class="r3-pill" onclick="RV3.slot(\'' + X.curRound() + '\')">Back to ' + SLOT[X.curRound()].toLowerCase() + '</button>') + '</div>' +
       '<div class="r3-ctl"><div class="r3-seg">' + ['M', 'A', 'E'].map(function (k) { return '<button class="' + (V.k === k ? 'on' : '') + '" onclick="RV3.slot(\'' + k + '\')">' + SLOT[k] + '</button>'; }).join('') + '</div>' +
       '<select onchange="RV3.floor(this.value)" aria-label="Floor"><option value="all">All floors</option>' + B.FL.map(function (f) { return '<option value="' + esc(f) + '"' + (B.fl === f ? ' selected' : '') + '>' + esc(flName(f)) + '</option>'; }).join('') + '</select>' +
-      '<select onchange="RV2.me(this.value)" aria-label="Doing the round">' + c.alloc.map(function (a) { return '<option' + (a.name === cur ? ' selected' : '') + '>' + esc(a.name) + '</option>'; }).join('') + '</select></div></div>' +
+      '<select onchange="RV2.me(this.value)" aria-label="Doing the round">' + c.alloc.map(function (a) { return '<option' + (a.name === cur ? ' selected' : '') + '>' + esc(a.name) + '</option>'; }).join('') + '</select></div>' +
       '<div class="r3-bar"><i style="width:' + (B.walk.length ? Math.round(done.length / B.walk.length * 100) : 0) + '%"></i></div>' +
       '<div class="r3-t2"><span>' + seen + ' seen · ' + raised + ' raised · ' + left + ' to go</span><span>About ' + left * 3 + ' min left</span></div>' +
-      '<div class="r3-scr' + (X.SR.on ? ' on' : '') + '"><button class="r3-b' + (X.SR.on ? ' r3-red' : '') + '" onclick="RV2.scribe()">' + (X.SR.on ? '■ Stop AI scribe' : '● Start AI scribe') + '</button><span>' + (X.SR.on ? 'AI scribe on. It drafts the note for each patient you open. You confirm.' : 'AI scribe off. Tell patients before recording; only text is kept.') + (X.SR.msg ? ' ' + esc(X.SR.msg) : '') + '</span></div></div>' +
-      '<div class="r3-main">' + (showList ? '<div class="r3-list">' + list(B) + '</div>' : '') + (showDet ? '<div class="r3-det">' + (V.screen === 'summary' ? summary(B) : detail(B)) + '</div>' : '') + '</div>';
-    if (V.mob && V.screen === 'list') h += '<div class="r3-mbar"><button class="r3-b" onclick="RV3.end()">End round</button><button class="r3-b r3-pri" style="flex:1" onclick="' + (firstOpen ? 'RV3.open(\'' + q(firstOpen.id) + '\')' : 'RV3.end()') + '">' + (firstOpen ? 'Next: ' + esc(roomOf(firstOpen)) : 'See summary') + '</button></div>';
-    else if (!V.mob) h += '<div class="r3-end"><button class="r3-b" onclick="RV3.end()">End round</button></div>';
+      '<button class="r3-scr' + (X.SR.on ? ' on' : '') + '" onclick="RV2.scribe()">' + mic + '<span>' + (X.SR.on ? 'AI scribe on. It drafts notes for each patient you open. You confirm. Tap to stop.' : 'AI scribe off. Tap to start. Tell patients first; only text is kept.') + (X.SR.msg ? ' ' + esc(X.SR.msg) : '') + '</span></button></div>';
+    var h = '<div class="r3' + (V.mob ? ' mob' : '') + '">';
+    if (showList) h += '<div class="r3-left"><div class="r3-scroll">' + head + list(B) + '</div><div class="r3-foot"><button class="r3-b" onclick="RV3.end()">End round</button><button class="r3-b r3-pri" style="flex:1" onclick="' + (firstOpen ? 'RV3.open(\'' + q(firstOpen.id) + '\')' : 'RV3.end()') + '">' + (firstOpen ? 'Next: ' + esc(roomOf(firstOpen)) : 'See summary') + '</button></div></div>';
+    if (showDet) h += '<div class="r3-right">' + (V.screen === 'summary' ? summary(B) : detail(B)) + '</div>';
     return h + '</div>';
   }
   function draw(ext) {
     var root = $('root'); if (!root) return;
     if (ext && document.activeElement && document.activeElement.id === 'rvN') return;
-    var sc = (document.querySelector('.r3-list') || {}).scrollTop || 0;
+    var l0 = document.querySelector('.r3-left .r3-scroll'), sc = l0 ? l0.scrollTop : 0, samePt = V.__lastPid === V.pid && V.__lastScr === V.screen, r0 = document.querySelector('.r3-right'), rs = r0 && samePt ? r0.scrollTop : 0;
     root.innerHTML = view();
-    var l = document.querySelector('.r3-list'); if (l) l.scrollTop = sc;
+    var l = document.querySelector('.r3-left .r3-scroll'); if (l) l.scrollTop = sc;
+    var r = document.querySelector('.r3-right'); if (r) r.scrollTop = rs;
+    V.__lastPid = V.pid; V.__lastScr = V.screen;
   }
 
   var css = document.createElement('style');
-  css.textContent = '.r3{padding:16px;display:flex;flex-direction:column;gap:12px;background:#F4F6FA;min-height:100vh;box-sizing:border-box;color:#0F172A}' +
-    '.r3-top{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}.r3-t1{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}.r3 h2{margin:0;font-size:22px}' +
-    '.r3-pill{font-size:12px;font-weight:600;color:#1D5FD1;background:#EAF1FE;border-radius:99px;padding:3px 9px;vertical-align:middle}.r3-mut{font-size:13px;color:#475569}.r3-mut small{display:block}' +
-    '.r3-ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.r3-ctl select{height:36px;border:1px solid #CBD5E1;border-radius:10px;padding:0 10px;font:inherit;background:#fff}' +
-    '.r3-seg{display:flex;gap:4px;border:1px solid #CBD5E1;border-radius:10px;padding:3px;background:#fff}.r3-seg button{height:30px;padding:0 12px;border:0;border-radius:7px;background:transparent;font:inherit;font-weight:600;color:#334155;cursor:pointer}.r3-seg button.on{background:#1D5FD1;color:#fff}' +
-    '.r3-bar{height:6px;background:#E2E8F0;border-radius:99px;overflow:hidden}.r3-bar i{display:block;height:6px;background:#1D5FD1}.r3-t2{display:flex;justify-content:space-between;font-size:13px;color:#334155}' +
-    '.r3-scr{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#F1F5FF;border:1px solid #D6E2FB;border-radius:10px;padding:8px 10px;font-size:13px;color:#1D4ED8}.r3-scr.on{background:#FEF3F2;border-color:#FDA29B;color:#B42318}' +
-    '.r3-main{display:grid;grid-template-columns:400px minmax(0,1fr);gap:12px;align-items:start}.r3-list{display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 230px);overflow:auto;padding-right:2px}' +
-    '.r3-lh{display:flex;justify-content:space-between;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#334155;margin-top:4px}.r3-lh span+span{font-weight:400;text-transform:none;letter-spacing:0;color:#475569}' +
-    '.r3-card,.r3-row{display:flex;gap:10px;align-items:center;width:100%;text-align:left;font:inherit;color:#0F172A;cursor:pointer;background:#fff}.r3-card{border:1px solid;border-radius:12px;padding:10px 12px;min-height:64px}.r3-card.sel,.r3-row.sel{background:#EAF1FE}.r3-card.done,.r3-row.done{opacity:.6}' +
-    '.r3-rm{font-size:15px;min-width:52px}.r3-nm{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:14px}.r3-nm span{font-size:12.5px;font-weight:600;line-height:1.35}.r3-nm small{font-size:11.5px;color:#64748B}' +
-    '.r3-st{font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:99px;flex-shrink:0}.r3-walk{background:#fff;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden}.r3-row{border:0;border-bottom:1px solid #EEF2F7;min-height:48px;padding:6px 12px}.r3-row:last-child{border-bottom:0}' +
-    '.r3-det{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;position:sticky;top:8px}.r3-dh{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}.r3-pn{font-size:19px;margin:2px 0}.r3-hb{display:flex;gap:6px;flex-wrap:wrap}' +
-    '.r3-tag{font-size:11px;font-weight:700;border-radius:99px;padding:1px 8px;background:#FFF4D6;color:#93370D;vertical-align:middle}.r3-rs{display:flex;flex-direction:column;gap:6px}.r3-rs div{font-size:13px;font-weight:600;line-height:1.4;padding:8px 10px;border-radius:8px}' +
-    '.r3-hist{border:1px solid #E2E8F0;border-radius:10px;overflow:hidden}.r3-hist div{display:flex;gap:10px;font-size:13px;padding:7px 10px;border-top:1px solid #EEF2F7}.r3-hist div:first-child{border-top:0}.r3-hist span{width:120px;flex-shrink:0;color:#475569}' +
-    '.r3-gl{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#334155;margin-top:4px}.r3-q{font-size:17px;line-height:1.45}' +
-    '.r3-ans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.r3-ans button{height:52px;border-radius:12px;border:1px solid #CBD5E1;background:#fff;font:inherit;font-size:15px;font-weight:600;cursor:pointer}' +
-    '.r3-cg{display:flex;flex-direction:column;gap:6px}.r3-cg>div:first-child{font-size:12px;font-weight:600;color:#475569}.r3-chips{display:flex;gap:6px;flex-wrap:wrap}.r3-chips button{height:36px;padding:0 12px;border-radius:99px;border:1px solid #CBD5E1;background:#fff;font:inherit;font-size:13px;cursor:pointer}' +
+  css.textContent = 'html,body{margin:0}.r3{display:flex;height:100vh;background:#F4F6FA;color:#0F172A;font-family:Inter,system-ui,sans-serif;font-size:14px;overflow:hidden}' +
+    '.r3 button{font-family:inherit;cursor:pointer}.r3-left{width:400px;flex-shrink:0;border-right:1px solid #E2E8F0;display:flex;flex-direction:column;min-height:0;background:#F4F6FA}.r3-scroll{flex:1;min-height:0;overflow-y:auto}' +
+    '.r3-right{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}' +
+    '.r3-head{background:#fff;padding:16px;border-bottom:1px solid #E2E8F0;display:flex;flex-direction:column;gap:10px}.r3-hr{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.r3-title{font-size:20px;font-weight:700}.r3-sub{font-size:12px;color:#475569;margin-top:2px}' +
+    '.r3-pill{font-size:11px;font-weight:600;color:#1D5FD1;background:#EAF1FE;padding:4px 8px;border-radius:99px;border:0;white-space:nowrap}' +
+    '.r3-ctl{display:flex;gap:6px;flex-wrap:wrap}.r3-ctl select{height:30px;border:1px solid #CBD5E1;border-radius:8px;padding:0 6px;font:inherit;font-size:12px;background:#fff;max-width:130px}' +
+    '.r3-seg{display:flex;gap:2px;border:1px solid #CBD5E1;border-radius:8px;padding:2px;background:#fff}.r3-seg button{height:24px;padding:0 9px;border:0;border-radius:6px;background:transparent;font-size:12px;font-weight:600;color:#334155}.r3-seg button.on{background:#1D5FD1;color:#fff}' +
+    '.r3-bar{height:6px;background:#E2E8F0;border-radius:99px;overflow:hidden}.r3-bar i{display:block;height:6px;background:#1D5FD1}.r3-t2{display:flex;justify-content:space-between;font-size:12px;color:#475569}' +
+    '.r3-scr{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:#F1F5FF;border:1px solid #D6E2FB;font-size:12px;color:#1E3A8A;text-align:left;line-height:1.4}.r3-scr svg{color:#1D5FD1;flex-shrink:0}.r3-scr.on{background:#FEF3F2;border-color:#FDA29B;color:#B42318}.r3-scr.on svg{color:#B42318}' +
+    '.r3-lh{padding:14px 16px 4px;display:flex;justify-content:space-between;align-items:baseline}.r3-lh span{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#334155}.r3-lh small{font-size:11px;color:#475569}' +
+    '.r3-pl{padding:6px 16px;display:flex;flex-direction:column;gap:8px}.r3-pl:last-child{padding-bottom:16px}' +
+    '.r3-card{display:flex;gap:10px;align-items:center;text-align:left;width:100%;min-height:64px;border:1px solid;border-radius:12px;padding:10px 12px;color:#0F172A}.r3-card.done{opacity:.6}' +
+    '.r3-rm{width:50px;flex-shrink:0;font-size:15px;font-weight:700}.r3-row .r3-rm{font-size:14px}.r3-nm{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.r3-nm b{font-size:14px;font-weight:600}.r3-nm span{font-size:12px;line-height:1.35;font-weight:600}.r3-nm1{flex:1;font-size:14px}' +
+    '.r3-st{font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;flex-shrink:0}' +
+    '.r3-box{background:#fff;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column}.r3-row{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:0 12px;border:0;border-bottom:1px solid #EEF2F7;text-align:left}.r3-row:last-child{border-bottom:0}' +
+    '.r3-foot{margin-top:auto;position:sticky;bottom:0;background:#fff;border-top:1px solid #E2E8F0;padding:12px 16px 16px;display:flex;gap:10px}.r3-foot.col{flex-direction:column;gap:6px}' +
+    '.r3-b{height:48px;border-radius:12px;border:1px solid #CBD5E1;background:#fff;font-size:15px;font-weight:600;padding:0 16px;color:#0F172A;white-space:nowrap}.r3-b:disabled{opacity:.45;cursor:default}.r3-pri{border:0;background:#1D5FD1;color:#fff}.r3-pri:disabled{background:#94A3B8;opacity:1}' +
+    '.r3-band{background:#fff;padding:12px 16px 14px;border-bottom:1px solid #E2E8F0;display:flex;flex-direction:column;gap:8px}.r3-bt{display:flex;justify-content:space-between;align-items:center;gap:8px}.r3-big{font-size:22px;font-weight:700}' +
+    '.r3-sb{height:36px;padding:0 12px;border-radius:8px;border:1px solid #CBD5E1;background:#fff;font-size:13px;font-weight:600;color:#0F172A}.r3-due{border-color:#F79009;color:#B54708;background:#FFFAEB}' +
+    '.r3-lnk{align-self:flex-start;height:32px;border:0;background:transparent;font-size:14px;font-weight:600;color:#1D5FD1;padding:0}' +
+    '.r3-links button{border:0;background:none;color:#1D5FD1;font-size:13px;font-weight:600;padding:0 0 0 10px}' +
+    '.r3-mut{font-size:13px;color:#475569;line-height:1.4}.r3-tag{font-size:11px;font-weight:700;border-radius:99px;padding:2px 8px;background:#FFF4D6;color:#93370D;vertical-align:middle}' +
+    '.r3-body{padding:14px 16px;display:flex;flex-direction:column;gap:14px}.r3-sec{display:flex;flex-direction:column;gap:6px}.r3-gl{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#334155}' +
+    '.r3-why{font-size:13px;line-height:1.4;font-weight:600;padding:8px 10px;border-radius:8px}' +
+    '.r3-card2{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.45}.r3-kv{display:flex;gap:8px;font-size:13px;line-height:1.4}.r3-kv span:first-child{color:#475569;width:76px;flex-shrink:0}' +
+    '.r3-ok{font-size:13px;color:#067647;background:#DCFAE6;border-radius:10px;padding:10px 12px}' +
+    '.r3-q{font-size:16px;line-height:1.45;font-weight:500}.r3-ans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.r3-ans button{height:52px;border-radius:12px;border:1px solid #CBD5E1;background:#fff;font-size:15px;font-weight:600}' +
+    '.r3-cg{display:flex;flex-direction:column;gap:6px}.r3-cg>div:first-child{font-size:12px;font-weight:600;color:#475569}.r3-chips{display:flex;gap:6px;flex-wrap:wrap}.r3-chips button{height:36px;padding:0 12px;border-radius:99px;border:1px solid #CBD5E1;background:#fff;font-size:13px;color:#0F172A}' +
     '.r3-chips button.on{border:2px solid #1D5FD1;background:#EAF1FE;color:#1D5FD1;font-weight:600}.r3-chips button.sr{border-color:#FDA29B;color:#B42318}.r3-chips button.sr.on{border:2px solid #B42318;background:#FEF3F2}' +
-    '.r3-det textarea{width:100%;box-sizing:border-box;border:1px solid #CBD5E1;border-radius:10px;padding:8px 10px;font:inherit;font-size:14px}' +
-    '.r3-route{border:1px solid;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}.r3-route div{display:flex;gap:8px;font-size:13px;line-height:1.4}.r3-route i{width:8px;height:8px;border-radius:99px;margin-top:5px;flex-shrink:0}' +
-    '.r3-foot{display:flex;gap:8px;margin-top:4px}.r3-b{height:40px;border-radius:10px;border:1px solid #CBD5E1;background:#fff;font:inherit;font-weight:600;padding:0 14px;cursor:pointer;color:#0F172A;white-space:nowrap}.r3-foot .r3-b{height:48px;font-size:15px}' +
-    '.r3-b:disabled{opacity:.45;cursor:default}.r3-pri{background:#1D5FD1;border-color:#1D5FD1;color:#fff}.r3-pri:disabled{background:#94A3B8;border-color:#94A3B8;opacity:1}.r3-red{background:#D92D20;border-color:#D92D20;color:#fff}.r3-due{border-color:#F79009;color:#B54708;background:#FFFAEB}' +
-    '.r3-ban{font-size:13px;line-height:1.4;padding:8px 10px;border-radius:8px}.r3-box{border:1px solid;border-radius:12px;overflow:hidden;display:flex;flex-direction:column}' +
-    '.r3-it{min-height:48px;padding:10px 12px;border:0;border-bottom:1px solid #EEF2F7;background:#fff;text-align:left;font:inherit;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;color:#0F172A}.r3-it:last-child{border-bottom:0}.r3-it.on{background:#FFFAEB;font-weight:600}.r3-it.kn{opacity:.7;cursor:default}.r3-it small{display:block;font-size:11.5px;color:#B54708;font-weight:400}' +
-    '.r3-tk{width:22px;height:22px;border-radius:6px;flex-shrink:0;border:1.5px solid #CBD5E1;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:700;color:#fff}.r3-tk.on{background:#B54708;border-color:#B54708}.r3-tk.kn{background:#FEDF89;border-color:#FEDF89}' +
-    '.r3-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.r3-stats div{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:10px;text-align:center}.r3-stats b{display:block;font-size:24px}.r3-stats span{font-size:12px;color:#475569}' +
-    '.r3-sr{border:1px solid #E2E8F0;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}.r3-mr{display:flex;gap:8px;align-items:baseline;font-size:14px}.r3-mr .r3-mut{margin-left:auto}.r3-auto{margin:0;padding-left:18px;font-size:13px;line-height:1.6}' +
-    '.r3-empty{padding:18px;color:#475569}.r3-end{display:flex;justify-content:flex-end}.r3-mbar{position:sticky;bottom:0;display:flex;gap:8px;background:#fff;border-top:1px solid #E2E8F0;padding:10px;margin:0 -16px -16px}.r3-mbar .r3-b{height:48px;font-size:15px}' +
-    '@media(max-width:900px){.r3{padding:10px}.r3-main{grid-template-columns:1fr}.r3-list{max-height:none}.r3-det{position:static}.r3-hist span{width:90px}}';
+    '.r3-body textarea{min-height:70px;border-radius:12px;border:1px solid #CBD5E1;padding:10px 12px;font:inherit;font-size:14px;line-height:1.4;resize:vertical;box-sizing:border-box;width:100%}' +
+    '.r3-rl{display:flex;gap:8px;font-size:13px;line-height:1.4}.r3-rl i{width:8px;height:8px;border-radius:99px;margin-top:6px;flex-shrink:0}' +
+    '.r3-it{min-height:48px;padding:10px 12px;border:0;border-bottom:1px solid #EEF2F7;background:#fff;text-align:left;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:8px;color:#0F172A}.r3-it:last-child{border-bottom:0}.r3-it.on{background:#FFFAEB;font-weight:600}.r3-it.kn{opacity:.7;cursor:default}.r3-it small{display:block;font-size:11px;color:#B54708;font-weight:400}' +
+    '.r3-tk{width:22px;height:22px;border-radius:6px;flex-shrink:0;border:1.5px solid #CBD5E1;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:14px;font-weight:700;color:#fff;box-sizing:border-box}.r3-tk.on{background:#B54708;border-color:#B54708}.r3-tk.kn{background:#FEDF89;border-color:#FEDF89}' +
+    '.r3-ban{font-size:12px;line-height:1.4;padding:8px 10px;border-radius:8px}' +
+    '.r3-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.r3-stats div{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:12px}.r3-stats b{display:block;font-size:24px}.r3-stats span{font-size:12px;color:#475569}' +
+    '.r3-li{padding:12px;border-bottom:1px solid #EEF2F7;display:flex;flex-direction:column;gap:3px}.r3-li:last-child{border-bottom:0}.r3-lt{display:flex;justify-content:space-between;gap:8px;font-size:14px;font-weight:600}.r3-lt small{font-size:12px;font-weight:500;color:#475569}.r3-row2{flex-direction:row;justify-content:space-between;padding:10px 12px;font-size:13px}' +
+    '.r3.mob .r3-left{width:100%;border-right:0}';
   document.head.appendChild(css);
 
   window.RV3 = {
