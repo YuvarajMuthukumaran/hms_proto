@@ -193,25 +193,19 @@
 
   /* ---------- 8. MECT form ---------- */
   const MECT='mect-final';
-  const CROP={1:[41.5,760.7],2:[18,747.7],3:[18,783.7],4:[55.5,766.2],5:[14,806.2],6:[18,38.5],7:[18,780.2],8:[18,814.2],9:[18,794.2],10:[18,426.9]};
+  const CROP={1:[41.5,760.7],2:[18,747.7],3:[18,783.7],4:[55.5,654.8],5:[563.8,256.4],6:[18,38.5],7:[18,780.2],8:[18,814.2],9:[18,794.2],10:[18,426.9]};
   const SEC={1:['info','Information sheet','Read only, for the patient and family'],2:['info','Information sheet','Read only'],3:['info','Information sheet','Read only'],
-    4:['doc','Information sheet, then the MECT checklist','Checklist filled by the doctor'],5:['doc','MECT checklist (doctor), then the anaesthesia consent','Anaesthesia part filled by the anaesthetist'],
+    4:['info','Information sheet','Read only'],5:['an','Anaesthesia consent','Filled by the anaesthetist'],
 7:['an','Anaesthesia consent, then the MECT informed consent','Consent filled by the doctor with the patient or NR'],
     8:['doc','MECT informed consent','Doctor with the patient or NR'],9:['doc',"Doctor's statement, then the Pre-MECT check-up",'Check-up filled by the RMO'],10:['rmo','Pre-MECT check-up','Filled by the RMO or nurse']};
   try{const F=CDF_FORMS[MECT];
     if(F&&!F.m24){F.m24=1;
       const DROP=/^(p1f\d+|p2f\d+|p3f\d+|p4f\d+|p5f[2-8]|p7f(14|26|27)|p8f([2-9]|1[0-4]|2[23])|p9f([1-6]|12))$/;
-      F.pages.forEach((pg,i)=>{const n=i+1,c=CROP[n];if(!c)return;
-        pg.fields=pg.fields.filter(f=>!DROP.test(f.id)&&!(n===10&&/^(Investigations|Pre MECT direction)$/i.test(String(f.label||'').trim())));
+      F.pages.forEach((pg,i)=>{const n=i+1,c=CROP[n];if(!c)return;if(n===4||n===5)pg.img=pg.img.split('?')[0]+'?v=196';
+        pg.fields=pg.fields.filter(f=>!DROP.test(f.id)&&!(n===5&&f.id==='p5f1')&&!(n===10&&/^(Investigations|Pre MECT direction)$/i.test(String(f.label||'').trim())));
         pg.fields.forEach(f=>{f.y=+(f.y-c[0]).toFixed(1);(f.opts||[]).forEach(o=>{o.y=+(o.y-c[0]).toFixed(1);});if(f.id==='p9f13')f.label='UHID';});
         pg.h=c[1];});
-      /* Yes / No boxes of the checklist (rows measured on the page images, in points before the crop) */
-      const yn=(n,rows,pre)=>{const pg=F.pages[n-1],t=CROP[n][0];rows.forEach((r,j)=>{const y=+(r[0]+2-t).toFixed(1),h=+(r[1]-r[0]-4).toFixed(1);
-        pg.fields.push({kind:'check',id:'m24'+pre+j+'y',x:514,y,w:19,h,label:pre+' row '+(j+1)+': Yes'},{kind:'check',id:'m24'+pre+j+'n',x:536,y,w:15,h,label:pre+' row '+(j+1)+': No'});});};
-      yn(4,[[783,806]],'Pre-ECT');
-      yn(5,[[61,84],[84,107],[107,129],[129,152]],'Pre-ECT');
-      yn(5,[[215,254],[254,293],[293,332],[332,370],[370,409]],'Peri-MECT');
-      yn(5,[[475,498],[498,521],[521,544]],'Post-MECT');
+      /* 24 Nov: the checklist table is cut out of pages 4 and 5; block 196 shows it as one on-screen table */
     }}catch(e){}
   /* who last filled each page of the MECT form */
   const pageOf=fid=>{try{const F=CDF_FORMS[MECT];for(let i=0;i<F.pages.length;i++)if(F.pages[i].fields.some(f=>f.id===fid))return i+1;}catch(e){}return 0;};
