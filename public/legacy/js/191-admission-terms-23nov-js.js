@@ -61,6 +61,8 @@
     if(typeof CD_TEMPLATES!=='undefined'&&!CD_TEMPLATES[FID])CD_TEMPLATES[FID]={html:'<div></div>',css:''};}catch(e){}
   /* 24 Nov 2026 (Anu, meeting): page 3 (guardian and psychiatric data) is already in the Application form pop-up, so the terms start at page 4 */
   try{const T=CDF_FORMS[FID];if(T&&T.pages)T.pages=T.pages.filter(pg=>!/adm-terms\/p3\.png$/.test(pg.img));}catch(e){}
+  /* 24 Nov (owner): blanks the tool put over printed text (item 9 list and 11, Serum TSH, items 26 and 29) are not blanks */
+  try{const T=CDF_FORMS[FID],X=/^(p5f\d+|p6f1|p7f1|p7f2)$/;if(T&&T.pages)T.pages.forEach(pg=>{pg.fields=pg.fields.filter(f=>!X.test(f.id));});}catch(e){}
 
   const css=document.createElement('style');css.id='m23-terms-css';
   css.textContent='#consentCard .ct-a,#formcCard .ct-a{display:flex;flex-wrap:nowrap;justify-content:flex-end;gap:6px;white-space:nowrap}'

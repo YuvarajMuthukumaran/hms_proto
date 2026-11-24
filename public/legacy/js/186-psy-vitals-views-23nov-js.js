@@ -64,7 +64,7 @@
   /* 2. one row a day */
   function byDay(R){const m=new Map();R.forEach(r=>{const k=dayKey(r.ts);if(!m.has(k))m.set(k,[]);m.get(k).push(r);});return [...m.values()];}
   function vDay(R,ps){
-    return `<div class="vx-scroll"><table class="vx-t vx-day"><thead><tr><th>Date</th>${ps.map(p=>`<th>${p[1]}<small>${p[2]}</small></th>`).join('')}</tr></thead><tbody>${byDay(R).map(d=>`<tr><td><b>${E(dayLbl(d[0].ts))}</b><div class="tiny muted">${d.length} reading${d.length>1?'s':''}</div></td>${ps.map(p=>{const xs=d.filter(r=>ok(r[p[0]])).slice().reverse();return `<td>${xs.length?xs.map(r=>`<div class="vx-li">${cell(p[0],r[p[0]])} <small>${E(r.time||'')}${r.sgw?' · '+E(r.sgw):''}</small></div>`).join(''):'<span class="vx-no">—</span>'}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div>`;
+    return `<div class="vx-scroll"><table class="vx-t vx-day"><thead><tr><th>Date</th>${ps.map(p=>`<th>${p[1]}<small>${p[2]}</small></th>`).join('')}</tr></thead><tbody>${byDay(R).map(d=>`<tr><td><b>${E(dayLbl(d[0].ts))}</b><div class="tiny muted">${d.length} reading${d.length>1?'s':''}</div></td>${ps.map(p=>{const xs=d.filter(r=>ok(r[p[0]])).slice().reverse();return `<td>${xs.length?xs.map(r=>`<div class="vx-li">${cell(p[0],r[p[0]])} <small>${E(r.time||'')}${r.sgw?' · '+E(r.sgw):''}${r.by?' · by '+E(r.by):''}</small></div>`).join(''):'<span class="vx-no">—</span>'}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div>`;
   }
   /* 3. paper chart: parameters down, days across */
   function vPaper(R,ps){
