@@ -226,6 +226,63 @@
         <tr><td>Psychiatrist</td><td>${E(team.psy||'-')}</td><td>${E(fmtD(dd))}</td><td>${dayN?'Day '+dayN:'-'}</td></tr>
         <tr><td>Psychologist</td><td>${E(team.psych||'-')}</td><td>${E(fmtD(dd))}</td><td>${dayN?'Day '+dayN:'-'}</td></tr></table>`;
     };
+    /* 24 Nov 2026 (owner): psychiatrist roles use the hospital's printed format
+       (Downloads/Discharge_Summary_Final_HMS_with_Discharge_Type_1.pdf): address + logo header, patient grid, Discharge Type
+       Yes/No table, blue headings, Rx table, Suggestions (follow-up, team), red urgent-help footer. The review pop-up (188)
+       shows this same page. */
+    if(DOC){
+      const d0=s=>s?new Date(String(s).slice(0,10)+'T00:00:00'):null,A=d0(adm),Dd=d0(dd),F=d0(D.fu);
+      const fuN=F&&Dd?Math.round((F-Dd)/DAY):null;
+      const onScr={};document.querySelectorAll('#view label.field').forEach(l=>{const lb=l.querySelector('.lbl'),ta=l.querySelector('textarea');if(lb&&ta)onScr[dcHead(lb.textContent)]=ta.value;});
+      const sv=px(pid).dcs||{},fF=DCO.map(k=>[dcHead(k),onScr[dcHead(k)]!==undefined?onScr[dcHead(k)]:(sv[k]||'')]),ci=fF.findIndex(f=>/^Condition at the Time of Discharge/i.test(f[0]));
+      const sec=f=>`<h3>${E(f[0])}:</h3><div class="tx">${H(f[1]||'-')}</div>`;
+      const rows=medRows(pid).map((r,i)=>`<tr><td>${i+1}) ${E(r.name)}</td><td>${E([r.s.freq,r.s.food].filter(Boolean).join(', ')||'-')}</td><td>${E(daysTxt(r.s.start,r.s.end)||'Till review')}</td></tr>`).join('');
+      const rx=`<h3>Rx:</h3>`+(rows?`<table class="rx"><tr><td>Drug/Medicine Name</td><td>Dose</td><td>Duration</td></tr>${rows}</table>`:'<div class="tx">No medicines at discharge.</div>');
+      const ty=typeOf(pid)||'',TY=[['Treatment Completed',/complet/i],['Transferred to other institution',/transfer/i],['Discharge on Request (DOR)',/request|\bDOR\b/i],['Leave Against Medical Advice (LAMA)',/against|\bLAMA\b/i],['Absconding',/abscond/i]];
+      const tyRows=TY.map(x=>{const y=x[1].test(ty);return `<tr class="${y?'on':''}"><td>${x[0]}</td><td class="yn"><span class="p ${y?'y':''}">${y?'✓ ':''}Yes</span><span class="p ${y?'':'n'}">No</span></td></tr>`;}).join('');
+      const fdt=s=>{const x=d0(s);return x?String(x.getDate()).padStart(2,'0')+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+x.getFullYear():'-';};
+      const r0=p.rel0||{},kv=(k,v)=>`<div><span>${k}</span><b>${E(v||'-')}</b></div>`;
+      const uhid=p.uhid||id.uhid||'';
+      const wk=d=>d?['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()]:'---';
+      const T=d0(t.fu);
+      const body=fF.slice(0,ci+1).map(sec).join('')+rx+fF.slice(ci+1).map(sec).join('');
+      const html=`<!doctype html><html><head><meta charset="utf-8"><title>Discharge summary · ${E(p.name||'')}</title><style>
+        body{font:12px/1.5 Arial,Helvetica,sans-serif;color:#222;margin:28px 40px}
+        .top{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;border-bottom:1.5px solid #999;padding-bottom:10px}
+        .addr{font-size:11px}.addr p{margin:0 0 8px}.brand{text-align:center}.brand img{height:58px}.brand h1{color:#1f3c88;font-size:24px;margin:2px 0 0}.brand i{font-size:12px}
+        .ds{text-align:right}.ds h2{font-size:17px;letter-spacing:.5px;margin:0 0 10px}.ds span{display:block;color:#666;font-size:11px}.ds b{display:block;margin-bottom:6px}
+        .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 14px;padding:12px 0;border-bottom:1.5px solid #999}
+        .grid span{display:block;color:#666;font-size:10.5px;font-weight:700;text-transform:uppercase}.grid b{font-size:12.5px;text-transform:uppercase}
+        h3{color:#1f3c88;font-size:15px;margin:18px 0 4px}.tx{font-size:11.5px}
+        table.ty{border-collapse:collapse;width:480px}.ty td{border:1px solid #c8cfd8;padding:5px 10px}.ty tr.on td{background:#dbe6f6;color:#1f3c88;font-weight:700;border-left:3px solid #1f3c88}
+        .yn{width:110px;text-align:center;white-space:nowrap}.p{display:inline-block;border:1px solid #bbb;border-radius:10px;padding:0 9px;margin:0 2px;font-size:10.5px;color:#aaa}.p.y{background:#1f3c88;border-color:#1f3c88;color:#fff;font-weight:700}.p.n{color:#111;font-weight:700;border-color:#555}
+        table.rx{border-collapse:collapse;width:470px}.rx td{border:1.5px solid #111;padding:2px 6px}
+        .fu{display:grid;grid-template-columns:2fr 2fr 1fr;font-size:11.5px}.team{font-weight:700;margin-top:6px;font-size:12.5px}
+        .foot{border-top:1.5px solid #999;margin-top:22px;padding-top:12px;text-align:center}.foot .r{color:#e00;font-weight:700}.foot i{display:block;color:#555;margin-top:10px}
+        *{-webkit-print-color-adjust:exact;print-color-adjust:exact}@media print{body{margin:10mm 12mm}}</style></head><body>
+        <div class="top"><div class="addr"><p>Sector-64, Opp: M3M Urbana,<br>Gurgaon - 122102</p><p>2/6 Sarvpriya Vihar, Near Hauzkhas Metro,<br>New Delhi - 110016</p><p><b>Appointments:8800000255</b></p></div>
+          <div class="brand"><img src="${location.origin}/logo.png" alt=""><h1>Tulasi Healthcare</h1><i>Psychiatric &amp; Rehabilitation Care</i></div>
+          <div class="ds"><h2>DISCHARGE SUMMARY</h2><span>UHID/MR NO.</span><b>${E(uhid)}</b><span>DATE OF ADMISSION</span><b>${E(fdt(adm))}</b></div></div>
+        <div class="grid">${kv('Patient name',p.name)}${kv('Age / Sex',id.age?id.age+'Yrs / '+({M:'Male',F:'Female'}[id.sex]||id.sex||''):'')}${kv('Mobile number',id.phone)}${kv('Panel','IPD')}
+          ${kv('UHID/MR No.',uhid)}${kv('Date of admission',fdt(adm))}${kv('Date of discharge',fdt(dd))}${kv('Facility','THC - Gurgaon')}
+          ${kv('Relative name',r0.name||(id.nr&&id.nr!=='Not recorded'?id.nr:''))}${kv('Relative phone number',r0.phone||r0.mobile||'')}</div>
+        <h3>Discharge Type:</h3><table class="ty">${tyRows}</table>
+        ${ama?[['State of mental health',l.state],['Treatment proposed',l.prop],['Risks explained',l.risk]].map(x=>sec([x[0],x[1]])).join(''):''}
+        ${body}
+        <h3>Suggestions</h3><div class="tx"><b>${fuN!=null&&fuN>=0?'Follow-up advised after '+fuN+(fuN===1?' day':' days')+'.':'Follow-up: date not set yet.'}</b></div>
+        <div class="fu"><span>Psychiatrist</span><span>Follow-up Date</span><span>Day</span>
+          <span>${E(fuDocOf(pid)||team.psy||'-')}</span><span>${F?E(fdt(D.fu)):'---'}</span><span>${F?wk(F):'---'}</span>
+          <span>Psychologist</span><span>Follow-up Date</span><span>Day</span>
+          <span>${E(team.psych||'-')}</span><span>${T?E(fdt(t.fu)):'---'}</span><span>${T?wk(T):'---'}</span></div>
+        ${t.mod||t.freq||t.dur?`<div class="tx" style="margin-top:6px">Therapy plan: ${E([t.mod,t.freq,t.dur].filter(Boolean).join(' · '))}</div>`:''}
+        <div class="team">${E(team.psy||'')}</div>
+        <div class="foot"><div class="r">For urgent help, call 8800000255 or 7707070002 (24x7)</div><div class="r">If the patient shows suicidal thoughts or self-harm, severe agitation or aggression, a severe panic attack, an overdose or withdrawal symptoms, or signs of mania.</div><i>This is a digitally generated document; signature is not required.</i></div>
+        <script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>`;
+      const w=window.open('','_blank');
+      if(!w){toast('Allow pop-ups for this site to download the PDF');return;}
+      w.document.open();w.document.write(html);w.document.close();
+      return;
+    }
     const html=`<!doctype html><html><head><meta charset="utf-8"><title>Discharge summary · ${E(p.name||'')}</title><style>
       body{font:13px/1.45 Arial,Helvetica,sans-serif;color:#111;margin:28px}h1{font-size:19px;margin:0}h2{font-size:14px;margin:18px 0 6px;border-bottom:1px solid #999;padding-bottom:3px}
       table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:5px 7px;text-align:left;vertical-align:top}th{background:#f2f2f2}
