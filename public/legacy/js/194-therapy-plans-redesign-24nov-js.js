@@ -107,7 +107,7 @@
     /* 24 Nov meeting: New session note stays on the page once notes exist (it was only in the empty state) */
     const nsn=PSY&&typeof window.snOpen==='function'?`<div style="display:flex;justify-content:flex-end;margin:0 0 10px"><button class="btn sm pri" onclick="snOpen('${Q(pid)}','ind')">New session note</button></div>`:'';
     return nsn+(warn.length?`<div class="tp4-alert">${IC.goal}<span>${warn.join('<br>')}</span></div>`:'')+`<div class="tp4-grid">${card(IC.ses+' Sessions and goals',`<div class="tp4-legend">${legend}</div>`,calendar(pid,'ind',cell))}
-      <div class="tp4-col">${card('Plan',`<span class="tp4-sub">${E(last.by||'')}</span>`,li('Therapy',E(th.mod||last.mod||'Not set'))+li('Frequency',E(th.freq||'Not set'))+li('Sessions',signed.length+' signed'+(D.notes.length>signed.length?' · '+(D.notes.length-signed.length)+' draft':''))+(D.goals.map((g,i)=>`<div class="tp4-li${gClick(pid,i)}><span style="display:flex;gap:7px;align-items:center">${mk(GC[i%GC.length],1)}${E(g.t)}</span><span class="tp4-sub">${PSY?'Edit':'History'}</span></div>`).join('')))}
+      <div class="tp4-col"><!-- 24 Nov owner: Plan card removed, the day card is the rail -->
       ${card(dayHead(S0.d),'',body)}</div></div>`;
   }
   /* Tulasi's daily group roster (Nikita, 24 Nov) */
