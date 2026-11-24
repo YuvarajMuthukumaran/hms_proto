@@ -266,8 +266,7 @@
           <div class="ds"><h2>DISCHARGE SUMMARY</h2><span>UHID/MR NO.</span><b>${E(uhid)}</b><span>DATE OF ADMISSION</span><b>${E(fdt(adm))}</b></div></div>
         <div class="grid">${kv('Patient name',p.name)}${kv('Age / Sex',id.age?id.age+'Yrs / '+({M:'Male',F:'Female'}[id.sex]||id.sex||''):'')}${kv('Mobile number',id.phone)}${kv('Panel','IPD')}
           ${kv('UHID/MR No.',uhid)}${kv('Date of admission',fdt(adm))}${kv('Date of discharge',fdt(dd))}${kv('Facility','THC - Gurgaon')}
-          ${kv('Relative name',r0.name||(id.nr&&id.nr!=='Not recorded'?id.nr:''))}${kv('Relative phone number',r0.phone||r0.mobile||'')}</div>
-        <h3>Discharge Type:</h3><table class="ty">${tyRows}</table>
+          ${kv('Relative name',r0.name||(id.nr&&id.nr!=='Not recorded'?id.nr:''))}${kv('Relative phone number',r0.phone||r0.mobile||'')}${kv('Discharge type',((TY.find(x=>x[1].test(ty))||[])[0])||ty||'-')}</div>
         ${ama?[['State of mental health',l.state],['Treatment proposed',l.prop],['Risks explained',l.risk]].map(x=>sec([x[0],x[1]])).join(''):''}
         ${body}
         <h3>Suggestions</h3><div class="tx"><b>${fuN!=null&&fuN>=0?'Follow-up advised after '+fuN+(fuN===1?' day':' days')+'.':'Follow-up: date not set yet.'}</b></div>
