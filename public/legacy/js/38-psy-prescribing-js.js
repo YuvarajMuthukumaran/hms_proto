@@ -195,7 +195,13 @@
   };
   /* "Change medicines" on the patient overview opens that patient's nursing chart (Add and Stop are there), not the Orders tab */
   window.psyToChart=id=>{S.ncP=id;go('#/nursing/'+id);};
-  window.psyChartTab=function(btn){const card=btn.closest('.mchart');if(!card)return;const on=card.classList.toggle('showvit');btn.textContent=on?'Medicines':'Vitals';};
+  window.psyChartTab=function(btn){const card=btn.closest('.mchart');if(!card)return;const on=card.classList.toggle('showvit');btn.textContent=on?'Medicines':'Vitals';
+    /* 24 Nov 2026 (Trello 222): on the Vitals view the blue button is "+ Vital Monitoring" (Order monitoring pop-up), back to Add medicine on Medicines */
+    const add=btn.nextElementSibling;
+    if(add&&/^(Add medicine|\+ Vital Monitoring)$/.test((add.textContent||'').trim())){if(!add.dataset.rx)add.dataset.rx=add.getAttribute('onclick')||'';
+      const pid=card.dataset.pid||S.pid||'';
+      if(on&&typeof window.shScaleOrder==='function'){add.textContent='+ Vital Monitoring';add.setAttribute('onclick',"shScaleOrder('"+String(pid).replace(/\\/g,'\\\\').replace(/'/g,"\\'")+"')");}
+      else{add.textContent='Add medicine';add.setAttribute('onclick',add.dataset.rx);}}};
   (function(){const st=document.createElement('style');st.id='psy-chart-tab-css';st.textContent='.mchart .pv-vit{display:none}.mchart.showvit .pv-vit{display:block}.mchart.showvit .mscroll,.mchart.showvit .mleg{display:none}.pv-vit .psy-vital-table{width:100%!important;min-width:100%!important;table-layout:fixed}.pv-vit .psy-vital-table th,.pv-vit .psy-vital-table td{padding:7px 10px;white-space:nowrap}.pv-vit .psy-vital-table th.psy-pulse-cell,.pv-vit .psy-vital-table td.psy-pulse-cell{width:8.5%}.pv-vit .psy-vital-table th.psy-vital-date,.pv-vit .psy-vital-table td.psy-vital-date{width:9%}.psy-vital-date{font-weight:600}.psy-vital-time{display:block;margin-top:2px;font-size:9px;line-height:1.15;color:#667085;white-space:nowrap}.psy-vital-time-label{display:block;margin-top:2px;font-size:9px;line-height:1.1;font-weight:500;color:#667085}.psy-vital-start{border-left:2px solid #b7c4d5!important}.psy-pulse-col{border-left:1px solid #cbd5e1!important}';document.head.appendChild(st);})();
   const __ch=compactHeader;
   compactHeader=function(){

@@ -31,7 +31,7 @@
   const fieldsOf=pg=>[].concat(...pg[1].map(s=>[].concat(...s[2].map(f=>f[0][0]==='#'?CHILD(1).concat(CHILD(2)):[f]))));
   const ALL=[].concat(...PAGES.map(fieldsOf));
   const px=pid=>{try{return psyPx(pid)||{};}catch(e){return {};}};
-  const ptOf=pid=>{try{return (window.PTS||[]).find(p=>p.id===pid)||{};}catch(e){return {};}};
+  const ptOf=pid=>{try{return ((typeof PTS!=='undefined'&&PTS)||window.PTS||[]).find(p=>p.id===pid)||{};}catch(e){return {};}};
   let cur={pid:null,page:0,v:{}};
   window.__appDraft=null;
 
@@ -83,6 +83,21 @@
     if(p.mobile||p.phone)v.pph=p.mobile||p.phone;
     if(p.address)v.paddr=p.address;
     if(/psychiatrist/.test(String((window.__TULASI__||{}).role||'')))try{v.doc=String(signer()).replace(/^Dr\.?\s*/,'');}catch(e){}
+    /* 24 Nov 2026 (Trello 225): pick up what the portal already holds -- admission date, the detailed history
+       (education, occupation, marital status, duration, complaints, diagnosis) and the first relative on record */
+    try{
+      const d=+p.day||0;if(d>0){const t=new Date();t.setDate(t.getDate()-(d-1));v.adm=t.toISOString().slice(0,10);}
+      const hf=px(pid).hf||{},H=re=>{const k=Object.keys(hf).find(k=>re.test(k)&&String(hf[k]||'').trim());return k?String(hf[k]).trim():'';};
+      const edu=H(/^Education/i);if(edu)v.edu=edu;
+      const occ=H(/^Occupation/i);if(occ)v.occ=occ;
+      const mar=H(/^Marital (status|history)/i);if(mar){const m=/widow/i.test(mar)?'Widowed':/remarried/i.test(mar)?'Married':OPTS.marital.find(o=>o.toLowerCase()===mar.toLowerCase());if(m)v.marital=m;}
+      const dur=H(/duration of illness|^Duration/i);if(dur)v.dur=dur;
+      const sym=H(/^Chief complaints/i);if(sym)v.sym=sym;
+      const dx=H(/^Provisional diagnosis/i)||(p.dx&&!/under assessment/i.test(p.dx)?p.dx:'');if(dx)v.dx=dx;
+      const r0=p.rel0;if(r0&&r0.name){const g=String(r0.name).trim().split(/\s+/);v.gFirst=g[0];if(g.length>2)v.gMiddle=g.slice(1,-1).join(' ');if(g.length>1)v.gSur=g[g.length-1];
+        const rl=OPTS.rel.find(o=>o.toLowerCase()===String(r0.rel||'').toLowerCase());if(rl)v.gRel=rl;if(r0.phone||r0.mobile)v.gPh=r0.phone||r0.mobile;}
+      if(!v.title&&v.sex)v.title=v.sex==='Male'?'Mr':'';
+    }catch(e){}
     return v;
   }
   function input(f,v){
@@ -95,12 +110,14 @@
     return '<div class="apf-f" style="'+col+'">'+lab+el+'</div>';
   }
   function grab(){fieldsOf(PAGES[cur.page]).forEach(f=>{const el=document.getElementById('apf_'+f[0]);if(el)cur.v[f[0]]=el.value.trim();});}
-  const filled=pg=>{const fs=fieldsOf(pg);return [fs.filter(f=>String(cur.v[f[0]]||'').trim()).length,fs.length];};
+  /* Trello 226: living together = same address, so the spouse's address is not asked */
+  const hid=f=>f[0]==='spAddr'&&cur.v.spLive==='Living together';
+  const filled=pg=>{const fs=fieldsOf(pg).filter(f=>!hid(f));return [fs.filter(f=>String(cur.v[f[0]]||'').trim()).length,fs.length];};
   function show(){V3.modal(NAME,'Fill what you know. The rest can be added later.','<div id="apfBox" class="apf"></div>','');const m=document.getElementById('modal');if(m)m.classList.add('apf-m');draw2();}
   function draw2(){
     const pg=PAGES[cur.page],last=cur.page===PAGES.length-1;
     const steps='<nav class="apf-steps" aria-label="Form pages">'+PAGES.map((p,i)=>{const c=filled(p);return '<button type="button" class="apf-step'+(i===cur.page?' on':'')+(c[0]===c[1]?' full':'')+'" '+(i===cur.page?'aria-current="step" ':'')+'onclick="apfGo('+i+')"><span class="n">'+(i+1)+'</span><span><b>'+E(p[0])+'</b><small>'+c[0]+' of '+c[1]+' filled</small></span></button>';}).join('')+'</nav>';
-    const secs='<div class="apf-body">'+pg[1].map(s=>'<section class="apf-sec'+(s[0]==='Psychiatric data'?' office':'')+'"><div><h4>'+E(s[0])+'</h4>'+(s[1]?'<p>'+E(s[1])+'</p>':'')+'</div><div class="apf-grid">'+s[2].map(f=>input(f,cur.v)).join('')+'</div></section>').join('')+'</div>';
+    const secs='<div class="apf-body">'+pg[1].map(s=>'<section class="apf-sec'+(s[0]==='Psychiatric data'?' office':'')+'"><div><h4>'+E(s[0])+'</h4>'+(s[1]?'<p>'+E(s[1])+'</p>':'')+'</div><div class="apf-grid">'+s[2].filter(f=>!hid(f)).map(f=>input(f,cur.v)).join('')+'</div></section>').join('')+'</div>';
     const foot='<div class="apf-foot"><span class="sp">Pages 4 to 11 (declaration and signatures) are on the <a href="'+PDF+'" target="_blank" rel="noopener">paper form</a>.</span>'
       +(cur.page>0?'<button class="btn" onclick="apfGo('+(cur.page-1)+')">Back</button>':'<button class="btn" onclick="closeModal()">Cancel</button>')
       +(last?'<button class="btn pri" onclick="apfSave()">Save form</button>':'<button class="btn" onclick="apfSave(1)">Save</button><button class="btn pri" onclick="apfGo('+(cur.page+1)+')">Next: '+E(PAGES[cur.page+1][0])+'</button>')+'</div>';
@@ -110,7 +127,9 @@
   window.apfSame=function(k,from){grab();cur.v[k]=cur.v[from]||'';if(k==='caddr'&&!cur.v.cph)cur.v.cph=cur.v.pph||'';draw2();};
   window.apfOpen=function(pid){
     const saved=pid?(px(pid).appForm||{}).v:(window.__appDraft||{}).v;
-    cur={pid:pid||null,page:0,v:Object.assign({adm:new Date().toISOString().slice(0,10)},pid?prefill(pid):{},saved||{})};
+    /* a saved blank never hides what the portal already knows (Trello 225) */
+    const sv={};Object.keys(saved||{}).forEach(k=>{if(String(saved[k]||'').trim())sv[k]=saved[k];});
+    cur={pid:pid||null,page:0,v:Object.assign({adm:new Date().toISOString().slice(0,10)},pid?prefill(pid):{},sv)};
     if(!pid){const b=document.querySelector('.card .pad .small.muted b');if(b&&!saved){const nm=(b.textContent||'').trim().split(/\s+/);if(nm[0]){cur.v.first=nm[0];if(nm.length>2)cur.v.middle=nm.slice(1,-1).join(' ');if(nm.length>1)cur.v.sur=nm[nm.length-1];}}}
     show();
   };

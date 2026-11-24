@@ -34,7 +34,11 @@
   function eyeFix(pid){
     const modal=document.getElementById('modal');if(!modal)return;
     modal.querySelectorAll('.pd-det > .pd-di:not(.done)').forEach(card=>{
-      if(pid&&ROUNDCARD.test(card.textContent||'')&&!/unsigned|to sign/i.test(card.textContent||'')){const da=card.querySelector('.pd-da');if(da&&!da.dataset.m23){da.dataset.m23='1';da.innerHTML='<button class="btn sm pri" onclick="closeModal();psyEyePop(\''+pid+'\',-1,\'round\')">Open rounds</button>';}return;}
+      if(pid&&ROUNDCARD.test(card.textContent||'')&&!/unsigned|to sign/i.test(card.textContent||'')){const da=card.querySelector('.pd-da');if(da&&!da.dataset.m23){da.dataset.m23='1';
+        /* 24 Nov 2026 (Trello 224): a daily-note card gets "Write daily note" (the daily-note pop-up) first, Open rounds beside it */
+        const dn=/daily note (due|not written|missing|overdue)|no daily note/i.test(card.textContent||'')&&typeof window.psyPopNote==='function';
+        da.innerHTML=(dn?'<button class="btn sm pri" onclick="closeModal();psyPopNote(\''+pid+'\')">Write daily note</button>':'')+'<button class="btn sm'+(dn?'':' pri')+'" onclick="closeModal();psyEyePop(\''+pid+'\',-1,\'round\')">Open rounds</button>';
+        if(dn){da.style.display='flex';da.style.gap='8px';da.querySelectorAll('button').forEach(b=>{b.style.flex='1 1 140px';});}}return;}
       const bs=[...card.querySelectorAll('.pd-da button')];
       const fu=bs.filter(b=>/^Review follow-up$/i.test(txt(b)));
       fu.forEach(b=>{b.textContent='Open rounds';b.setAttribute('onclick',(b.getAttribute('onclick')||'').replace(/'review'\)/,"'round')"));});

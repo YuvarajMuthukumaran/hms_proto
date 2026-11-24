@@ -66,9 +66,21 @@
 
   function btns(pid,k,keepReview){
     const d=px(pid).absDone||{},q=Q(pid);
-    const fam=d[k+'_fam']?'<span class="tiny" style="color:#067647">Family informed · '+E(d[k+'_fam'].by)+'</span>':'<button class="btn sm pri" onclick="closeModal();absFam(\''+q+'\',\''+k+'\')">Inform family</button>';
+    /* 24 Nov 2026 (Trello 223): "Call family" opens the same family call pop-up as the Family tasks (faCall), key abs_<kind> */
+    let fc='';try{fc=window.__faApi&&__faApi.famState(pid)['abs_'+k]||'';}catch(e){}
+    const fam=d[k+'_fam']?'<span class="tiny" style="color:#067647">Family informed · '+E(d[k+'_fam'].by)+'</span>'
+      :fc?'<span class="tiny" style="color:#067647">Family called · '+E(fc)+'</span>'
+      :'<button class="btn sm pri" onclick="closeModal();'+(typeof window.faCall==='function'?'faCall(\''+q+'\',\'abs_'+k+'\')':'absFam(\''+q+'\',\''+k+'\')')+'">Call family</button>';
     const second=k==='gone'?(d.gone_doc?'<span class="tiny" style="color:#067647">Report signed · '+E(d.gone_doc.by)+'</span>':'<button class="btn sm pri" onclick="closeModal();absDoc(\''+q+'\')">Document event</button>'):(keepReview||'<button class="btn sm pri" onclick="closeModal();psyEyePop(\''+q+'\',-1,\'review\')">Review treatment</button>');
     return fam+second;
+  }
+  if(typeof window.faCall==='function'&&!window.faCall.__abs){
+    const __fc=window.faCall;
+    window.faCall=function(pid,key){const r=__fc.apply(this,arguments);
+      const k=String(key||'').replace(/^abs_/,'');
+      if(LBL[k]&&String(key).indexOf('abs_')===0)try{[...document.querySelectorAll('#modal .small.muted')].forEach(el=>{if(/^Required:/.test((el.textContent||'').trim()))el.textContent='Required: tell the family · '+LBL[k];});}catch(e){}
+      return r;};
+    Object.keys(__fc).forEach(x=>{if(x.indexOf('__')===0)window.faCall[x]=__fc[x];});window.faCall.__abs=1;
   }
   if(typeof window.psyEye==='function'){
     const __e=window.psyEye;
