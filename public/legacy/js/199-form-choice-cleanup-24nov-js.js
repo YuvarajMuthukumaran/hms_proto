@@ -19,7 +19,7 @@
      sat across columns. p7.png now has a clean table (Name / Address / Sign / Date x Patient, Family member, Doctor;
      original in git history) and one blank per cell. Sign is left for the paper signature. Old ids kept for names/dates. */
   (function(){const m=CDF_FORMS['mect-final'],pg=m&&m.pages&&m.pages[6];if(!pg||pg.__m199)return;pg.__m199=1;
-    pg.img=String(pg.img).split('?')[0]+'?v=199';
+    pg.img=String(pg.img).split('?')[0]+'?v=199b';const p8=m.pages[7];if(p8)p8.img=String(p8.img).split('?')[0]+'?v=199b';
     const old=['p7f15','p7f16','p7f17','p7f18','p7f19','p7f20','p7f21','p7f22','p7f23','p7f24','p7f25'];
     pg.fields=pg.fields.filter(x=>!old.includes(x.id));
     const L=(id,label,x,y,w)=>({kind:'line',id,label,x,y,w,h:15,size:10});
