@@ -42,12 +42,14 @@
     add('S Chandra', 'GM Operations'); add('Floor lead psychiatrist', 'Clinical team');
     return out;
   };
+  /* 24 Nov (Nikita): every choice is a drop-down that starts blank */
+  var sel = function (k, cur, opts, extra) { return '<select data-k="' + k + '"' + (extra || '') + '><option value="">Select</option>' + opts.map(function (o) { var v = typeof o === 'string' ? o : o[0], l = typeof o === 'string' ? o : o[1]; return '<option value="' + esc(v) + '"' + (cur === v ? ' selected' : '') + '>' + esc(l) + '</option>'; }).join('') + '</select>'; };
   var chip = function (on, attr, label) { return '<button type="button" class="pxl-ch' + (on ? ' on' : '') + '" ' + attr + '>' + esc(label) + '</button>'; };
 
   function css() {
     if (document.getElementById('pxl-css')) return;
     var s = document.createElement('style'); s.id = 'pxl-css';
-    s.textContent = '.pxl-ov{position:fixed;inset:0;z-index:9999;background:rgba(16,24,40,.45);display:flex;align-items:flex-start;justify-content:center;overflow:auto;zoom:1.3333;font-family:Inter,system-ui,sans-serif}'
+    s.textContent = '.pxl-ov{position:fixed;inset:0;z-index:9999;background:rgba(16,24,40,.45);display:flex;align-items:flex-start;justify-content:center;overflow:auto;font-family:Inter,system-ui,sans-serif}'
       + '.pxl{background:#fff;border-radius:16px;width:min(860px,72vw);margin:28px 0;padding:22px 24px;box-shadow:0 20px 50px rgba(16,24,40,.25);color:#101828}'
       + '.pxl h3{margin:0;font-size:20px}.pxl .sub{color:#667085;font-size:13.5px;margin-top:2px}'
       + '.pxl-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px}'
@@ -69,36 +71,37 @@
 
   function draw() {
     if (!root) return;
-    var p = pt(F.pid), act = F.act, yes = act === 'yes';
+    var p = pt(F.pid), act = F.act, yes = act === 'yes' || !act;
     var q = F.q.toLowerCase(), list = pts().filter(function (x) { return !q || (x.name + ' ' + room(x) + ' ' + (x.uhid || '')).toLowerCase().indexOf(q) >= 0; }).slice(0, 60);
     var focus = document.activeElement && root.contains(document.activeElement) ? document.activeElement.getAttribute('data-k') : null;
     var h = '<div class="pxl" role="dialog" aria-label="Log a concern">'
       + '<div class="pxl-top"><div><h3>Someone raised a concern</h3><div class="sub">Log it once. It is saved to the patient record.</div></div><button type="button" class="pxl-lnk" data-x="back">Back</button></div>'
-      + '<div class="pxl-f"><span class="pxl-l">Does anything need action?</span><div class="pxl-chs">' + ACT.map(function (a) { return chip(act === a[0], 'data-act="' + a[0] + '"', a[1]); }).join('') + '</div></div>'
+      + '<div class="pxl-g"><div class="pxl-f"><label>Does anything need action?</label>' + sel('act', act, ACT) + '</div><div></div></div>'
       /* patient: one searchable drop-down */
       + '<div class="pxl-f"><label>Patient and room</label><div class="pxl-cb"><input data-k="q" placeholder="Search by name, room or UHID" value="' + esc(p && !F.ddOpen ? p.name + (room(p) ? ' · Room ' + room(p) : '') : F.q) + '" autocomplete="off">'
       + (F.ddOpen ? '<div class="pxl-dd">' + (list.length ? list.map(function (x) { return '<button type="button" data-pid="' + esc(x.id) + '" class="' + (x.id === F.pid ? 'on' : '') + '">' + esc(x.name) + ' <small>' + (room(x) ? 'Room ' + esc(room(x)) : 'No room yet') + (x.uhid ? ' · ' + esc(x.uhid) : '') + '</small></button>'; }).join('') : '<div style="padding:10px 12px;color:#667085">No admitted patient matches.</div>') + '</div>' : '')
       + '</div></div>'
-      + '<div class="pxl-f"><span class="pxl-l">Raised by</span><div class="pxl-chs">' + BY.map(function (b) { return chip(F.by === b, 'data-by="' + b + '"', b); }).join('') + '</div>'
-      + (F.by === 'Family member' ? '<div class="pxl-chs" style="margin-top:8px">' + REL.map(function (r) { return chip(F.rel === r, 'data-rel="' + r + '"', r); }).join('') + '</div>' : '') + '</div>'
-      + '<div class="pxl-g"><div class="pxl-f"><span class="pxl-l">Came in as</span><div class="pxl-chs">' + SRC.map(function (s) { return chip(F.src === s, 'data-src="' + s + '"', s); }).join('') + '</div></div>'
-      + '<div class="pxl-f"><label>Escalated by <small>(if another team passed it on)</small></label><select data-k="escBy">' + ESC.map(function (e) { return '<option value="' + esc(e) + '"' + (F.escBy === e ? ' selected' : '') + '>' + (e || 'Not escalated') + '</option>'; }).join('') + '</select></div></div>';
+      + '<div class="pxl-g"><div class="pxl-f"><label>Raised by</label>' + sel('by', F.by, BY) + '</div>'
+      + '<div class="pxl-f">' + (F.by === 'Family member' ? '<label>Relation with the patient</label>' + sel('rel', F.rel, REL) : '') + '</div></div>'
+      + '<div class="pxl-g"><div class="pxl-f"><label>Came in as</label>' + sel('src', F.src, SRC) + '</div>'
+      + '<div class="pxl-f"><label>Escalated by <small>(if another team passed it on)</small></label>' + sel('escBy', F.escBy, ['Not escalated'].concat(ESC.filter(Boolean))) + '</div></div>';
     if (yes) {
       h += '<div class="pxl-f"><span class="pxl-l">Issues <small>(at least one; each complaint or request on its own)</small></span>'
         + F.issues.map(function (i, k) {
           return '<div class="pxl-iss"><div class="pxl-iss-h"><span>' + String.fromCharCode(65 + k) + '.</span>' + (F.issues.length > 1 ? '<button type="button" class="pxl-lnk rm" data-rm="' + k + '">Remove</button>' : '') + '</div>'
             + '<div class="pxl-g"><div><span class="pxl-l">Title</span><input data-k="t" data-i="' + k + '" value="' + esc(i.t) + '" placeholder="e.g. Food served cold"></div>'
-            + '<div><span class="pxl-l">Category</span><select data-k="cat" data-i="' + k + '"><option value="">Choose a category</option>' + CATS.map(function (c) { return '<option' + (i.cat === c[0] ? ' selected' : '') + '>' + c[0] + '</option>'; }).join('') + '</select></div></div>'
-            + '<div style="margin-top:10px"><span class="pxl-l">When</span><div class="pxl-chs">' + WHEN.map(function (w) { return chip(i.when === w, 'data-when="' + k + ':' + w + '"', w); }).join('') + '</div></div>'
+            + '<div><span class="pxl-l">Category</span>' + sel('cat', i.cat, CATS.map(function (c) { return c[0]; }), ' data-i="' + k + '"') + '</div></div>'
+            + '<div class="pxl-g" style="margin-top:10px"><div><span class="pxl-l">When</span>' + sel('when', i.when, WHEN, ' data-i="' + k + '"') + '</div><div></div></div>'
             + '<div style="margin-top:10px"><span class="pxl-l">What they said</span><textarea data-k="what" data-i="' + k + '" placeholder="In their words">' + esc(i.what) + '</textarea></div></div>';
         }).join('')
         + '<button type="button" class="pxl-lnk" data-x="add">+ Add another issue</button></div>';
-      var ms = minSev(), sv = sev(), rt = route(), go = F.owner || rt[0];
-      h += '<div class="pxl-g"><div class="pxl-f"><span class="pxl-l">Severity</span><div class="pxl-chs">' + SEV.map(function (s) { return '<button type="button" class="pxl-ch' + (sv === s ? ' on' : '') + '" data-sev="' + s + '"' + (SEV.indexOf(s) < SEV.indexOf(ms) ? ' disabled title="Set by the category; it can be raised, not lowered"' : '') + '>' + s + '</button>'; }).join('') + '</div>'
-        + '<div class="pxl-note">' + (F.issues.some(function (i) { return i.cat; }) ? 'Starts at ' + ms + ' from the category. You can raise it, not lower it.' : 'Set from the category.') + '</div></div>'
+      var hasCat = F.issues.some(function (i) { return i.cat; });
+      var ms = minSev(), sv = sev(), rt = route(), go = F.owner || (hasCat ? rt[0] : '');
+      h += '<div class="pxl-g"><div class="pxl-f"><label>Severity</label><select data-k="sev"><option value="">Select</option>' + SEV.map(function (s) { return '<option value="' + s + '"' + (F.sev === s ? ' selected' : '') + (hasCat && SEV.indexOf(s) < SEV.indexOf(ms) ? ' disabled' : '') + '>' + s + '</option>'; }).join('') + '</select>'
+        + '<div class="pxl-note">' + (hasCat ? 'At least ' + ms + ' for this category. You can raise it, not lower it.' : 'Choose a category first.') + '</div></div>'
         + '<div class="pxl-f"><label>Contact for updates' + (F.by === 'Anonymous' ? ' <small>(optional)</small>' : '') + '</label><input data-k="contact" type="tel" value="' + esc(F.contact) + '" placeholder="Phone of the person who raised it"></div></div>'
-        + '<div class="pxl-f"><label>Goes to</label><div class="pxl-row"><select data-k="owner">' + owners().map(function (o) { return '<option value="' + esc(o[0]) + '"' + (go === o[0] ? ' selected' : '') + '>' + esc(o[0]) + ' · ' + esc(o[1]) + '</option>'; }).join('') + '</select></div>'
-        + '<div class="pxl-note">Picked from the category and severity. ' + HINT[sv] + '</div></div>';
+        + '<div class="pxl-f"><label>Goes to</label><div class="pxl-row"><select data-k="owner">' + (go ? '' : '<option value="" selected>Select (or choose a category)</option>') + owners().map(function (o) { return '<option value="' + esc(o[0]) + '"' + (go === o[0] ? ' selected' : '') + '>' + esc(o[0]) + ' · ' + esc(o[1]) + '</option>'; }).join('') + '</select></div>'
+        + '<div class="pxl-note">Picked from the category and severity. ' + (F.sev ? HINT[sv] : '') + '</div></div>';
     } else {
       h += '<div class="pxl-f"><label>What did they say?</label><textarea data-k="note" placeholder="In their words">' + esc(F.note) + '</textarea><div class="pxl-note">' + (act === 'praise' ? 'Saved to the patient record and shown in Reports under Compliments.' : 'Saved to the patient record only. No owner and no clock.') + '</div></div>';
     }
@@ -120,10 +123,12 @@
     if (!F.by) miss.push('who raised it');
     if (F.by === 'Family member' && !F.rel) miss.push('the relation');
     if (!F.src) miss.push('how it came in');
+    if (!F.act) miss.push('whether it needs action');
     var act = F.act, iss = F.issues.filter(function (i) { return i.t.trim() || i.cat || i.what.trim(); });
     if (act === 'yes') {
       if (!iss.length) miss.push('at least one issue');
       iss.forEach(function (i, k) { if (!i.t.trim() || !i.cat) miss.push('issue ' + String.fromCharCode(65 + k) + ' title and category'); });
+      if (!F.sev) miss.push('the severity');
       if (F.by !== 'Anonymous' && !String(F.contact).trim()) miss.push('a contact phone for updates');
     } else if (!String(F.note).trim()) miss.push('what they said');
     if (miss.length) { F.err = 'Please add ' + miss.join(', ') + '.'; draw(); return; }
@@ -137,9 +142,9 @@
     }
     var sv = sev(), rt = route(), owner = F.owner || rt[0], role = (owners().filter(function (o) { return o[0] === owner; })[0] || [owner, rt[1]])[1];
     var id = window.PXG ? window.PXG.nid(self) : 'G-0' + (143 + (st.extraConcerns || []).length), ty = sv === 'High' ? 'grievance' : 'concern';
-    var issues = iss.map(function (i) { return { t: i.t.trim(), cat: i.cat, when: i.when || 'Today', st: 'Open', what: i.what.trim(), fam: '', asks: [], owner: owner }; });
+    var issues = iss.map(function (i) { return { t: i.t.trim(), cat: i.cat, when: i.when || 'Not said', st: 'Open', what: i.what.trim(), fam: '', asks: [], owner: owner }; });
     var desc = issues.map(function (i) { return i.what; }).filter(Boolean).join(' ') || 'No description added.';
-    var c = { id: id, type: ty, pid: pid, title: issues[0].t.slice(0, 70), raisedBy: by, raisedRel: F.rel || '', via: F.src, src: F.src, escalatedBy: F.escBy || '', contact: String(F.contact || '').trim(),
+    var c = { id: id, type: ty, pid: pid, title: issues[0].t.slice(0, 70), raisedBy: by, raisedRel: F.rel || '', via: F.src, src: F.src, escalatedBy: F.escBy === 'Not escalated' ? '' : (F.escBy || ''), contact: String(F.contact || '').trim(),
       tag: 'General admin', owner: owner, ownerRole: role, category: mainCat(), severity: sv, sev: sv, issues: issues,
       sla: '6 h left', at: Date.now(), slaTone: 'grey', logged: 'just now', status: ty === 'grievance' ? 'Pending' : 'Open', desc: desc };
     L.unshift({ d: window.PXDay ? window.PXDay() : '', what: F.src + ' logged', who: 'Patient Experience', time: time, how: how, note: desc, tag: 'concern' }); calls[pid] = L;
@@ -168,7 +173,7 @@
       else if (d.when) { var w = d.when.split(':'); F.issues[+w[0]].when = w[1]; }
       else if (d.sev) F.sev = d.sev;
       else if (d.rm) F.issues.splice(+d.rm, 1);
-      else if (d.x === 'add') F.issues.push({ t: '', cat: '', when: 'Today', what: '' });
+      else if (d.x === 'add') F.issues.push({ t: '', cat: '', when: '', what: '' });
       else if (d.x === 'save') { save(); return; }
       else if (d.x === 'close') { close(); return; }
       else if (d.x === 'back') { close(); self.setState({ logOpen: true, form: Object.assign({}, self.state.form, { kind: '' }) }); return; }
@@ -183,7 +188,13 @@
     });
     root.addEventListener('change', function (e) {
       var t = e.target, k = t.dataset.k, i = t.dataset.i;
-      if (k === 'cat') { F.issues[+i].cat = t.value; F.owner = ''; F.fi = null; draw(); }
+      if (k === 'cat') { F.issues[+i].cat = t.value; F.owner = ''; if (F.sev && SEV.indexOf(F.sev) < SEV.indexOf(minSev())) F.sev = ''; F.fi = null; F.err = ''; draw(); }
+      else if (k === 'when') F.issues[+i].when = t.value;
+      else if (k === 'act') { F.act = t.value; F.err = ''; draw(); }
+      else if (k === 'src') F.src = t.value;
+      else if (k === 'rel') F.rel = t.value;
+      else if (k === 'sev') { F.sev = t.value; F.owner = ''; draw(); }
+      else if (k === 'by') { F.by = t.value; if (F.by !== 'Family member') F.rel = ''; if (!F.contactTyped) { var p = pt(F.pid); F.contact = F.by === 'Family member' && p ? (p.phone || '') : ''; if (F.by === 'Family member' && p && p.gRel && REL.indexOf(p.gRel) >= 0) F.rel = p.gRel; } F.err = ''; draw(); }
       else if (k === 'escBy') F.escBy = t.value;
       else if (k === 'owner') F.owner = t.value;
     });
@@ -196,7 +207,7 @@
   window.PXLog = {
     open: function (app, pid) {
       self = app; close(); css();
-      F = { act: 'yes', pid: '', q: '', ddOpen: false, by: '', rel: '', src: '', escBy: '', issues: [{ t: '', cat: '', when: 'Today', what: '' }], sev: '', owner: '', contact: '', contactTyped: false, note: '', err: '', fi: null };
+      F = { act: '', pid: '', q: '', ddOpen: false, by: '', rel: '', src: '', escBy: '', issues: [{ t: '', cat: '', when: '', what: '' }], sev: '', owner: '', contact: '', contactTyped: false, note: '', err: '', fi: null };
       if (pid && pt(pid)) setPid(pid);
       root = document.createElement('div'); root.className = 'pxl-ov'; document.body.appendChild(root);
       bind(); document.addEventListener('keydown', onKey); draw();

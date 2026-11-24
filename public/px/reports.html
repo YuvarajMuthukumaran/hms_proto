@@ -175,6 +175,9 @@ if(window.PX_REAL){
   ATT[2].items=pts.filter(h=>{const a=admT(h);return !isNaN(a)&&now-a>=7*D&&!called(h.id,now-7*D,now+1);}).map(h=>[nm(h),'no call in 7 days','p:'+(h.name||'')]);
   ATT[3].items=pts.filter(h=>{const a=admT(h);return !isNaN(a)&&now-a<2*D&&!steps[h.id+0];}).map(h=>[nm(h),'admitted '+Math.max(1,Math.round((now-admT(h))/36e5))+' h ago','p:'+(h.name||'')]);
   RAISE.length=0; ROOT.length=0; COMPL.length=0;
+  /* 24 Nov (Nikita): what families keep raising = real categories, last 30 days against the 30 before */
+  const rc={};con.forEach(c=>{const t=c.at||0,k=now-t<30*D?1:now-t<60*D?2:0;if(!k)return;const cats=(c.issues&&c.issues.length?c.issues.map(i=>i.cat):[c.category]).filter(Boolean);[...new Set(cats)].forEach(x=>{rc[x]=rc[x]||[x,0,0];rc[x][k]++;});});
+  Object.values(rc).filter(r=>r[1]).sort((x,y)=>y[1]-x[1]).forEach(r=>RAISE.push(r));
 }
 
 /* ── helpers ── */
@@ -267,7 +270,7 @@ function render(){
   /* What families keep raising */
   const raiseRows=RAISE.map(r=>{
     const d=r[1]-r[2];
-    return '<div class="li"><span>'+r[0]+'</span><span><b style="color:var(--ink)">'+r[1]+'</b> &nbsp;'+(d===0?'same':(d>0?'up '+d:'down '+(-d)))+'</span></div>';
+    return '<div class="li"><span>'+esc(r[0])+'</span><span><b style="color:var(--ink)">'+r[1]+'</b> &nbsp;'+(d===0?'same':(d>0?'up '+d:'down '+(-d)))+'</span></div>';
   }).join('');
   const rootRows=ROOT.map(r=>'<div class="li" style="background:#FFFAF0"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join('');
 
@@ -307,8 +310,8 @@ function render(){
 
   '<div class="two">'+
     '<div class="card">'+
-      '<div class="ch"><h3>What families keep raising</h3><small>From grievances</small></div>'+
-      '<div id="raise">'+raiseRows+rootRows+'</div>'+
+      '<div class="ch"><h3>What families keep raising</h3><small>'+(window.PX_REAL?'From grievances, last 30 days':'From grievances')+'</small></div>'+
+      '<div id="raise">'+((raiseRows+rootRows)||'<div class="li"><span class="muted" style="color:var(--mut,#667085)">No complaints logged in the last 30 days.</span></div>')+'</div>'+
     '</div>'+
     '<div class="card">'+
       '<div class="ch"><h3>Compliments to pass on</h3><small>'+npsText+'</small></div>'+
