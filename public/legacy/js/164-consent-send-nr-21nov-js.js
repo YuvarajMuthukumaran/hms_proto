@@ -10,7 +10,7 @@
    NOT BUILT YET: the page the NR opens on their phone to sign. Until it exists the message asks them to contact the team. */
 (function(){
   const E=s=>hesc(String(s==null?'':s));
-  const FORMS=[['Admission consent form and letter of undertaking','admission-consent'],['Form E · request for admission','form-e'],['High risk informed consent','high-risk-consent'],['Form C · independent admission','form-c'],['Admission terms (pages 3 to 8)','adm-terms']];
+  const FORMS=[['Admission consent form and letter of undertaking','admission-consent'],['Form E · request for admission','form-e'],['High risk informed consent','high-risk-consent'],['Form C · independent admission','form-c'],['Admission terms (pages 4 to 8)','adm-terms']];
   const nameOf=fid=>(FORMS.find(f=>f[1]===fid)||['Form'])[0];
   const fidOf=t=>{const s=String(t||'').trim();const f=FORMS.find(x=>s.indexOf(x[0])===0);return f?f[1]:'';};
   const px=pid=>{try{return psyPx(pid)||{};}catch(e){return {};}};
@@ -24,7 +24,7 @@
   window.nrOpen=function(pid,fid){
     const p=ptFind(pid)||{},id=identity(pid),nr=id.nr||'the nominated representative',rel=id.rel||'';
     const text='Dear '+nr+', Tulasi Healthcare would like you to read and sign the "'+nameOf(fid)+'" for '+(p.name||'the patient')+'. Please contact the ward team to complete it. Thank you.';
-    V3.modal('Send to NR on WhatsApp · '+E(nameOf(fid)),'The nominated representative signs remotely. Option 2 of 2; the other option is Collect e-signature on this screen.',
+    V3.modal('Send on WhatsApp · '+E(nameOf(fid)),'The nominated representative signs remotely. Option 2 of 2; the other option is Collect e-signature on this screen.',
       '<div class="ds-box" style="border:1px solid #e3eaf2;border-radius:12px;padding:12px 14px;background:#fbfcfe"><div class="small muted">Send to</div><div style="font-weight:700">'+E(nr)+(rel?' <span class="muted" style="font-weight:500">· '+E(rel)+'</span>':'')+'</div><div class="tiny muted">Goes to the patient\'s WhatsApp group with the family.</div></div>'
       +'<label class="field" style="margin-top:12px"><span class="lbl">Message</span><textarea class="input" id="nrMsg" rows="5">'+E(text)+'</textarea></label>'
       +'<div class="tiny muted">On real patients WhatsApp stays off until the family has agreed to it. The request is still saved here.</div><div id="nrE" class="small" style="color:var(--red);display:none"></div>',
@@ -56,7 +56,7 @@
       const cs=tr.querySelector('.cs');
       if(c&&c.remote&&cs){const t=document.createElement('span');t.className='nr-st';t.textContent='Sent to NR on WhatsApp, waiting'+(c.remote.sent?'':' (not delivered)');cs.after(t);}
       const last=tr.querySelector('td:last-child .ct-a')||tr.querySelector('td:last-child');if(!last)return;
-      const b=document.createElement('button');b.type='button';b.className='btn sm';b.textContent=c&&c.remote?'Record the signature':'Send to NR on WhatsApp';b.dataset.p=pid;b.dataset.f=fid;
+      const b=document.createElement('button');b.type='button';b.className='btn sm';b.textContent=c&&c.remote?'Record the signature':'Send on WhatsApp';b.dataset.p=pid;b.dataset.f=fid;
       b.setAttribute('onclick',(c&&c.remote?'nrRecord':'nrOpen')+'(this.dataset.p,this.dataset.f)');last.appendChild(b);
     });
   }

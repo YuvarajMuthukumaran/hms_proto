@@ -94,16 +94,18 @@
     const N=notes(pid),C=caps(pid),R=reas(pid);
     const wrap=document.createElement('div');wrap.id='docWrap';
     const RL=roundLog(pid),cnt={dn:N.length,rd:RL.length,cap:C.length,rea:R.length},LB={dn:'Daily notes',rd:'Rounds',cap:'Capacity assessment',rea:'Re-assessment'};
-    wrap.innerHTML=`<div class="doc-top"><div><h3 style="margin:0">Documentation</h3><div class="small muted">Daily notes, rounds, capacity assessments and re-assessments.</div></div></div>`
-      +`<div class="doc-tabs" role="tablist" aria-label="Documentation">${KEYS.map(k=>`<button type="button" role="tab" class="doc-tab ${TAB()===k?'on':''}" id="docT_${k}" data-k="${k}" aria-controls="docP_${k}" aria-selected="${TAB()===k}" tabindex="${TAB()===k?0:-1}" onclick="docTab('${k}')" onkeydown="docTabKey(event)">${LB[k]}<span class="doc-tc">${cnt[k]}</span></button>`).join('')}</div>`
-      +part(pid,'dn','Daily notes',N.length+' note'+(N.length===1?'':'s'),N[0]?((N[0].d||'')+' '+(N[0].my||'')).trim():'','<div id="docDn"></div>','')
-      +part(pid,'rd','Rounds',RL.length+' round'+(RL.length===1?'':'s'),(RL[0]||{}).at||'',roundsTable(pid)||'<div class="small muted" style="padding:16px 4px">No rounds yet.</div>','')
+    /* 24 Nov 2026 (Anu, meeting): no "Documentation" title and line here, the tab already says it */
+    wrap.innerHTML=`<div class="doc-tabs" role="tablist" aria-label="Documentation">${KEYS.map(k=>`<button type="button" role="tab" class="doc-tab ${TAB()===k?'on':''}" id="docT_${k}" data-k="${k}" aria-controls="docP_${k}" aria-selected="${TAB()===k}" tabindex="${TAB()===k?0:-1}" onclick="docTab('${k}')" onkeydown="docTabKey(event)">${LB[k]}<span class="doc-tc">${cnt[k]}</span></button>`).join('')}</div>`
+      +part(pid,'dn','Daily notes',N.length+' note'+(N.length===1?'':'s'),N[0]?((N[0].d||'')+' '+(N[0].my||'')).trim():'','<div id="docDn"></div>',`<button class="btn sm pri" onclick="openNotesFor('${Q(pid)}')">Open Daily notes for all patients</button>`)
+      +part(pid,'rd','Rounds',RL.length+' round'+(RL.length===1?'':'s'),(RL[0]||{}).at||'',roundsTable(pid)||'<div class="small muted" style="padding:16px 4px">No rounds yet.</div>',`<button class="btn sm pri" onclick="if(window.psyOpenRounds)psyOpenRounds('${Q(pid)}');else go('#/rounds')">Open Rounds for all patients</button>`)
       +part(pid,'cap','Capacity assessment',C.length+' done',C[0]?C[0].at:'',capTable(pid),`<button class="btn sm" onclick="acrCapNew('${Q(pid)}')">New assessment</button>`)
       +part(pid,'rea','Re-assessment',R.length+' done',R[0]?R[0].at:'',reaTable(pid),`<button class="btn sm" onclick="docReaNew('${Q(pid)}')">New re-assessment</button>`);
     old[0]?old[0].before(wrap):host.appendChild(wrap);
     const dn=wrap.querySelector('#docDn');old.forEach(e=>{e.style.display='';dn.appendChild(e);});
     /* Daily notes' own Print button prints this part */
     dn.querySelectorAll('button').forEach(b=>{if(/^Print all daily notes$/.test(b.textContent.trim()))b.remove();});
+    /* the "Writing notes for several patients?" bar: its button is now in the part's own button row */
+    dn.querySelectorAll('section.card').forEach(c=>{if(/^Writing notes for several patients\?/.test((c.textContent||'').trim()))c.remove();});
   }
   function tabs(v,pid,sub){
     const bar=v.querySelector('.ws-mid > .subtabs')||v.querySelector('.subtabs');if(!bar)return;

@@ -8,7 +8,7 @@
   const FID='app-form',NAME='Application form for admission',PDF='/forms/admission-application/application-form.pdf';
   const E=s=>hesc(String(s==null?'':s));
   const Q=s=>String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  const OPTS={title:['Mr','Mrs','Ms'],sex:['Male','Female','Other'],marital:['Single','Married','Separated','Divorced','Widowed'],live:['Living together','Separate'],rel:['Father','Mother','Spouse','Son','Daughter','Guardian','Other relative']};
+  const OPTS={title:['Mr','Mrs','Ms'],sex:['Male','Female','Other'],marital:['Single','Married','Separated','Divorced','Widowed'],live:['Living together','Separate'],rel:['Father','Mother','Spouse','Son','Daughter','Guardian','Other relative'],kidsN:['0','1','2','3','4','5','6'],sd:['Son','Daughter']};
   /* page > sections [title, note, fields]; field [key, label, type, span of 12, same-as key] */
   const PAGES=[
     ['Personal data',[
@@ -19,26 +19,36 @@
     ]],
     ['Spouse and children',[
       ['Work and marriage','',[['occ','Occupation','',6],['marital','Marital status','marital',12]]],
-      ['Spouse','Leave empty if single',[['sp','Name of the spouse','',6],['spAge','Age, if alive','',2],['spOcc','Occupation','',4],['spLive','Living together or separate','live',12],['spAddr','Address of the spouse','area',12]]],
-      ['Children','',[['kids','Number of children','',4],['#k','Children','']]],
+      ['Spouse','Shown by the marital status',[['sp','Name of the spouse','',6],['spAge','Age, if alive','',2],['spOcc','Occupation','',4],['spLive','Living together or separate','live',12],['spAddr','Address of the spouse','area',12]]],
+      ['Children','',[['kids','Number of children','kidsN',12],['#k','Children','']]],
       /* Trello 226: the guardian is asked with the spouse and children; picking Spouse, Son or Daughter fills that person in */
-      ['Relative or guardian','The person applying for the patient',[['gRel','Relationship to the patient','rel',12],['gTitle','Title','title',3],['gFirst','First name','',3],['gMiddle','Middle name','',3],['gSur','Surname','',3],['gAddr','Address','area',8],['gPh','Phone numbers','',4],['gCaddr','Correspondence address','area',12,'gAddr']]]
+      ['Nominated Representative','The person applying for the patient. Use "Make as guardian" on the spouse or a child, or fill in',[['gRel','Relationship to the patient','rel',12],['gTitle','Title','title',3],['gFirst','First name','',3],['gMiddle','Middle name','',3],['gSur','Surname','',3],['gAddr','Address','area',8],['gPh','Phone numbers','',4],['gCaddr','Correspondence address','area',12,'gAddr']]]
     ]],
     ['Psychiatric data',[
       ['Psychiatric data','For office use. Filled by the treating psychiatrist',[['dur','Duration of illness','',4],['doc','Examined by (Dr)','',4],['exDate','Examined on','date',2],['exTime','Time','time',2],['sym','Current symptoms','area',6],['dx','Diagnosis','area',6],['rem','Remarks','area',12]]]
     ]]
   ];
-  const CHILD=n=>[['c'+n,'Name','',6],['c'+n+'p','Phone','',6],['c'+n+'e','E-mail','email',12],['c'+n+'a','Address','area',12]];
-  const fieldsOf=pg=>[].concat(...pg[1].map(s=>[].concat(...s[2].map(f=>f[0][0]==='#'?CHILD(1).concat(CHILD(2)):[f]))));
-  const ALL=[].concat(...PAGES.map(fieldsOf));
+  /* 24 Nov 2026 (Anu, meeting): son or daughter per child, children shown by the number picked, addresses optional */
+  const CHILD=n=>[['c'+n,'Name','',6],['c'+n+'r','Son or daughter','sd',6],['c'+n+'p','Phone','',6],['c'+n+'e','E-mail','email',6],['c'+n+'a','Address','area',12]];
+  let cur={pid:null,page:0,v:{},open:{}};
+  const kidsN=v=>{v=v||cur.v||{};let n=parseInt(v.kids,10);n=isFinite(n)?n:0;for(let i=6;i>n;i--)if(String(v['c'+i]||'').trim()){n=i;break;}return Math.max(0,Math.min(6,n));};
+  const KIDS=v=>[].concat(...Array.from({length:kidsN(v)},(_,i)=>CHILD(i+1)));
+  const fieldsOf=pg=>[].concat(...pg[1].map(s=>[].concat(...s[2].map(f=>f[0][0]==='#'?KIDS():[f]))));
+  const ADDR=/^(spAddr|c[1-6]a|gCaddr)$/;
   const px=pid=>{try{return psyPx(pid)||{};}catch(e){return {};}};
   const ptOf=pid=>{try{return ((typeof PTS!=='undefined'&&PTS)||window.PTS||[]).find(p=>p.id===pid)||{};}catch(e){return {};}};
-  let cur={pid:null,page:0,v:{}};
   window.__appDraft=null;
 
   if(!document.getElementById('apfCss')){const st=document.createElement('style');st.id='apfCss';st.textContent=`
   #modal.apf-m{width:min(860px,100%)!important}
-  #modal.apf-m .mb{padding:0!important}
+  #modal.apf-m .mb{padding:0!important;height:min(640px,68vh);overflow:auto}
+  .apf-add{all:unset;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--apf-b);padding:6px 0}
+  .apf-add:focus-visible{outline:2px solid var(--apf-b);border-radius:3px}
+  .apf-mg{all:unset;cursor:pointer;font-size:12px;font-weight:600;color:#344054;border:1px solid #d0d5dd;border-radius:99px;padding:3px 12px;background:#fff}
+  .apf-mg[aria-pressed=true]{background:#ecfdf3;border-color:#12b76a;color:#067647}
+  .apf-mg:focus-visible{outline:2px solid var(--apf-b);outline-offset:1px}
+  .apf-kh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 10px}
+  .apf-kh h5{margin:0!important}
   .apf{--apf-b:#1e6cdb;--apf-line:#e4e8ee;--apf-ink:#101828;--apf-mut:#667085}
   .apf-steps{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--apf-line);position:sticky;top:0;background:#fff;z-index:2}
   .apf-step{all:unset;cursor:pointer;display:flex;gap:10px;align-items:flex-start;padding:12px 18px 11px;border-bottom:3px solid transparent;color:var(--apf-mut)}
@@ -103,22 +113,33 @@
   }
   function input(f,v){
     const [k,l,t,span,same]=f,val=v[k]||'',id='apf_'+k,col='grid-column:span '+(span||12);
-    if(k[0]==='#')return '<div style="grid-column:span 12;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">'+[1,2].map(n=>'<div class="apf-kid"><h5>Child '+n+'</h5><div class="apf-grid">'+CHILD(n).map(c=>input(c,v)).join('')+'</div></div>').join('')+'</div>';
+    if(k[0]==='#'){const n=kidsN(v);if(!n)return '';return '<div style="grid-column:span 12;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px">'+Array.from({length:n},(_,i)=>i+1).map(n=>'<div class="apf-kid"><div class="apf-kh"><h5>Child '+n+'</h5>'+mg('c'+n)+'</div><div class="apf-grid">'+CHILD(n).map(c=>input(c,v)).join('')+'</div></div>').join('')+'</div>';}
+    if(ADDR.test(k)&&!String(val).trim()&&!cur.open[k])return '<div class="apf-f" style="'+col+'"><button type="button" class="apf-add" onclick="apfAddr(\''+k+'\')">+ Add address</button></div>';
     const opts=OPTS[t];
     if(opts)return '<div class="apf-f" style="'+col+'"><span id="'+id+'_l">'+E(l)+'</span><div class="apf-seg" role="group" aria-labelledby="'+id+'_l">'+opts.map(o=>'<button type="button" aria-pressed="'+(val===o)+'" onclick="apfPick(\''+k+'\',\''+Q(o)+'\')">'+E(o)+'</button>').join('')+'</div></div>';
-    const lab='<span><label for="'+id+'">'+E(l)+'</label>'+(same?'<button type="button" class="apf-same" onclick="apfSame(\''+k+'\',\''+same+'\')">Same as above</button>':'')+'</span>';
+    const lab='<span><label for="'+id+'">'+E(l)+'</label>'+(k==='sp'?mg('sp'):'')+(same?'<button type="button" class="apf-same" onclick="apfSame(\''+k+'\',\''+same+'\')">Same as above</button>':'')+'</span>';
     const el=t==='area'?'<textarea class="input" id="'+id+'" rows="2">'+E(val)+'</textarea>':'<input class="input" id="'+id+'" type="'+(t==='date'||t==='time'||t==='email'?t:'text')+'" value="'+E(val)+'">';
     return '<div class="apf-f" style="'+col+'">'+lab+el+'</div>';
   }
   function grab(){fieldsOf(PAGES[cur.page]).forEach(f=>{const el=document.getElementById('apf_'+f[0]);if(el)cur.v[f[0]]=el.value.trim();});}
   /* Trello 226: living together = same address, so the spouse's address is not asked */
-  const hid=f=>f[0]==='spAddr'&&cur.v.spLive==='Living together';
+  /* 24 Nov 2026 (Anu, meeting): Single, no spouse; Married, name and living together (address only when separate);
+     Separated or divorced, the spouse's address; Widowed, no address */
+  const SPF=/^(sp|spAge|spOcc|spLive|spAddr)$/;
+  const spHide=(k,v)=>{const m=v.marital||'';if(!SPF.test(k))return false;
+    if(!m||m==='Single')return true;
+    if(m==='Married')return k==='spAddr'&&v.spLive!=='Separate';
+    if(m==='Separated'||m==='Divorced')return k==='spLive';
+    if(m==='Widowed')return k==='spAddr'||k==='spLive'||k==='spAge';
+    return false;};
+  const hid=f=>spHide(f[0],cur.v);
+  const mg=who=>{const nm=String(cur.v[who]||'').trim();if(!nm)return '';const on=cur.v.gFrom===who;return '<button type="button" class="apf-mg" aria-pressed="'+on+'" onclick="apfMg(\''+who+'\')">'+(on?'✓ Guardian':'Make as guardian')+'</button>';};
   const filled=pg=>{const fs=fieldsOf(pg).filter(f=>!hid(f));return [fs.filter(f=>String(cur.v[f[0]]||'').trim()).length,fs.length];};
   function show(){V3.modal(NAME,'Fill what you know. The rest can be added later.','<div id="apfBox" class="apf"></div>','');const m=document.getElementById('modal');if(m)m.classList.add('apf-m');draw2();}
   function draw2(){
     const pg=PAGES[cur.page],last=cur.page===PAGES.length-1;
     const steps='<nav class="apf-steps" aria-label="Form pages">'+PAGES.map((p,i)=>{const c=filled(p);return '<button type="button" class="apf-step'+(i===cur.page?' on':'')+(c[0]===c[1]?' full':'')+'" '+(i===cur.page?'aria-current="step" ':'')+'onclick="apfGo('+i+')"><span class="n">'+(i+1)+'</span><span><b>'+E(p[0])+'</b><small>'+c[0]+' of '+c[1]+' filled</small></span></button>';}).join('')+'</nav>';
-    const secs='<div class="apf-body">'+pg[1].map(s=>'<section class="apf-sec'+(s[0]==='Psychiatric data'?' office':'')+'"><div><h4>'+E(s[0])+'</h4>'+(s[1]?'<p>'+E(s[1])+'</p>':'')+'</div><div class="apf-grid">'+s[2].filter(f=>!hid(f)).map(f=>input(f,cur.v)).join('')+'</div></section>').join('')+'</div>';
+    const secs='<div class="apf-body">'+pg[1].map(s=>'<section class="apf-sec'+(s[0]==='Psychiatric data'?' office':'')+'"><div><h4>'+E(s[0])+'</h4>'+(s[1]?'<p>'+E(s[1])+'</p>':'')+'</div><div class="apf-grid">'+(s[0]==='Spouse'&&!s[2].some(f=>!hid(f))?'<p style="grid-column:span 12;margin:0;font-size:12.5px;color:#667085">'+(cur.v.marital==='Single'?'Not asked: single.':'Pick the marital status above.')+'</p>':'')+s[2].filter(f=>!hid(f)).map(f=>input(f,cur.v)).join('')+'</div></section>').join('')+'</div>';
     const foot='<div class="apf-foot"><span class="sp">Pages 4 to 11 (declaration and signatures) are on the <a href="'+PDF+'" target="_blank" rel="noopener">paper form</a>.</span>'
       +(cur.page>0?'<button class="btn" onclick="apfGo('+(cur.page-1)+')">Back</button>':'<button class="btn" onclick="closeModal()">Cancel</button>')
       +(last?'<button class="btn pri" onclick="apfSave()">Save form</button>':'<button class="btn" onclick="apfSave(1)">Save</button><button class="btn pri" onclick="apfGo('+(cur.page+1)+')">Next: '+E(PAGES[cur.page+1][0])+'</button>')+'</div>';
@@ -130,7 +151,7 @@
     const saved=pid?(px(pid).appForm||{}).v:(window.__appDraft||{}).v;
     /* a saved blank never hides what the portal already knows (Trello 225) */
     const sv={};Object.keys(saved||{}).forEach(k=>{if(String(saved[k]||'').trim())sv[k]=saved[k];});
-    cur={pid:pid||null,page:0,v:Object.assign({adm:new Date().toISOString().slice(0,10)},pid?prefill(pid):{},sv)};
+    cur={pid:pid||null,page:0,open:{},v:Object.assign({adm:new Date().toISOString().slice(0,10)},pid?prefill(pid):{},sv)};
     if(!pid){const b=document.querySelector('.card .pad .small.muted b');if(b&&!saved){const nm=(b.textContent||'').trim().split(/\s+/);if(nm[0]){cur.v.first=nm[0];if(nm.length>2)cur.v.middle=nm.slice(1,-1).join(' ');if(nm.length>1)cur.v.sur=nm[nm.length-1];}}}
     show();
   };
@@ -139,13 +160,21 @@
     const v=cur.v,put=(k,x)=>{if(String(x||'').trim())v[k]=String(x).trim();};
     let nm='',ad='',ph='',ti='';
     if(o==='Spouse'){nm=v.sp;ad=v.spLive==='Living together'?v.paddr:v.spAddr;ph=v.spLive==='Living together'?v.pph:'';ti=v.sex==='Male'?'Mrs':v.sex==='Female'?'Mr':'';}
-    else if(o==='Son'||o==='Daughter'){const n=String(v.c1||'').trim()||!String(v.c2||'').trim()?1:2;nm=v['c'+n];ad=v['c'+n+'a'];ph=v['c'+n+'p'];ti=o==='Son'?'Mr':'Ms';}
+    else if(o==='Son'||o==='Daughter'){let n=/^c\d$/.test(String(v.gFrom||''))?+v.gFrom.slice(1):0;if(!n)for(let i=1;i<=kidsN();i++)if(String(v['c'+i]||'').trim()&&(!v['c'+i+'r']||v['c'+i+'r']===o)){n=i;break;}n=n||1;nm=v['c'+n];ad=v['c'+n+'a'];ph=v['c'+n+'p'];ti=o==='Son'?'Mr':'Ms';v.gFrom='c'+n;}
     else return;
     if(!String(nm||'').trim()){toast('No '+(o==='Spouse'?'spouse':'child')+' name above yet');return;}
     const p=String(nm).trim().split(/\s+/);v.gFirst=p[0];v.gMiddle=p.length>2?p.slice(1,-1).join(' '):'';v.gSur=p.length>1?p[p.length-1]:'';
     put('gTitle',ti);put('gAddr',ad);put('gPh',ph);
   }
-  window.apfPick=function(k,o){grab();cur.v[k]=cur.v[k]===o?'':o;if(k==='gRel'&&cur.v.gRel)gFill(o);draw2();};
+  window.apfPick=function(k,o){grab();cur.v[k]=cur.v[k]===o?'':o;
+    if(k==='gRel'){if(o==='Spouse')cur.v.gFrom='sp';else if(o!=='Son'&&o!=='Daughter')cur.v.gFrom='';else if(!/^c\d$/.test(String(cur.v.gFrom||'')))cur.v.gFrom='';if(cur.v.gRel)gFill(o);}
+    draw2();};
+  window.apfAddr=function(k){grab();cur.open[k]=1;draw2();setTimeout(()=>{const e=document.getElementById('apf_'+k);if(e)e.focus();},0);};
+  /* "Make as guardian": that person becomes the nominated representative (press again to undo) */
+  window.apfMg=function(who){grab();const v=cur.v;
+    if(v.gFrom===who){v.gFrom='';v.gRel='';['gTitle','gFirst','gMiddle','gSur','gAddr','gPh'].forEach(k=>v[k]='');draw2();return;}
+    v.gFrom=who;v.gRel=who==='sp'?'Spouse':(v[who+'r']||'Son');
+    gFill(v.gRel);toast('Nominated representative: '+(v[who]||''));draw2();};
   window.apfSave=function(stay){
     grab();
     const rec={v:Object.assign({},cur.v),by:signer(),at:atNow(),ts:Date.now(),role:String((window.__TULASI__||{}).role||'')};
@@ -156,7 +185,7 @@
   };
   window.apfPrint=function(pid){
     const r=pid?px(pid).appForm:window.__appDraft;const v=(r&&r.v)||{};
-    const rows=PAGES.map((p,i)=>'<h2>Page '+(i+1)+': '+E(p[0])+'</h2><table>'+p[1].map(sc=>'<tr><th colspan="2" class="sub">'+E(sc[0])+'</th></tr>'+[].concat(...sc[2].map(f=>f[0][0]==='#'?[1,2].map(n=>CHILD(n).map(c=>[c[0],'Child '+n+', '+c[1].toLowerCase()])).flat():[f])).map(f=>'<tr><td class="l">'+E(f[1])+'</td><td>'+E(v[f[0]]||'')+'</td></tr>').join('')).join('')+'</table>').join('');
+    const rows=PAGES.map((p,i)=>'<h2>Page '+(i+1)+': '+E(p[0])+'</h2><table>'+p[1].map(sc=>'<tr><th colspan="2" class="sub">'+E(sc[0])+'</th></tr>'+[].concat(...sc[2].filter(f=>!spHide(f[0],v)).map(f=>f[0][0]==='#'?Array.from({length:kidsN(v)},(_,i)=>i+1).map(n=>CHILD(n).map(c=>[c[0],'Child '+n+', '+c[1].toLowerCase()])).flat():[f])).map(f=>'<tr><td class="l">'+E(f[1])+'</td><td>'+E(v[f[0]]||'')+'</td></tr>').join('')).join('')+'</table>').join('');
     const w=window.open('','_blank');if(!w){toast('Allow pop-ups to print');return;}
     w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+NAME+'</title><style>body{font:13px Arial,sans-serif;margin:24px;color:#111}h1{font-size:18px;text-align:center;margin:0}h2{font-size:14px;margin:18px 0 6px}.c{text-align:center;font-size:11px;color:#444}table{width:100%;border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px 8px;vertical-align:top;text-align:left}td.l{width:38%;color:#333}th.sub{background:#f2f4f7}.f{margin-top:18px;font-size:11px;color:#444}</style></head><body><div class="c"><b>Tulasi Healthcare</b><br>India Culture &amp; Convention Centre, Golf Course Extension Road, Sector-64, Gurgaon-122102, Haryana</div><h1 style="margin-top:12px">APPLICATION FORM</h1>'+rows
       +'<div class="f">'+(r?'Filled by '+E(r.by)+', '+E(r.at)+'. ':'')+'Pages 4 to 11 (declaration of understanding and acceptance of conditions, signatures) are signed on the paper form.</div><script>setTimeout(function(){print()},300)<\/script></body></html>');

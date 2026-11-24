@@ -36,7 +36,9 @@
   /* 23 Nov second meeting: the summary headings as written in the agreed format. Display only: the text is still saved under
      the old label (psyx.dcs[old label]), so saved summaries keep loading. Psychiatrist and floor lead psychiatrist. */
   const DCH={'Admitting diagnosis (provisional)':'Admitting Diagnosis (Provisional)','Discharge diagnosis':'Discharge Diagnosis','History and complaints':'History and Complaints','Examination, physical and MSE':'Examination Physical and MSE','Intervention during stay (medical and psychological)':'Intervention During Stay (Medical and Psychological)','Condition at the time of discharge':'Condition at the Time of Discharge','Treatment advice on discharge':'Treatment Advice On Discharge'};
-  const DCO=['Admitting diagnosis (provisional)','Discharge diagnosis','History and complaints','Allergy','Examination, physical and MSE','Intervention during stay (medical and psychological)','Condition at the time of discharge','Treatment advice on discharge','Suggestions'];
+  const DCO=['Admitting diagnosis (provisional)','Discharge diagnosis','History and complaints','Allergy','Examination, physical and MSE','Intervention during stay (medical and psychological)','Condition at the time of discharge'];
+  /* 24 Nov 2026 (Anu, meeting): "Treatment advice on discharge" and "Suggestions" are gone from the summary and its PDF */
+  window.__dcDropped=/^(Treatment advice on discharge|Suggestions)$/i;
   const dcHead=k=>DCH[String(k||'').trim()]||String(k||'').trim();
   const dcRelabel=()=>{if(!DOC)return;document.querySelectorAll('#view label.field .lbl').forEach(l=>{const t=l.textContent.trim();if(DCH[t]&&l.closest('label.field').querySelector('textarea[data-dcs]'))l.textContent=DCH[t];});};
   const fmtD=s=>{if(!s)return '';const d=new Date(String(s).length<=10?s+'T00:00:00':s);return isNaN(d)?String(s):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});};
@@ -155,15 +157,34 @@
         <div class="m20-g2"><select class="input" id="m20F"><option value="">Frequency</option>${FREQ.map(f=>`<option>${f}</option>`).join('')}</select><select class="input" id="m20Fo"><option value="">With food?</option>${FOOD.map(f=>`<option>${f}</option>`).join('')}</select></div>
         <div class="m20-g2"><label class="field"><span class="tiny muted">Start</span><input class="input" type="date" id="m20S" value="${E(iso(new Date(String(ctx(pid).edd||'')&&!isNaN(new Date(ctx(pid).edd))?new Date(ctx(pid).edd+'T00:00:00'):new Date())))}"></label><label class="field"><span class="tiny muted">End</span><input class="input" type="date" id="m20E"></label></div>
         <input class="input" id="m20No" placeholder="Note or advice"><button class="btn sm pri" onclick="m20MedAdd('${Q(pid)}')">Add medicine</button></div></details>
-      <div class="m20-fu"><b>Follow-up with the psychiatrist</b><input class="input" type="date" value="${E(D.fu||'')}" onchange="dc2Fu('${Q(pid)}',this.value)" aria-label="Follow-up date"><span class="tiny muted">${D.fuOver?'Set by you':'Suggested: end date of the last medicine'}</span>${D.fuOver?`<button class="btn sm" onclick="dc2FuReset('${Q(pid)}')">Use the suggestion</button>`:''}</div></div></section>`;
+      <div class="m20-fu"><b>Follow-up with the psychiatrist</b><label class="m20-fud"><span>Follow up with</span><input class="input" value="${E(D.fuDoc!=null?D.fuDoc:fuDocDefault(pid))}" placeholder="Dr name" onchange="dc2FuDoc('${Q(pid)}',this.value)" aria-label="Follow up with doctor"></label><input class="input" type="date" value="${E(D.fu||'')}" onchange="dc2Fu('${Q(pid)}',this.value)" aria-label="Follow-up date"><span class="tiny muted">${D.fuOver?'Set by you':'Suggested: end date of the last medicine'}</span>${D.fuOver?`<button class="btn sm" onclick="dc2FuReset('${Q(pid)}')">Use the suggestion</button>`:''}</div></div></section>`;
   }
 
+  /* 24 Nov 2026 (Anu, meeting): follow-up names the doctor ("Follow up with Dr X"), the treating psychiatrist by default */
+  const fuDocDefault=pid=>{const t=(ctx(pid).team||{}).psy||'';return t?(/^dr\.?\s/i.test(t)?t:'Dr. '+t):'';};
+  const fuDocOf=pid=>{const D=dcrx(pid);return String(D.fuDoc!=null?D.fuDoc:fuDocDefault(pid)).trim();};
+  window.dc2FuDoc=function(pid,v){dcrx(pid).fuDoc=String(v||'').trim();};
+  /* 24 Nov 2026 (Anu, meeting): the psychiatrist fills the therapy plan like the OPD format: therapy type, how often, how long */
+  const TMODS=['Individual therapy','Group therapy','Family therapy','Cognitive behavioural therapy','Supportive therapy','Psychoeducation','Relapse prevention','Motivational interviewing','Behavioural activation','Exposure and response prevention','Relaxation training'];
+  const TFR=['Weekly','Every 2 weeks','Monthly','As needed'],TDUR=['1 month','3 months','6 months','Until next review'];
+  window.dc2ThSet=function(pid,f,v){const D=dcrx(pid);D.th=D.th||{};if(typeof window.dcThSet==='function'&&f!=='dur')return dcThSet(pid,f,v);D.th[f]=v;render();};
+  window.dc2ThFu=function(pid,v){const D=dcrx(pid);D.th=D.th||{};D.th.fu=v;D.th.fuOver=true;};
+  function therapyEditCard(pid){
+    const D=dcrx(pid);D.th=D.th||{};const t=D.th,rel=((px(pid).sn||{}).relapse)||null;
+    const sel=(f,list,ph)=>`<select class="input" onchange="dc2ThSet('${Q(pid)}','${f}',this.value)"><option value="">${ph}</option>${list.concat(t[f]&&!list.includes(t[f])?[t[f]]:[]).map(o=>`<option ${o===t[f]?'selected':''}>${E(o)}</option>`).join('')}</select>`;
+    return `<section class="card m20-col" id="m20Th"><div class="hd"><div><h3>Therapy plan after discharge</h3><div class="small muted" style="margin-top:4px">As on the OPD prescription: therapy, how often, how long.</div></div></div>
+      <div class="pad m20-stack"><label class="field"><span class="lbl">Therapy type</span>${sel('mod',TMODS,'Pick a therapy')}</label>
+      <div class="m20-g2"><label class="field"><span class="lbl">How often</span>${sel('freq',TFR,'Frequency')}</label><label class="field"><span class="lbl">Duration</span>${sel('dur',TDUR,'Duration')}</label></div>
+      <label class="field"><span class="lbl">Follow-up with the psychologist</span><input class="input" type="date" value="${E(t.fu||'')}" onchange="dc2ThFu('${Q(pid)}',this.value)"></label>
+      ${rel?`<div class="box small"><div class="lbl">Relapse prevention plan</div>${[['Triggers',rel.trig],['Early warning signs',rel.ews],['Coping plan',rel.cope],['Support contacts',rel.sup]].filter(x=>x[1]).map(x=>`<div style="margin-top:4px"><b>${x[0]}:</b> ${E(x[1])}</div>`).join('')}</div>`:''}</div></section>`;
+  }
   /* ---------- therapy plan (psychiatrist sees the psychologist's plan, read only) ---------- */
   function therapyReadCard(pid){
+    if(DOC)return therapyEditCard(pid);
     const t=dcrx(pid).th||{},rel=((px(pid).sn||{}).relapse)||null;
     const row=(l,v)=>`<div class="box small"><div class="lbl">${l}</div><div style="margin-top:4px">${v?E(v):'<span class="muted">Not set yet</span>'}</div></div>`;
     return `<section class="card m20-col" id="m20Th"><div class="hd"><div><h3>Therapy plan after discharge</h3><div class="small muted" style="margin-top:4px">Set by the psychologist.</div></div></div>
-      <div class="pad m20-stack">${row('Therapy plan',t.mod)}${row('How often',t.freq)}${row('Follow-up with the psychologist',fmtD(t.fu))}
+      <div class="pad m20-stack">${row('Therapy plan',t.mod)}${row('How often',t.freq)}${t.dur?row('Duration',t.dur):''}${row('Follow-up with the psychologist',fmtD(t.fu))}
       ${rel?`<div class="box small"><div class="lbl">Relapse prevention plan</div>${[['Triggers',rel.trig],['Early warning signs',rel.ews],['Coping plan',rel.cope],['Support contacts',rel.sup]].filter(x=>x[1]).map(x=>`<div style="margin-top:4px"><b>${x[0]}:</b> ${E(x[1])}</div>`).join('')}</div>`:''}</div></section>`;
   }
 
@@ -199,8 +220,8 @@
       const fuN=F&&Dd?Math.round((F-Dd)/DAY):null,dayN=A&&Dd?Math.max(1,Math.round((Dd-A)/DAY)+1):null;
       const sum=fF.slice(0,ci+1).map(fx).join('')+rx+fF.slice(ci+1).map(fx).join('');
       return `<h2>Discharge summary</h2>${sum}
-        <div class="f"><b>${fuN!=null&&fuN>=0?'Follow-up advised after '+fuN+(fuN===1?' day':' days')+' ('+E(fmtD(D.fu))+').':'Follow-up: date not set yet.'}</b></div>
-        <h2>Therapy plan after discharge</h2><table><tr><th>Therapy plan</th><td>${E(t.mod||'-')}</td><th>How often</th><td>${E(t.freq||'-')}</td></tr><tr><th>Follow-up with the psychologist</th><td colspan="3">${E(fmtD(t.fu)||'-')}</td></tr></table>
+        <div class="f"><b>${fuN!=null&&fuN>=0?'Follow-up advised after '+fuN+(fuN===1?' day':' days')+' ('+E(fmtD(D.fu))+')'+(fuDocOf(pid)?' with '+E(fuDocOf(pid)):'')+'.':'Follow-up: date not set yet.'}</b></div>
+        <h2>Therapy plan after discharge</h2><table><tr><th>Therapy plan</th><td>${E(t.mod||'-')}</td><th>How often</th><td>${E(t.freq||'-')}</td></tr><tr><th>Duration</th><td>${E(t.dur||'-')}</td><th>Follow-up with the psychologist</th><td>${E(fmtD(t.fu)||'-')}</td></tr></table>
         <h2>Treating team</h2><table><tr><th>Role</th><th>Treating Team</th><th>Date</th><th>Day</th></tr>
         <tr><td>Psychiatrist</td><td>${E(team.psy||'-')}</td><td>${E(fmtD(dd))}</td><td>${dayN?'Day '+dayN:'-'}</td></tr>
         <tr><td>Psychologist</td><td>${E(team.psych||'-')}</td><td>${E(fmtD(dd))}</td><td>${dayN?'Day '+dayN:'-'}</td></tr></table>`;
@@ -216,7 +237,7 @@
       <tr><th>Discharge type</th><td>${E(typeOf(pid)||'Not set')}</td><th>Room</th><td>${E(String(p.room||'').replace(/^Room\s*/i,''))}</td></tr></table>
       ${ama?`<h2>Discharge against medical advice</h2>${[['State of mental health',l.state],['Treatment proposed',l.prop],['Risks explained',l.risk]].map(x=>`<div class="f"><b>${x[0]}</b>${H(x[1]||'-')}</div>`).join('')}`:''}
       ${DOC?docPart():`<h2>Summary</h2>${fields.length?fields.map(f=>`<div class="f"><b>${E(f[0])}</b>${H(f[1]||'-')}</div>`).join(''):'<div>Summary not drafted yet.</div>'}
-      <h2>Therapy plan after discharge</h2><table><tr><th>Therapy plan</th><td>${E(t.mod||'-')}</td><th>How often</th><td>${E(t.freq||'-')}</td></tr><tr><th>Follow-up with the psychologist</th><td colspan="3">${E(fmtD(t.fu)||'-')}</td></tr></table>
+      <h2>Therapy plan after discharge</h2><table><tr><th>Therapy plan</th><td>${E(t.mod||'-')}</td><th>How often</th><td>${E(t.freq||'-')}</td></tr><tr><th>Duration</th><td>${E(t.dur||'-')}</td><th>Follow-up with the psychologist</th><td>${E(fmtD(t.fu)||'-')}</td></tr></table>
       <h2>Medications at discharge</h2>${meds?`<table><tr><th>No.</th><th>Medicine and dose</th><th>Frequency</th><th>Food</th><th>Start</th><th>End</th><th>Duration</th><th>Note</th></tr>${meds}</table>`:'<div>No medicines at discharge.</div>'}
       <div class="f"><b>Follow-up with the psychiatrist</b>${E(fmtD(D.fu)||'-')}</div>
       <h2>Treating team</h2><table><tr><th>Role</th><th>Treating team</th><th>From</th><th>To</th></tr>
@@ -245,6 +266,7 @@
     '.m20-med .input,.m20-add .input{min-height:34px}'+
     '.m20-add summary{cursor:pointer;font-weight:700;color:#175cd3}'+
     '.m20-fu{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line-2);padding-top:10px}'+
+    '.m20-fud{display:flex;align-items:center;gap:8px}.m20-fud span{font-size:13px;color:#344054;white-space:nowrap}'+
     '.m20-type{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}'+
     '.m20-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}'+
     '.m20-griev{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}'+

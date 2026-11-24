@@ -97,7 +97,7 @@
     const step=(()=>{const r=(hi-lo)/4,m=Math.pow(10,Math.floor(Math.log10(r||1)));return [1,2,2.5,5,10].map(f=>f*m).find(f=>f>=r)||r;})();
     let g='';
     for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step){const yy=y(v).toFixed(1);g+=`<line x1="${L}" x2="${W-8}" y1="${yy}" y2="${yy}" stroke="#eef1f5"/><text x="${L-8}" y="${(+yy+4).toFixed(1)}" text-anchor="end" class="vx-ax">${+v.toFixed(1)}</text>`;}
-    if(nr&&!isBp){g+=`<rect x="${L}" y="${y(nr[1]).toFixed(1)}" width="${W-8-L}" height="${(y(nr[0])-y(nr[1])).toFixed(1)}" fill="#12b76a" opacity=".07"/>`;}
+    /* 24 Nov 2026 (Anu, meeting): no green usual-range band */
     if(isBp){[140,90].forEach(v=>{if(v>lo&&v<hi)g+=`<line x1="${L}" x2="${W-8}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="#f04438" stroke-dasharray="4 4" opacity=".45"/>`;});}
     const pts=[];/* x of each reading: its day column, spread by time inside the column */
     D.forEach((d,i)=>{const x0=L+i*colW,n=d.length;d.forEach((r,j)=>{pts.push({r,x:x0+colW*(n===1?.5:(.2+.6*j/(n-1))),i});});
@@ -122,9 +122,9 @@
       let dl='First reading';
       if(pv){const a=isBp?sys(L):+L[k],b=isBp?sys(pv):+pv[k],d=a-b;dl=d===0?'Same as last time':(d>0?'Up ':'Down ')+fmtN(Math.abs(d))+(isBp?' systolic':'')+' since '+E(pv.time||dayLbl(pv.ts));}
       const st2=NORM[k]?`<div class="vx-st ${out?'bad':'ok'}"><i></i>${out?'Outside usual range':'In usual range'}</div>`:'';
-      const sum=isBp?[['Highest',Math.max(...xs.map(sys))+'/'+Math.max(...xs.map(dia))],['Lowest',Math.min(...xs.map(sys))+'/'+Math.min(...xs.map(dia))],['Readings',xs.length]]
-        :(()=>{const v=xs.map(r=>+r[k]).filter(isFinite);return [['Highest',fmtN(Math.max(...v))],['Lowest',fmtN(Math.min(...v))],['Readings',xs.length]];})();
-      const key=isBp?'<div class="vx-key"><i style="background:#c2410c"></i>Systolic <i style="background:#1e6cdb"></i>Diastolic <i class="dash"></i>140 / 90 limits</div>':NORM[k]?'<div class="vx-key"><i class="band"></i>Usual range '+NORM[k][0]+' to '+NORM[k][1]+'</div>':'';
+      const sum=isBp?[['Highest',Math.max(...xs.map(sys))+'/'+Math.max(...xs.map(dia))],['Lowest',Math.min(...xs.map(sys))+'/'+Math.min(...xs.map(dia))]]
+        :(()=>{const v=xs.map(r=>+r[k]).filter(isFinite);return [['Highest',fmtN(Math.max(...v))],['Lowest',fmtN(Math.min(...v))]];})();
+      const key=isBp?'<div class="vx-key"><i style="background:#c2410c"></i>Systolic <i style="background:#1e6cdb"></i>Diastolic <i class="dash"></i>140 / 90 limits</div>':NORM[k]?'<div class="vx-key">Usual range '+NORM[k][0]+' to '+NORM[k][1]+'</div>':'';
       return `<section class="vx-row${out?' is-bad':''}" aria-label="${E(p[1])}">
         <div class="vx-id"><div class="vx-nm">${E(p[1])} <small>${E(p[2])}</small></div><div class="vx-big${out?' bad':''}">${E(L[k])}</div>${st2}<div class="vx-dl">${dl}</div><div class="vx-at">Latest ${E(dayLbl(L.ts))}${L.time?', '+E(L.time):''}${L.by?'<br>by '+E(L.by):''}</div></div>
         <div class="vx-plot">${key}${chart(k,xs)}</div>
@@ -205,7 +205,7 @@
     /* trend redesign: monitor rows */
     +'.vx-mon{border:1px solid #e3eaf2;border-radius:14px;background:#fff;overflow:hidden}'
     +'.vx-row{display:grid;grid-template-columns:180px minmax(0,1fr) 110px;gap:18px;align-items:center;padding:10px 16px 8px;border-bottom:1px solid #eef2f6;position:relative}'
-    +'.vx-row::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:#12b76a}.vx-row.is-bad::before{background:#d92d20}'
+    +'.vx-row::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:transparent}.vx-row.is-bad::before{background:#d92d20}'
     +'.vx-nm{font-size:13.5px;font-weight:700;color:#344054}.vx-nm small{font-weight:500;color:#98a2b3;font-size:12px}'
     +'.vx-big{font-size:26px;line-height:1.1;font-weight:700;color:#101828;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin:2px 0 4px}.vx-big.bad{color:#b42318}'
     +'.vx-st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#067647}.vx-st i{width:7px;height:7px;border-radius:50%;background:currentColor}.vx-st.bad{color:#b42318}'
