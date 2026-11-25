@@ -119,7 +119,25 @@
         if(m){S.dxCode=m[1];S.dx=m[2];}else{S.dxCode='';S.dx=v;}}}catch(e){}
     return __pp.apply(this,arguments);};}
 
-  const run=()=>{try{allergies();}catch(e){}try{treat();}catch(e){}try{oldHms();}catch(e){}};
+  /* PX admission checklist (px_adm_<pid> in px_state, ticked in the PX app), view only on the Admission page */
+  const ADMI=[['welcome','Welcome and ward orientation given'],['rights','Patient rights explained (MHCA)'],['rules','Ward rules, calls and visiting explained'],['bill','Charges and billing explained to the family'],['prefs','Preferences taken'],['belong','Belongings listed'],['fam','Family contact for updates recorded'],['griev','How to raise a concern explained']];
+  let PXC=null;const PXA={};
+  fetch('/api/config',{cache:'no-store'}).then(r=>r.json()).then(j=>{if(j&&j.supabase&&j.pxStore)PXC=j.supabase;}).catch(()=>{});
+  function admLoad(pid){if(!PXC)return;const o=PXA[pid];if(o&&Date.now()-o.t<30000)return;PXA[pid]={t:Date.now(),v:(o||{}).v||null};
+    fetch(PXC.url+'/rest/v1/px_state?select=data&key=eq.'+encodeURIComponent('px_adm_'+pid),{headers:{apikey:PXC.key,Authorization:'Bearer '+PXC.key,'x-tulasi-role':role}})
+      .then(r=>r.ok?r.json():[]).then(rows=>{let d=(rows&&rows[0]||{}).data;if(typeof d==='string'){try{d=JSON.parse(d);}catch(e){d={};}}PXA[pid].v=d||{};const c=document.getElementById('m25PxAdm');if(c)c.remove();pxAdm();}).catch(()=>{});}
+  function pxAdm(){
+    const m=(location.hash||'').match(/^#\/patient\/([^/]+)\/admission/);const old=document.getElementById('m25PxAdm');
+    if(!m){if(old)old.remove();return;}const pid=decodeURIComponent(m[1]);if(old&&old.dataset.id===pid)return;
+    admLoad(pid);const d=(PXA[pid]||{}).v;
+    const anchor=document.querySelector('.subtabs');if(!anchor)return;
+    const n=d?ADMI.filter(i=>d[i[0]]&&d[i[0]].on).length:0;
+    const rows=d?ADMI.map(i=>{const x=d[i[0]];const on=!!(x&&x.on);return `<div class="m25-pa${on?' ok':''}"><span>${on?'✓':''}</span><div><b>${E(i[1])}</b><div class="small muted">${on?'Done · '+E(x.by||'')+(x.at?' · '+E(x.at):''):'Not done yet'}</div></div></div>`;}).join(''):'<div class="small muted">'+(PXC?'Loading…':'Not available here (the Patient Experience store is off).')+'</div>';
+    const el=document.createElement('section');el.id='m25PxAdm';el.dataset.id=pid;el.className='card';el.style.cssText='margin:12px 0;padding:14px 16px';
+    el.innerHTML=`<div class="row" style="justify-content:space-between"><b>Patient Experience · admission checklist</b>${d?`<span class="small">${n} of ${ADMI.length} done</span>`:''}</div><div class="small muted" style="margin:4px 0 8px">Ticked by the Patient Experience Lead. View only.</div><div class="m25-pal">${rows}</div>`;
+    anchor.after(el);}
+  if(PSY){const cs=document.createElement('style');cs.textContent='.m25-pal{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:8px}.m25-pa{display:flex;gap:10px;border:1px solid #E3EAF2;border-radius:10px;padding:8px 10px}.m25-pa>span{width:20px;height:20px;border-radius:6px;border:1.5px solid #D0D5DD;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;flex:none}.m25-pa.ok{background:#F6FEF9;border-color:#ABEFC6}.m25-pa.ok>span{background:#12B76A;border-color:#12B76A}';document.head.appendChild(cs);}
+  const run=()=>{try{allergies();}catch(e){}try{treat();}catch(e){}try{oldHms();}catch(e){}if(PSY)try{pxAdm();}catch(e){}};
   const __r=window.render;
   if(typeof __r==='function')window.render=function(){const o=__r.apply(this,arguments);setTimeout(run,0);return o;};
   new MutationObserver(()=>{clearTimeout(run.t);run.t=setTimeout(run,60);}).observe(document.documentElement,{childList:true,subtree:true});

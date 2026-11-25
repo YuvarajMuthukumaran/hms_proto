@@ -79,6 +79,9 @@ button{font:inherit;cursor:pointer}input,select,textarea{font:inherit;color:inhe
 .asks{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:34px;font-size:14px;color:var(--mute)}
 .ask{border:1px solid #FEDF89;background:#FFFAEB;color:var(--amber);border-radius:99px;padding:3px 10px;font-size:13.5px;font-weight:600}
 .ask.ok{border-color:#ABEFC6;background:#ECFDF3;color:var(--green)}
+.ist{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.istp{font-size:13px;font-weight:700;padding:3px 10px;border-radius:99px;background:#EFF4FF;color:#1E5BB8}.istp.resolved{background:#ECFDF3;color:#067647}.istp.declined{background:#F2F4F7;color:#475467}
+.iown{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:14px;color:#475467}.iown b{color:var(--ink)}.stp .opt{font-weight:500;color:#98a2b3;font-size:11px}
+#sgo select{width:100%;margin-top:6px;padding:8px;border:1px solid #d0d5dd;border-radius:8px;font:inherit}
 .own{display:flex;justify-content:space-between;align-items:center;margin:10px 0 0 34px;font-size:14px}
 .av{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;background:#FFF1E6;color:var(--amber);flex:none}
 .frm{display:grid;grid-template-columns:1fr 1fr;gap:10px;border:1px dashed #B2CCFF;background:#F8FBFF;border-radius:10px;padding:12px;margin-top:10px}
@@ -136,7 +139,7 @@ html.embed .top{display:none}html.embed body{background:transparent}
 <script>
 (function(){
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const STAGES=['Logged','Investigating','Resolved','Family confirmed','Closed'];   /* 25 Nov (owner): one-line labels */
+const STAGES=['Logged','Investigating','Resolved','Family communicated','Closed'];   /* 25 Nov meeting: 'Family communicated', optional unless the family raised it */   /* 25 Nov (owner): one-line labels */
 const SAFETY=['Mr. S. Chandra and medical director told','CCTV for the time window saved','Written statements from staff on duty','Restraint and injection recorded in chart','Patient checked for injuries by a doctor','Family given an update within 24 h'];
 const ROOTS=['Not known yet','Staff conduct','Ward rule not followed','Call centre gave wrong information','Charges not explained at admission','Maintenance fault','Policy not explained to family','Food','Other'];
 const CATS=['Staff conduct','Ward rules','Billing and charges','Room and housekeeping','Food','Maintenance','Communication','Safety','Rights','Other'];
@@ -149,9 +152,15 @@ function famBox(c,W){const p=pts().find(q=>q.id===c.pid)||{};let F=(p.rels||[]).
   if(!F.length&&p.nr&&p.nr!=='Not recorded')F=[{n:p.nr,rel:p.nrRel||'Relative',ph:p.mobile||p.phone||''}];
   if(!F.length&&(p.gName||p.guardian))F=[{n:p.gName||p.guardian,rel:p.gRel||'Relative',ph:p.phone||''}];
   if(W.fam&&W.ph&&F.length&&!F.some(x=>x.ph))F[0].ph=W.ph;
+  /* 25 Nov meeting: the family member who raised it is shown once, here, marked "Raised it" */
+  if(W.fam){const nm=String(W.n||'').toLowerCase(),i=F.findIndex(x=>String(x.n||'').toLowerCase()===nm||(W.rel&&String(x.rel||'').toLowerCase()===String(W.rel).toLowerCase()));
+    if(i>=0)F[i].raised=1;else F.unshift({n:W.n,rel:W.rel||'Family',ph:W.ph||'',raised:1});}
+  {const seen={};F=F.filter(x=>{const k=String(x.ph||'').replace(/[^0-9]/g,'').slice(-10);if(!k)return true;if(seen[k]){return false;}seen[k]=1;return true;});}
   const tel=v=>String(v).replace(/[^0-9+]/g,'');
-  return '<div class="fam"><div class="lbl" style="margin-top:12px">Family</div>'+(F.length?F.map(x=>'<div class="per"><span class="av">'+esc(ini(x.n))+'</span><div class="n"><b>'+esc(x.n)+'</b><span>'+esc(x.rel||'Relative')+(x.ph?' · <a href="tel:'+esc(tel(x.ph))+'">'+esc(x.ph)+'</a>':' · no phone recorded')+'</span></div>'+(x.ph?'<button class="btn ic sm" data-a="call" aria-label="Call the family">📞</button>':'')+'</div>').join(''):'<div class="note" style="margin-top:4px">No family details in the patient record.</div>')+'</div>';}
-function staffSug(c){const W=who(c),have=c.staff||[],L=[];if(W.t==='Staff'&&W.n&&W.n!=='Staff member')L.push(W.n);(c.iss||[]).forEach(i=>{const o=ownerName(c,i.owner);if(o&&!L.includes(o))L.push(o);});return L.filter(x=>!have.includes(x));}
+  return '<div class="fam"><div class="lbl" style="margin-top:12px">Family</div>'+(F.length?F.map(x=>'<div class="per"><span class="av">'+esc(ini(x.n))+'</span><div class="n"><b>'+esc(x.n)+'</b><span>'+esc(x.rel||'Relative')+(x.raised?' · raised it':'')+(x.ph?' · <a href="tel:'+esc(tel(x.ph))+'">'+esc(x.ph)+'</a>':' · no phone recorded')+'</span></div>'+(x.ph?'<button class="btn ic sm" data-a="call" aria-label="Call the family">📞</button>':'')+'</div>').join(''):'<div class="note" style="margin-top:4px">No family details in the patient record.</div>')+'</div>';}
+function staffSug(c){const W=who(c),have=c.staff||[],L=[];if(W.t==='Staff'&&W.n&&W.n!=='Staff member')L.push(W.n);(c.iss||[]).forEach(i=>{const o=ownerName(c,i.owner);if(o&&!L.includes(o))L.push(o);});
+  {const p=pts().find(q=>q.id===c.pid)||{};[p.doctor||p.dr,p.psych].forEach(n=>{if(n&&!L.includes(n))L.push(n);});}
+  return L.filter(x=>!have.includes(x));}
 function who(c){const r=String(c.raisedBy||'');const p=pts().find(q=>q.id===c.pid)||{};
   if(/^staff/i.test(r))return {t:'Staff',n:c.staffName||r.replace(/^Staff:?\s*/i,'')||'Staff member',fam:false};
   if(/^patient$/i.test(r))return {t:'Patient',n:c.name,fam:false,ph:p.phone||''};
@@ -208,11 +217,11 @@ function tickets(L){
 function issue(c,i,k){
   const L=String.fromCharCode(65+k),F=V.form&&V.form.k===k?V.form:null;
   if(F)return '<div class="iss">'+form(F)+'</div>';
-  return '<div class="iss"><div class="ih"><div style="display:flex;gap:10px"><div><h4>'+esc(i.t)+'</h4><div class="sub">'+esc([i.cat,i.when].filter(Boolean).join(' · '))+'</div></div></div>'
-    +'<div class="seg" role="group" aria-label="Issue '+(k+1)+' status">'+['Open','Resolved','Declined'].map(s=>'<button class="'+(i.st===s?'on':'')+'" data-ist="'+k+'" data-v="'+s+'">'+s+'</button>').join('')+'</div></div>'
+  return '<div class="iss"><div class="ih"><div style="display:flex;gap:10px"><div><h4>'+esc(i.t)+'</h4><div class="sub">'+esc([i.cat,i.when].filter(Boolean).join(' · '))+'</div><div class="iown"><span class="av">'+esc(ini(ownerName(c,i.owner)))+'</span>Owner: <b>'+esc(ownerName(c,i.owner)||'Not set')+'</b> <button class="lnk" data-ied="'+k+'">Edit</button></div></div></div>'
+    +'<div class="ist"><span class="istp '+String(i.st||'Open').toLowerCase()+'">'+esc(i.st||'Open')+'</span>'+((i.st||'Open')==='Open'?'<button class="btn sm pri" data-ist="'+k+'" data-v="Resolved" title="The problem in this issue is fixed">Mark resolved</button><button class="btn sm" data-ist="'+k+'" data-v="Declined" title="Nothing will be done, with a reason in the log">Decline</button>':'<button class="btn sm" data-ist="'+k+'" data-v="Open">Reopen</button>')+'</div></div>'
     +((i.what||i.fam)?'<ul>'+(i.what?'<li>'+esc(i.what)+'</li>':'')+(i.fam?'<li>'+esc(i.fam)+'</li>':'')+'</ul>':'<div style="height:6px"></div>')
     +((i.asks||[]).length?'<div class="asks">They asked for '+i.asks.map((a,j)=>'<button class="ask'+(a.ok?' ok':'')+'" data-ask="'+k+':'+j+'" title="Tap to mark '+(a.ok?'pending':'done')+'">● '+esc(a.t)+' · '+(a.ok?'Done':'Pending')+'</button>').join('')+'</div>':'')
-    +'<div class="own"><span style="display:flex;align-items:center;gap:8px"><span class="av">'+esc(ini(ownerName(c,i.owner)))+'</span>Owner: <b>'+esc(ownerName(c,i.owner)||'Not set')+'</b></span><button class="btn sm" data-ied="'+k+'">Edit</button></div></div>';
+    +'</div>';
 }
 function form(F){
   const o=(v,L)=>L.map(x=>'<option'+(x===v?' selected':'')+'>'+esc(x)+'</option>').join('');
@@ -232,7 +241,7 @@ function detail(c){
   const head='<div class="card hd"><h2>'+esc(c.name)+(c.ser?' <span class="pill red">⚠ Serious'+(c.category?': '+esc(String(c.category).toLowerCase()):'')+'</span>':'')+'</h2>'
     +'<div class="meta">'+[esc(c.id),c.room?'Room '+esc(String(c.room).replace(/^Room\s*/,'')):'',c.raisedBy?'Raised by '+esc((w=>w.t==='Family'?'family'+(w.rel?' ('+w.rel.toLowerCase()+')':''):w.t==='Staff'?'staff: '+w.n:w.t==='Team'?w.n:w.t.toLowerCase())(who(c))):'',c.escalated?'Raised to Mr. S. Chandra':'',c.logged?'Logged '+esc(c.logged)+(c.via?' · '+esc(c.via):''):''].filter(Boolean).join(' · ')+'</div>'
     +'<div class="acts"><button class="btn" data-a="remind" title="Send a reminder to '+esc(c.owner||'the owner')+' to finish this">🔔 Remind owner</button><button class="btn" data-a="esc" title="Raise it to Mr. S. Chandra (GM Operations)" style="color:var(--red)">↑ Raise to Mr. S. Chandra</button><button class="btn" data-a="print">Report</button><button class="btn pri" data-a="call">Call family</button></div>'
-    +'<div class="stages" role="group" aria-label="Stage">'+STAGES.map((s,i)=>'<button class="stp'+(i<c.st?' done':'')+(i===c.st?' cur'+(c.ser?' ser':''):'')+'" data-stg="'+i+'" aria-current="'+(i===c.st?'step':'false')+'"><span class="dot">'+(i<c.st?'&#10003;':(i+1))+'</span><span>'+s+'</span></button>').join('')+'</div>'+stgHist(c)
+    +'<div class="stages" role="group" aria-label="Stage">'+STAGES.map((s,i)=>'<button class="stp'+(i<c.st?' done':'')+(i===c.st?' cur'+(c.ser?' ser':''):'')+'" data-stg="'+i+'" aria-current="'+(i===c.st?'step':'false')+'"><span class="dot">'+(i<c.st?'&#10003;':(i+1))+'</span><span>'+s+(i===3&&!who(c).fam?' <small class="opt">(optional)</small>':'')+'</span></button>').join('')+'</div>'+stgHist(c)
     +(c.reminded?'<div class="meta" style="margin:8px 0 0">Reminded '+c.reminded+' time'+(c.reminded>1?'s':'')+', last '+esc(c.remindedAt||'')+'</div>':'')
     +(c.ser&&c.st<4?'<div class="warn">Serious: Mr. S. Chandra and the medical director are told on logging. Update the family within 24 h.</div>':'')+'</div>';
   const saf=c.ser?'<div class="card safety"><div class="ch"><h3>Safety steps</h3><b style="color:var(--red);font-size:14px">'+nS+' of '+SAFETY.length+' done</b></div><div class="sgrid">'
@@ -246,8 +255,8 @@ function detail(c){
     +'<div class="r"><input class="inp" id="gNote" style="flex:1" placeholder="Note: what was found or done" value="'+esc(V.note)+'"><button class="btn pri sm" data-a="note">Add</button></div></div></div>';
   const W=who(c);
   const side='<div class="card"><div class="lbl">People</div><div class="per"><span class="av" style="background:#EFF4FF;color:#1E5BB8">'+esc(c.ini||ini(c.name))+'</span><div class="n"><b>'+esc(c.name)+'</b><span>Patient'+(c.room?' · Room '+esc(String(c.room).replace(/^Room\s*/,'')):'')+'</span></div><button class="lnk" data-a="chart">Chart ↗</button></div>'
-    +(W.t==='Patient'?'':'<div class="per"><span class="av">'+esc(ini(W.n))+'</span><div class="n"><b>'+esc(W.n)+'</b><span>Raised it · '+esc(W.t==='Family'?'Family'+(W.rel?' ('+W.rel+')':''):W.t)+'</span></div>'+(W.fam?'<button class="btn ic sm" data-a="call" aria-label="Call the family">📞</button>':'')+'</div>')
-    +famBox(c,W)+(W.ph&&!W.fam?'<div class="kv"><span>'+(W.fam?'Family phone':'Phone')+'</span><b><a href="tel:'+esc(String(W.ph).replace(/[^0-9+]/g,''))+'">'+esc(W.ph)+'</a></b></div>':'')+'</div>'
+    +(W.t==='Patient'||W.fam?'':'<div class="per"><span class="av">'+esc(ini(W.n))+'</span><div class="n"><b>'+esc(W.n)+'</b><span>Raised it · '+esc(W.t==='Family'?'Family'+(W.rel?' ('+W.rel+')':''):W.t)+'</span></div>'+(W.fam?'<button class="btn ic sm" data-a="call" aria-label="Call the family">📞</button>':'')+'</div>')
+    +famBox(c,W)+'</div>'
     +'<div class="card"><div class="lbl">Why it happened</div><label style="font-size:14px;font-weight:600">Root cause<select class="inp" id="gRoot" style="margin-top:6px">'+ROOTS.map(r=>'<option'+((c.root||'Not known yet')===r?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select></label>'
     +'<div style="font-size:14px;font-weight:600;margin:12px 0 6px">Staff or team involved</div><div class="tags">'+(c.staff||[]).map((s,i)=>'<button class="tag" data-unstaff="'+i+'" title="Tap to remove">'+esc(s)+' ×</button>').join('')
     +staffSug(c).map(s=>'<button class="tag add" data-sugstaff="'+esc(s)+'" title="Add">+ '+esc(s)+'</button>').join('')+(V.staffAdd?'<input class="inp" id="gStaff" style="width:150px;height:28px;padding:2px 8px" placeholder="Team or person" value="'+esc(V.staffTxt)+'"><button class="btn sm pri" data-a="staffok">Add</button>':'<button class="tag add" data-a="staffadd">+ Add</button>')+'</div>'
@@ -296,17 +305,19 @@ function act(a,t){
   if(a==='staffok'){const t=String(V.staffTxt||'').trim();V.staffAdd=false;if(!t){draw();return;}patch(c.id,{staff:(c.staff||[]).concat([t])});return;}
 }
 /* stage confirm pop-up: what the move means, a warning for open issues or safety steps, an optional note for the log */
-const SGM=['The grievance goes back to the start and shows in Open.','The owner is looking into it. It stays in Open.','The owner has fixed it. It moves to "To confirm with family", and someone calls the family.','The family has said it is sorted. Close it once nothing is left to do.','Nothing more to do. It moves to Closed and leaves the open list.'];
+const SGM=['The grievance goes back to the start and shows in Open.','The owner is looking into it. It stays in Open.','The owner has fixed it. It moves to "To confirm with family", and someone calls the family.','The family has been told what was done. Needed when the family raised it; optional otherwise.','Nothing more to do. It moves to Closed and leaves the open list.'];
 function stgAsk(c,i){stgClose();const back=i<c.st,open=(c.iss||[]).filter(x=>(x.st||'Open')==='Open').length,saf=c.ser&&c.safety?Object.keys(c.safety).length:0;
   const warn=i>=2&&open?'<div class="sgw">'+open+' issue'+(open>1?'s are':' is')+' still open. Mark '+(open>1?'them':'it')+' Resolved or Declined first if that is done.</div>':'';
   const o=document.createElement('div');o.className='sgo';o.id='sgo';
   o.innerHTML='<div class="sgm'+(back?' back':'')+'" role="dialog" aria-modal="true" aria-labelledby="sgT"><h3 id="sgT">'+(back?'Move back to ':'Move to ')+esc(STAGES[i])+'?</h3>'
     +'<div class="sgp"><span>'+esc(c.name||'Patient')+' · '+esc(c.id)+'</span><span style="margin-left:auto"><b>'+esc(STAGES[c.st])+'</b> <span class="ar">→</span> <b class="to">'+esc(STAGES[i])+'</b></span></div>'
     +'<p>'+esc(back?'Use this only if the stage was set by mistake or the problem came back. '+SGM[i]:SGM[i])+'</p>'+warn
+    +(i===1&&(c.iss||[]).length?'<label><span>Which issue is being looked into</span><select id="sgI">'+(c.iss.length>1?'<option value="all">All issues</option>':'')+c.iss.map((x,k)=>'<option value="'+k+'">Issue '+(k+1)+': '+esc(x.t||'')+'</option>').join('')+'</select></label>':'')
+    +(i===4&&who(c).fam&&c.st<3?'<div class="sgw">The family raised this. Tell them what was done (Family communicated) before closing.</div>':'')
     +'<label><span>Note for the log <span style="font-weight:400;color:#667085">(optional)</span></span><textarea id="sgN" placeholder="'+(back?'Why it is moving back':'What was done')+'"></textarea></label>'
     +'<div class="sgb"><button class="btn" id="sgX">Cancel</button><button class="btn pri" id="sgY">'+(back?'Move back':'Move to '+esc(STAGES[i]))+'</button></div></div>';
   document.body.appendChild(o);const y=o.querySelector('#sgY');y.focus();
-  o.addEventListener('click',e=>{if(e.target===o||e.target.id==='sgX'){e.stopPropagation();stgClose();}else if(e.target.id==='sgY'){e.stopPropagation();const n=(o.querySelector('#sgN').value||'').trim();stgClose();stgDo(c,i,n);}});
+  o.addEventListener('click',e=>{if(e.target===o||e.target.id==='sgX'){e.stopPropagation();stgClose();}else if(e.target.id==='sgY'){e.stopPropagation();let n=(o.querySelector('#sgN').value||'').trim();const si=o.querySelector('#sgI');if(si){const v=si.value;n=(v==='all'?'All issues':'Issue '+(+v+1)+': '+(c.iss[+v].t||''))+(n?' · '+n:'');}stgClose();stgDo(c,i,n);}});
   o.addEventListener('keydown',e=>{if(e.key==='Escape'){stgClose();}else if(e.key==='Tab'){const f=[...o.querySelectorAll('textarea,button')];const a=f[0],z=f[f.length-1];if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}}});
   stgAsk.back=document.querySelector('.stp[data-stg="'+i+'"]');}
 function stgClose(){const o=document.getElementById('sgo');if(o)o.remove();}
@@ -326,7 +337,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
   if(!c)return;
   if(d.stg!==undefined){const i=+d.stg;if(i===c.st)return;stgAsk(c,i);return;}
   if(d.saf!==undefined){const S=Object.assign({},c.safety||{}),i=+d.saf;if(S[i])delete S[i];else S[i]={by:ME,at:stamp()};patch(c.id,{safety:S});return;}
-  if(d.ist!==undefined){const iss=c.iss.map(x=>Object.assign({},x));iss[+d.ist].st=d.v;setIss(c,iss,'Issue '+(1+ +d.ist)+': '+d.v);return;}
+  if(d.ist!==undefined){const iss=c.iss.map(x=>Object.assign({},x));iss[+d.ist].st=d.v;patch(c.id,Object.assign(addLog(c,'Issue','Issue '+(1+ +d.ist)+' ('+(iss[+d.ist].t||'')+') marked '+d.v),{issues:iss}),'Issue '+(1+ +d.ist)+': '+d.v);return;}
   if(d.ask){const p=d.ask.split(':'),iss=c.iss.map(x=>Object.assign({},x,{asks:(x.asks||[]).map(a=>Object.assign({},a))})),a=iss[+p[0]].asks[+p[1]];a.ok=!a.ok;setIss(c,iss);return;}
   if(d.ied!==undefined){const i=c.iss[+d.ied];V.form={k:+d.ied,t:i.t||'',cat:i.cat||'',when:i.when||'',what:i.what||'',fam:i.fam||'',asks:(i.asks||[]).map(a=>a.t).join(', '),owner:i.owner||''};draw();return;}
   if(d.about){V.about=d.about;draw();return;}

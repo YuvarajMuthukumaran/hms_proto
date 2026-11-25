@@ -10,7 +10,13 @@
   var ITEMS = [['fb', 'Feedback collected from the patient and family'], ['fu', 'Importance of follow-up explained'], ['fub', 'Follow-ups booked']];
   var POINTS = ['Take medicines exactly as prescribed', 'Do not stop medicines without the doctor', 'Come for the OPD follow-up on the date', 'Warning signs to watch for', 'Whom to call in an emergency', 'Therapy or group sessions to continue'];
   var WITH = ['Psychiatrist OPD', 'Psychologist session', 'Family session', 'Lab tests', 'Other'];
-  var OPEN = {};
+  var OPEN = {}, TAB = { t: 'form' };
+  /* 25 Nov meeting (Nikita): the questions follow who gives the feedback */
+  var QP = [['qCare', 'Care from the doctors and therapists'], ['qNurse', 'Care from the nurses and ward staff'], ['qFood', 'Food and room'], ['qSafe', 'Felt safe and respected']];
+  var QF = [['qInfo', 'Kept informed about the treatment'], ['qStaff', 'Staff were polite and helpful'], ['qBill', 'Charges were explained clearly'], ['qVisit', 'Calls and visits were easy']];
+  var RATE = ['Poor', 'Fair', 'Good', 'Very good'];
+  window.pxDcTab = function (k) { TAB.t = k; paint(true); };
+  window.pxDcSave = function (id) { var d = load(id); save(id, d); try { if (window.toast) toast('Discharge form saved'); } catch (e) {} var b = document.getElementById('pxDcSaved'); if (b) { b.textContent = 'Saved ' + when(); } };
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function cur() {
     try { if (typeof S === 'undefined' || typeof P === 'undefined' || S.view !== 'rec' || S.rtab !== 'dis') return null; var p = P.find(function (x) { return x.id === S.pid; }); return p ? (p.hmsId || p.id) : null; } catch (e) { return null; }
@@ -56,6 +62,8 @@
     var d = load(id), f = F(d);
     var fb = part(id, d, 'fb', ITEMS[0][1], read([['From', f.fbFrom], ['Score', f.fbScore !== undefined && f.fbScore !== '' ? f.fbScore + ' of 10' : ''], ['What they said', f.fbSaid]]),
       '<div class="dc-l">Feedback from</div>' + chips(id, 'fbFrom', ['Patient', 'Family', 'Patient and family'], f.fbFrom || '') +
+      (f.fbFrom ? ((/Patient/.test(f.fbFrom) ? '<div class="dc-l" style="margin-top:8px">Questions for the patient</div>' + QP.map(function (q) { return '<div class="dc-q"><span>' + esc(q[1]) + '</span>' + chips(id, q[0], RATE, f[q[0]] || '') + '</div>'; }).join('') : '') +
+        (/amily/.test(f.fbFrom) ? '<div class="dc-l" style="margin-top:8px">Questions for the family</div>' + QF.map(function (q) { return '<div class="dc-q"><span>' + esc(q[1]) + '</span>' + chips(id, q[0], RATE, f[q[0]] || '') + '</div>'; }).join('') : '')) : '<div class="dc-none">Choose who gives the feedback to see their questions.</div>') +
       '<div class="dc-l">How likely are they to recommend Tulasi? (0 to 10)</div>' + chips(id, 'fbScore', ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], f.fbScore == null ? '' : f.fbScore) +
       '<div class="dc-l">What they said</div><textarea class="dc-in" rows="2" data-id="' + esc(id) + '" data-f="fbSaid" placeholder="In their words" oninput="pxDcSet(this)">' + esc(f.fbSaid || '') + '</textarea>');
     var fu = part(id, d, 'fu', ITEMS[1][1], read([['Explained to', f.fuTo], ['How', f.fuHow], ['Points covered', f.pts.join(', ')]]),
@@ -71,8 +79,10 @@
     var fdate = function (s) { if (!s) return ''; var t = new Date(s + 'T00:00'); return isNaN(t) ? s : t.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
     var fub = part(id, d, 'fub', ITEMS[2][1], read(f.fus.filter(function (r) { return r.date || r.with; }).map(function (r, i) { return ['Follow-up ' + (i + 1), [fdate(r.date), r.with, r.in ? 'booked in ' + r.in : 'not booked yet'].filter(Boolean).join(' · ')]; })),
       rows + '<button type="button" class="mini dc-add" onclick="pxDcRow(\'' + esc(id) + '\',-1)">+ Add another follow-up</button>');
-    return '<section id="pxDcCard" class="dc-card"><div class="dc-top"><b>Discharge form · your part</b><span id="pxDcCnt" class="dc-cnt">' + cnt(d) + '</span></div>' +
-      '<div class="dc-sub">Each item on the discharge checklist ticks itself when its part is filled. The care team sees the checklist in the clinical portal.</div>' + fb + fu + fub + '</section>';
+    var tabs = '<div class="dc-tabs" role="tablist"><button type="button" role="tab" class="dc-tab' + (TAB.t === 'form' ? ' on' : '') + '" onclick="pxDcTab(\'form\')">Discharge form</button><button type="button" role="tab" class="dc-tab' + (TAB.t === 'ck' ? ' on' : '') + '" onclick="pxDcTab(\'ck\')">Discharge checklist <span class="dc-cnt">' + cnt(d) + '</span></button></div>';
+    var ck = '<div class="dc-ck">' + ITEMS.map(function (it) { var x = d[it[0]], on = !!(x && x.on); return '<div class="dc-cki' + (on ? ' ok' : '') + '"><span class="dc-box">' + (on ? '✓' : '') + '</span><div><b>' + esc(it[1]) + '</b><div class="dc-sub">' + (on ? 'Done by ' + esc(x.by || '') + ' · ' + esc(x.at || '') : 'Ticks itself when this part of the discharge form is filled') + '</div></div></div>'; }).join('') + '<div class="dc-sub">The treating psychiatrist sees these ticks in the clinical portal (Discharge checklist).</div></div>';
+    return '<section id="pxDcCard" class="dc-card"><div class="dc-top"><b>Discharge</b><span id="pxDcCnt" class="dc-cnt">' + cnt(d) + '</span></div>' + tabs +
+      (TAB.t === 'ck' ? ck : '<div class="dc-sub">Each item on the discharge checklist ticks itself when its part is filled.</div>' + fb + fu + fub + '<div class="dc-sv"><span id="pxDcSaved" class="dc-sub"></span><button type="button" class="dc-save" onclick="pxDcSave(\'' + esc(id) + '\')">Save</button></div>') + '</section>';
   }
   var css = document.createElement('style');
   css.textContent = '.dc-card{background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:grid;gap:10px}.dc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.dc-top b{font-size:15px}.dc-cnt{font-size:13px;font-weight:600;color:#344054}.dc-sub{font-size:12.5px;color:#667085;margin-top:-6px}'
@@ -84,6 +94,10 @@
     + '.dc-in{width:100%;box-sizing:border-box;min-height:38px;border:1px solid #D6DEE8;border-radius:10px;padding:7px 10px;font:inherit;font-size:13.5px;background:#fff}.dc-in:focus{outline:2px solid #1e6cdb;outline-offset:0;border-color:#1e6cdb}textarea.dc-in{resize:vertical}'
     + '.dc-g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.dc-row{display:grid;grid-template-columns:170px minmax(160px,220px) 1fr auto;gap:12px;align-items:end;padding:8px 0;border-bottom:1px solid #EEF2F6}'
     + '.dc-x{border:0;background:none;color:#b42318;font:inherit;font-size:13px;cursor:pointer;padding:8px 4px}.dc-add{justify-self:start;margin-top:4px}'
+    + '.dc-tabs{display:flex;gap:4px;border-bottom:1px solid #E3EAF2}.dc-tab{border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:#475467;padding:9px 14px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}.dc-tab.on{color:#1849a9;box-shadow:inset 0 -2px 0 #1e6cdb}'
+    + '.dc-q{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid #F2F4F7;font-size:13.5px}.dc-ck{display:grid;gap:8px}.dc-cki{display:flex;gap:10px;align-items:flex-start;border:1px solid #E3EAF2;border-radius:10px;padding:10px 12px}.dc-cki.ok{background:#F6FEF9;border-color:#ABEFC6}'
+    + '.dc-box{width:20px;height:20px;border-radius:6px;border:1.5px solid #D0D5DD;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex:none}.dc-cki.ok .dc-box{background:#12B76A;border-color:#12B76A}'
+    + '.dc-sv{display:flex;justify-content:flex-end;align-items:center;gap:10px}.dc-save{border:0;background:#1e6cdb;color:#fff;font:inherit;font-weight:600;font-size:14px;padding:9px 20px;border-radius:10px;cursor:pointer}'
     + '@media(max-width:700px){.dc-row{grid-template-columns:1fr}.dc-read{grid-template-columns:1fr}}';
   document.head.appendChild(css);
   function paint(force) {

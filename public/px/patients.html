@@ -329,7 +329,7 @@ function rec(){
   const prev=P[(idx-1+P.length)%P.length], next=P[(idx+1)%P.length];
   const due=[...p.st].map((c,i)=>[c,i]).filter(([c,i])=>(c==='l'||c==='t')&&!S.done[p.id+i]);
   const TABICON={"summary":"<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" style=\"flex:0 0 auto\"><rect x=\"6\" y=\"4\" width=\"12\" height=\"17\" rx=\"2\"/><path d=\"M9 10h6M9 14h6\"/></svg>","family":"<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" style=\"flex:0 0 auto\"><path d=\"M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z\"/></svg>","prefs":"<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" style=\"flex:0 0 auto\"><path d=\"M6 3v7M6 14v7M12 3v3M12 10v11M18 3v11M18 18v3M3 10h6M9 6h6M15 14h6\"/></svg>","griev":"<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" style=\"flex:0 0 auto\"><path d=\"M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z\"/></svg>","rounds":"<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" style=\"flex:0 0 auto\"><path d=\"M4 20h4L19 9l-4-4L4 16z\"/></svg>","dis":"<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" style=\"flex:0 0 auto\"><path d=\"M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10\"/></svg>","past":"<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" style=\"flex:0 0 auto\"><path d=\"M3 12a9 9 0 1 0 3-6.7L3 8\"/><path d=\"M3 3v5h5M12 7v5l3 2\"/></svg>"};
-  const TABS=[['summary','Stay summary'],['family','Family calls and updates'],['prefs','Preferences'],['griev','Grievances'],['rounds','Rounds'],['dis','Discharge and feedback'],['past','Past admissions']];
+  const TABS=[['summary','Admission'],['family','Family calls and updates'],['prefs','Preferences'],['griev','Grievances'],['rounds','Rounds'],['dis','Discharge and feedback'],['past','Past admissions']];
   let body='';
   if(S.rtab==='past'&&!(p.tags||[]).includes('Readmission'))S.rtab='summary';/* 23 Nov (Nikita): no Past admissions tab when there are none */
   if(S.rtab==='summary') body=summary(p); else if(S.rtab==='family') body=family(p); else if(S.rtab==='prefs') body=prefs(p); else if(S.rtab==='griev') body=griev(p); else if(S.rtab==='rounds') body=roundsTab(p); else if(S.rtab==='dis') body=dis(p); else body=`<div style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:18px">${p.tags.includes('Readmission')?`<b>Admission 1 · 2 to 19 Jul 2026</b><div style="font-size:13px;color:#667085;margin-top:4px">Dr. Ichpreet Singh · Kiran Mehra · feedback NPS 8 · 1 grievance (laundry)</div><button class="mini" style="margin-top:10px">Open</button>`:'<span style="color:#667085">No earlier stays at Tulasi.</span>'}</div>`;
@@ -402,7 +402,7 @@ function prefs0(p){
   if(!p.prefs) return `<section style="background:#FFFAEB;border:1px solid #FEDF89;border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b>Preferences not taken yet</b><div style="font-size:13px;color:#475467">Due by Day 2. Take them with the RMO, the patient and the family. Same form the psychiatrist sees under Patient Experience.</div></div><button class="btn pri">Take preferences</button></section>`;
   return `<div style="font-size:13px;color:#475467;margin-bottom:10px">Same record as the psychiatrist's Patient Experience tab. First filled by the RMO with you; anyone on the care team can update it.</div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px">
-  ${blk('Diet','Kitchen · Ward',H&&H.diet?[['Diet type',esc(H.diet.type||'Not set')],['Foods to avoid',esc(H.diet.avoid||'Not set')],['Likes, dislikes, fasting days',esc(H.diet.notes||'Not set')],['Written by',esc((H.by||'the care team')+(H.at?', '+H.at:''))]]:[['Diet type','Vegetarian'],['Foods to avoid','None known'],['Likes, dislikes, fasting days','No onion or garlic on Tuesdays; prefers roti to rice']])}
+  ${blk('Diet','Dietician · Ward',H&&H.diet?[['Diet type',esc(H.diet.type||'Not set')],['Foods to avoid',esc(H.diet.avoid||'Not set')],['Likes, dislikes, fasting days',esc(H.diet.notes||'Not set')],['Written by',esc((H.by||'the care team')+(H.at?', '+H.at:''))]]:[['Diet type','Vegetarian'],['Foods to avoid','None known'],['Likes, dislikes, fasting days','No onion or garlic on Tuesdays; prefers roti to rice']])}
   ${blk('Calls and visits','Front desk · Ward',[['Phone calls (hospital phone)','2 a day, 10 minutes'],['Visits','Family, weekends']])}
   ${blk('Approved visitors','Front desk · Security',H&&H.contacts&&H.contacts.length?H.contacts.map(c=>[esc(c[0]),esc(c[1])+' · '+esc(c[2])]):[[esc(p.rep),esc(p.rel)+' · nominated representative · Allowed'],['Cousin','Allowed'],['Friend','Not for now']])}
   ${blk('Room and belongings','Front desk · Housekeeping',[['Room','Keep in current room'],['Belongings','Phone and wallet in locker; belts, laces and sharps at nursing station'],['Signed by',esc(p.rep)+', on admission']])}
@@ -449,8 +449,10 @@ function dis(p){
   return dis0(p);
 }
 const PF_GROUPS=[
- ['Diet','Kitchen · Ward',[['Diet type','sel',['Vegetarian','Non-vegetarian','Eggetarian','Jain','Other']],['Foods to avoid','txt'],['Likes, dislikes, fasting days','txt']]],
- ['Calls and visits','Front desk · Ward',[['Phone calls (hospital phone)','txt'],['Visits','txt']]],
+ /* 25 Nov meeting: foods to avoid as ticks plus a free-text line; calls and visits as separate answers. Field keys stay "group.index"; a 4th item
+    sets the key so old answers (1.0, 1.1) keep their place as notes. */
+ ['Diet','Dietician · Ward',[['Diet type','sel',['Vegetarian','Non-vegetarian','Eggetarian','Jain','Other']],['Foods to avoid','multi',['Onion and garlic','Egg','Meat or fish','Milk products','Gluten / wheat','Nuts','Sugar (diabetic)','Spicy food','Fried food','Caffeine']],['Other foods to avoid','txt',null,3],['Likes, dislikes, fasting days','txt',null,2]]],
+ ['Calls and visits','Front desk · Ward',[['Phone calls allowed','sel',['Yes','No','Only with the doctor\'s OK'],2],['Calls a day','sel',['1','2','3','As needed'],3],['Length of a call','sel',['5 minutes','10 minutes','15 minutes'],4],['Who may call','txt',null,5],['Visits allowed','sel',['Yes','No','Only with the doctor\'s OK'],6],['Visiting days','multi',['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],7],['Calls: other notes','txt',null,0],['Visits: other notes','txt',null,1]]],
  ['Approved visitors','Front desk · Security',[['Visitor 1 (name, relation, allowed or not)','txt'],['Visitor 2','txt'],['Visitor 3','txt']]],
  ['Room and belongings','Front desk · Housekeeping',[['Room','txt'],['Belongings','txt']]],
  ['Activities and outings','Ward · Activity team',[['Activities allowed','txt'],['Outings','txt']]],
@@ -476,25 +478,27 @@ function pfOpen(pid){ const p=P.find(x=>x.id===pid); if(!p)return; const cur=pfA
 /* 23 Nov 2026 (owner): Preferences are folding sections on the tab itself, like the psych pages. A section with nothing in it opens
    in fill view; a closed section shows its read view (what was recorded). Saves as you type into the same px_prefs_v2 record. */
 window.__pfO=window.__pfO||{};
-const pfFilled=(f,gi)=>PF_GROUPS[gi][2].some((x,fi)=>f[gi+'.'+fi]);
+const pfFilled=(f,gi)=>PF_GROUPS[gi][2].some((x,fi)=>f[gi+'.'+(x[3]!=null?x[3]:fi)]);
 function prefs(p){
   const f=pfAll()[p.id]||{},O=window.__pfO[p.id]=window.__pfO[p.id]||{},P=esc(p.id);
   const n=PF_GROUPS.filter((g,gi)=>pfFilled(f,gi)).length;
   const head=`<div class="pf-top"><span>${f.__at?'Last saved '+esc(f.__at)+'. ':'Not taken yet. Due by Day 2, with the RMO, the patient and the family. '}Same record as the psychiatrist's Patient Experience tab. Saves as you type.</span><span class="pf-cnt">${n} of ${PF_GROUPS.length} sections filled</span></div>`;
   return head+'<div class="pf-acc">'+PF_GROUPS.map((g,gi)=>{
     const open=O[gi]!==undefined?O[gi]:!pfFilled(f,gi),fgNo=gi===FG&&f[FG+'.0']!=='Yes';
-    const read=g[2].map((x,fi)=>f[gi+'.'+fi]&&!(fgNo&&fi>0)?[x[0],f[gi+'.'+fi]]:null).filter(Boolean);
+    const KY=(x,fi)=>gi+'.'+(x[3]!=null?x[3]:fi);const read=g[2].map((x,fi)=>f[KY(x,fi)]&&!(fgNo&&fi>0)?[x[0],f[KY(x,fi)]]:null).filter(Boolean);
     const rv=read.length?'<dl class="pf-read">'+read.map(r=>'<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>').join('')+'</dl>':'<div class="pf-read pf-none">Nothing recorded yet. Open to fill.</div>';
-    const fields=g[2].map((x,fi)=>{const k=gi+'.'+fi,v=f[k]||'',hide=gi===FG&&fi>0&&f[FG+'.0']!=='Yes';
-      return `<label class="pf-f"${hide?' hidden':''}>${esc(x[0])}${x[1]==='sel'?`<select data-pfi="${k}" data-pid="${P}"><option value=""></option>${x[2].map(o=>`<option${v===o?' selected':''}>${esc(o)}</option>`).join('')}</select>`:`<textarea rows="2" data-pfi="${k}" data-pid="${P}">${esc(v)}</textarea>`}</label>`;}).join('');
+    const fields=g[2].map((x,fi)=>{const k=KY(x,fi),v=f[k]||'',hide=gi===FG&&fi>0&&f[FG+'.0']!=='Yes';
+      return `<label class="pf-f"${hide?' hidden':''}>${esc(x[0])}${x[1]==='multi'?`<span class="pf-m" data-pfm="${k}" data-pid="${P}">${x[2].map(o=>{const on=v.split(', ').indexOf(o)>=0;return `<label class="pf-mc${on?' on':''}"><input type="checkbox" value="${esc(o)}"${on?' checked':''}>${esc(o)}</label>`;}).join('')}</span>`:x[1]==='sel'?`<select data-pfi="${k}" data-pid="${P}"><option value=""></option>${x[2].map(o=>`<option${v===o?' selected':''}>${esc(o)}</option>`).join('')}</select>`:`<textarea rows="2" data-pfi="${k}" data-pid="${P}">${esc(v)}</textarea>`}</label>`;}).join('');
     return `<details class="pf-s" data-pid="${P}" data-gi="${gi}"${open?' open':''}><summary><span class="pf-h"><b>${esc(g[0])}</b><span class="pf-st${read.length?' ok':''}">${read.length?read.length+' filled':'Empty'}</span><span class="pf-seen">Seen by ${esc(g[1])}</span><span class="pf-chev" aria-hidden="true"></span></span>${rv}</summary><div class="pf-fill">${fields}<div class="pf-done"><button type="button" class="btn" data-pfclose="1">Done</button></div></div></details>`;}).join('')+'</div>';
 }
 function pfSave(pid,k,v){const all=pfAll(),cur=all[pid]||{};if(v)cur[k]=v;else delete cur[k];cur.__at=new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});cur.__ts=Date.now();all[pid]=cur;try{localStorage.setItem('px_prefs_v2',JSON.stringify(all));}catch(e){}}
 document.addEventListener('input',e=>{const t=e.target.closest&&e.target.closest('[data-pfi]');if(!t)return;pfSave(t.dataset.pid,t.dataset.pfi,t.value.trim());
   if(t.dataset.pfi===FG+'.0')t.closest('.pf-fill').querySelectorAll('.pf-f').forEach((l,i)=>{if(i>0)l.hidden=t.value!=='Yes';});});
+document.addEventListener('change',e=>{const m=e.target.closest&&e.target.closest('[data-pfm]');if(!m)return;const v=[...m.querySelectorAll('input:checked')].map(i=>i.value);pfSave(m.dataset.pid,m.dataset.pfm,v.join(', '));m.querySelectorAll('.pf-mc').forEach(l=>l.classList.toggle('on',l.querySelector('input').checked));});
 document.addEventListener('toggle',e=>{const d=e.target;if(!d.classList||!d.classList.contains('pf-s'))return;const O=window.__pfO[d.dataset.pid]=window.__pfO[d.dataset.pid]||{};O[d.dataset.gi]=d.open;if(!d.open){const y=window.scrollY;render();window.scrollTo(0,y);}},true);
 document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-pfclose]');if(t){const d=t.closest('details');if(d)d.open=false;}});
 (function(){const s=document.createElement('style');s.textContent='.pf-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:#475467;margin-bottom:10px}.pf-cnt{font-weight:600;color:#344054}'
+ +'.pf-m{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.pf-mc{display:inline-flex;align-items:center;gap:6px;border:1px solid #D6DEE8;border-radius:99px;padding:5px 12px;font-size:13px;font-weight:500;cursor:pointer;background:#fff}.pf-mc input{margin:0;accent-color:#1e6cdb}.pf-mc.on{border-color:#1e6cdb;background:#EEF4FF;color:#1849a9}'
  +'.pf-acc{display:grid;gap:10px}.pf-s{background:#fff;border:1px solid #E3EAF2;border-radius:12px}.pf-s[open]{border-color:#B9D3F5;box-shadow:0 0 0 3px #EEF5FF}'
  +'.pf-s>summary{list-style:none;cursor:pointer;padding:12px 16px;display:grid;gap:8px}.pf-s>summary::-webkit-details-marker{display:none}.pf-s>summary:focus-visible{outline:2px solid #1e6cdb;outline-offset:2px;border-radius:12px}'
  +'.pf-h{display:flex;align-items:center;gap:10px}.pf-h b{font-size:15px;color:#101828}.pf-st{font-size:12px;font-weight:600;color:#98A2B3}.pf-st.ok{color:#067647}.pf-seen{margin-left:auto;font-size:12px;color:#667085}'
@@ -619,6 +623,6 @@ window.onCallSaved = r => {
 render();
 </script>
 
-<script src="px-dc-checklist.js"></script>
+<script src="px-dc-checklist.js"></script><script src="px-adm-checklist.js"></script>
 </body>
 </html>
