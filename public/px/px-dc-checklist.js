@@ -17,6 +17,42 @@
   var RATE = ['Poor', 'Fair', 'Good', 'Very good'];
   window.pxDcTab = function (k) { TAB.t = k; paint(true); };
   window.pxDcSave = function (id) { var d = load(id); save(id, d); try { if (window.toast) toast('Discharge form saved'); } catch (e) {} var b = document.getElementById('pxDcSaved'); if (b) { b.textContent = 'Saved ' + when(); } };
+  /* 25 Nov (owner): Print PDF on the Tulasi letterhead */
+  window.pxDcPrint = function (id) {
+    var d = load(id), f = F(d), p = {};
+    try { p = P.find(function (x) { return String(x.hmsId || x.id) === String(id); }) || {}; } catch (e) {}
+    var row = function (k, v) { return v ? '<tr><th>' + esc(k) + '</th><td>' + esc(v) + '</td></tr>' : ''; };
+    var kv = function (k, v) { return '<div><span>' + esc(k) + '</span><b>' + esc(v || '-') + '</b></div>'; };
+    var qs = [];
+    if (/Patient/.test(f.fbFrom || '')) qs = qs.concat(QP); if (/amily/.test(f.fbFrom || '')) qs = qs.concat(QF);
+    var fbT = row('Feedback from', f.fbFrom) + qs.map(function (q) { return row(q[1], f[q[0]]); }).join('') + row('Would recommend Tulasi (0 to 10)', f.fbScore !== undefined && f.fbScore !== '' ? String(f.fbScore) : '') + row('What they said', f.fbSaid);
+    var fuT = row('Explained to', f.fuTo) + row('How', f.fuHow) + row('Points covered', f.pts.join(', '));
+    var fus = f.fus.filter(function (r) { return r.date || r.with; });
+    var fubT = fus.length ? '<table class="fut"><tr><th>Date</th><th>With</th><th>Doctor</th><th>Booked in</th></tr>' + fus.map(function (r) { return '<tr><td>' + esc(r.date || '') + '</td><td>' + esc(r.with || '') + '</td><td>' + esc(r.who || '') + '</td><td>' + esc(r.in || 'Not booked yet') + '</td></tr>'; }).join('') + '</table>' : '<p class="no">No follow-up recorded.</p>';
+    var sec = function (t, k, body) { var x = d[k]; return '<h3>' + esc(t) + '</h3><div class="st">' + (x && x.on ? 'Done by ' + esc(x.by || '') + ', ' + esc(x.at || '') : 'Not done yet') + '</div>' + (body || '<p class="no">Nothing filled yet.</p>'); };
+    var tb = function (r) { return r ? '<table class="kv">' + r + '</table>' : ''; };
+    var html = '<!doctype html><html><head><meta charset="utf-8"><title>Discharge feedback and follow-up - ' + esc(p.name || '') + '</title><style>'
+      + 'body{font:12px/1.5 Arial,Helvetica,sans-serif;color:#222;margin:28px 40px}'
+      + '.top{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;border-bottom:1.5px solid #999;padding-bottom:10px}'
+      + '.addr{font-size:11px}.addr p{margin:0 0 8px}.brand{text-align:center}.brand img{height:58px}.brand h1{color:#1f3c88;font-size:24px;margin:2px 0 0}.brand i{font-size:12px}'
+      + '.ds{text-align:right}.ds h2{font-size:15px;letter-spacing:.5px;margin:0 0 10px}.ds span{display:block;color:#666;font-size:11px}.ds b{display:block;margin-bottom:6px}'
+      + '.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 14px;padding:12px 0;border-bottom:1.5px solid #999}.grid span{display:block;color:#666;font-size:10.5px;font-weight:700;text-transform:uppercase}.grid b{font-size:12.5px}'
+      + 'h3{color:#1f3c88;font-size:15px;margin:18px 0 2px}.st{font-size:11px;color:#666;margin-bottom:6px}.no{color:#888;margin:4px 0}'
+      + 'table{border-collapse:collapse;width:100%;font-size:12px}.kv th,.kv td,.fut th,.fut td{border:1px solid #c8cfd8;padding:5px 9px;text-align:left;vertical-align:top}.kv th{width:42%;background:#f6f8fb;font-weight:600;color:#333}.fut th{background:#f1f4f9;color:#1f3c88}'
+      + '.sgn{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px;font-size:11.5px}.sgn .sl{border-bottom:1px solid #333;height:44px;margin-bottom:6px}.sgn b{display:block}'
+      + '.foot{border-top:1.5px solid #999;margin-top:24px;padding-top:10px;text-align:center;font-size:11px;color:#555}'
+      + '*{-webkit-print-color-adjust:exact;print-color-adjust:exact}@media print{body{margin:10mm 12mm}}</style></head><body>'
+      + '<div class="top"><div class="addr"><p>Sector-64, Opp: M3M Urbana,<br>Gurgaon - 122102</p><p>2/6 Sarvpriya Vihar, Near Hauzkhas Metro,<br>New Delhi - 110016</p><p><b>Appointments:8800000255</b></p></div>'
+      + '<div class="brand"><img src="' + location.origin + '/logo.png" alt=""><h1>Tulasi Healthcare</h1><i>Psychiatric &amp; Rehabilitation Care</i></div>'
+      + '<div class="ds"><h2>DISCHARGE FEEDBACK<br>AND FOLLOW-UP</h2><span>UHID/MR NO.</span><b>' + esc(p.uhid || '-') + '</b><span>PRINTED ON</span><b>' + esc(when()) + '</b></div></div>'
+      + '<div class="grid">' + kv('Patient name', p.name) + kv('Age / Sex', p.as) + kv('Room', p.room) + kv('Psychiatrist', p.dr) + '</div>'
+      + sec(ITEMS[0][1], 'fb', tb(fbT)) + sec(ITEMS[1][1], 'fu', tb(fuT)) + sec(ITEMS[2][1], 'fub', fubT)
+      + '<div class="sgn"><div><div class="sl"></div><b>Patient Experience Lead</b>Name, signature and date</div><div><div class="sl"></div><b>Patient / family member</b>Name, relation, signature and date</div></div>'
+      + '<div class="foot">Tulasi Healthcare · Patient Experience</div>'
+      + '<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>';
+    var w = window.open('', '_blank'); if (!w) { try { toast('Allow pop-ups to print'); } catch (e) {} return; }
+    w.document.open(); w.document.write(html); w.document.close();
+  };
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function cur() {
     try { if (typeof S === 'undefined' || typeof P === 'undefined' || S.view !== 'rec' || S.rtab !== 'dis') return null; var p = P.find(function (x) { return x.id === S.pid; }); return p ? (p.hmsId || p.id) : null; } catch (e) { return null; }
@@ -44,10 +80,14 @@
     if (k === 'pts') { var i = f.pts.indexOf(v); if (i < 0) f.pts.push(v); else f.pts.splice(i, 1); }
     else if (k.indexOf('fus.') === 0) { var a = k.split('.'); f.fus[+a[1]][a[2]] = f.fus[+a[1]][a[2]] === v ? '' : v; }
     else f[k] = String(f[k]) === v ? '' : v;
-    save(id, d); paint(true);
+    save(id, d);
+    /* 25 Nov (owner: "page gets refreshed each time"): only the picked group changes; the whole card is redrawn only when the questions change */
+    if (k === 'fbFrom') { var y = window.scrollY; paint(true); window.scrollTo(0, y); return; }
+    var g = el.parentNode; if (k === 'pts') { var on = f.pts.indexOf(v) >= 0; el.classList.toggle('on', on); el.setAttribute('aria-pressed', on); return; }
+    Array.prototype.forEach.call(g.querySelectorAll('.dc-c'), function (b) { var o = b === el && el.dataset.dv === String(k.indexOf('fus.') === 0 ? f.fus[+k.split('.')[1]][k.split('.')[2]] : f[k]); b.classList.toggle('on', o); b.setAttribute('aria-pressed', o); });
   };
-  window.pxDcRow = function (id, i) { var d = load(id), f = F(d); if (i < 0) f.fus.push({}); else { f.fus.splice(i, 1); if (!f.fus.length) f.fus.push({}); } save(id, d); paint(true); };
-  window.pxDcFold = function (el) { OPEN[el.dataset.k] = el.open; if (!el.open) paint(true); };
+  window.pxDcRow = function (id, i) { var d = load(id), f = F(d); if (i < 0) f.fus.push({}); else { f.fus.splice(i, 1); if (!f.fus.length) f.fus.push({}); } save(id, d); var y = window.scrollY; paint(true); window.scrollTo(0, y); };
+  window.pxDcFold = function (el) { OPEN[el.dataset.k] = el.open; if (!el.open) { var y = window.scrollY; paint(true); window.scrollTo(0, y); } };
   function chips(id, k, opts, sel, multi) {
     return '<div class="dc-ch">' + opts.map(function (o) { var on = multi ? sel.indexOf(o) >= 0 : String(sel) === String(o);
       return '<button type="button" class="dc-c' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-id="' + esc(id) + '" data-f="' + k + '" data-dv="' + esc(o) + '" onclick="pxDcPick(this)">' + esc(o) + '</button>'; }).join('') + '</div>';
@@ -95,7 +135,7 @@
     var tabs = '<div class="dc-tabs" role="tablist"><button type="button" role="tab" class="dc-tab' + (TAB.t === 'form' ? ' on' : '') + '" onclick="pxDcTab(\'form\')">Discharge form</button><button type="button" role="tab" class="dc-tab' + (TAB.t === 'ck' ? ' on' : '') + '" onclick="pxDcTab(\'ck\')">Discharge checklist <span class="dc-cnt">' + cnt(d) + '</span></button></div>';
     var ck = '<div class="dc-ck">' + ITEMS.map(function (it) { var x = d[it[0]], on = !!(x && x.on); return '<div class="dc-cki' + (on ? ' ok' : '') + '"><span class="dc-box">' + (on ? '✓' : '') + '</span><div><b>' + esc(it[1]) + '</b><div class="dc-sub">' + (on ? 'Done by ' + esc(x.by || '') + ' · ' + esc(x.at || '') : 'Ticks itself when this part of the discharge form is filled') + '</div></div></div>'; }).join('') + '<div class="dc-sub">The treating psychiatrist sees these ticks in the clinical portal (Discharge checklist).</div></div>';
     return '<section id="pxDcCard" class="dc-card"><div class="dc-top"><b>Discharge</b><span id="pxDcCnt" class="dc-cnt">' + cnt(d) + '</span></div>' + tabs +
-      (TAB.t === 'ck' ? ck : '<div class="dc-sub">Each item on the discharge checklist ticks itself when its part is filled.</div>' + fb + fu + fub + '<div class="dc-sv"><span id="pxDcSaved" class="dc-sub"></span><button type="button" class="dc-save" onclick="pxDcSave(\'' + esc(id) + '\')">Save</button></div>') + '</section>';
+      (TAB.t === 'ck' ? ck : '<div class="dc-sub">Each item on the discharge checklist ticks itself when its part is filled.</div>' + fb + fu + fub + '<div class="dc-sv"><span id="pxDcSaved" class="dc-sub"></span><button type="button" class="dc-print" onclick="pxDcPrint(\'' + esc(id) + '\')">Print PDF</button><button type="button" class="dc-save" onclick="pxDcSave(\'' + esc(id) + '\')">Save</button></div>') + '</section>';
   }
   var css = document.createElement('style');
   css.textContent = '.dc-card{background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:grid;gap:10px}.dc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.dc-top b{font-size:15px}.dc-cnt{font-size:13px;font-weight:600;color:#344054}.dc-sub{font-size:12.5px;color:#667085;margin-top:-6px}'
@@ -110,7 +150,7 @@
     + '.dc-tabs{display:flex;gap:4px;border-bottom:1px solid #E3EAF2}.dc-tab{border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:#475467;padding:9px 14px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}.dc-tab.on{color:#1849a9;box-shadow:inset 0 -2px 0 #1e6cdb}'
     + '.dc-q{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid #F2F4F7;font-size:13.5px}.dc-ck{display:grid;gap:8px}.dc-cki{display:flex;gap:10px;align-items:flex-start;border:1px solid #E3EAF2;border-radius:10px;padding:10px 12px}.dc-cki.ok{background:#F6FEF9;border-color:#ABEFC6}'
     + '.dc-box{width:20px;height:20px;border-radius:6px;border:1.5px solid #D0D5DD;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex:none}.dc-cki.ok .dc-box{background:#12B76A;border-color:#12B76A}'
-    + '.dc-sv{display:flex;justify-content:flex-end;align-items:center;gap:10px}.dc-save{border:0;background:#1e6cdb;color:#fff;font:inherit;font-weight:600;font-size:14px;padding:9px 20px;border-radius:10px;cursor:pointer}'
+    + '.dc-sv{display:flex;justify-content:flex-end;align-items:center;gap:10px}.dc-print{border:1px solid #D0D5DD;background:#fff;color:#344054;font:inherit;font-weight:600;font-size:14px;padding:8px 18px;border-radius:10px;cursor:pointer}.dc-print:hover{border-color:#1e6cdb;color:#1849a9}.dc-save{border:0;background:#1e6cdb;color:#fff;font:inherit;font-weight:600;font-size:14px;padding:9px 20px;border-radius:10px;cursor:pointer}'
     + '@media(max-width:700px){.dc-row{grid-template-columns:1fr}.dc-read{grid-template-columns:1fr}}';
   document.head.appendChild(css);
   function paint(force) {

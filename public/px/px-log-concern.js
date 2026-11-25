@@ -155,6 +155,8 @@
       sla: '6 h left', at: Date.now(), slaTone: 'grey', logged: 'just now', status: ty === 'grievance' ? 'Pending' : 'Open', desc: desc };
     L.unshift({ d: window.PXDay ? window.PXDay() : '', what: F.src + ' logged', who: 'Patient Experience', time: time, how: how, note: desc, tag: 'concern' }); calls[pid] = L;
     try { localStorage.setItem('px_gopen', id); } catch (e) {}
+    /* 25 Nov (owner): a concern that came in by phone also shows in the patient's Family call log (patients.html reads px_calls_v1) */
+    if (F.src === 'Phone call') try { var pp = pts().filter(function (x) { return x.id === pid; })[0] || {}, CL = JSON.parse(localStorage.getItem('px_calls_v1') || '[]'); CL.unshift({ kind: 'inbound', pid: pid, name: pp.name || '', at: Date.now(), who: by, gid: id, words: issues.map(function (i) { return i.t; }).join('; ') }); localStorage.setItem('px_calls_v1', JSON.stringify(CL)); } catch (e) {}
     close();
     self.setState({ extraConcerns: (st.extraConcerns || []).concat([c]), calls: calls, logOpen: false, screen: 'concerns', filter: 'open', srcf: 'all', cid: id });
     setTimeout(function () { var fr = document.querySelector('iframe[src*="grievances.html"]'); if (fr && fr.contentWindow) try { fr.contentWindow.postMessage({ gOpen: id }, '*'); } catch (e) {} }, 400);
