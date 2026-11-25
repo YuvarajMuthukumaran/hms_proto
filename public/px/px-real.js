@@ -94,7 +94,7 @@
   }
   var patients = null, why = '';
   if (test) {
-    var n = ['Test Patient One', 'Test Patient Two', 'Oyatullo Tavarovich Gadoey', 'Test Patient Four', 'Test Patient Five', 'Test Patient Six'];
+    var n = ['Test Patient One', 'Test Patient Two', 'Test Patient Three With A Long Name', 'Test Patient Four', 'Test Patient Five', 'Test Patient Six'];
     patients = n.map(function (nm, i) {
       return fromRow({ id: 'rt' + i, name: nm, sex: i % 2 ? 'F' : 'M', age: 30 + i, uhid: 'TEST-' + i, room: i < 3 ? String(100 + i) : '', floor: i % 2 ? 'Female ward' : 'Male ward',
         admitted_at: new Date(Date.now() - i * 864e5).toISOString().slice(0, 10), psychiatrist: 'Test Psychiatrist', psychologist: 'Test Psychologist',

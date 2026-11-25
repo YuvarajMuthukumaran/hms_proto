@@ -11,7 +11,8 @@
   var q = function (s) { return esc(s).replace(/'/g, '&#39;'); };
   var hhmm = function (t) { var d = new Date(t); return (d.getHours() % 12 || 12) + ':' + String(d.getMinutes()).padStart(2, '0') + (d.getHours() < 12 ? ' am' : ' pm'); };
   var SLOT = { M: 'Morning', A: 'Afternoon', E: 'Evening' }, PREV = { A: 'M', E: 'A' }, NEXT = { M: 'the afternoon', A: 'the evening', E: "tomorrow's morning" };
-  var roomOf = function (p) { return String(p.room || '').replace(/^Room\s*/, ''); };
+  /* 25 Nov audit: 'No room yet' wrapped onto three lines in the 50 px room column, so it is a dash */
+  var roomOf = function (p) { var r = String(p.room || '').replace(/^Room\s*/, ''); return !r || /^no room/i.test(r) ? '—' : r; };
   var floorOf = function (p) { var f = String(p.floor || '').replace(/^f/i, ''); if (!f) { var m = roomOf(p).match(/\d/); f = m ? m[0] : ''; } return f; };
   var flName = function (f) { return f === '' ? 'No floor' : f === '0' ? 'Ground floor' : f + ({ 1: 'st', 2: 'nd', 3: 'rd' }[f] || 'th') + ' floor'; };
 
