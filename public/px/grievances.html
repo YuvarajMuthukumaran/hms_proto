@@ -23,7 +23,7 @@ button{font:inherit;cursor:pointer}input,select,textarea{font:inherit;color:inhe
 .btn.ic{width:36px;padding:0;justify-content:center}.btn.sm{height:30px;padding:0 10px;font-size:14px}
 .btn:focus-visible,.tab:focus-visible,.tk:focus-visible,.stp:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .wrap{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;padding:16px}
-.bar{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.bar{grid-column:1/-1;display:flex;justify-content:flex-start;align-items:center;gap:12px;flex-wrap:wrap}
 .srch{display:flex;align-items:center;gap:8px;width:300px;height:40px;padding:0 12px;background:#fff;border:1px solid #D0D5DD;border-radius:10px}
 .srch input{border:0;outline:0;flex:1;background:none}
 .tabs{display:flex;gap:2px;background:#EAECF0;border-radius:10px;padding:3px}
@@ -72,7 +72,7 @@ button{font:inherit;cursor:pointer}input,select,textarea{font:inherit;color:inhe
 .inp{border:1px solid #D0D5DD;border-radius:8px;padding:7px 10px;background:#fff;width:100%}
 textarea.inp{resize:vertical;min-height:60px}
 .log{display:flex;flex-direction:column}.le{display:flex;gap:8px;padding:6px 0;border-top:1px solid #F2F4F7}.le .av{width:24px;height:24px;font-size:11px}.le .x{margin-top:0!important}.srt{height:34px;border:1px solid var(--line);border-radius:8px;padding:0 8px;font:inherit;font-size:14px;background:#fff}.tk .h{align-items:center}.le:first-child{border-top:0}
-.le .k{font-size:13.5px;color:var(--mute)}.le .x{color:#344054;margin-top:2px}
+.le .k{font-size:13px;color:var(--mute);white-space:nowrap}.le .k b{color:var(--ink);font-weight:600}.le .x{color:#344054;margin-top:0}.le .l1{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex:1;min-width:0}.le{align-items:center;padding:5px 0}.fam .per{margin-top:6px}
 .cmp{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px;display:flex;flex-direction:column;gap:8px}
 .cmp .r{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .lbl{font-size:12.5px;font-weight:700;letter-spacing:.04em;color:var(--mute);text-transform:uppercase;margin-bottom:8px}
@@ -106,6 +106,14 @@ const CATS=['Staff conduct','Ward rules','Billing and charges','Room and houseke
 const QBY={Safety:['CCTV reviewed','Staff statement taken','Doctor checked the patient'],Rights:['Spoke to the treating doctor','Staff statement taken'],Food:['Spoke to the kitchen','Diet changed'],'Food and dietary':['Spoke to the kitchen','Diet changed'],'Billing and charges':['Spoke to billing','Charges explained'],'Billing and insurance':['Spoke to billing','Charges explained'],'Room and housekeeping':['Housekeeping told','Room checked'],Maintenance:['Maintenance ticket raised','Room checked'],'Nursing care':['Spoke to nursing in-charge'],'Doctor communication':['Doctor to call the family'],'Family updates':['Doctor to call the family'],Belongings:['Belongings checked'],'Staff conduct':['Staff statement taken','Spoke to the staff member']};
 function quick(c){const k=c.iss.map(i=>i.cat).concat([c.category]),o=[];k.forEach(x=>(QBY[x]||[]).forEach(q=>{if(o.indexOf(q)<0)o.push(q);}));const w=who(c);if(w.fam&&!(c.log||[]).some(e=>/family/i.test(e.t)))o.unshift('Spoke to family');return o.slice(0,4);}
 /* who raised it, from the saved text (Patient / Family (rel) / Staff: name / a team / Anonymous) */
+/* 25 Nov (Nikita): family details always in People; staff involved suggestions */
+function famBox(c,W){const p=pts().find(q=>q.id===c.pid)||{};let F=(p.rels||[]).slice(0,2).map(r=>({n:r.name,rel:r.rel,ph:r.phone}));
+  if(!F.length&&p.nr&&p.nr!=='Not recorded')F=[{n:p.nr,rel:p.nrRel||'Relative',ph:p.mobile||p.phone||''}];
+  if(!F.length&&(p.gName||p.guardian))F=[{n:p.gName||p.guardian,rel:p.gRel||'Relative',ph:p.phone||''}];
+  if(W.fam&&W.ph&&F.length&&!F.some(x=>x.ph))F[0].ph=W.ph;
+  const tel=v=>String(v).replace(/[^0-9+]/g,'');
+  return '<div class="fam"><div class="lbl" style="margin-top:12px">Family</div>'+(F.length?F.map(x=>'<div class="per"><span class="av">'+esc(ini(x.n))+'</span><div class="n"><b>'+esc(x.n)+'</b><span>'+esc(x.rel||'Relative')+(x.ph?' · <a href="tel:'+esc(tel(x.ph))+'">'+esc(x.ph)+'</a>':' · no phone recorded')+'</span></div>'+(x.ph?'<button class="btn ic sm" data-a="call" aria-label="Call the family">📞</button>':'')+'</div>').join(''):'<div class="note" style="margin-top:4px">No family details in the patient record.</div>')+'</div>';}
+function staffSug(c){const W=who(c),have=c.staff||[],L=[];if(W.t==='Staff'&&W.n&&W.n!=='Staff member')L.push(W.n);(c.iss||[]).forEach(i=>{const o=ownerName(c,i.owner);if(o&&!L.includes(o))L.push(o);});return L.filter(x=>!have.includes(x));}
 function who(c){const r=String(c.raisedBy||'');const p=pts().find(q=>q.id===c.pid)||{};
   if(/^staff/i.test(r))return {t:'Staff',n:c.staffName||r.replace(/^Staff:?\s*/i,'')||'Staff member',fam:false};
   if(/^patient$/i.test(r))return {t:'Patient',n:c.name,fam:false,ph:p.phone||''};
@@ -168,7 +176,7 @@ function issue(c,i,k){
 }
 function form(F){
   const o=(v,L)=>L.map(x=>'<option'+(x===v?' selected':'')+'>'+esc(x)+'</option>').join('');
-  return '<div class="frm"><label class="w">What the family raised<input class="inp" data-ff="t" value="'+esc(F.t)+'" placeholder="For example: Washroom not working"></label>'
+  return '<div class="frm"><label class="w">What was raised<input class="inp" data-ff="t" value="'+esc(F.t)+'" placeholder="For example: Washroom not working"></label>'
     +'<label>About<select class="inp" data-ff="cat">'+o(F.cat,['',...CATS])+'</select></label><label>When it happened<input class="inp" data-ff="when" value="'+esc(F.when)+'" placeholder="Mon, 9:30 to 10:00 am"></label>'
     +'<label class="w">What happened<textarea class="inp" data-ff="what">'+esc(F.what)+'</textarea></label>'
     +'<label class="w">What the family says<textarea class="inp" data-ff="fam">'+esc(F.fam)+'</textarea></label>'
@@ -189,21 +197,21 @@ function detail(c){
     +(c.ser&&c.st<4?'<div class="warn">Serious: Mr. S. Chandra and the medical director are told on logging. Update the family within 24 h.</div>':'')+'</div>';
   const saf=c.ser?'<div class="card safety"><div class="ch"><h3>Safety steps</h3><b style="color:var(--red);font-size:14px">'+nS+' of '+SAFETY.length+' done</b></div><div class="sgrid">'
     +SAFETY.map((x,i)=>'<button class="chk'+(S[i]?' on':'')+'" data-saf="'+i+'"><span class="bx">'+(S[i]?'✓':'')+'</span><span><span class="t">'+esc(x)+'</span>'+(S[i]?'<small>'+esc(S[i].by+', '+S[i].at)+'</small>':'')+'</span></button>').join('')+'</div></div>':'';
-  const iss='<div class="card"><div class="ch"><h3>What '+esc((w=>w.t==='Family'?'the family':w.t==='Patient'?'the patient':w.t==='Staff'?w.n:w.t==='Team'?w.n:'they')(who(c)))+' raised</h3><button class="btn sm" data-a="addiss">+ Add issue</button></div>'
+  const iss='<div class="card"><div class="ch"><h3>Issues</h3><button class="btn sm" data-a="addiss">+ Add issue</button></div>'
     +c.iss.map((i,k)=>issue(c,i,k)).join('')+(V.form&&V.form.k===-1?'<div class="iss">'+form(V.form)+'</div>':'')+'</div>';
   const lg='<div class="card"><div class="ch"><h3>Investigation and action taken</h3><span style="font-size:14px;color:var(--mute)">'+log.length+' entr'+(log.length===1?'y':'ies')+'</span></div><div class="log">'
-    +log.map(e=>'<div class="le"><span class="av" style="background:#EFF4FF;color:#1E5BB8">'+esc(e.by==='System'?'HM':ini(e.by))+'</span><div><div class="k"><b style="color:var(--ink)">'+esc(e.by)+'</b> · '+esc(e.k)+(e.at?' · '+esc(e.at):'')+'</div><div class="x">'+esc(e.t)+'</div></div></div>').join('')+'</div>'
+    +log.map(e=>'<div class="le"><span class="av" style="background:#EFF4FF;color:#1E5BB8">'+esc(e.by==='System'?'HM':ini(e.by))+'</span><div class="l1"><span class="x">'+esc(e.t)+'</span><span class="k"><b>'+esc(e.by)+'</b> · '+esc(e.k)+(e.at?' · '+esc(e.at):'')+'</span></div></div>').join('')+'</div>'
     +'<div class="cmp">'+(c.iss.length>1?'<div class="r"><span style="font-size:13.5px;color:var(--mute)">About</span><div class="seg">'+opts.map(o=>'<button class="'+(V.about===o?'on':'')+'" data-about="'+esc(o)+'">'+esc(o)+'</button>').join('')+'</div></div>':'')
     +'<div class="r">'+quick(c).map(q=>'<button class="tag add" data-quick="'+esc(q)+'">+ '+esc(q)+'</button>').join('')+'</div>'
     +'<div class="r"><input class="inp" id="gNote" style="flex:1" placeholder="Note: what was found or done" value="'+esc(V.note)+'"><button class="btn pri sm" data-a="note">Add</button></div></div></div>';
   const W=who(c);
   const side='<div class="card"><div class="lbl">People</div><div class="per"><span class="av" style="background:#EFF4FF;color:#1E5BB8">'+esc(c.ini||ini(c.name))+'</span><div class="n"><b>'+esc(c.name)+'</b><span>Patient'+(c.room?' · Room '+esc(String(c.room).replace(/^Room\s*/,'')):'')+'</span></div><button class="lnk" data-a="chart">Chart ↗</button></div>'
     +(W.t==='Patient'?'':'<div class="per"><span class="av">'+esc(ini(W.n))+'</span><div class="n"><b>'+esc(W.n)+'</b><span>Raised it · '+esc(W.t==='Family'?'Family'+(W.rel?' ('+W.rel+')':''):W.t)+'</span></div>'+(W.fam?'<button class="btn ic sm" data-a="call" aria-label="Call the family">📞</button>':'')+'</div>')
-    +(W.ph?'<div class="kv"><span>'+(W.fam?'Family phone':'Phone')+'</span><b><a href="tel:'+esc(String(W.ph).replace(/[^0-9+]/g,''))+'">'+esc(W.ph)+'</a></b></div>':(W.fam?'<div class="note">No family phone in the patient record.</div>':''))+'</div>'
+    +famBox(c,W)+(W.ph&&!W.fam?'<div class="kv"><span>'+(W.fam?'Family phone':'Phone')+'</span><b><a href="tel:'+esc(String(W.ph).replace(/[^0-9+]/g,''))+'">'+esc(W.ph)+'</a></b></div>':'')+'</div>'
     +'<div class="card"><div class="lbl">Why it happened</div><label style="font-size:14px;font-weight:600">Root cause<select class="inp" id="gRoot" style="margin-top:6px">'+ROOTS.map(r=>'<option'+((c.root||'Not known yet')===r?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select></label>'
     +'<div style="font-size:14px;font-weight:600;margin:12px 0 6px">Staff or team involved</div><div class="tags">'+(c.staff||[]).map((s,i)=>'<button class="tag" data-unstaff="'+i+'" title="Tap to remove">'+esc(s)+' ×</button>').join('')
-    +(V.staffAdd?'<input class="inp" id="gStaff" style="width:150px;height:28px;padding:2px 8px" placeholder="Team or person" value="'+esc(V.staffTxt)+'"><button class="btn sm pri" data-a="staffok">Add</button>':'<button class="tag add" data-a="staffadd">+ Add</button>')+'</div>'
-    +'<div class="note">Root causes roll up into a monthly view, so repeat problems (for example the call centre promising free tests) reach the team that can fix them.</div></div>'
+    +staffSug(c).map(s=>'<button class="tag add" data-sugstaff="'+esc(s)+'" title="Add">+ '+esc(s)+'</button>').join('')+(V.staffAdd?'<input class="inp" id="gStaff" style="width:150px;height:28px;padding:2px 8px" placeholder="Team or person" value="'+esc(V.staffTxt)+'"><button class="btn sm pri" data-a="staffok">Add</button>':'<button class="tag add" data-a="staffadd">+ Add</button>')+'</div>'
+    +'</div>'
     +'<div class="card"><div class="kv"><span>Logged by</span><b>'+esc(c.loggedBy||(/Logged by (.*)/.exec(c.via||'')||[])[1]||ME)+'</b></div><div class="kv"><span>How it reached us</span><b>'+esc(c.via||c.src||'')+'</b></div><div class="kv"><span>Owner</span><b>'+esc(ownerName(c))+'</b></div><div class="kv"><span>Reference</span><b>'+esc(c.id)+'</b></div></div>';
   return '<div class="det"><div class="main">'+head+saf+iss+lg+'</div><div class="side">'+side+'</div></div>';
 }
@@ -257,6 +265,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
   if(d.ied!==undefined){const i=c.iss[+d.ied];V.form={k:+d.ied,t:i.t||'',cat:i.cat||'',when:i.when||'',what:i.what||'',fam:i.fam||'',asks:(i.asks||[]).map(a=>a.t).join(', '),owner:i.owner||''};draw();return;}
   if(d.about){V.about=d.about;draw();return;}
   if(d.quick){V.note=d.quick+(V.note?': '+V.note:'');draw();const e=document.getElementById('gNote');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length);}return;}
+  if(d.sugstaff){patch(c.id,{staff:(c.staff||[]).concat(d.sugstaff)},'Added');return;}
   if(d.unstaff!==undefined){const s=(c.staff||[]).slice();s.splice(+d.unstaff,1);patch(c.id,{staff:s});return;}
 });
 /* the app may hand over which grievance to open (Reports sets px_gopen before switching here) */

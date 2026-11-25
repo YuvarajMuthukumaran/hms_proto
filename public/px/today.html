@@ -622,7 +622,7 @@ window.onCallSaved = r => {
       if(R){
         const saf=(R.saf||[]).filter(a=>!a.ack);const reqs=(R.ent||[]).filter(e=>e.kind==='request'&&!e.cl);const notes=(R.ent||[]).filter(e=>e.kind==='note');const gr=(R.ent||[]).filter(e=>e.kind==='grievance');const iss=(R.iss||[]).filter(i=>i.st==='open');
         if(saf.length)h+='<div style="background:#FEF3F2;border:1px solid #FDA29B;border-radius:12px;padding:10px 16px;font-size:14px"><b style="color:#B42318">'+saf.length+' safety concern'+(saf.length>1?'s':'')+' from Rounds, not taken yet.</b> '+saf.map(a=>esc((a.patient||'Room '+a.room)+': '+a.what)).join(' · ')+'</div>';
-        if(reqs.length||notes.length||gr.length||iss.length)h+='<div style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:10px 16px;font-size:14px;display:flex;flex-direction:column;gap:3px"><div><b>From Rounds</b> <span style="color:#667085">· what was sent on the walk today</span></div>'
+        /* 25 Nov (Nikita): no From Rounds summary on Today */if(false)h+='<div style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;padding:10px 16px;font-size:14px;display:flex;flex-direction:column;gap:3px"><div><b>From Rounds</b> <span style="color:#667085">· what was sent on the walk today</span></div>'
           +(gr.length?'<div>'+gr.length+' grievance'+(gr.length>1?'s':'')+' logged with source Rounds: '+gr.slice(0,3).map(g=>esc(g.id+' '+g.patient)).join(', ')+'</div>':'')
           +(reqs.length?'<div>'+reqs.length+' request'+(reqs.length>1?'s':'')+' for you: '+reqs.slice(0,4).map(r=>esc(r.patient+' · '+r.title)).join(' · ')+'</div>':'')
           +(notes.length?'<div>'+notes.length+' note'+(notes.length>1?'s':'')+' sent to the nursing in-charge (sleep).</div>':'')

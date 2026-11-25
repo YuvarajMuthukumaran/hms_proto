@@ -285,12 +285,11 @@ function render(){
   /* Assemble */
   root.innerHTML=
   '<div class="hello">'+
-    '<div><p id="range">'+RANGE[S.per]+'. '+SITE[S.site]+'. Everyone on the team sees this page.</p>'+
+    '<div><p id="range">'+RANGE[S.per]+'. Everyone on the team sees this page.</p>'+
     '<small>Counted from what is logged in the HMS.'+(window.PX_REAL?'':' Sample numbers in this mockup.')+'</small></div>'+
     '<div class="ctrls">'+
       '<div class="seg" role="radiogroup" aria-label="Period">'+segBtn(PER,'per')+'</div>'+
-      '<div class="seg" role="radiogroup" aria-label="Site">'+segBtn(SITE,'site')+'</div>'+
-      '<button class="btn" data-dl="1">Download for ops review</button>'+
+      
     '</div>'+
   '</div>'+
 

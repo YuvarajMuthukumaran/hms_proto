@@ -37,9 +37,24 @@
     TK.forEach(([pi,id,x,y,h,id2])=>{const pg=m.pages[pi];if(!pg)return;const t='m199t_'+id;
       pg.fields.push({kind:'check',id:t,label:'Tick',x:x-23,y:y-0.5,w:27,h:h+1,size:10});GATE[id]=t;if(id2)GATE[id2]=t;});
   })();
+  /* 25 Nov (Anu): item 2 'I state that I am not having any medical problem' gets a tick box (m199none); ticking it
+     switches off item 3 (its tick boxes greyed and unclickable, their blanks hidden). An item 3 tick greys item 2. */
+  (function(){const m=CDF_FORMS['mect-final'],pg=m&&m.pages&&m.pages[4];if(!pg||pg.__m199n)return;pg.__m199n=1;
+    pg.fields.push({kind:'check',id:'m199none',label:'No medical problem',x:276,y:189.5,w:27,h:12.5,size:10});})();
+  /* 25 Nov (Anu, "not able to understand these bubbles"): MECT page 7 items 1 and 2 end in '(YES/NO)'. The old p7f32 had
+     ovals over whole phrases (his / her NR / Family members ...); now each item has two ovals, over YES and over NO only:
+     m199cap (item 1, capacity) and p7f32 (item 2, needs 100% support). */
+  (function(){const m=CDF_FORMS['mect-final'],pg=m&&m.pages&&m.pages[6];if(!pg||pg.__m199yn)return;pg.__m199yn=1;
+    const yn=(id,label,y,xy,xn)=>({kind:'choice',id,label,x:xy,y,w:xn+15-xy,h:12.6,opts:[{t:'YES',x:xy,y,w:15.5,h:12.6},{t:'NO',x:xn,y,w:15.5,h:12.6}]});
+    pg.fields=pg.fields.filter(x=>x.id!=='p7f32');
+    pg.fields.push(yn('m199cap','Capacity to make decisions',662,264,282.5),yn('p7f32','Needs 100% support from NR',681.5,419,437.5));})();
+  const TKIDS=TK.map(t=>'m199t_'+t[1]);
   function gate(){const key=String((typeof S!=='undefined'&&S.cdEntryKey)||'');if(key.split('|')[1]!=='mect-final')return;
-    let v={};try{v=cdfVals(key)||{};}catch(e){}const au=v.__autoIds||{};
-    Object.keys(GATE).forEach(id=>{const on=!!v[GATE[id]]||(!!v[id]&&!au[id]);
+    let v={};try{v=cdfVals(key)||{};}catch(e){}const au=v.__autoIds||{},none=!!v.m199none,any=TKIDS.some(t=>!!v[t]);
+    const off=(sel,o)=>document.querySelectorAll(sel).forEach(e=>{e.style.opacity=o?'.3':'';e.style.pointerEvents=o?'none':'';if(o)e.setAttribute('aria-disabled','true');else e.removeAttribute('aria-disabled');});
+    TKIDS.forEach(t=>off('.cdf-page [onclick*="cdfCheck(\''+t+'\'"]',none));
+    off('.cdf-page [onclick*="cdfCheck(\'m199none\'"]',any&&!none);
+    Object.keys(GATE).forEach(id=>{const on=!none&&(!!v[GATE[id]]||(!!v[id]&&!au[id]));
       document.querySelectorAll('.cdf-page [oninput*="cdfSet(\'' +id+'\'"],.cdf-page [onchange*="cdfSet(\'' +id+'\'"]').forEach(e=>{e.style.visibility=on?'':'hidden';});});}
   try{const __c=cdfCheck;cdfCheck=function(){const r=__c.apply(this,arguments);try{gate();}catch(e){}return r;};}catch(e){}
   /* 24 Nov (owner): MECT anaesthesia consent line 1 was wrong: the dotted line after '1' (the patient) held the doctor's

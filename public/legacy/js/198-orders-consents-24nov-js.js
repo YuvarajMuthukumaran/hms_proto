@@ -35,8 +35,21 @@
     {k:'date',id:'on',q:'Date done'}],next:['Repeat the same scale after the last session']});
   const T={
     mect:{name:'MECT',group:'Procedures',desc:'Electroconvulsive therapy with anaesthesia',tasks:[
-      CONSENT('MECT','mect-final',[{k:'text',id:'second',q:'Second psychiatrist to countersign (MECT needs two)'}]),
-      {id:'anaes',label:'Anaesthesia fitness',role:'RMO',fields:[
+      CONSENT('MECT','mect-final',[{k:'psy',id:'second',q:'Second psychiatrist to countersign (MECT needs two)'}]),
+      {id:'ecg',label:'Physical examination and ECG',role:'RMO',fields:[
+        {k:'yn',id:'pe',q:'Physical examination done',want:'Yes'},{k:'text',id:'bp',q:'BP and pulse',ph:'For example 124/80, 78 per minute'},
+        {k:'choice',id:'ecg',q:'ECG',opts:['Normal','Abnormal, doctor informed','Not done']},
+        {k:'yn',id:'teeth',q:'Loose teeth or dentures found?'}],next:['Note dentures or loose teeth on the session checklist']},
+      {id:'blood',label:'Investigation',role:'RMO',fields:[
+        {k:'labs',id:'labs',items:['Complete blood count','Kidney function','Electrolytes','Fasting sugar']},
+        {k:'yn',id:'spec',q:'Special tests sent, if the anaesthetist advised any'},
+        {k:'choice',id:'rev',q:'Results checked by the RMO',opts:['Normal','Abnormal, doctor informed']},
+        {k:'text',id:'abn',q:'Abnormal values, if any',opt:true,ph:'For example sugar 112'}],next:['Tell the psychiatrist about any abnormal value']},
+      {id:'fund',label:'Fundus examination',role:'RMO',fields:[
+        {k:'yn',id:'fun',q:'Fundus examination done',want:'Yes'},
+        {k:'choice',id:'res',q:'Finding',opts:['Normal','Papilloedema or other change, doctor informed'],stop:'Papilloedema or other change, doctor informed',stopText:'Fundus change found. MECT is on hold; tell the psychiatrist.'},
+        {k:'date',id:'on',q:'Date done'}],next:[]},
+      {id:'anaes',label:'Anaesthesia fitness',role:'RMO',waits:['ecg','blood','fund'],fields:[
         {k:'yn',id:'ac',q:'Anaesthesia consent signed by the patient or representative and one family member',want:'Yes'},
         {k:'multi',id:'probs',q:'Medical problems (tick all that apply)',opts:['None','Hypertension','Diabetes','Heart disease','Kidney failure','Hypothyroidism','Bronchial asthma','Jaundice','Thyrotoxicosis','Steroid therapy','Drug allergy','Bleeding disorder','Epilepsy or seizures','Earlier anaesthesia complication','Other']},
         {k:'choice',id:'pac',q:'Pre-anaesthetic check (PAC) fitness',opts:['Fit','Fit with precautions','Not fit'],stop:'Not fit',stopText:'Not fit for anaesthesia. MECT is on hold; tell the psychiatrist.'},
@@ -44,16 +57,7 @@
         {k:'yn',id:'fast',q:'Fasting of 6 to 8 hours before MECT explained',want:'Yes'},
         {k:'text',id:'prec',q:'Precautions to carry to every session',opt:true,ph:'For example BP before each session'}],
         next:['Carry the precautions to every session checklist']},
-      {id:'blood',label:'Blood work',role:'RMO',fields:[
-        {k:'labs',id:'labs',items:['Complete blood count','Kidney function','Electrolytes','Fasting sugar']},
-        {k:'yn',id:'spec',q:'Special tests sent, if the anaesthetist advised any'},
-        {k:'choice',id:'rev',q:'Results checked by the RMO',opts:['Normal','Abnormal, doctor informed']},
-        {k:'text',id:'abn',q:'Abnormal values, if any',opt:true,ph:'For example sugar 112'}],next:['Tell the psychiatrist about any abnormal value']},
       {id:'mmse',label:'Mini-Mental State Exam (MMSE)',role:'Psychologist',fields:[{k:'num',id:'score',q:'MMSE score before MECT (out of 30)',min:0,max:30,band:'mmse'},{k:'date',id:'on',q:'Date done'}],next:['Repeat the MMSE after every 3rd session']},
-      {id:'ecg',label:'Physical examination and ECG',role:'RMO',fields:[
-        {k:'yn',id:'pe',q:'Physical examination done',want:'Yes'},{k:'text',id:'bp',q:'BP and pulse',ph:'For example 124/80, 78 per minute'},
-        {k:'choice',id:'ecg',q:'ECG',opts:['Normal','Abnormal, doctor informed','Not done']},
-        {k:'yn',id:'fun',q:'Fundus examination done',want:'Yes'},{k:'yn',id:'teeth',q:'Loose teeth or dentures found?'}],next:['Note dentures or loose teeth on the session checklist']},
       {id:'sched',label:'Schedule the first session',role:'Psychiatrist',waits:true,fields:[
         {k:'date',id:'day',q:'First session date'},{k:'time',id:'time',q:'Time'},
         {k:'choice',id:'n',q:'Sessions planned',opts:['6','8','10','12']}],
@@ -126,7 +130,7 @@
     if(f.k==='form')return signedForm(pid,f.fid);
     if(f.k==='paper'||f.k==='stamp')return !!(v&&v.at);
     return v!=null&&String(v).trim()!=='';}
-  const others=(o,t)=>tplOf(o).tasks.filter(x=>x.id!==t.id&&!x.waits);
+  const others=(o,t)=>tplOf(o).tasks.filter(x=>x.id!==t.id&&(Array.isArray(t.waits)?t.waits.includes(x.id):x.waits!==true));
   const blocked=(o,t)=>t.waits&&others(o,t).some(x=>!(o.done||{})[x.id]);
   const started=(o,t)=>Object.keys((o.ans||{})[t.id]||{}).length>0;
   const st=(o,t)=>(o.done||{})[t.id]?'d':blocked(o,t)?'l':started(o,t)?'w':'';
@@ -137,9 +141,13 @@
     if(o.stopped)return ['Stopped','grey'];if(stopped(o))return ['On hold','red'];
     if(d===TT.length)return [tp.emergency?'Closed':o.tpl==='out'?'Done':'Running','green'];
     if(tp.emergency)return ['Active now','red'];
-    const last=TT.find(t=>t.waits);if(last&&!blocked(o,last)&&!(o.done||{})[last.id])return ['Ready: '+last.label.toLowerCase(),'blue'];
+    const last=TT.find(t=>t.waits===true);if(last&&!blocked(o,last)&&!(o.done||{})[last.id])return ['Ready: '+last.label.toLowerCase(),'blue'];
     return [d+' of '+TT.length+' done','amber'];}
   const isMine=t=>t.role==='Psychiatrist';
+  /* 25 Nov (Anu): psychiatrists for the countersign drop-down: the staff list (real mode), else the treating psychiatrists on the wards; the treating one is left out */
+  function psyNames(pid){const N=new Set();try{(window.__realStaff||[]).filter(x=>x.role==='psychiatrist').forEach(x=>N.add(x.name));}catch(e){}
+    if(!N.size)try{(typeof PTS!=='undefined'?PTS:[]).forEach(p=>{const n=((ptCtxOf(p.id)||{}).team||{}).psy;if(n)N.add(n);});}catch(e){}
+    let tr='';try{tr=((ptCtxOf(pid)||{}).team||{}).psy||'';}catch(e){}if(N.size>1)N.delete(tr);return [...N].sort();}
 
   /* ---------- icons (17 px strokes like the other tabs) ---------- */
   const IC={mect:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',ket:'<path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/>',dtms:'<circle cx="12" cy="12" r="3"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 6.3a8 8 0 0 1 0 11.4"/>',cloz:'<rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-35 12 12)"/><path d="m9.5 8.5 6 6"/>',lai:'<path d="m18 2 4 4M15 5l4 4M3 21l3-3M6 18l10-10-4-4L2 14l4 4zM9 11l2 2"/>',out:'<path d="M14 3h5v18h-5M10 17l5-5-5-5M15 12H3"/>',res:'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="M12 8v5M12 16h.01"/>'};
@@ -197,6 +205,7 @@
       return `<div class="o2-q">${L}<div class="o2-seg">${opts.map((x,i)=>`<button type="button" class="${v===x?'on':''}" onclick="o2Set(${args},${i})"${dis}>${E(x)}</button>`).join('')}</div>${ex}</div>`;}
     if(f.k==='multi'){const cur=v||f.pre||[];return `<div class="o2-q">${L}${f.pre&&!v?`<span class="small muted">${E(f.preNote)}</span>`:''}<div class="o2-seg wrap">${f.opts.map((x,i)=>`<button type="button" class="${cur.includes(x)?'on':''}" onclick="o2Multi(${args},${i})"${dis}>${E(x)}</button>`).join('')}</div></div>`;}
     if(f.k==='num'){const b=f.band?mmse(v):null;return `<div class="o2-q"><label class="o2-ql" for="${id}">${E(f.q)}</label><input class="input o2-in sm" type="number" inputmode="numeric" id="${id}" min="${f.min}" max="${f.max}" value="${E(v==null?'':v)}" oninput="o2Txt(${args},this)" onchange="o2Paint()"${dis}>${f.band?(b?`<div class="o2-note ${b[1]}"><b>${b[0]}</b> worked out from the score</div>`:'<span class="small muted">Cognition fills in from the score.</span>'):''}</div>`;}
+    if(f.k==='psy'){const L2=psyNames(pid);if(v&&!L2.includes(v))L2.push(v);return `<div class="o2-q"><label class="o2-ql" for="${id}">${E(f.q)}</label><select class="input o2-in" id="${id}" onchange="o2Txt(${args},this);o2Paint()"${dis}><option value="">Select the psychiatrist</option>${L2.map(n=>`<option${n===v?' selected':''}>${E(n)}</option>`).join('')}</select></div>`;}
     if(f.k==='text')return `<div class="o2-q"><label class="o2-ql" for="${id}">${E(f.q)}${f.opt?' <span class="muted">(optional)</span>':''}</label><input class="input o2-in" type="text" id="${id}" value="${E(v==null?'':v)}" placeholder="${E(f.ph||'')}" oninput="o2Txt(${args},this)" onchange="o2Paint()"${dis}></div>`;
     if(f.k==='date'||f.k==='time')return `<div class="o2-q"><label class="o2-ql" for="${id}">${E(f.q)}</label><input class="input o2-in sm" type="${f.k}" id="${id}" value="${E(v==null?'':v)}" onchange="o2Txt(${args},this);o2Paint()"${dis}></div>`;
     if(f.k==='check')return `<label class="o2-check"><input type="checkbox" ${v?'checked':''} onchange="o2Chk(${args},this)"${dis}> <span>${E(f.q)}</span></label>`;
@@ -212,14 +221,45 @@
     return `<button class="o2-lk" onclick="o2Back()">‹ Back to orders</button>
       <div class="o2-head"><div style="display:flex;gap:12px;align-items:flex-start"><span class="o2-ic big${tp.emergency?' em':''}">${ico(o.tpl,22)}</span><div><h3>${E(tp.name)}</h3><div class="small muted">Ordered by ${E(o.by)} · ${E(o.at)}. Each task shows who owns it. Tasks marked "waits" open when the rest are done.</div></div></div>
         <div class="o2-btns"><span class="o2-pill ${s[1]}">${E(s[0])}</span>${o.stopped||allDone(o)?'':`<button class="btn sm" onclick="o2Stop('${o.id}')">Stop order</button>`}</div></div>
-      <div class="o2-wu"><div class="o2-tl">${TT.map(k=>{const y=st(o,k);return `<button type="button" class="o2-task${k.id===t.id?' on':''}${y==='l'?' lock':''}" onclick="o2Task('${k.id}')"><span class="o2-tic ${y}">${y==='d'?'✓':y==='w'?'•':''}</span><span><b>${E(k.label)}</b><small>${E(k.role)}</small><small class="${y==='d'?'o2-ok':y==='w'?'o2-wait':''}">${y==='d'?'Done':y==='l'?'Waits for the rest':y==='w'?'In progress':'Not started'}</small></span></button>`;}).join('')}</div>
+      <div class="o2-wu"><div class="o2-tl">${o.tpl==='mect'?'<div class="o2-wul">Pre-ECT work-up</div>':''}${TT.map(k=>{const y=st(o,k);return `<button type="button" class="o2-task${k.id===t.id?' on':''}${y==='l'?' lock':''}" onclick="o2Task('${k.id}')"><span class="o2-tic ${y}">${y==='d'?'✓':y==='w'?'•':''}</span><span><b>${E(k.label)}</b><small>${E(k.role)}</small><small class="${y==='d'?'o2-ok':y==='w'?'o2-wait':''}">${y==='d'?'Done':y==='l'?(Array.isArray(k.waits)?'Waits for '+k.waits.map(w=>(TT.find(z=>z.id===w)||{}).label||w).join(', '):'Waits for the rest'):y==='w'?'In progress':'Not started'}</small></span></button>`;}).join('')}</div>
       <div class="o2-panel"><div class="o2-ph"><div><h4>${E(t.label)}</h4><div class="small muted">Owner: ${E(t.role)}${!isMine(t)&&!ro?' · you can fill it for them (one login per role)':''}</div></div><span class="o2-pill ${done?'green':x==='l'?'grey':x==='w'?'amber':'grey'}">${done?'Done':x==='l'?'Waits':x==='w'?'In progress':'Not started'}</span></div>
         <div class="o2-pb">${x==='l'?`<div class="o2-note warn"><b>Waits.</b> Opens when ${others(o,t).filter(y=>!(o.done||{})[y.id]).map(y=>E(y.label)).join(', ')} ${others(o,t).filter(y=>!(o.done||{})[y.id]).length>1?'are':'is'} done.</div>`:''}
           ${done?`<div class="o2-note ok"><b>Done</b> ${E(done.by)}${done.for&&done.for!=='Psychiatrist'?' for the '+E(done.for):''} · ${E(done.at)}</div>`:''}
           ${t.fields.map((f,i)=>fieldHtml(pid,o,t,f,i,ro)).join('')}
           ${t.next&&t.next.length?`<div class="o2-note"><b>${done?'Next steps':'After saving'}</b> ${t.next.map(E).join('. ')}.</div>`:''}</div>
-        ${ro?'':`<div class="o2-pf"><span class="small muted">${ok?'All answered. Ready to save.':left+' '+(left===1?'question':'questions')+' left'}</span><button class="btn ${tp.emergency?'o2-red':'pri'}" onclick="o2Done('${o.id}','${t.id}')"${ok?'':' disabled'}>${t.waits?E(t.label):'Save'}</button></div>`}</div></div>`;
+        ${ro?'':`<div class="o2-pf"><span class="small muted">${ok?'All answered. Ready to save.':left+' '+(left===1?'question':'questions')+' left'}</span><button class="btn ${tp.emergency?'o2-red':'pri'}" onclick="o2Done('${o.id}','${t.id}')"${ok?'':' disabled'}>${t.waits?E(t.label):'Save'}</button></div>`}</div></div>${o.tpl==='mect'?ectHtml(pid,o):''}`;
   }
+  /* 25 Nov (Anu): ECT progress. Once the first session is scheduled, each session day is recorded here in three parts:
+     before (MMSE, bowel, bladder, nil by mouth), during (anaesthesia, current dose, seizure duration) and after (MMSE, confusion or
+     side effects, hydration, any injection). Saved in the order as o.sess = [{n,date,by,at,pre,dur,post}]. Replaces the Peri-MECT and
+     Post-MECT rows of the consent form's checklist (block 196). */
+  const ECT=[['pre','Before the session',[['mmse','num','MMSE score',1],['bowel','yn','Bowel cleared'],['bladder','yn','Bladder emptied'],['npo','yn','Nil by mouth for 6 to 8 hours'],['vit','text','BP and pulse',1,'For example 124/80, 78']]],
+    ['dur','During the session',[['an','text','Anaesthesia given (drug and dose)',0,'For example propofol 80 mg, succinylcholine 40 mg'],['cur','text','Current dose (stimulus)',0,'For example 50%, 252 mC'],['sz','num','Seizure duration (seconds)'],['ev','text','Events during the session',1,'None']]],
+    ['post','After the session',[['mmse','num','MMSE score',1],['conf','multi','Confusion or side effects',0,['None','Confusion','Headache','Nausea or vomiting','Muscle pain','Memory complaints','Other']],['hyd','choice','Hydration',0,['Oral fluids taken','IV fluids given']],['inj','text','Any injection needed',1,'Drug, dose and why'],['note','text','Note',1]]]];
+  const jq=v=>JSON.stringify(v).replace(/"/g,'&quot;');
+  function ectLeft(F){let n=0;ECT.forEach(([p,,FL])=>FL.forEach(([k,typ,,opt])=>{if(opt)return;const v=(F[p]||{})[k];if(typ==='multi'?!(v||[]).length:v==null||String(v).trim()==='')n++;}));if(!F.date)n++;return n;}
+  function ectHtml(pid,o){const sch=(o.done||{}).sched,A=(o.ans||{}).sched||{},L=o.sess||[],plan=+A.n||0,F=UI.ect&&UI.ect.oid===o.id?UI.ect:null;
+    if(!sch)return `<div class="o2-ect"><div class="o2-ph"><div><h4>ECT sessions</h4><div class="small muted">Opens once the first session is scheduled.</div></div></div></div>`;
+    const show=(r,k)=>{const v=(r||{})[k];return Array.isArray(v)?v.join(', '):v==null||v===''?'-':String(v);};
+    const chk=x=>{const miss=['bowel','bladder','npo'].filter(k=>(x.pre||{})[k]!=='Yes');return miss.length?miss.map(k=>({bowel:'Bowel',bladder:'Bladder',npo:'NPO'})[k]).join(', ')+' not done':'All done';};
+    const rows=L.map(x=>`<tr><td><b>${x.n}</b></td><td>${E(x.date||'')}</td><td>${E(show(x.pre,'mmse'))}</td><td>${E(chk(x))}</td><td>${E(show(x.dur,'an'))}</td><td>${E(show(x.dur,'cur'))}</td><td>${E(show(x.dur,'sz'))}${(x.dur||{}).sz?' s':''}</td><td>${E(show(x.post,'conf'))}</td><td>${E(show(x.post,'hyd'))}${(x.post||{}).inj?'<br><span class="small">Injection: '+E(x.post.inj)+'</span>':''}</td><td>${E(show(x.post,'mmse'))}</td><td class="small muted">${E(x.by)}<br>${E(x.at)}</td></tr>`).join('');
+    const fld=(p,[k,typ,q,opt,x])=>{const id='ect_'+p+'_'+k,v=F?(F[p]||{})[k]:'';const lab=`<span class="o2-ql">${E(q)}${opt?' <span class="muted">(optional)</span>':''}</span>`;
+      if(typ==='yn'||typ==='choice'){const O=typ==='yn'?['No','Yes']:x;return `<div class="o2-q">${lab}<div class="o2-seg">${O.map(z=>`<button type="button" class="${v===z?'on':''}" onclick="o2EctSet('${p}','${k}',${jq(z)})">${E(z)}</button>`).join('')}</div></div>`;}
+      if(typ==='multi'){const c=v||[];return `<div class="o2-q">${lab}<div class="o2-seg wrap">${x.map(z=>`<button type="button" class="${c.includes(z)?'on':''}" onclick="o2EctMulti('${p}','${k}',${jq(z)})">${E(z)}</button>`).join('')}</div></div>`;}
+      return `<div class="o2-q"><label class="o2-ql" for="${id}">${E(q)}${opt?' <span class="muted">(optional)</span>':''}</label><input class="input o2-in${typ==='num'?' sm':''}" type="${typ==='num'?'number':'text'}" id="${id}" value="${E(v==null?'':v)}" placeholder="${E(typeof x==='string'?x:'')}" oninput="o2EctTxt('${p}','${k}',this.value)"></div>`;};
+    const n=F?ectLeft(F):0;
+    const form=F?`<div class="o2-ectf"><div class="o2-ectd"><h4>Session ${F.n}</h4><input class="input o2-in sm" type="date" value="${E(F.date)}" onchange="o2EctTxt('','date',this.value)" aria-label="Session date"></div>
+      <div class="o2-ectg">${ECT.map(([p,t,FL])=>`<div class="o2-ectc"><h5>${E(t)}</h5>${FL.map(z=>fld(p,z)).join('')}</div>`).join('')}</div>
+      <div class="o2-pf"><span class="small muted">${n?n+' left':'Ready to save.'}</span><span class="o2-btns"><button class="btn" onclick="o2EctCancel()">Cancel</button><button class="btn pri" onclick="o2EctSave('${o.id}')"${n?' disabled':''}>Save session ${F.n}</button></span></div></div>`:'';
+    return `<div class="o2-ect"><div class="o2-ph"><div><h4>ECT sessions</h4><div class="small muted">${L.length} of ${plan||'?'} recorded · first session ${E(A.day||'')} ${E(A.time||'')}</div></div>${F||o.stopped?'':`<button class="btn sm pri" onclick="o2EctNew('${o.id}')">Record session ${L.length+1}</button>`}</div>
+      ${form}${L.length?`<div class="o2-ectw"><table class="o2-lab o2-ectt"><thead><tr><th>No.</th><th>Date</th><th>MMSE before</th><th>Bowel, bladder, NPO</th><th>Anaesthesia</th><th>Current dose</th><th>Seizure</th><th>Side effects</th><th>Hydration</th><th>MMSE after</th><th>By</th></tr></thead><tbody>${rows}</tbody></table></div>`:F?'':'<div class="small muted" style="padding:4px 16px 14px">No session recorded yet.</div>'}</div>`;}
+  window.o2EctNew=function(oid){const [,o]=cur(oid);if(!o)return;const d=new Date();UI.ect={oid,n:(o.sess||[]).length+1,date:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),pre:{},dur:{},post:{}};o2Paint();};
+  window.o2EctCancel=function(){UI.ect=null;o2Paint();};
+  window.o2EctSet=function(p,k,v){const F=UI.ect;if(!F)return;F[p][k]=F[p][k]===v?'':v;o2Paint();};
+  window.o2EctMulti=function(p,k,v){const F=UI.ect;if(!F)return;let c=[...(F[p][k]||[])];if(v==='None')c=c.includes('None')?[]:['None'];else{c=c.filter(y=>y!=='None');c=c.includes(v)?c.filter(y=>y!==v):[...c,v];}F[p][k]=c;o2Paint();};
+  window.o2EctTxt=function(p,k,v){const F=UI.ect;if(!F)return;if(p)F[p][k]=v;else F[k]=v;const pf=document.querySelector('.o2-ectf .o2-pf');if(pf){const n=ectLeft(F);pf.querySelector('.small').textContent=n?n+' left':'Ready to save.';pf.querySelector('.btn.pri').disabled=!!n;}};
+  window.o2EctSave=function(oid){const [,o]=cur(oid),F=UI.ect;if(!o||!F||ectLeft(F))return;o.sess=o.sess||[];o.sess.push({n:F.n,date:F.date,by:me(),at:atNow(),pre:F.pre,dur:F.dur,post:F.post});UI.ect=null;save();try{toast('Session '+F.n+' saved');}catch(e){}};
+
   const html=pid=>{const o=UI.view==='order'&&find(pid,UI.oid);return o?orderHtml(pid,o):listHtml(pid);};
 
   /* ---------- actions ---------- */
@@ -278,6 +318,7 @@
     +'.o2-empty,.o2-box{border:1px solid #e4e7ec;border-radius:12px;background:#fff}.o2-empty{padding:14px 16px}.o2-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid #f2f4f7}.o2-row:first-child{border-top:0}'
     +'.o2-lk{all:unset;cursor:pointer;color:#1e6cdb;font-weight:600;font-size:13.5px;align-self:flex-start}.o2-lk:hover{text-decoration:underline}.o2-lk:focus-visible{outline:2px solid #1e6cdb;border-radius:4px}'
     +'.o2-wu{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px;align-items:start}@media(max-width:860px){.o2-wu{grid-template-columns:1fr}}'
+    +'.o2-wul{padding:10px 14px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#475467;background:#f9fafb;border-bottom:1px solid #e4e7ec}.o2-ect{margin-top:16px;border:1px solid #e4e7ec;border-radius:12px;background:#fff}.o2-ect>.o2-ph{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px}.o2-ectf{border-top:1px solid #e4e7ec;padding:14px 16px}.o2-ectd{display:flex;align-items:center;gap:12px;margin-bottom:10px}.o2-ectd h4{margin:0}.o2-ectg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.o2-ectc{border:1px solid #eaecf0;border-radius:10px;padding:12px}.o2-ectc h5{margin:0 0 8px;font-size:14px}.o2-ectw{overflow-x:auto;padding:0 16px 14px}.o2-ectt{min-width:900px}@media(max-width:1000px){.o2-ectg{grid-template-columns:1fr}}'
     +'.o2-tl{border:1px solid #e4e7ec;border-radius:12px;background:#fff;overflow:hidden}.o2-task{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:10px;align-items:flex-start;width:100%;padding:11px 14px;border-top:1px solid #f2f4f7}.o2-task:first-child{border-top:0}'
     +'.o2-task b{display:block;font-size:13.5px}.o2-task small{display:block;font-size:12px;color:#667085}.o2-task.on{background:#eff4ff;box-shadow:inset 3px 0 0 #1e6cdb}.o2-task.lock{opacity:.65}.o2-task:focus-visible{outline:2px solid #1e6cdb;outline-offset:-2px}'
     +'.o2-tic{width:20px;height:20px;border-radius:50%;border:1.5px solid #98a2b3;flex:none;display:grid;place-items:center;font-size:11px;margin-top:1px}.o2-tic.d{background:#079455;border-color:#079455;color:#fff}.o2-tic.w{border-color:#dc6803;color:#dc6803}'

@@ -309,11 +309,10 @@
       return '<button style="color:' + cc[0] + ';' + (on ? 'border:2px solid ' + cc[0] + ';background:' + cc[1] + ';font-weight:700' : '') + '" onclick="RV3.out(\'' + a[0] + '\')">' + a[1] + '</button>';
     }).join('') + '</div></div>';
     if (raise) {
-      b += '<div class="r3-sec">' + GL('What is it about?') + ['Care', 'Stay', 'Serious'].map(function (g) {
-        return '<div class="r3-cg"><div' + (g === 'Serious' ? ' style="color:#B42318"' : '') + '>' + (g === 'Serious' ? 'Serious · Mr. S. Chandra is told the moment you save' : g) + '</div><div class="r3-chips">' + CATS.filter(function (x) { return x.g === g; }).map(function (x) {
+      b += '<div class="r3-sec">' + GL('What is it about?') + /* 25 Nov (Nikita): all categories in one row, serious ones red, no headings (the Save box says Mr. S. Chandra is told) */
+        '<div class="r3-chips">' + CATS.map(function (x) {
           return '<button class="' + (x.alert ? 'sr ' : '') + (x.id === catSel ? 'on' : '') + '" onclick="RV3.cat(\'' + x.id + '\')">' + esc(x.label) + '</button>';
         }).join('') + '</div></div>';
-      }).join('') + '</div>';
     }
     if (V.out && V.out !== 'asleep' && V.out !== 'out' && (!raise || catSel)) {
       var dr = !V.edited && (X.state.drafts || {})[p.id];

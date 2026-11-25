@@ -14,9 +14,8 @@
   const MR={pre:['Capacity assessment form','Admission consent form signed by patient / NR for IPD patient',
       'MECT education material with consent form signed by patient / NR and two psychiatrists',
       'Anaesthesia consent form signed by patient / NR and one family member (legal guardian)',
-      'PAC and pre MECT work-up (routine and special tests, ECG, fundus examination) checked by RMO','MMSE score'],
-    peri:['Session 1','Session 2','Session 3','Session 4','Session 5'],
-    post:['Vitals','Response monitoring, clinically (behaviour and psychopathology) and objective rating scale','Cognitive deficits, clinical and MMSE']};
+      'PAC and pre MECT work-up (routine and special tests, ECG, fundus examination) checked by RMO','MMSE score']};
+  /* 25 Nov (Anu): Peri-MECT and Post-MECT rows removed; each session is recorded in the MECT order's ECT sessions (block 198) */
   const MH={pre:'Pre-ECT assessment',peri:'Peri-MECT assessment',post:'Post-MECT assessment'},OLD={peri:'Peri-MECT',post:'Post-MECT'};
   const mget=(v,p,i)=>{const k='m196'+p+(i+1);if(v[k])return v[k];const o=OLD[p];if(o){if(v['m24'+o+i+'y'])return 'y';if(v['m24'+o+i+'n'])return 'n';}return '';};
   function mectHtml(ed){
