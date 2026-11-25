@@ -87,7 +87,7 @@
       + '<div class="pxl-g"><div class="pxl-f"><label>Raised by</label>' + sel('by', F.by, BY) + '</div>'
       + '<div class="pxl-f">' + (F.by === 'Family member' ? '<label>Relation with the patient</label>' + sel('rel', F.rel, REL) : F.by === 'Staff' ? '<label>Staff name</label><input data-k="staff" value="' + esc(F.staff) + '" placeholder="Name of the staff member">' : F.by === 'Another team' ? '<label>Which team</label>' + sel('escBy', F.escBy, ESC.filter(Boolean)) : '') + '</div></div>'
       + '<div class="pxl-g"><div class="pxl-f"><label>How it reached us</label>' + sel('src', F.src, SRC) + '</div>'
-      + '<div class="pxl-f"><label>Logged by <small>(your name)</small></label><input data-k="me" value="' + esc(F.me) + '" placeholder="Your name"></div></div>';
+      + '<div class="pxl-f"><label>Logged by</label><input data-k="me" value="' + esc(F.me) + '" placeholder="Patient Experience"></div></div>';
     if (yes) {
       /* 24 Nov meeting: one plain row per issue (no A/B/C boxes); category list always opens downwards */
       h += '<div class="pxl-f"><span class="pxl-l">What is it about? <small>(add one line for each separate complaint)</small></span>'
@@ -139,6 +139,7 @@
     if (miss.length) { F.err = 'Please add ' + miss.join(', ') + '.'; draw(); return; }
     var st = self.state, pid = F.pid, calls = Object.assign({}, st.calls), L = (calls[pid] || []).slice();
     var by = F.by === 'Family member' ? 'Family (' + F.rel + ')' : F.by === 'Staff' ? 'Staff: ' + String(F.staff).trim() : F.by === 'Another team' ? F.escBy : F.by;
+    if (!String(F.me || '').trim()) F.me = 'Patient Experience';
     try { if (String(F.me).trim()) localStorage.setItem('px_me_name', String(F.me).trim()); } catch (e) {}
     var time = new Date().toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
     var how = F.src + ', from ' + by.toLowerCase();
@@ -221,7 +222,7 @@
     open: function (app, pid) {
       self = app; close(); css();
       F = { act: '', pid: '', q: '', ddOpen: false, by: '', rel: '', src: '', escBy: '', issues: [{ t: '', cat: '', when: '', what: '' }], sev: '', owner: '', contact: '', contactTyped: false, note: '', err: '', fi: null, staff: '', me: '', sevSet: false, catOpen: null };
-      try { F.me = localStorage.getItem('px_me_name') || ''; } catch (e) {}
+      try { F.me = localStorage.getItem('px_me_name') || 'Patient Experience'; } catch (e) { F.me = 'Patient Experience'; }
       if (pid && pt(pid)) setPid(pid);
       root = document.createElement('div'); root.className = 'pxl-ov'; document.body.appendChild(root);
       bind(); document.addEventListener('keydown', onKey); draw();
