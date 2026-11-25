@@ -259,4 +259,6 @@
     '@media(max-width:600px){.tp4-day{min-height:50px}.tp4-tag{display:none}}'
   ].join('');
   document.head.appendChild(css);
+  /* 25 Nov: the same per-day data for block 203, which copies it to the PX store (therapy calendar in the PX app) */
+  window.__tp194api={ind,grp,fam,kOf,met};
 })();

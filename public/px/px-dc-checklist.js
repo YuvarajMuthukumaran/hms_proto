@@ -58,8 +58,21 @@
     var on = !!(d[k] && d[k].on), open = OPEN[k] !== undefined ? OPEN[k] : !on;
     return '<details class="dc-p" data-k="' + k + '"' + (open ? ' open' : '') + ' ontoggle="pxDcFold(this)"><summary><span class="dc-h"><b>' + esc(title) + '</b>' + stat(d, k) + '<span class="dc-chev" aria-hidden="true"></span></span>' + rv + '</summary><div class="dc-body">' + body + '</div></details>';
   }
+  /* 25 Nov meeting: the follow-up dates the psychiatrist and psychologist set at discharge (copied to px_tp_<id> by portal block 203)
+     come in as rows by themselves (src psy / psych); a row not yet booked follows the doctor's date if it changes. */
+  function seedFu(id, d, f) {
+    var T = null; try { T = JSON.parse(localStorage.getItem('px_tp_' + id) || 'null'); } catch (e) {}
+    var fu = (T && T.fu) || {}, ch = false;
+    [['psy', 'Psychiatrist OPD', 'doc'], ['psych', 'Psychologist session', 'name']].forEach(function (s) {
+      var x = fu[s[0]]; if (!x || !x.date) return;
+      var r = f.fus.filter(function (y) { return y.src === s[0]; })[0];
+      if (!r) { var e = f.fus.filter(function (y) { return !y.date && !y.with && !y.src; })[0]; r = e || {}; if (!e) f.fus.push(r); r.src = s[0]; r.with = s[1]; r.date = x.date; r.who = x[s[2]] || ''; ch = true; }
+      else if (!r.in && (r.date !== x.date || r.who !== (x[s[2]] || ''))) { r.date = x.date; r.who = x[s[2]] || ''; ch = true; }
+    });
+    if (ch) save(id, d);
+  }
   function card(id) {
-    var d = load(id), f = F(d);
+    var d = load(id), f = F(d); seedFu(id, d, f);
     var fb = part(id, d, 'fb', ITEMS[0][1], read([['From', f.fbFrom], ['Score', f.fbScore !== undefined && f.fbScore !== '' ? f.fbScore + ' of 10' : ''], ['What they said', f.fbSaid]]),
       '<div class="dc-l">Feedback from</div>' + chips(id, 'fbFrom', ['Patient', 'Family', 'Patient and family'], f.fbFrom || '') +
       (f.fbFrom ? ((/Patient/.test(f.fbFrom) ? '<div class="dc-l" style="margin-top:8px">Questions for the patient</div>' + QP.map(function (q) { return '<div class="dc-q"><span>' + esc(q[1]) + '</span>' + chips(id, q[0], RATE, f[q[0]] || '') + '</div>'; }).join('') : '') +
@@ -71,7 +84,7 @@
       '<div><div class="dc-l">How</div>' + chips(id, 'fuHow', ['In person', 'Phone', 'Video call'], f.fuHow || '') + '</div></div>' +
       '<div class="dc-l">Points covered</div>' + chips(id, 'pts', POINTS, f.pts, true));
     var rows = f.fus.map(function (r, i) {
-      return '<div class="dc-row"><div><div class="dc-l">Date</div>' + txt(id, 'fus.' + i + '.date', r.date, '', 'date') + '</div>' +
+      return '<div class="dc-row">' + (r.src ? '<div class="dc-sub" style="grid-column:1/-1">Set by the ' + (r.src === 'psy' ? 'psychiatrist' : 'psychologist') + (r.who ? ' (' + esc(r.who) + ')' : '') + ' at discharge</div>' : '') + '<div><div class="dc-l">Date</div>' + txt(id, 'fus.' + i + '.date', r.date, '', 'date') + '</div>' +
         '<div><div class="dc-l">With</div><select class="dc-in" data-id="' + esc(id) + '" data-f="fus.' + i + '.with" onchange="pxDcSet(this)"><option value=""></option>' + WITH.map(function (o) { return '<option' + (r.with === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></div>' +
         '<div><div class="dc-l">Booked in</div>' + chips(id, 'fus.' + i + '.in', ['TeleCRM', 'Tulasi app'], r.in || '') + '</div>' +
         (f.fus.length > 1 ? '<button type="button" class="dc-x" aria-label="Remove this follow-up" onclick="pxDcRow(\'' + esc(id) + '\',' + i + ')">Remove</button>' : '') + '</div>';
