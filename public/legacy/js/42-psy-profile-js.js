@@ -292,7 +292,8 @@
         return `<section class="pxs-card"><div class="pxs-hd"><h4>${hesc(title)}</h4>${seen?`<span class="pxs-seen">Seen by ${hesc(seen)}</span>`:''}</div><dl>${body}</dl></section>`;
       }).join('');
       const foot=[...t.content.querySelectorAll('.row')].filter(r=>/First filled by/.test(r.textContent)).pop();
-      const note=foot?`<div class="tiny muted" style="margin:2px 4px 14px">${hesc(clean((foot.querySelector('.tiny')||foot).textContent))}</div>`:'';
+      /* 25 Nov audit: the "First filled by ... last updated by ..." line is demo text; real patients do not get it */
+      const note=foot&&!((()=>{try{return ptFind(S.pid)||{};}catch(e){return {};}})().real)?`<div class="tiny muted" style="margin:2px 4px 14px">${hesc(clean((foot.querySelector('.tiny')||foot).textContent))}</div>`:'';
       const call=t.content.querySelector('.callout');
       const grievance2=[...t.content.querySelectorAll('section.card')].find(s=>/^Grievances/.test((s.querySelector('h3')||{}).textContent||''));
       const lblG=[...t.content.children].find(x=>x.classList&&x.classList.contains('lbl')&&/^Grievances/.test(x.textContent));
