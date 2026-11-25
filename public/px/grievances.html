@@ -155,7 +155,7 @@ function all(){
     out.push(x);});
   return out;
 }
-function patch(id,p,msg){
+function patch(id,p,msg){V.keep=id;
   const h=host(),s=hs(),cs=Object.assign({},s.concernStatus||{});cs[id]=Object.assign({},cs[id]||{},p);
   if(h)h.setState({concernStatus:cs});else LOCAL.concernStatus=cs;
   if(msg)toast(msg);draw();
@@ -229,7 +229,9 @@ function detail(c){
   return '<div class="det"><div class="main">'+head+saf+iss+lg+'</div><div class="side">'+side+'</div></div>';
 }
 function draw(){
-  const L=all(),F=filt(L);
+  const L=all();let F=filt(L);
+  /* 25 Nov (owner): an action on the open grievance (stage, issue, reminder) keeps that patient open; the list tab does not change */
+  if(V.keep&&V.keep===V.sel&&!F.some(c=>c.id===V.sel)){const k=L.find(c=>c.id===V.keep);if(k)F=[k].concat(F);}
   if(!F.some(c=>c.id===V.sel))V.sel=F[0]?F[0].id:'';
   const cur=L.find(c=>c.id===V.sel);
   const n=k=>{const o=V.f;V.f=k;const r=filt(L).length;V.f=o;return r;};
@@ -267,11 +269,11 @@ function act(a,t){
   if(a==='staffok'){const t=String(V.staffTxt||'').trim();V.staffAdd=false;if(!t){draw();return;}patch(c.id,{staff:(c.staff||[]).concat([t])});return;}
 }
 document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const c=cur(),d=t.dataset;
-  if(d.f){V.f=d.f;V.form=null;draw();return;}
-  if(d.sel){V.sel=d.sel;V.form=null;V.about='General';draw();return;}
+  if(d.f){V.f=d.f;V.keep="";V.form=null;draw();return;}
+  if(d.sel){V.sel=d.sel;V.keep="";V.form=null;V.about='General';draw();return;}
   if(d.a){act(d.a,t);return;}
   if(!c)return;
-  if(d.stg!==undefined){const i=+d.stg;if(i===c.st)return;V.f=i>=4?'closed':i>=2?'confirm':(V.f==='serious'&&c.ser?'serious':'open');patch(c.id,Object.assign(addLog(c,'Stage','Moved to '+STAGES[i],{g2:i}),{g2:i,status:i<2?(c.escalated?'Escalated':'Open'):i<4?'Resolved':'Closed'}),STAGES[i]);return;}
+  if(d.stg!==undefined){const i=+d.stg;if(i===c.st)return;patch(c.id,Object.assign(addLog(c,'Stage','Moved to '+STAGES[i],{g2:i}),{g2:i,status:i<2?(c.escalated?'Escalated':'Open'):i<4?'Resolved':'Closed'}),STAGES[i]);return;}
   if(d.saf!==undefined){const S=Object.assign({},c.safety||{}),i=+d.saf;if(S[i])delete S[i];else S[i]={by:ME,at:stamp()};patch(c.id,{safety:S});return;}
   if(d.ist!==undefined){const iss=c.iss.map(x=>Object.assign({},x));iss[+d.ist].st=d.v;setIss(c,iss,'Issue '+(1+ +d.ist)+': '+d.v);return;}
   if(d.ask){const p=d.ask.split(':'),iss=c.iss.map(x=>Object.assign({},x,{asks:(x.asks||[]).map(a=>Object.assign({},a))})),a=iss[+p[0]].asks[+p[1]];a.ok=!a.ok;setIss(c,iss);return;}
