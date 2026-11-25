@@ -85,18 +85,18 @@ const DAY=Math.floor(Date.now()/86400000)%6;
 /* Room issues: safety every day + checklist v1 sections + maintenance. [label, owner, safety] */
 const RG=[
  ['Safety (checked every day)',[['Something a patient could tie or hang from','Chandraji and maintenance',1],['Mirror is not the safe, unbreakable kind','Chandraji and maintenance',1],['Bathroom door cannot be opened from outside','Chandraji and maintenance',1],['Sharp or broken item in the room','Chandraji and nursing in-charge',1],['Window or grill loose','Chandraji and maintenance',1],['Cleaning chemicals or medicines left in the room','Chandraji and nursing in-charge',1]]],
- ['General room area',[['Furniture dusty or not wiped','Housekeeping supervisor'],['Cobwebs in corners or ceiling','Housekeeping supervisor'],['Floor not mopped or stained','Housekeeping supervisor'],['Walls marked or stained','Housekeeping supervisor'],['Switches or sockets dirty','Housekeeping supervisor'],['AC vents dusty','Maintenance (electrical)']]],
- ['Patient bed and bedding',[['Bed frame not clean','Housekeeping supervisor'],['Mattress stained, smelly or damaged','Housekeeping supervisor'],['Linen not changed or stained','Housekeeping supervisor']]],
- ['Bathroom area',[['Toilet bowl, seat or flush not clean','Housekeeping supervisor'],['Leak or flush not working','Maintenance (plumbing)'],['Sink not draining or water pooling','Maintenance (plumbing)'],['Shower or glass partition not clean, mould','Housekeeping supervisor'],['Floor not mopped or window glass stained','Housekeeping supervisor'],['Toilet paper, soap or toiletries not restocked','Housekeeping supervisor']]],
- ['Patient-specific items',[['Belongings untidy or not stored','Nursing in-charge'],['Shared equipment (commode, walker) not disinfected','Housekeeping supervisor']]],
- ['Safety and hygiene',[['Bin not emptied','Housekeeping supervisor'],['Medical waste not disposed as per protocol','Housekeeping supervisor'],['Hand sanitiser empty or not working','Housekeeping supervisor'],['Spill not cleaned','Housekeeping supervisor'],['Bad smell in the room','Housekeeping supervisor']]],
- ['Final checks and repairs',[['Electrical: light, fan, AC or socket','Maintenance (electrical)'],['Plumbing: tap, pipe or drain','Maintenance (plumbing)'],['Civil: wall, door, window or ceiling','Maintenance (civil)'],['TV, set top box or remote','Maintenance'],['Furniture missing or blocking the way','Housekeeping supervisor'],['Something else in the room','Housekeeping supervisor']]]
+ ['General room area',[['Furniture dusty or not wiped','Housekeeping in-charge'],['Cobwebs in corners or ceiling','Housekeeping in-charge'],['Floor not mopped or stained','Housekeeping in-charge'],['Walls marked or stained','Housekeeping in-charge'],['Switches or sockets dirty','Housekeeping in-charge'],['AC vents dusty','Maintenance (electrical)']]],
+ ['Patient bed and bedding',[['Bed frame not clean','Housekeeping in-charge'],['Mattress stained, smelly or damaged','Housekeeping in-charge'],['Linen not changed or stained','Housekeeping in-charge']]],
+ ['Bathroom area',[['Toilet bowl, seat or flush not clean','Housekeeping in-charge'],['Leak or flush not working','Maintenance (plumbing)'],['Sink not draining or water pooling','Maintenance (plumbing)'],['Shower or glass partition not clean, mould','Housekeeping in-charge'],['Floor not mopped or window glass stained','Housekeeping in-charge'],['Toilet paper, soap or toiletries not restocked','Housekeeping in-charge']]],
+ ['Patient-specific items',[['Belongings untidy or not stored','Nursing in-charge'],['Shared equipment (commode, walker) not disinfected','Housekeeping in-charge']]],
+ ['Safety and hygiene',[['Bin not emptied','Housekeeping in-charge'],['Medical waste not disposed as per protocol','Housekeeping in-charge'],['Hand sanitiser empty or not working','Housekeeping in-charge'],['Spill not cleaned','Housekeeping in-charge'],['Bad smell in the room','Housekeeping in-charge']]],
+ ['Final checks and repairs',[['Electrical: light, fan, AC or socket','Maintenance (electrical)'],['Plumbing: tap, pipe or drain','Maintenance (plumbing)'],['Civil: wall, door, window or ceiling','Maintenance (civil)'],['TV, set top box or remote','Maintenance'],['Furniture missing or blocking the way','Housekeeping in-charge'],['Something else in the room','Housekeeping in-charge']]]
 ];
 const CG=[
  ['Notice board (NABH display)',[['Patient rights not displayed','You (patient experience)'],['Complaint contact or grievance number not displayed','You (patient experience)'],['Room tariff not displayed','You (patient experience)'],['Notices out of date or torn','You (patient experience)']]],
- ['Dining area',[['Not clean, food left out','Housekeeping supervisor'],['Tables or chairs damaged','Maintenance (civil)'],['Drinking water not available','Kitchen supervisor'],['Menu for the day not displayed','Kitchen supervisor']]],
- ['Activity room',[['Not clean','Housekeeping supervisor'],['Games, books or TV missing or broken','You (patient experience)'],['Locked when it should be open','Nursing in-charge']]],
- ['Nurse station and corridor',[['Fire exit blocked','Chandraji and maintenance',1],['Wet floor without a warning sign','Chandraji and housekeeping',1],['Corridor not clean or cluttered','Housekeeping supervisor'],['Lights not working','Maintenance (electrical)']]]
+ ['Dining area',[['Not clean, food left out','Housekeeping in-charge'],['Tables or chairs damaged','Maintenance (civil)'],['Drinking water not available','Dietician'],['Menu for the day not displayed','Dietician']]],
+ ['Activity room',[['Not clean','Housekeeping in-charge'],['Games, books or TV missing or broken','You (patient experience)'],['Locked when it should be open','Nursing in-charge']]],
+ ['Nurse station and corridor',[['Fire exit blocked','Chandraji and maintenance',1],['Wet floor without a warning sign','Chandraji and housekeeping',1],['Corridor not clean or cluttered','Housekeeping in-charge'],['Lights not working','Maintenance (electrical)']]]
 ];
 const SAFE=RG[0][1];const TODAY=[...RG,...CG].flatMap(g=>g[1]);
 /* Patient concerns: [topic, owner, grievance category, [specific options], safety options] */
@@ -106,25 +106,25 @@ const AB=[
  ['Therapist continuity','Psychology team lead','Therapist continuity',['Therapy sessions missed','Therapist changed','Wants more sessions']],
  ['Family updates','Psychology team lead','Family updates',['Wants to call family','Wants a visit','Family not getting updates','Does not want a certain visitor']],
  ['Nursing care','Nursing in-charge','Nursing care',['Ignored when asked for help','Medicine given late','Cannot sleep','Spoke rudely']],
- ['Food and dietary','Kitchen supervisor','Food and dietary',['Food served cold','Not the diet I asked for','Not enough, still hungry','Meal times','Taste or quality','Drinking water']],
- ['Room and housekeeping','Housekeeping supervisor','Room and housekeeping',['Not clean','Bathroom','Too noisy at night','Too hot or cold, AC','Bed or bedding','Light, fan or TV not working','Disturbed by roommate']],
- ['Attendants and security','Floor supervisor','Attendants and security',['Attendant spoke rudely','Argument with another patient','Wants a room change','Felt threatened by another patient'],['Felt threatened by another patient']],
+ ['Food and dietary','Dietician','Food and dietary',['Food served cold','Not the diet I asked for','Not enough, still hungry','Meal times','Taste or quality','Drinking water']],
+ ['Room and housekeeping','Housekeeping in-charge','Room and housekeeping',['Not clean','Bathroom','Too noisy at night','Too hot or cold, AC','Bed or bedding','Light, fan or TV not working','Disturbed by roommate']],
+ ['Attendants and security','Floor coordinator','Attendants and security',['Attendant spoke rudely','Argument with another patient','Wants a room change','Felt threatened by another patient'],['Felt threatened by another patient']],
  ['Belongings','Front desk','Belongings',['Item missing','Laundry not returned','Needs things from home','Wants phone or money back']],
- ['Billing and insurance','Billing desk','Billing and insurance',['Billing question','Charges not explained','Insurance or TPA']],
- ['Medicines at discharge','Pharmacy desk','Medicines at discharge',['Medicines not ready','Prescription not clear']],
+ ['Billing and insurance','Billing in-charge','Billing and insurance',['Billing question','Charges not explained','Insurance or TPA']],
+ ['Medicines at discharge','Pharmacist','Medicines at discharge',['Medicines not ready','Prescription not clear']],
  ['Rights','Kanika and Chandraji','Rights',['Wants to leave now','Does not know why they are here','Wants to make a formal complaint','Wants to see own records']],
  ['Safety','Chandraji and treating doctor','Safety',['Rough handling or force','Felt unsafe with a staff member','Felt threatened by another patient','Talks of self-harm'],['Rough handling or force','Felt unsafe with a staff member','Felt threatened by another patient','Talks of self-harm']],
  ['Other','You','Other',['Nothing to do, bored','Wants outdoor time','Wants yoga, gym or games','Something else']]
 ];
 const AB_OLD=[
- ['Food','Kitchen supervisor','Food and dietary',['Food served cold','Not the diet I asked for','Not enough, still hungry','Meal times','Taste or quality','Drinking water']],
- ['Room','Housekeeping supervisor','Room and housekeeping',['Not clean','Bathroom','Too noisy at night','Too hot or cold, AC','Bed or bedding','Light, fan or TV not working']],
+ ['Food','Dietician','Food and dietary',['Food served cold','Not the diet I asked for','Not enough, still hungry','Meal times','Taste or quality','Drinking water']],
+ ['Room','Housekeeping in-charge','Room and housekeeping',['Not clean','Bathroom','Too noisy at night','Too hot or cold, AC','Bed or bedding','Light, fan or TV not working']],
  ['Sleep','Nursing in-charge','Other',['Cannot sleep','Disturbed by roommate','Lights on at night','Woken too early']],
  ['Family and calls','Psychology team lead','Family updates',['Wants to call family','Wants a visit','Family not getting updates','Does not want a certain visitor']],
  ['Treatment','Treating psychiatrist','Doctor communication',['Wants to talk to the doctor','Medicine side effects','Therapy sessions missed','Wants to know when they go home','Wants a second opinion']],
  ['Staff','Nursing in-charge','Other',['Spoke rudely','Ignored when asked for help','Rough handling or force','Felt unsafe with a staff member'],['Rough handling or force','Felt unsafe with a staff member']],
  ['Other patients','Nursing in-charge','Other',['Argument with roommate','Wants a room change','Felt threatened by another patient'],['Felt threatened by another patient']],
- ['Belongings and laundry','Housekeeping supervisor','Laundry',['Item missing','Laundry not returned','Needs things from home','Wants phone or money back']],
+ ['Belongings and laundry','Housekeeping in-charge','Laundry',['Item missing','Laundry not returned','Needs things from home','Wants phone or money back']],
  ['Activities','You','Other',['Nothing to do, bored','Wants outdoor time','Wants yoga, gym or games','Wants TV or newspaper']],
  ['Leaving or rights','Treating psychiatrist and Chandraji','Rights',['Wants to leave now','Does not know why they are here','Wants to make a formal complaint','Billing question']],
  ['Something else','You','Other',['Something else']]
@@ -178,7 +178,7 @@ function drawer(){const el=document.getElementById('dr');if(!S.cur){el.innerHTML
    <div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(p.n)}</b>${p.rec?`<span style="font-size:12px;color:#B54708;font-weight:600">${esc(p.rec)} · sent to ${/Vitals/.test(p.rec)?'nursing in-charge':'psychology team lead'}</span>`:''}</div>
    <span style="font-size:13px;color:#475467">"How are you doing here? Anything you need?"</span>
    <div style="display:flex;flex-wrap:wrap;gap:6px">${['All good','Not good','Wants to tell us something','Not available'].map(v=>chip('p:'+p.n,v,a)).join('')}</div>
-   ${bad?(()=>{const T=AB.find(x=>x[0]===ab);const sp=R['s:'+p.n]||'';const isSafe=T&&T[4]&&T[4].includes(sp);const owner=!T?'':sp==='Billing question'?'Billing desk':sp==='Wants to make a formal complaint'?'Kanika and Chandraji':T[1];return `<div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:600">What is it about?</span><div style="display:flex;flex-wrap:wrap;gap:6px">${AB.map(x=>chip('a:'+p.n,x[0],ab)).join('')}</div>
+   ${bad?(()=>{const T=AB.find(x=>x[0]===ab);const sp=R['s:'+p.n]||'';const isSafe=T&&T[4]&&T[4].includes(sp);const owner=!T?'':sp==='Billing question'?'Billing in-charge':sp==='Wants to make a formal complaint'?'Kanika and Chandraji':T[1];return `<div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:600">What is it about?</span><div style="display:flex;flex-wrap:wrap;gap:6px">${AB.map(x=>chip('a:'+p.n,x[0],ab)).join('')}</div>
     ${T&&T[0]!=='Something else'?`<span style="font-size:13px;font-weight:600">${esc(T[0])}: what exactly?</span><div style="display:flex;flex-wrap:wrap;gap:6px">${T[3].map(v=>chip('s:'+p.n,v,sp,T[4]&&T[4].includes(v))).join('')}</div>`:''}
     <textarea class="inp" data-w="${esc(p.n)}" placeholder="In their words" style="width:100%;min-height:56px;padding:8px 12px">${esc(R['w:'+p.n]||'')}</textarea>
     ${T&&(sp||T[0]==='Something else')?`<div style="font-size:12px;padding:8px 10px;border-radius:10px;background:${isSafe||sp==='Wants to leave now'?'#FEF3F2':'#F8FAFC'};color:${isSafe||sp==='Wants to leave now'?'#B42318':'#475467'}">${isSafe?'Safety grievance: Chandraji and the treating doctor are told now. Stay with the patient or make sure a nurse does.':sp==='Wants to leave now'?'Urgent: treating psychiatrist and Chandraji told now (leaving against advice).':T[0]==='Sleep'?'Sent to the nursing in-charge as a note, not a grievance.':T[0]==='Activities'?'Saved as a request for you. Not a grievance.':'Logged as a grievance to '+esc(owner)+', 6-hour clock. Shows in their record.'}</div>`:''}</div>`})():''}
@@ -263,9 +263,9 @@ const CM_OWN = p => ({
   'Doctor communication':[p.dr||'Treating psychiatrist','6 h'],
   'Treatment progress':[(p.dr||'Treating psychiatrist')+' (family meeting)','6 h'],
   'Therapist continuity':['Psychology team lead','6 h'],
-  'Billing and insurance':['Billing desk','6 h'],
-  'Food and dietary':['Kitchen supervisor','6 h'],
-  'Room and housekeeping':['Housekeeping supervisor','6 h'],
+  'Billing and insurance':['Billing in-charge','6 h'],
+  'Food and dietary':['Dietician','6 h'],
+  'Room and housekeeping':['Housekeeping in-charge','6 h'],
   'Rights':['Kanika and Chandraji','6 h'],
   'Safety':['Chandraji and treating doctor','now'],
   'Other':['Kanika','6 h']
@@ -424,7 +424,7 @@ document.addEventListener('change',e=>{ const t=e.target;
       if(ans==='All good'){out.push({kind:'log',patient:p.n,room:r.room,title:'Spoken to on the round: all good'});return;}
       const topic=R['a:'+p.n],sp=R['s:'+p.n]||'',words=R['w:'+p.n]||'';const T=AB.find(x=>x[0]===topic);if(!T)return;
       const safe=!!(T[4]&&T[4].includes(sp)),leaving=sp==='Wants to leave now';
-      const owner=safe?'Chandraji and the treating doctor':sp==='Billing question'?'Billing desk':sp==='Wants to make a formal complaint'?'Kanika and Chandraji':leaving?'Treating psychiatrist and Chandraji':T[1];
+      const owner=safe?'Chandraji and the treating doctor':sp==='Billing question'?'Billing in-charge':sp==='Wants to make a formal complaint'?'Kanika and Chandraji':leaving?'Treating psychiatrist and Chandraji':T[1];
       const title=topic+(sp?': '+sp:'')+(words?' · "'+words+'"':'');
       if(topic==='Sleep')out.push({kind:'note',id:nextId('N'),patient:p.n,room:r.room,title,owner:'Nursing in-charge',cat:T[2]});
       else if(topic==='Activities')out.push({kind:'request',id:nextId('Q'),patient:p.n,room:r.room,title,owner:'Patient experience (you)',cat:T[2]});
@@ -489,7 +489,7 @@ document.addEventListener('change',e=>{ const t=e.target;
      <b>Room issues (checklist v1)</b>${tx('lsRG',rg,200)}<b>Common areas</b>${tx('lsCG',cg,140)}
      <b>What patients can talk about</b><span style="font-size:12px;color:#667085">Topic | owner | grievance category | options separated by ; | safety: options that count as safety</span>${tx('lsAB',ab,150)}
      <div style="display:flex;gap:8px;justify-content:space-between"><button class="btn" data-px="listreset">Back to the team's list</button><button class="btn pri" data-px="listsave">Save lists</button></div>`;}
-  function parseGroups(t){const out=[];let g=null;t.split(/\r?\n/).forEach(l=>{l=l.trim();if(!l)return;if(l.startsWith('##')){g=[l.replace(/^#+\s*/,''),[]];out.push(g);return;}if(!g)return;const p=l.split('|').map(x=>x.trim());if(!p[0])return;const it=[p[0],p[1]||'Housekeeping supervisor'];if(/safety/i.test(p[2]||''))it.push(1);g[1].push(it);});return out.filter(g=>g[1].length);}
+  function parseGroups(t){const out=[];let g=null;t.split(/\r?\n/).forEach(l=>{l=l.trim();if(!l)return;if(l.startsWith('##')){g=[l.replace(/^#+\s*/,''),[]];out.push(g);return;}if(!g)return;const p=l.split('|').map(x=>x.trim());if(!p[0])return;const it=[p[0],p[1]||'Housekeeping in-charge'];if(/safety/i.test(p[2]||''))it.push(1);g[1].push(it);});return out.filter(g=>g[1].length);}
   function parseAB(t){return t.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{const p=l.split('|').map(x=>x.trim());const opts=(p[3]||'').split(';').map(x=>x.trim()).filter(Boolean);const row=[p[0],p[1]||'Nursing in-charge',p[2]||'Other',opts.length?opts:[p[0]]];const sf=(p[4]||'').replace(/^safety:\s*/i,'').split(';').map(x=>x.trim()).filter(Boolean);if(sf.length)row.push(sf);return row;});}
   document.addEventListener('click',e=>{
     const t=e.target.closest('[data-px],[data-ack],[data-pxclose]');if(!t)return;

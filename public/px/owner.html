@@ -18,7 +18,7 @@ h1{margin:0;font-size:22px;font-weight:600}.muted{color:#667085}.small{font-size
 .bad{border-color:#D92D20!important;background:#FEF3F2}
 </style></head><body>
 <div class="wrap">
-  <div><h1>Owner inbox</h1><div class="small muted">For teams without an HMS login: nursing in-charge, housekeeping, kitchen, billing and maintenance. See what Patient Experience sent you, post an update, and mark it fixed. Patient Experience then calls the family to confirm.</div></div>
+  <div><h1>Owner inbox</h1><div class="small muted">For teams without an HMS login: nursing in-charge, housekeeping, dietician, billing and maintenance. See what Patient Experience sent you, post an update, and mark it fixed. Patient Experience then calls the family to confirm.</div></div>
   <div class="row"><label class="small" style="font-weight:600">You are
     <select id="team" class="inp" style="width:auto;margin-left:6px" onchange="setTeam(this.value)"></select></label>
     <div class="seg" role="tablist"><button id="tb1" class="on" onclick="tab(1)">Room issues <span id="n1"></span></button><button id="tb2" onclick="tab(2)">Grievances <span id="n2"></span></button></div></div>
@@ -28,7 +28,7 @@ h1{margin:0;font-size:22px;font-weight:600}.muted{color:#667085}.small{font-size
 <div class="toast" id="toast"></div>
 <script src="px-store.js"></script>
 <script>
-var TEAMS=[['Nursing in-charge',/nurs|sister|brother anil/i],['Housekeeping supervisor',/housekeep/i],['Kitchen supervisor',/kitchen|dietician/i],['Billing desk',/billing|tpa/i],['Maintenance (electrical)',/electrical/i],['Maintenance (plumbing)',/plumbing/i],['Maintenance (civil)',/civil/i],['Maintenance (TV)',/\btv\b/i]];
+var TEAMS=[['Nursing in-charge',/nurs|sister|brother anil/i],['Housekeeping in-charge',/housekeep/i],['Dietician',/kitchen|dietician/i],['Billing in-charge',/billing|tpa/i],['Maintenance (electrical)',/electrical/i],['Maintenance (plumbing)',/plumbing/i],['Maintenance (civil)',/civil/i],['Maintenance (TV)',/\btv\b/i]];
 var KEYT='pxowner_team',TAB=1,cfg=null,G={},O={};
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function toast(t){var e=document.getElementById('toast');e.textContent=t;e.style.display='block';clearTimeout(window._t);window._t=setTimeout(function(){e.style.display='none';},3200);}

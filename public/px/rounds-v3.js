@@ -20,8 +20,8 @@
   var CATS = [
     ['doctor', 'Doctor', 'Care', 'Treating psychiatrist', 24], ['therapy', 'Therapy', 'Care', 'Psychology team lead', 24], ['nursing', 'Nursing', 'Care', 'Nursing in-charge', 4],
     ['meds', 'Medicines', 'Care', 'Nursing in-charge and pharmacy', 4], ['family', 'Family updates', 'Care', 'Treating psychologist', 24],
-    ['food', 'Food', 'Stay', 'Kitchen supervisor', 6], ['room', 'Room', 'Stay', 'Housekeeping supervisor', 4], ['noise', 'Noise', 'Stay', 'Floor supervisor', 2],
-    ['att', 'Attendants', 'Stay', 'Floor supervisor', 4], ['belong', 'Belongings', 'Stay', 'Front desk', 24], ['bill', 'Billing', 'Stay', 'Billing desk', 24],
+    ['food', 'Food', 'Stay', 'Dietician', 6], ['room', 'Room', 'Stay', 'Housekeeping in-charge', 4], ['noise', 'Noise', 'Stay', 'Floor coordinator', 2],
+    ['att', 'Attendants', 'Stay', 'Floor coordinator', 4], ['belong', 'Belongings', 'Stay', 'Front desk', 24], ['bill', 'Billing', 'Stay', 'Billing in-charge', 24],
     ['safety', 'Safety', 'Serious', 'Mr. S. Chandra and treating doctor', 1], ['rights', 'Rights or dignity', 'Serious', 'Mr. S. Chandra and Kanika', 2], ['leave', 'Wants to leave', 'Serious', 'Treating psychiatrist and nursing in-charge', 1]
   ].map(function (c) { return { id: c[0], label: c[1], g: c[2], owner: c[3], sla: c[4], alert: c[2] === 'Serious' }; });
   var catBy = function (id) { return CATS.filter(function (c) { return c.id === id; })[0]; };
@@ -39,7 +39,7 @@
   /* section 6: room check, grouped by who fixes it */
   var ROOM = [
     ['safety', 'Safety · goes to Mr. S. Chandra now', 'Mr. S. Chandra and maintenance', [['tie', 'Something to tie or hang from'], ['sharp', 'Sharp or broken item'], ['grill', 'Window or grill loose'], ['chem', 'Chemicals or medicines left out']]],
-    ['clean', 'Clean · Housekeeping', 'Housekeeping supervisor', [['floor', 'Floor not mopped or stained'], ['linen', 'Linen not changed or stained'], ['dust', 'Dusty furniture or cobwebs'], ['bin', 'Bin full or bad smell']]],
+    ['clean', 'Clean · Housekeeping', 'Housekeeping in-charge', [['floor', 'Floor not mopped or stained'], ['linen', 'Linen not changed or stained'], ['dust', 'Dusty furniture or cobwebs'], ['bin', 'Bin full or bad smell']]],
     ['fix', 'Broken · Maintenance', 'Maintenance', [['elec', 'Light, fan, AC or socket'], ['civil', 'Door, wall or window'], ['tv', 'TV or remote']]],
     ['disp', 'Displayed · You', 'You (patient experience)', [['rights', 'Patient rights not up'], ['tariff', 'Grievance number or tariff not up']]]
   ];

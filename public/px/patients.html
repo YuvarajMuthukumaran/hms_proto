@@ -100,9 +100,9 @@ const CM_OWN = p => ({
   'Doctor communication':[p.dr||'Treating psychiatrist','6 h'],
   'Treatment progress':[(p.dr||'Treating psychiatrist')+' (family meeting)','6 h'],
   'Therapist continuity':['Psychology team lead','6 h'],
-  'Billing and insurance':['Billing desk','6 h'],
-  'Food and dietary':['Kitchen supervisor','6 h'],
-  'Room and housekeeping':['Housekeeping supervisor','6 h'],
+  'Billing and insurance':['Billing in-charge','6 h'],
+  'Food and dietary':['Dietician','6 h'],
+  'Room and housekeeping':['Housekeeping in-charge','6 h'],
   'Rights':['Kanika and Chandraji','6 h'],
   'Safety':['Chandraji and treating doctor','now'],
   'Other':['Kanika','6 h']
@@ -531,7 +531,7 @@ function roundsTab(p){
   ${log.length?log.slice(0,25).map(l=>`<div style="padding:8px 16px;border-top:1px solid #EEF2F6;font-size:14px">${hm(l.t)} · Room ${esc(l.room)} · ${esc(l.text)}</div>`).join(''):'<div style="padding:14px 16px;color:#667085;font-size:14px">No round entries yet for this patient.</div>'}</section>`;
 }
 function griev(p){
-  const G={nb:[['G-0145','Brother says a night attendant pushed Neel','Safety','red','Escalated to Chandraji · incident report not added yet','Open'],['G-0140','Room too noisy at night','Room and housekeeping','','Sister Rekha · 4 h 10 m left','Open']],rk:[['G-0146','Wife wants to take him home today (DAMA risk)','Family concern','amber','Dr. Aanya Sharma to speak within 30 min','Open']],rs:[['G-0137','Bill estimate not shared before discharge','Billing and insurance','amber','Billing desk · 5 h left','Open']],mi:[['G-0138','Asked for visiting hours and what to bring','Other','','You · due 6 pm','Open']]}[p.id]||[];
+  const G={nb:[['G-0145','Brother says a night attendant pushed Neel','Safety','red','Escalated to Chandraji · incident report not added yet','Open'],['G-0140','Room too noisy at night','Room and housekeeping','','Sister Rekha · 4 h 10 m left','Open']],rk:[['G-0146','Wife wants to take him home today (DAMA risk)','Family concern','amber','Dr. Aanya Sharma to speak within 30 min','Open']],rs:[['G-0137','Bill estimate not shared before discharge','Billing and insurance','amber','Billing in-charge · 5 h left','Open']],mi:[['G-0138','Asked for visiting hours and what to bring','Other','','You · due 6 pm','Open']]}[p.id]||[];
   G.unshift(...(S.griev[p.id]||[]));
   return `<section style="background:#fff;border:1px solid #E3EAF2;border-radius:12px;overflow:hidden"><div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center"><b>Grievances for this stay</b><button class="btn" style="height:34px">${I.plus}Log grievance</button></div>
   ${G.length?G.map(g=>`<div style="padding:12px 16px;border-top:1px solid #EEF2F6;display:grid;grid-template-columns:80px minmax(0,1fr) 180px 220px 70px;gap:10px;font-size:13px;align-items:center"><span style="color:#667085">${g[0]}</span><b style="font-weight:600">${esc(g[1])}</b><span>${g[3]==='red'?'<span class="tag" style="background:#FEF3F2;border-color:#FDA29B;color:#B42318">Safety</span>':esc(g[2])}</span><span style="color:#475467">${esc(g[4])}</span><a href="#">${g[5]}</a></div>`).join(''):'<div style="padding:14px 16px;border-top:1px solid #EEF2F6;color:#667085">No grievances logged for this stay.</div>'}

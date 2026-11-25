@@ -116,6 +116,14 @@ html.embed .top{display:none}html.embed body{background:transparent}
 .sgm textarea:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:transparent}
 .sgm .sgb{display:flex;justify-content:flex-end;gap:8px}
 .sgm.back .btn.pri{background:#B54708;border-color:#B54708}
+.sgh{margin-top:14px;border-top:1px solid #F2F4F7;padding-top:10px;font-size:13.5px}
+.sgh summary{cursor:pointer;font-weight:600;color:#344054;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;list-style:none}
+.sgh summary::-webkit-details-marker{display:none}.sgh summary::before{content:'▸';color:#98A2B3;transition:transform .15s}.sgh[open] summary::before{transform:rotate(90deg)}
+.sgh summary span{font-weight:400;color:var(--mute);font-size:13px}
+.sgh ol{list-style:none;margin:10px 0 0;padding:0 0 0 14px;border-left:2px solid #EAECF0;display:flex;flex-direction:column;gap:10px}
+.sgh li{position:relative}.sgh li::before{content:'';position:absolute;left:-20px;top:5px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid var(--blue)}
+.sgh .ar{color:#98A2B3}.sgh .nt{color:#344054;margin-top:2px}.sgh .by{color:var(--mute);font-size:12.5px;margin-top:2px}
+.sgh .sgo-w{font-size:12px;color:#B42318;background:#FEF3F2;border-radius:99px;padding:1px 8px;margin-left:4px}
 @keyframes sgoF{from{opacity:0}}@keyframes sgoU{from{opacity:0;transform:translateY(8px) scale(.98)}}
 @media (prefers-reduced-motion:reduce){.sgo,.sgm{animation:none}}
 </style>
@@ -133,7 +141,7 @@ const SAFETY=['Mr. S. Chandra and medical director told','CCTV for the time wind
 const ROOTS=['Not known yet','Staff conduct','Ward rule not followed','Call centre gave wrong information','Charges not explained at admission','Maintenance fault','Policy not explained to family','Food','Other'];
 const CATS=['Staff conduct','Ward rules','Billing and charges','Room and housekeeping','Food','Maintenance','Communication','Safety','Rights','Other'];
 /* 24 Nov meeting: suggested actions follow the category and who raised it */
-const QBY={Safety:['CCTV reviewed','Staff statement taken','Doctor checked the patient'],Rights:['Spoke to the treating doctor','Staff statement taken'],Food:['Spoke to the kitchen','Diet changed'],'Food and dietary':['Spoke to the kitchen','Diet changed'],'Billing and charges':['Spoke to billing','Charges explained'],'Billing and insurance':['Spoke to billing','Charges explained'],'Room and housekeeping':['Housekeeping told','Room checked'],Maintenance:['Maintenance ticket raised','Room checked'],'Nursing care':['Spoke to nursing in-charge'],'Doctor communication':['Doctor to call the family'],'Family updates':['Doctor to call the family'],Belongings:['Belongings checked'],'Staff conduct':['Staff statement taken','Spoke to the staff member']};
+const QBY={Safety:['CCTV reviewed','Staff statement taken','Doctor checked the patient'],Rights:['Spoke to the treating doctor','Staff statement taken'],Food:['Spoke to the dietician','Diet changed'],'Food and dietary':['Spoke to the kitchen','Diet changed'],'Billing and charges':['Spoke to billing','Charges explained'],'Billing and insurance':['Spoke to billing','Charges explained'],'Room and housekeeping':['Housekeeping told','Room checked'],Maintenance:['Maintenance ticket raised','Room checked'],'Nursing care':['Spoke to nursing in-charge'],'Doctor communication':['Doctor to call the family'],'Family updates':['Doctor to call the family'],Belongings:['Belongings checked'],'Staff conduct':['Staff statement taken','Spoke to the staff member']};
 function quick(c){const k=c.iss.map(i=>i.cat).concat([c.category]),o=[];k.forEach(x=>(QBY[x]||[]).forEach(q=>{if(o.indexOf(q)<0)o.push(q);}));const w=who(c);if(w.fam&&!(c.log||[]).some(e=>/family/i.test(e.t)))o.unshift('Spoke to family');return o.slice(0,4);}
 /* who raised it, from the saved text (Patient / Family (rel) / Staff: name / a team / Anonymous) */
 /* 25 Nov (Nikita): family details always in People; staff involved suggestions */
@@ -151,7 +159,9 @@ function who(c){const r=String(c.raisedBy||'');const p=pts().find(q=>q.id===c.pi
   if(/famil|husband|wife|father|mother|son|daughter|brother|sister/i.test(r))return {t:'Family',n:(p.gName||r),rel:c.raisedRel||(/\((.*)\)/.exec(r)||[])[1]||'',fam:true,ph:c.contact||p.phone||''};
   return {t:'Team',n:r||'Not recorded',fam:false};}
 /* owner as a person: the treating psychiatrist's own name when the route says so */
-function ownerName(c,o){o=o||c.owner||'';const p=pts().find(q=>q.id===c.pid)||{};if(/treating psychiatrist/i.test(o)&&(p.doctor||p.dr))return p.doctor||p.dr;if(/treating psychologist/i.test(o)&&p.psych)return p.psych;return o;}
+/* 25 Nov (owner: "we are a hospital, not a hotel"): older saved grievances keep the old team names; they show with the hospital names */
+const OLDN={'Kitchen supervisor':'Dietician','Housekeeping supervisor':'Housekeeping in-charge','Floor supervisor':'Floor coordinator','Billing desk':'Billing in-charge','Pharmacy desk':'Pharmacist'};
+function ownerName(c,o){o=o||c.owner||'';o=OLDN[o]||o;const p=pts().find(q=>q.id===c.pid)||{};if(/treating psychiatrist/i.test(o)&&(p.doctor||p.dr))return p.doctor||p.dr;if(/treating psychologist/i.test(o)&&p.psych)return p.psych;return o;}
 const ME='Patient Experience';
 /* standalone (opened on its own, for testing): synthetic sample grievances, never saved */
 const LOCAL={concernStatus:{},extraConcerns:[
@@ -222,7 +232,7 @@ function detail(c){
   const head='<div class="card hd"><h2>'+esc(c.name)+(c.ser?' <span class="pill red">⚠ Serious'+(c.category?': '+esc(String(c.category).toLowerCase()):'')+'</span>':'')+'</h2>'
     +'<div class="meta">'+[esc(c.id),c.room?'Room '+esc(String(c.room).replace(/^Room\s*/,'')):'',c.raisedBy?'Raised by '+esc((w=>w.t==='Family'?'family'+(w.rel?' ('+w.rel.toLowerCase()+')':''):w.t==='Staff'?'staff: '+w.n:w.t==='Team'?w.n:w.t.toLowerCase())(who(c))):'',c.escalated?'Raised to Mr. S. Chandra':'',c.logged?'Logged '+esc(c.logged)+(c.via?' · '+esc(c.via):''):''].filter(Boolean).join(' · ')+'</div>'
     +'<div class="acts"><button class="btn" data-a="remind" title="Send a reminder to '+esc(c.owner||'the owner')+' to finish this">🔔 Remind owner</button><button class="btn" data-a="esc" title="Raise it to Mr. S. Chandra (GM Operations)" style="color:var(--red)">↑ Raise to Mr. S. Chandra</button><button class="btn" data-a="print">Report</button><button class="btn pri" data-a="call">Call family</button></div>'
-    +'<div class="stages" role="group" aria-label="Stage">'+STAGES.map((s,i)=>'<button class="stp'+(i<c.st?' done':'')+(i===c.st?' cur'+(c.ser?' ser':''):'')+'" data-stg="'+i+'" aria-current="'+(i===c.st?'step':'false')+'"><span class="dot">'+(i<c.st?'&#10003;':(i+1))+'</span><span>'+s+'</span></button>').join('')+'</div>'
+    +'<div class="stages" role="group" aria-label="Stage">'+STAGES.map((s,i)=>'<button class="stp'+(i<c.st?' done':'')+(i===c.st?' cur'+(c.ser?' ser':''):'')+'" data-stg="'+i+'" aria-current="'+(i===c.st?'step':'false')+'"><span class="dot">'+(i<c.st?'&#10003;':(i+1))+'</span><span>'+s+'</span></button>').join('')+'</div>'+stgHist(c)
     +(c.reminded?'<div class="meta" style="margin:8px 0 0">Reminded '+c.reminded+' time'+(c.reminded>1?'s':'')+', last '+esc(c.remindedAt||'')+'</div>':'')
     +(c.ser&&c.st<4?'<div class="warn">Serious: Mr. S. Chandra and the medical director are told on logging. Update the family within 24 h.</div>':'')+'</div>';
   const saf=c.ser?'<div class="card safety"><div class="ch"><h3>Safety steps</h3><b style="color:var(--red);font-size:14px">'+nS+' of '+SAFETY.length+' done</b></div><div class="sgrid">'
@@ -300,7 +310,15 @@ function stgAsk(c,i){stgClose();const back=i<c.st,open=(c.iss||[]).filter(x=>(x.
   o.addEventListener('keydown',e=>{if(e.key==='Escape'){stgClose();}else if(e.key==='Tab'){const f=[...o.querySelectorAll('textarea,button')];const a=f[0],z=f[f.length-1];if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}}});
   stgAsk.back=document.querySelector('.stp[data-stg="'+i+'"]');}
 function stgClose(){const o=document.getElementById('sgo');if(o)o.remove();}
-function stgDo(c,i,n){patch(c.id,Object.assign(addLog(c,'Stage','Moved to '+STAGES[i]+(n?': '+n:''),{g2:i}),{g2:i,status:i<2?(c.escalated?'Escalated':'Open'):i<4?'Resolved':'Closed'}),STAGES[i]);}
+/* 25 Nov (owner: "these pop-up details must be saved"): every confirmed move is kept as a stage record on the grievance
+   (concernStatus[id].stages = [{from,to,note,open,by,at,ts}]), next to the log entry. In the lead app this is in the grievance's
+   pxg:<id> row of px_state (the shared database), so it is there after a reload and on every computer. */
+function stgDo(c,i,n){const open=(c.iss||[]).filter(x=>(x.st||'Open')==='Open').length;
+  const rec={from:STAGES[c.st],to:STAGES[i],note:n||'',open:i>=2?open:0,by:ME,at:stamp(),ts:Date.now()};
+  patch(c.id,Object.assign(addLog(c,'Stage','Moved to '+STAGES[i]+(n?': '+n:''),{g2:i}),{g2:i,status:i<2?(c.escalated?'Escalated':'Open'):i<4?'Resolved':'Closed',stages:(c.stages||[]).concat([rec])}),'Saved: moved to '+STAGES[i]);}
+function stgHist(c){const L=(c.stages||[]).slice().reverse();if(!L.length)return '';const r=x=>'<li><div><b>'+esc(x.from)+'</b> <span class="ar">→</span> <b>'+esc(x.to)+'</b>'+(x.open?' <span class="sgo-w">'+x.open+' issue'+(x.open>1?'s':'')+' still open</span>':'')+'</div>'+(x.note?'<div class="nt">'+esc(x.note)+'</div>':'')+'<div class="by">'+esc(x.by)+' · '+esc(x.at)+'</div></li>';
+  return '<details class="sgh"'+(V.sgh===c.id?' open':'')+'><summary>Stage history · '+L.length+'<span>Last: '+esc(L[0].to)+', '+esc(L[0].by)+', '+esc(L[0].at)+'</span></summary><ol>'+L.map(r).join('')+'</ol></details>';}
+document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classList.contains('sgh')){const c=cur();V.sgh=d.open&&c?c.id:'';}},true);
 document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const c=cur(),d=t.dataset;
   if(d.f){V.f=d.f;V.keep="";V.form=null;draw();return;}
   if(d.sel){V.sel=d.sel;V.keep="";V.form=null;V.about='General';draw();return;}

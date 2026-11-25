@@ -13,7 +13,7 @@
   var BY = ['Patient', 'Family member', 'Staff', 'Another team', 'Anonymous'];
   var REL = ['Father', 'Mother', 'Spouse', 'Son', 'Daughter', 'Brother', 'Sister', 'Other'];
   var SRC = ['Phone call', 'Came in person', 'Floor round', 'Ward meeting', 'Front desk', 'At discharge', 'WhatsApp or email'];
-  var ESC = ['', 'Clinical team', 'Nursing', 'Front desk', 'Floor supervisor', 'Another team'];
+  var ESC = ['', 'Clinical team', 'Nursing', 'Front desk', 'Floor coordinator', 'Another team'];
   var WHEN = ['Today', 'Yesterday', 'This week', 'Earlier'];
   var ACT = [['yes', 'Yes, it needs action'], ['no', 'No, just a note'], ['praise', 'Compliment']];
   var HINT = { Low: 'Low: due in 6 hours. It goes to Mr. S. Chandra at 6 hours if it is still open.',
