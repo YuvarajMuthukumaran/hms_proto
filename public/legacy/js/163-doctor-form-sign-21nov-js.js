@@ -14,6 +14,7 @@
   const DOC=/^(psychiatrist|floor-lead-psychiatrist)$/.test(ROLE);
   const E=s=>hesc(String(s==null?'':s));
   const FORMS=[['Admission consent form and letter of undertaking','admission-consent'],['Form E · request for admission','form-e'],['High risk informed consent','high-risk-consent'],['Form C · independent admission','form-c']];
+  const DOCSPOT={'high-risk-consent':[0,312.9,424,230]};
   const nameOf=fid=>(FORMS.find(f=>f[1]===fid)||['Form'])[0];
   const fidOf=t=>{const s=String(t||'').trim();const f=FORMS.find(x=>s.indexOf(x[0])===0);return f?f[1]:'';};
   const px=pid=>{try{return psyPx(pid)||{};}catch(e){return {};}};
@@ -38,19 +39,31 @@
     const r=rec(pid,fid),es=r.es,doc=r.doc;
     return '<div class="ds-box" id="dsPanel"><div class="lbl" style="margin-bottom:4px"><b>Signatures</b></div>'
       +'<div class="ds-row"><span class="l">'+(es&&es.as==='patient'?'Patient':'Family or nominated representative')+'</span><span>'+(es?E(who(es))+'<div class="tiny muted">'+E(es.at||'')+'</div>'+(es.sig?'<img alt="Signature" src="'+E(es.sig)+'" style="display:block;max-width:240px;max-height:80px;margin-top:6px;border-bottom:1px solid #98a2b3">':''):'<span class="muted">Not signed yet. The patient or the family signs first.</span>')+'</span></div>'
-      +'<div class="ds-row"><span class="l">Doctor</span><span>'+(doc?'<b>'+E(doc.by)+'</b> signed<div class="tiny muted">'+E(doc.at||'')+'</div>':'<span class="muted">'+(es?'Awaiting the doctor':'After the patient or family has signed')+'</span>')+'</span></div></div>';
+      +'<div class="ds-row"><span class="l">Doctor</span><span>'+(doc?'<b>'+E(doc.by)+'</b> signed<div class="tiny muted">'+E(doc.at||'')+'</div>'+(doc.sig?'<img alt="Doctor signature" src="'+E(doc.sig)+'" style="display:block;max-width:240px;max-height:80px;margin-top:6px;border-bottom:1px solid #98a2b3">':''):'<span class="muted">'+(es?'Awaiting the doctor':'After the patient or family has signed')+'</span>')+'</span></div></div>';
   }
 
   window.dsOpen=function(pid,fid){
     const r=rec(pid,fid);if(!r.es){toast('The patient or the family has to sign first');return;}
     V3.modal('Doctor sign · '+E(nameOf(fid)),'Read the form and the signature, then tick the box.',
-      sigPanel(pid,fid)+(r.doc?'':'<label class="ds-tick"><input type="checkbox" id="dsTick" onchange="document.getElementById(\'dsGo\').disabled=!this.checked"><span>I have read the form and the signature above, and I sign.</span></label>'),
+      sigPanel(pid,fid)+(r.doc?'':'<div class="lbl" style="margin-top:12px">Doctor signature · <b>'+E(signer())+'</b></div><canvas id="dsSgC" width="560" height="140" style="width:100%;height:140px;background:#fff;border:1px dashed #98a2b3;border-radius:10px;touch-action:none;margin-top:6px"></canvas><button type="button" class="btn sm" style="margin-top:6px" onclick="dsSgClear()">Clear</button>')+(r.doc?'':'<label class="ds-tick"><input type="checkbox" id="dsTick" onchange="document.getElementById(\'dsGo\').disabled=!this.checked"><span>I have read the form and the signature above, and I sign.</span></label>'),
       '<button class="btn" onclick="closeModal()">'+(r.doc?'Close':'Cancel')+'</button>'+(r.doc?'':'<button class="btn pri" id="dsGo" disabled data-p="'+E(pid)+'" data-f="'+E(fid)+'" onclick="dsSign(this.dataset.p,this.dataset.f)">Sign as doctor</button>'));
+    if(!r.doc)setTimeout(dsPad,30);
   };
+  /* 25 Nov 2026 (owner): the doctor draws a signature too; it is saved with the doctor sign (doc.sig) and drawn on the form */
+  const PD={c:null,g:null,drawn:false};
+  function dsPad(){const c=document.getElementById('dsSgC');if(!c)return;PD.c=c;PD.g=c.getContext('2d');PD.drawn=false;
+    PD.g.lineWidth=2.2;PD.g.lineCap='round';PD.g.strokeStyle='#101828';let on=false;
+    const at=e=>{const b=c.getBoundingClientRect();return [(e.clientX-b.left)*c.width/b.width,(e.clientY-b.top)*c.height/b.height];};
+    c.addEventListener('pointerdown',e=>{on=true;c.setPointerCapture(e.pointerId);const [x,y]=at(e);PD.g.beginPath();PD.g.moveTo(x,y);});
+    c.addEventListener('pointermove',e=>{if(!on)return;const [x,y]=at(e);PD.g.lineTo(x,y);PD.g.stroke();PD.drawn=true;});
+    ['pointerup','pointercancel'].forEach(t=>c.addEventListener(t,()=>{on=false;}));}
+  window.dsSgClear=function(){if(PD.g){PD.g.clearRect(0,0,PD.c.width,PD.c.height);PD.drawn=false;}};
   window.dsSign=function(pid,fid){
     const t=document.getElementById('dsTick');if(!t||!t.checked)return;
+    if(!(PD.drawn&&PD.c&&document.getElementById('dsSgC'))){toast('Sign in the box first');return;}
+    const sig=PD.c.toDataURL('image/png');
     const x=px(pid);x.consent=x.consent||{};const c=x.consent[fid]||(x.consent[fid]={st:'due'});
-    const d={by:signer(),at:atNow()};c.doc=d;
+    const d={by:signer(),at:atNow(),sig};c.doc=d;
     try{const k=keyOf(pid,fid);if(k){const v=cdfVals(k);v.__docsign=d;cdfTouch(k);}}catch(e){}
     try{V3.log(pid,S.role,'note',nameOf(fid)+' signed by the doctor, '+d.by);}catch(e){}
     closeModal();render();toast(nameOf(fid)+': signed by '+d.by);
@@ -77,7 +90,11 @@
     window.acrOpenForm=function(fid){
       const r=__open.apply(this,arguments);
       try{const pid=S.pid||(String(location.hash).match(/^#\/patient\/([^/?]+)/)||[])[1];const mb=document.querySelector('.modal .mb');
-        if(mb&&pid&&!document.getElementById('dsPanel'))mb.insertAdjacentHTML('beforeend',sigPanel(pid,fid));}catch(e){}
+        if(mb&&pid&&!document.getElementById('dsPanel'))mb.insertAdjacentHTML('beforeend',sigPanel(pid,fid));
+        /* 25 Nov 2026: the doctor's drawn signature on the form's "Signature of Doctor" line (page, x, y, width in form points) */
+        const sp=DOCSPOT[fid],d=rec(pid,fid).doc,pg=sp&&mb&&mb.querySelectorAll('.cdf-page')[sp[0]];
+        if(pg&&d&&d.sig&&!pg.querySelector('.ds-onform')){const K=typeof CDF_K==='number'?CDF_K:1;
+          pg.insertAdjacentHTML('beforeend','<img class="acr-onform ds-onform" alt="Doctor signature" src="'+E(d.sig)+'" style="position:absolute;left:'+sp[1]*K+'px;top:'+(sp[2]-26)*K+'px;width:'+sp[3]*K+'px;height:'+40*K+'px;object-fit:contain;object-position:left bottom;pointer-events:none">');}}catch(e){}
       return r;
     };
   }
