@@ -65,7 +65,7 @@
      not a card on top; Take Action and the eye offer "View grievance". Patients not on the wards still use the card. */
   const TBL=/^(psychiatrist|floor-lead-psychiatrist)$/.test(role);
   const ptOf=c=>{try{const L=allPts();if(MOCK&&c.id==='G-T1')return L[0]||null;return L.find(x=>(c.pid&&x.id===c.pid)||x.name===c.pname)||null;}catch(e){return null;}};
-  const inTable=c=>TBL&&!!ptOf(c);
+  const inTable=c=>TBL;   /* 25 Nov (owner): psychiatrist roles never get the card; grievances are Event rows only */
   if(TBL){
     const __x=window.psyExtraItems;
     window.psyExtraItems=function(p){const out=(typeof __x==='function'?__x.apply(this,arguments):[])||[];

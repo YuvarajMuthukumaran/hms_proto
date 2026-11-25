@@ -38,7 +38,7 @@
     +'.m25-sgs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}@media(max-width:760px){.m25-sgs{grid-template-columns:1fr}}.m25-sg .btn.on{background:#eef4ff;border-color:#1e6cdb;color:#1849a9}';
   const st=document.createElement('style');st.id='m25-css';st.textContent=CSS
     /* 2. Type column */
-    +(PSY?'.pd-t thead th:first-child,.pd-t td.pd-ty{display:none!important}':'')
+    +(PSY?'.pd-t thead th:first-child,.pd-t td.pd-ty,.pd-t tbody>tr>td:first-child:not([colspan]){display:none!important}':'')
     /* 3. names look like links */
     +(PSY?'.psy-ipd-name{cursor:pointer;color:#1849a9}.psy-ipd-name:hover{text-decoration:underline}':'')
     +'.m25-al{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.m25-alr{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}';
