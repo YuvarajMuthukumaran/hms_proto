@@ -208,4 +208,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/207-today-icons-25nov-js.js',
   '/legacy/js/209-consultant-review-treatment-25nov-js.js',
   '/legacy/js/210-admission-labels-25nov-js.js',
+  '/legacy/js/211-inpatient-name-link-25nov-js.js',
 ];
