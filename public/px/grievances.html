@@ -218,7 +218,7 @@ function issue(c,i,k){
   const L=String.fromCharCode(65+k),F=V.form&&V.form.k===k?V.form:null;
   if(F)return '<div class="iss">'+form(F)+'</div>';
   return '<div class="iss"><div class="ih"><div style="display:flex;gap:10px"><div><h4>'+esc(i.t)+'</h4><div class="sub">'+esc([i.cat,i.when].filter(Boolean).join(' · '))+'</div><div class="iown"><span class="av">'+esc(ini(ownerName(c,i.owner)))+'</span>Owner: <b>'+esc(ownerName(c,i.owner)||'Not set')+'</b> <button class="lnk" data-ied="'+k+'">Edit</button></div></div></div>'
-    +'<div class="ist"><span class="istp '+String(i.st||'Open').toLowerCase()+'">'+esc(i.st||'Open')+'</span>'+((i.st||'Open')==='Open'?'<button class="btn sm pri" data-ist="'+k+'" data-v="Resolved" title="The problem in this issue is fixed">Mark resolved</button><button class="btn sm" data-ist="'+k+'" data-v="Declined" title="Nothing will be done, with a reason in the log">Decline</button>':'<button class="btn sm" data-ist="'+k+'" data-v="Open">Reopen</button>')+'</div></div>'
+    +'</div>'
     +((i.what||i.fam)?'<ul>'+(i.what?'<li>'+esc(i.what)+'</li>':'')+(i.fam?'<li>'+esc(i.fam)+'</li>':'')+'</ul>':'<div style="height:6px"></div>')
     +((i.asks||[]).length?'<div class="asks">They asked for '+i.asks.map((a,j)=>'<button class="ask'+(a.ok?' ok':'')+'" data-ask="'+k+':'+j+'" title="Tap to mark '+(a.ok?'pending':'done')+'">● '+esc(a.t)+' · '+(a.ok?'Done':'Pending')+'</button>').join('')+'</div>':'')
     +'</div>';
