@@ -42,7 +42,7 @@ const PT_DX=[
 ];
 const ptDxSet=p=>PT_DX.find(x=>x[0].test(p.dx))[1];
 function ptMakeCtx(p){
-  const c=ptClone(PT_CTX.neel),id=ptIdentity(p),set=ptDxSet(p),psy=PSYOF[p.id]||(typeof rmoPsy==='function'&&rmoPsy(p))||'Dr. Nandini Rao',psych=PSYCHOF[p.id]||'';
+  const c=ptClone(PT_CTX.neel),id=ptIdentity(p),set=ptDxSet(p),psy=PSYOF[p.id]||(typeof rmoPsy==='function'&&rmoPsy(p))||(p.real||window.__realMode?'Not set':'Dr. Nandini Rao'),psych=PSYCHOF[p.id]||'';
   const adm=id.adm,at=(n,t)=>ptDT(ptDay(Math.max(0,p.day-n)),t),fresh=p.day<=1;
   Object.assign(c,{
     dx:set.dx,section:String(p.sec||'89'),team:{psy,psych},obs:(EX[p.id]||[])[0]||set.obs,
@@ -118,7 +118,7 @@ function ptSwaps(){
   const p=ptFind(S.pid),id=ptIdentity(p),c=PT_CTX[S.pid]||{},set=ptDxSet(p);
   return [
     ['#/patient/neel/','#/patient/'+p.id+'/'],["go('#/patient/neel')","go('#/patient/"+p.id+"')"],
-    ['<div class="avbig">NB</div>','<div class="avbig">'+id.ini+'</div>'],['23/M R 213 A',id.age+'/'+id.sex+' '+String(p.room||'').replace(/^Room\s*/i,'R ')],['UHID 2026-27RG6990','UHID '+id.uhid],
+    ['<div class="avbig">NB</div>','<div class="avbig">'+id.ini+'</div>'],['23/M R 213 A',[[id.age,id.sex].filter(x=>x!=null&&x!=='').join('/'),String(p.room||'').replace(/^Room\s*/i,'R ')].filter(Boolean).join(' ')],['UHID 2026-27RG6990','UHID '+id.uhid],
     ['Room 214 · Bed A','R '+String(p.room||'').replace(/^Room\s*/i,'')],['6A60.0 · ICD-11',set.icd+' · ICD-11'],['18 Oct, 11:20',ptD(id.adm)+', 11:20'],['24 Oct, 16:40',ptD(id.adm)+', 16:40'],
     ["Day 6 of stay","Day "+p.day+" of stay"],['day 6 of 30','day '+p.day+' of 30'],['+91 98XXX XXX21',id.phone],
     ['Ananya Bose (Sister)',id.nr+(id.rel==='Not recorded'?'':' ('+id.rel+')')],['Ananya Bose (sister)',id.nr+' ('+id.rel.toLowerCase()+')'],['Ananya Bose, sister',id.nr+', '+id.rel.toLowerCase()],
