@@ -1,6 +1,6 @@
 /* 25 Nov 2026 meeting (Nikita): the Patient Experience Lead sees the therapy plan calendar and the follow-up dates the doctors set.
    The PX app cannot read clinical records, so the psychiatrist and psychologist portals copy a short summary of each inpatient to
-   the PX shared store (px_state key px_tp_<patient id>; needs SUPABASE_PX_STORE=true): per day the individual sessions, goal logs,
+   the PX shared store (px_state key pxo:t-<patient id>, the only prefix doctor logins may write besides pxn:; needs SUPABASE_PX_STORE=true): per day the individual sessions, goal logs,
    group attendance and family contacts of the last 90 days (block 194's own data), the goals and groups, and the discharge
    follow-ups (psychiatrist: dcrx.fu + fuDoc; psychologist: dcrx.th.fu). Only changed patients are sent, at most once a minute.
    Read in the PX app by public/px/px-tp-cal.js (Therapy plan tab) and px-dc-checklist.js (Follow-ups booked). */
@@ -10,7 +10,7 @@
   let cfg=null;const sent={};let ready=false,busy=false,dirty=true;
   const rest=(path,opt)=>{opt=opt||{};opt.headers=Object.assign({apikey:cfg.key,Authorization:'Bearer '+cfg.key,'x-tulasi-role':role,'Content-Type':'application/json'},opt.headers||{});return fetch(cfg.url+'/rest/v1/'+path,opt);};
   fetch('/api/config',{cache:'no-store'}).then(r=>r.json()).then(j=>{if(!j||!j.supabase||!j.pxStore)return;cfg=j.supabase;
-    return rest('px_state?select=key,data&key=like.px_tp_*').then(r=>r.ok?r.json():[]).then(rows=>{(rows||[]).forEach(r=>{const d=typeof r.data==='string'?r.data:JSON.stringify(r.data);try{const o=JSON.parse(d);delete o.at;sent[r.key]=JSON.stringify(o);}catch(e){}});ready=true;});}).catch(()=>{});
+    return rest('px_state?select=key,data&key=like.pxo:t-*').then(r=>r.ok?r.json():[]).then(rows=>{(rows||[]).forEach(r=>{const d=typeof r.data==='string'?r.data:JSON.stringify(r.data);try{const o=JSON.parse(d);delete o.at;sent[r.key]=JSON.stringify(o);}catch(e){}});ready=true;});}).catch(()=>{});
   const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   const fromK=k=>{const p=k.split('-');return iso(new Date(+p[0],+p[1],+p[2]));};
   const goalName=(g,i)=>String(g.title||g.t||g.goal||g.text||g.name||('Goal '+(i+1)));
@@ -34,7 +34,7 @@
   async function flush(){
     if(!cfg||!ready||busy||!dirty||!window.__tp194api)return;busy=true;dirty=false;
     try{const out=[];
-      patients().forEach(p=>{const s=summary(p.id);if(!s)return;const key='px_tp_'+p.id,sig=JSON.stringify(s);
+      patients().forEach(p=>{const s=summary(p.id);if(!s)return;const key='pxo:t-'+p.id,sig=JSON.stringify(s);
         if(sent[key]===sig)return;if(!Object.keys(s.d).length&&!s.fu.psy&&!s.fu.psych&&!s.goals.length&&!sent[key])return;
         s.at=new Date().toISOString();s.by=role;out.push({key,data:s,updated_at:s.at,_sig:sig});});
       for(let i=0;i<out.length;i+=40){const part=out.slice(i,i+40);

@@ -25,7 +25,7 @@
   const onMyDay=()=>/^#\/myday\b/.test(location.hash||'')||!location.hash||location.hash==='#/';
   async function load(){
     if(!cfg)return;
-    try{const r=await rest('px_state?select=key,data&key=like.px*:*');if(!r.ok)return;const g={},o={};
+    try{const r=await rest('px_state?select=key,data&key=like.px*:*&key=not.like.pxo:t-*');if(!r.ok)return;const g={},o={};
       (await r.json()).forEach(x=>{const id=x.key.split(':')[1];if(x.key.indexOf('pxg:')===0)g[id]=x.data;else if(x.key.indexOf('pxo:')===0&&!/^(h|v)-/.test(id))o[id]=x.data;});
       const s=JSON.stringify([g,o]);G=g;O=o;if(s!==sig){sig=s;if(onMyDay()){if(TBL)render();else paint();}}
     }catch(e){}

@@ -11,7 +11,7 @@
   const put=(key,data)=>rest('px_state?on_conflict=key',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify([{key,data,updated_at:new Date().toISOString()}])});
   async function load(){
     if(!cfg)return;
-    try{const r=await rest('px_state?select=key,data&key=like.px*:*');if(!r.ok)return;const rows=await r.json();const g={},o={};
+    try{const r=await rest('px_state?select=key,data&key=like.px*:*&key=not.like.pxo:t-*');if(!r.ok)return;const rows=await r.json();const g={},o={};
       rows.forEach(x=>{const id=x.key.split(':')[1];if(x.key.indexOf('pxg:')===0)g[id]=x.data;else if(x.key.indexOf('pxo:')===0&&!/^(h|v)-/.test(id))o[id]=x.data;});
       let ca={main:{},v1:[]},ph={};try{const r2=await rest('px_state?select=key,data&or=(key.in.(px_calls_main_v1,px_calls_v1),key.like.pxo:h-*)');if(r2.ok){(await r2.json()).forEach(x=>{const d=typeof x.data==='string'?JSON.parse(x.data):x.data;if(x.key==='px_calls_main_v1')ca.main=d||{};else if(x.key==='px_calls_v1')ca.v1=Array.isArray(d)?d:[];else if(x.key.indexOf('pxo:h-')===0)ph[x.key.slice(6)]=d;});}}catch(e){}
       CALLS=ca;PH=ph;publishPrefs();publishVitals();

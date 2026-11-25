@@ -58,10 +58,10 @@
     var on = !!(d[k] && d[k].on), open = OPEN[k] !== undefined ? OPEN[k] : !on;
     return '<details class="dc-p" data-k="' + k + '"' + (open ? ' open' : '') + ' ontoggle="pxDcFold(this)"><summary><span class="dc-h"><b>' + esc(title) + '</b>' + stat(d, k) + '<span class="dc-chev" aria-hidden="true"></span></span>' + rv + '</summary><div class="dc-body">' + body + '</div></details>';
   }
-  /* 25 Nov meeting: the follow-up dates the psychiatrist and psychologist set at discharge (copied to px_tp_<id> by portal block 203)
+  /* 25 Nov meeting: the follow-up dates the psychiatrist and psychologist set at discharge (copied to px_state pxo:t-<id> by portal block 203, read by px-tp-cal.js)
      come in as rows by themselves (src psy / psych); a row not yet booked follows the doctor's date if it changes. */
   function seedFu(id, d, f) {
-    var T = null; try { T = JSON.parse(localStorage.getItem('px_tp_' + id) || 'null'); } catch (e) {}
+    var T = window.pxTpData ? window.pxTpData(String(id)) : null;
     var fu = (T && T.fu) || {}, ch = false;
     [['psy', 'Psychiatrist OPD', 'doc'], ['psych', 'Psychologist session', 'name']].forEach(function (s) {
       var x = fu[s[0]]; if (!x || !x.date) return;

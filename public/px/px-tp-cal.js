@@ -1,6 +1,6 @@
 /* 25 Nov 2026 meeting (Nikita): the patient record gets a "Therapy plan" tab with the same month calendar the psychiatrist and
    psychologist see (Individual / Group / Family), view only. The clinical portal copies a summary to the PX store as
-   px_tp_<patient id> (block 203): per day [type, title, detail, result]; types ses (session), goal, grp (group), call, wa,
+   px_state pxo:t-<patient id> (block 203): per day [type, title, detail, result]; types ses (session), goal, grp (group), call, wa,
    fses (family session), miss (call not reached); plus goals, groups and the follow-up dates set at discharge. */
 (function () {
   var MN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -11,7 +11,20 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function iso(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function fd(s) { var t = new Date(String(s).slice(0, 10) + 'T00:00'); return isNaN(t) ? s : t.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }); }
-  function data(p) { try { return JSON.parse(localStorage.getItem('px_tp_' + (p.hmsId || p.id)) || 'null'); } catch (e) { return null; } }
+  /* doctor logins may only write pxo: keys, so the summary is px_state pxo:t-<id>; read here every minute (px-store.js polls px_ keys only) */
+  var C = window.__pxtpC = window.__pxtpC || {};
+  function pull() {
+    fetch('/api/config', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j || !j.supabase || !j.pxStore) return; var c = j.supabase;
+      return fetch(c.url + '/rest/v1/px_state?select=key,data&key=like.pxo:t-*', { headers: { apikey: c.key, Authorization: 'Bearer ' + c.key, 'x-tulasi-role': 'patient-experience-lead' } })
+        .then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) {
+          var ch = false; (rows || []).forEach(function (r) { var d = typeof r.data === 'string' ? JSON.parse(r.data) : r.data, id = r.key.slice(6); if (JSON.stringify(C[id]) !== JSON.stringify(d)) { C[id] = d; ch = true; } });
+          if (ch && typeof S !== 'undefined' && S.view === 'rec' && (S.rtab === 'tp' || S.rtab === 'dis')) try { render(); } catch (e) {}
+        });
+    }).catch(function () {});
+  }
+  pull(); setInterval(function () { if (!document.hidden) pull(); }, 60000);
+  function data(p) { var id = typeof p === 'string' ? p : (p.hmsId || p.id); if (C[id]) return C[id]; try { return JSON.parse(localStorage.getItem('pxo:t-' + id) || 'null'); } catch (e) { return null; } }
   window.pxTpData = data;
   function rowsOf(T, day) { var r = (T.d || {})[day] || [], t = SEG[V.seg]; return r.filter(function (x) { return t.indexOf(x[0]) >= 0; }); }
   function mark(x) { var v = x[3], c = COL[x[0]] || '#667085'; return '<i class="tpx-mk' + (v === 0 ? ' no' : v === 0.5 ? ' half' : '') + '" style="--k:' + c + '"></i>'; }
@@ -57,5 +70,4 @@
     + '.tpx-ms{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}.tpx-mk{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--k);border:2px solid var(--k);flex:none}.tpx-mk.half{background:linear-gradient(90deg,var(--k) 50%,#fff 50%)}.tpx-mk.no{background:#fff}'
     + '.tpx-key{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:#475467;margin-top:10px}.tpx-key span{display:inline-flex;gap:6px;align-items:center}.tpx-li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #F2F4F7;font-size:14px}.tpx-li:last-child{border-bottom:0}.tpx-li .tpx-mk{margin-top:4px}';
   document.head.appendChild(css);
-  window.addEventListener('storage', function (e) { if (e.key && e.key.indexOf('px_tp_') === 0 && typeof S !== 'undefined' && S.view === 'rec' && S.rtab === 'tp') try { render(); } catch (x) {} });
 })();
