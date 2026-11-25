@@ -44,10 +44,23 @@ button{font:inherit;cursor:pointer}input,select,textarea{font:inherit;color:inhe
 .hd h2{margin:0;font-size:22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .meta{font-size:14px;color:var(--mute);margin:6px 0 12px}
 .acts{display:flex;gap:8px;flex-wrap:wrap;overflow:visible}.acts .btn{flex:none;white-space:nowrap;padding:0 11px;font-size:14px}
-.stages{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px}
-.stp{border:0;background:none;padding:0;text-align:left;font-size:13.5px;color:var(--mute)}
-.stp i{display:block;height:4px;border-radius:2px;background:#EAECF0;margin-bottom:6px}
-.stp.done i{background:var(--blue)}.stp.cur{color:var(--ink);font-weight:700}.stp.cur i{background:var(--blue)}.stp.cur.ser i{background:#D92D20}
+.stages{display:grid;grid-template-columns:repeat(5,1fr);margin-top:18px}
+.stp{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 4px;border:0;background:none;text-align:center;font-size:13px;line-height:1.3;color:var(--mute);cursor:pointer}
+.stp::before,.stp::after{content:"";position:absolute;top:13px;right:calc(50% + 14px);width:calc(100% - 28px);height:3px;border-radius:2px;background:#EAECF0}
+.stp::after{background:var(--blue);transform:scaleX(0);transform-origin:left;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.stp:first-child::before,.stp:first-child::after{display:none}
+.stp.done::after,.stp.cur::after{transform:scaleX(1)}
+.stp .dot{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid #D0D5DD;display:grid;place-items:center;font-size:12.5px;font-weight:700;color:#98A2B3;transition:background .3s,border-color .3s,color .3s,transform .2s}
+.stp:hover .dot{transform:scale(1.08)}
+.stp.done{color:#344054}.stp.done .dot{background:var(--blue);border-color:var(--blue);color:#fff}
+.stp.cur{color:var(--ink);font-weight:700}.stp.cur .dot{border-color:var(--blue);color:var(--blue);background:#EFF6FF;animation:stpP 2.2s ease-out infinite}
+.stp.cur.ser .dot{border-color:#D92D20;color:#D92D20;background:#FEF3F2;animation-name:stpPr}
+@keyframes stpP{0%{box-shadow:0 0 0 0 rgba(30,108,219,.35)}70%,100%{box-shadow:0 0 0 9px rgba(30,108,219,0)}}
+@keyframes stpPr{0%{box-shadow:0 0 0 0 rgba(217,45,32,.35)}70%,100%{box-shadow:0 0 0 9px rgba(217,45,32,0)}}
+@media (prefers-reduced-motion:reduce){.stp::after,.stp .dot{transition:none}.stp.cur .dot{animation:none}}
+
+
+
 .warn{color:var(--red);font-size:14px;font-weight:600;margin-top:10px}
 .safety{border-color:#FDA29B;background:#FFFBFA}.safety h3{color:var(--red)}
 .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -192,7 +205,7 @@ function detail(c){
   const head='<div class="card hd"><h2>'+esc(c.name)+(c.ser?' <span class="pill red">⚠ Serious'+(c.category?': '+esc(String(c.category).toLowerCase()):'')+'</span>':'')+'</h2>'
     +'<div class="meta">'+[esc(c.id),c.room?'Room '+esc(String(c.room).replace(/^Room\s*/,'')):'',c.raisedBy?'Raised by '+esc((w=>w.t==='Family'?'family'+(w.rel?' ('+w.rel.toLowerCase()+')':''):w.t==='Staff'?'staff: '+w.n:w.t==='Team'?w.n:w.t.toLowerCase())(who(c))):'',c.escalated?'Raised to Mr. S. Chandra':'',c.logged?'Logged '+esc(c.logged)+(c.via?' · '+esc(c.via):''):''].filter(Boolean).join(' · ')+'</div>'
     +'<div class="acts"><button class="btn" data-a="remind" title="Send a reminder to '+esc(c.owner||'the owner')+' to finish this">🔔 Remind owner</button><button class="btn" data-a="esc" title="Raise it to Mr. S. Chandra (GM Operations)" style="color:var(--red)">↑ Raise to Mr. S. Chandra</button><button class="btn" data-a="print">Report</button><button class="btn pri" data-a="call">Call family</button></div>'
-    +'<div class="stages" role="group" aria-label="Stage">'+STAGES.map((s,i)=>'<button class="stp'+(i<c.st?' done':'')+(i===c.st?' cur'+(c.ser?' ser':''):'')+'" data-stg="'+i+'"><i></i>'+s+'</button>').join('')+'</div>'
+    +'<div class="stages" role="group" aria-label="Stage">'+STAGES.map((s,i)=>'<button class="stp'+(i<c.st?' done':'')+(i===c.st?' cur'+(c.ser?' ser':''):'')+'" data-stg="'+i+'" aria-current="'+(i===c.st?'step':'false')+'"><span class="dot">'+(i<c.st?'&#10003;':(i+1))+'</span><span>'+s+'</span></button>').join('')+'</div>'
     +(c.reminded?'<div class="meta" style="margin:8px 0 0">Reminded '+c.reminded+' time'+(c.reminded>1?'s':'')+', last '+esc(c.remindedAt||'')+'</div>':'')
     +(c.ser&&c.st<4?'<div class="warn">Serious: Mr. S. Chandra and the medical director are told on logging. Update the family within 24 h.</div>':'')+'</div>';
   const saf=c.ser?'<div class="card safety"><div class="ch"><h3>Safety steps</h3><b style="color:var(--red);font-size:14px">'+nS+' of '+SAFETY.length+' done</b></div><div class="sgrid">'
