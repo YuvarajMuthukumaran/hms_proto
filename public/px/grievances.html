@@ -157,7 +157,14 @@ function famBox(c,W){const p=pts().find(q=>q.id===c.pid)||{};let F=(p.rels||[]).
     if(i>=0)F[i].raised=1;else F.unshift({n:W.n,rel:W.rel||'Family',ph:W.ph||'',raised:1});}
   {const seen={};F=F.filter(x=>{const k=String(x.ph||'').replace(/[^0-9]/g,'').slice(-10);if(!k)return true;if(seen[k]){return false;}seen[k]=1;return true;});}
   const tel=v=>String(v).replace(/[^0-9+]/g,'');
-  return '<div class="fam"><div class="lbl" style="margin-top:12px">Family</div>'+(F.length?F.map(x=>'<div class="per"><span class="av">'+esc(ini(x.n))+'</span><div class="n"><b>'+esc(x.n)+'</b><span>'+esc(x.rel||'Relative')+(x.raised?' · raised it':'')+(x.ph?' · <a href="tel:'+esc(tel(x.ph))+'">'+esc(x.ph)+'</a>':' · no phone recorded')+'</span></div>'+(x.ph?'<button class="btn ic sm" data-a="call" aria-label="Call the family">📞</button>':'')+'</div>').join(''):'<div class="note" style="margin-top:4px">No family details in the patient record.</div>')+'</div>';}
+  /* 25 Nov (owner): the family member who raised it sits under People; Family lists only the others */
+  const R=F.find(x=>x.raised);F=F.filter(x=>!x.raised);
+  const rh=R?'<div class="per"><span class="av">'+esc(ini(R.n))+'</span><div class="n"><b>'+esc(R.n)+'</b><span>Raised it · '+esc(R.rel||'Family')+(R.ph?' · <a href="tel:'+esc(tel(R.ph))+'">'+esc(R.ph)+'</a>':' · no phone recorded')+'</span></div>'+(R.ph?'<button class="btn ic sm" data-a="call" aria-label="Call the family">📞</button>':'')+'</div>':'';
+  if(R&&!F.length)return rh;
+  return rh+'<div class="fam"><div class="lbl" style="margin-top:12px">Family</div>'+(F.length?F.map(x=>'<div class="per"><span class="av">'+esc(ini(x.n))+'</span><div class="n"><b>'+esc(x.n)+'</b><span>'+esc(x.rel||'Relative')+(x.raised?' · raised it':'')+(x.ph?' · <a href="tel:'+esc(tel(x.ph))+'">'+esc(x.ph)+'</a>':' · no phone recorded')+'</span></div>'+(x.ph?'<button class="btn ic sm" data-a="call" aria-label="Call the family">📞</button>':'')+'</div>').join(''):'<div class="note" style="margin-top:4px">No family details in the patient record.</div>')+'</div>';}
+/* 25 Nov (owner): Staff or team involved is picked from a drop-down: this patient's doctors, then the hospital teams */
+const TEAMS=['Treating psychiatrist','Treating psychologist','Nursing in-charge','Nurse on duty','RMO','Floor coordinator','Floor lead psychiatrist','Psychology team lead','Dietician','Housekeeping in-charge','Maintenance','Security','Billing in-charge','Pharmacist','Front desk','Patient Experience','GM Operations'];
+function staffOpts(c){const have=c.staff||[],L=[];staffSug(c).concat(TEAMS.map(t=>ownerName(c,t))).forEach(n=>{if(n&&!have.includes(n)&&!L.includes(n))L.push(n);});return L;}
 function staffSug(c){const W=who(c),have=c.staff||[],L=[];if(W.t==='Staff'&&W.n&&W.n!=='Staff member')L.push(W.n);(c.iss||[]).forEach(i=>{const o=ownerName(c,i.owner);if(o&&!L.includes(o))L.push(o);});
   {const p=pts().find(q=>q.id===c.pid)||{};[p.doctor||p.dr,p.psych].forEach(n=>{if(n&&!L.includes(n))L.push(n);});}
   return L.filter(x=>!have.includes(x));}
@@ -259,7 +266,7 @@ function detail(c){
     +famBox(c,W)+'</div>'
     +'<div class="card"><div class="lbl">Why it happened</div><label style="font-size:14px;font-weight:600">Root cause<select class="inp" id="gRoot" style="margin-top:6px">'+ROOTS.map(r=>'<option'+((c.root||'Not known yet')===r?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select></label>'
     +'<div style="font-size:14px;font-weight:600;margin:12px 0 6px">Staff or team involved</div><div class="tags">'+(c.staff||[]).map((s,i)=>'<button class="tag" data-unstaff="'+i+'" title="Tap to remove">'+esc(s)+' ×</button>').join('')
-    +staffSug(c).map(s=>'<button class="tag add" data-sugstaff="'+esc(s)+'" title="Add">+ '+esc(s)+'</button>').join('')+(V.staffAdd?'<input class="inp" id="gStaff" style="width:150px;height:28px;padding:2px 8px" placeholder="Team or person" value="'+esc(V.staffTxt)+'"><button class="btn sm pri" data-a="staffok">Add</button>':'<button class="tag add" data-a="staffadd">+ Add</button>')+'</div>'
+    +staffSug(c).map(s=>'<button class="tag add" data-sugstaff="'+esc(s)+'" title="Add">+ '+esc(s)+'</button>').join('')+(V.staffAdd?'<select class="inp" id="gStaff" style="width:auto;height:30px;padding:2px 8px" aria-label="Team or person"><option value="">Select team or person</option>'+staffOpts(c).map(o=>'<option>'+esc(o)+'</option>').join('')+'</select>':'<button class="tag add" data-a="staffadd">+ Add</button>')+'</div>'
     +'</div>'
     +'<div class="card"><div class="kv"><span>Logged by</span><b>'+esc(c.loggedBy||(/Logged by (.*)/.exec(c.via||'')||[])[1]||ME)+'</b></div><div class="kv"><span>How it reached us</span><b>'+esc(c.via||c.src||'')+'</b></div><div class="kv"><span>Owner</span><b>'+esc(ownerName(c))+'</b></div><div class="kv"><span>Reference</span><b>'+esc(c.id)+'</b></div></div>';
   return '<div class="det"><div class="main">'+head+saf+iss+lg+'</div><div class="side">'+side+'</div></div>';
@@ -283,7 +290,7 @@ document.addEventListener('input',e=>{const t=e.target;
   if(t.id==='gQ'){V.q=t.value;draw();return;}
   if(t.id==='gNote')V.note=t.value;if(t.id==='gStaff')V.staffTxt=t.value;
   if(t.dataset.ff&&V.form)V.form[t.dataset.ff]=t.value;});
-document.addEventListener('change',e=>{const t=e.target;if(t.id==='gSort'){V.sort=t.value;draw();return;}if(t.id==='gRoot'){const c=cur();if(c)patch(c.id,{root:t.value},'Root cause saved');}if(t.dataset.ff&&V.form)V.form[t.dataset.ff]=t.value;});
+document.addEventListener('change',e=>{const t=e.target;if(t.id==='gSort'){V.sort=t.value;draw();return;}if(t.id==='gStaff'){V.staffTxt=t.value;if(t.value)act('staffok');return;}if(t.id==='gRoot'){const c=cur();if(c)patch(c.id,{root:t.value},'Root cause saved');}if(t.dataset.ff&&V.form)V.form[t.dataset.ff]=t.value;});
 document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id==='gNote'){e.preventDefault();act('note');}if(e.target.id==='gStaff'){e.preventDefault();act('staffok');}});
 function act(a,t){
   const c=cur(),h=host();
