@@ -1,7 +1,7 @@
 /* 24 Nov 2026 (owner): every signature pad sits in the middle of its window, with its "Signature" label centred above it.
    All roles. Drawing maps the pointer from the pad's own on-screen box, so moving it does not change signing. */
 (function(){
-  const P='canvas.ct-pad,canvas.tn-sig,#capSigCanvas,#acrCapC,#acrCapNC,#esC';
+  const P='canvas.ct-pad,canvas.tn-sig,#capSigCanvas,#acrCapC,#acrCapNC,#acrCapDC,#acrCapPC,#esC';
   const css=document.createElement('style');css.id='sig-center-css';
   css.textContent=P.split(',').map(s=>s+'{margin-left:auto!important;margin-right:auto!important;display:block!important}').join('')
     +P.split(',').map(s=>'.lbl:has(+ '+s+')').join(',')+'{text-align:center!important}'

@@ -186,24 +186,51 @@
   let newPad=null;
   const whoSigns=()=>{const on=document.querySelector('#acrCapF .cap-concl .tog.on')||[...document.querySelectorAll('#acrCapF .radios .tog.on')].find(b=>/^4[AB]/.test(b.textContent.trim()));return on&&/^4B/.test(on.textContent.trim())?'Nominated representative':'Patient';};
   window.acrCapWho=function(){const t=whoSigns(),l=document.getElementById('acrCapWho');if(l)l.textContent=t;};
+  /* 25 Nov 2026 meeting (Anu): no "I reviewed" tick (not on the real form); NR name filled from the file (identity, then the
+     Application form); the doctor signs in a box again; the patient or family signs in a box or uploads a photo of the signature;
+     the saved assessment opens as a printed-looking document with both signatures. */
+  const nrOf=pid=>{let n='';try{const id=ptIdentity(ptFind(pid))||{};n=id.nr&&id.nr!=='Not recorded'?id.nr:'';}catch(e){}
+    if(!n)try{const v=(px(pid).appForm||{}).v||{};n=v.nrName||v.nr_name||v.nrn||'';
+      if(!n)for(const k in v){if(/^(nr|nom).*name$/i.test(k)&&v[k]){n=v[k];break;}}}catch(e){}
+    return n;};
+  const sigBox=(pre,who)=>`<div class="m25-sg"><div class="row" style="gap:6px;margin-bottom:6px"><button type="button" class="btn sm on" data-m="draw" onclick="m25SigMode('${pre}','draw')">Sign in the box</button><button type="button" class="btn sm" data-m="up" onclick="m25SigMode('${pre}','up')">Upload a photo of the signature</button></div>
+      <div id="${pre}D"><canvas id="${pre}C" width="520" height="150" style="width:100%;height:150px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;touch-action:none"></canvas>
+      <button type="button" class="btn sm" style="margin-top:6px" onclick="m25SigClear('${pre}')">Clear</button></div>
+      <div id="${pre}U" style="display:none"><input type="file" accept="image/*" class="input" onchange="m25SigFile('${pre}',this)"><img id="${pre}I" alt="" style="display:none;max-height:120px;margin-top:8px;border:1px solid #e4e7ec;border-radius:8px;background:#fff"></div></div>`;
+  const PADS=window.__m25Pads=window.__m25Pads||{};
+  window.m25SigMode=function(pre,m){const d=document.getElementById(pre+'D'),u=document.getElementById(pre+'U');if(!d||!u)return;d.style.display=m==='draw'?'':'none';u.style.display=m==='up'?'':'none';
+    const w=d.parentNode;w.querySelectorAll('[data-m]').forEach(b=>b.classList.toggle('on',b.dataset.m===m));(PADS[pre]=PADS[pre]||{}).mode=m;};
+  window.m25SigClear=function(pre){const P=PADS[pre];if(P&&P.g){P.g.clearRect(0,0,P.c.width,P.c.height);P.drawn=false;}};
+  window.m25SigFile=function(pre,inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const P=PADS[pre]=PADS[pre]||{};P.file=r.result;const i=document.getElementById(pre+'I');if(i){i.src=r.result;i.style.display='block';}};r.readAsDataURL(f);};
+  const sigOn=pre=>padOn(pre+'C',P=>{P.mode='draw';P.file='';PADS[pre]=P;});
+  const sigVal=pre=>{const P=PADS[pre]||{};if(P.mode==='up')return P.file||'';return P.drawn&&P.c?P.c.toDataURL('image/png'):'';};
+  const qaOf=box=>{const out=[];const lab=el=>{const q=el.closest('.q');if(q){const t=(q.querySelector('.small')||{}).textContent||'';return el.classList&&el.classList.contains('radios')?t:t+' (note)';}
+      const f=el.closest('.field');if(f)return ((f.querySelector('.lbl')||{}).textContent||'').trim();
+      const c=el.closest('.cap-concl');return c||/4[AB]/.test(el.textContent||'')?'Conclusion':'';};
+    box.querySelectorAll('input,select,textarea,.radios').forEach(el=>{if(el.type==='checkbox'||el.type==='file')return;
+      let v='';if(el.classList.contains('radios')){const b=el.querySelector('.tog.on');v=b?b.textContent.trim():'';}else v=(el.value||'').trim();
+      const l=lab(el).trim();if(!l)return;if(/\(note\)$/.test(l)&&!v)return;out.push([l,v]);});
+    return out;};
   window.acrCapNew=function(pid){
     capHist(pid);
     let form='';try{form=capForm(true);}catch(e){form='';}
     if(!form){toast('The capacity form could not open');return;}
-    let nr='';try{const id=ptIdentity(ptFind(pid))||{};nr=id.nr&&id.nr!=='Not recorded'?id.nr:'';}catch(e){}
+    const nr=nrOf(pid);
+    /* no made-up answers: the demo values of the base form (place, NR, ticked buttons) are cleared */
+    try{const t=document.createElement('template');t.innerHTML=form;
+      t.content.querySelectorAll('.field').forEach(f=>{const l=((f.querySelector('.lbl')||{}).textContent||'').trim(),i=f.querySelector('input.input');if(!i)return;
+        if(/^Nominated representative/i.test(l))i.setAttribute('value',nr);else if(/^Place of assessment/i.test(l))i.setAttribute('value','');});
+      t.content.querySelectorAll('.radios .tog.on').forEach(b=>b.classList.remove('on'));form=t.innerHTML;}catch(e){}
     V3.modal('New capacity assessment · '+E(pt0(pid).name||''),'Same questions as at admission. Saved in the Capacity assessment list.',
-      `<div class="cap-doc"><span style="font-size:18px">✓</span><div>Doctor's signature: <b>${E(signer())}</b>. Applied automatically when you save.</div></div>
-       <div id="acrCapF" style="max-height:52vh;overflow:auto;padding-right:6px" onclick="setTimeout(acrCapWho,0)">${form}</div>
-       <div class="box" style="margin-top:12px"><div class="lbl">Signature of the <span id="acrCapWho">Patient</span></div>
-         <label class="row small" style="gap:8px;align-items:flex-start;margin:8px 0"><input type="checkbox" id="acrCapLater" style="margin-top:3px" onchange="document.getElementById('acrCapSigW').style.display=this.checked?'none':''"><span>They are not here. Save now and collect the signature later (family may visit only every two weeks).</span></label>
-         <div id="acrCapSigW"><label class="field"><span class="lbl">Name</span><input class="input" id="acrCapNN" value="${E(nr)}" placeholder="Full name"></label>
-         <canvas id="acrCapNC" width="520" height="150" style="width:100%;height:150px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;touch-action:none;margin-top:8px"></canvas>
-         <button class="btn sm" style="margin-top:6px" onclick="if(window.__acrNP){__acrNP.g.clearRect(0,0,__acrNP.c.width,__acrNP.c.height);__acrNP.drawn=false;}">Clear</button></div></div>
-       <label class="row small" style="gap:8px;align-items:flex-start;margin-top:10px"><input type="checkbox" id="acrCapOk" style="margin-top:3px"><span>I reviewed the full assessment and confirm it is accurate.</span></label>
+      `<div id="acrCapF" style="max-height:52vh;overflow:auto;padding-right:6px" onclick="setTimeout(acrCapWho,0)">${form}</div>
+       <div class="m25-sgs"><div class="box"><div class="lbl">Signature of the doctor · <b>${E(signer())}</b></div>${sigBox('acrCapD')}</div>
+       <div class="box"><div class="lbl">Signature of the <span id="acrCapWho">Patient</span></div>
+         <label class="row small" style="gap:8px;align-items:flex-start;margin:8px 0"><input type="checkbox" id="acrCapLater" style="margin-top:3px" onchange="document.getElementById('acrCapSigW').style.display=this.checked?'none':''"><span>They are not here. Save now and collect the signature later.</span></label>
+         <div id="acrCapSigW"><label class="field"><span class="lbl">Name</span><input class="input" id="acrCapNN" value="${E(nr)}" placeholder="Full name"></label>${sigBox('acrCapN')}</div></div></div>
        <div id="acrCapErr" class="small" style="color:var(--red);display:none;margin-top:6px"></div>`,
       `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="acrCapNewSave('${Q(pid)}')">Sign and save</button>`);
-    big();const m=document.getElementById('modal');if(m)m.style.width='min(900px,100%)';
-    padOn('acrCapNC',P=>{newPad=P;window.__acrNP=P;});setTimeout(acrCapWho,50);
+    big();const m=document.getElementById('modal');if(m)m.style.width='min(960px,100%)';
+    sigOn('acrCapD');sigOn('acrCapN');setTimeout(()=>{newPad=PADS.acrCapN;window.__acrNP=PADS.acrCapN;acrCapWho();},50);
   };
   window.acrCapNewSave=function(pid){
     const box=document.getElementById('acrCapF');if(!box)return;
@@ -212,52 +239,47 @@
     const answers=[...box.querySelectorAll('.radios')].map(g=>[...g.querySelectorAll('.tog')].findIndex(b=>b.classList.contains('on')));
     const on=box.querySelector('.cap-concl .tog.on')||[...box.querySelectorAll('.radios .tog.on')].find(b=>/^4[AB]/.test(b.textContent.trim()));
     if(!on)return err('Choose the conclusion (4A or 4B) first.');
-    if(!(document.getElementById('acrCapOk')||{}).checked)return err('Tick that you reviewed the assessment.');
-    const later=!!(document.getElementById('acrCapLater')||{}).checked,name=((document.getElementById('acrCapNN')||{}).value||'').trim();
-    if(!later&&(!name||!newPad||!newPad.drawn))return err('Write the name and sign in the box, or tick that they are not here.');
+    const dsig=sigVal('acrCapD');if(!dsig)return err('The doctor signs in the box (or uploads a photo of the signature).');
+    const later=!!(document.getElementById('acrCapLater')||{}).checked,name=((document.getElementById('acrCapNN')||{}).value||'').trim(),psig=later?'':sigVal('acrCapN');
+    if(!later&&(!name||!psig))return err('Write the name and sign (or upload the signature), or tick that they are not here.');
     const L=capHist(pid),personType=whoSigns(),at=atNow();
-    const a={id:'cap'+Date.now().toString(36),at,by:signer(),purpose:L.length?'Review':'Admission',level:on.textContent.trim(),inputs,answers,personType,person:later?'':name,signature:later?'':newPad.c.toDataURL('image/png'),pending:later,personAt:later?'':at};
+    const a={id:'cap'+Date.now().toString(36),at,ts:Date.now(),by:signer(),purpose:L.length?'Review':'Admission',level:on.textContent.trim(),inputs,answers,qa:qaOf(box),docSig:dsig,personType,person:later?'':name,signature:psig,pending:later,personAt:later?'':at};
     L.unshift(a);
     /* the first one also counts as the admission assessment */
     const x=px(pid);if(!x.capacitySigned)x.capacitySigned={inputs,answers,signedBy:a.by,signedAt:at,person:a.person,personType,signature:a.signature,pending:later,level:a.level};
     try{V3.log(pid,S.role,'note','Capacity assessment signed by '+a.by+': '+a.level+(later?' ('+personType.toLowerCase()+' signature pending)':''));}catch(e){}
     closeModal();render();toast('Capacity assessment saved'+(later?'. The '+personType.toLowerCase()+' signs at their next visit.':' with both signatures.'));
   };
-  /* the answers of a saved assessment, read only, in the same form */
-  function capRead(a){
-    if(!a||!a.inputs||!a.answers)return '';
-    let h='';try{h=capForm(true);}catch(e){return '';}
-    const t=document.createElement('template');t.innerHTML=h;
-    const ctl=[...t.content.querySelectorAll('input,select,textarea')],gr=[...t.content.querySelectorAll('.radios')];
-    if(ctl.length!==a.inputs.length||gr.length!==a.answers.length)return '';
-    ctl.forEach((el,i)=>{const s=document.createElement('div');s.className='cap-read-value';s.textContent=a.inputs[i]||'Not filled in';el.replaceWith(s);});
-    gr.forEach((g,i)=>{const b=[...g.querySelectorAll('.tog')][a.answers[i]];const s=document.createElement('div');s.className='cap-read-value';s.textContent=b?b.textContent.trim():'Not answered';g.replaceWith(s);});
-    t.content.querySelectorAll('button').forEach(b=>b.remove());
-    return `<div style="max-height:46vh;overflow:auto;padding-right:6px;margin-top:10px">${t.innerHTML}</div>`;
+  /* the answers of a saved assessment as question and answer lines (older saves: rebuilt from the form) */
+  function capQA(a){
+    if(Array.isArray(a.qa)&&a.qa.length)return a.qa;
+    try{const t=document.createElement('div');t.innerHTML=capForm(true);
+      const ctl=[...t.querySelectorAll('input,select,textarea')],gr=[...t.querySelectorAll('.radios')];
+      ctl.forEach((el,i)=>{if(a.inputs&&i<a.inputs.length)el.value=a.inputs[i]||'';});
+      gr.forEach((g,i)=>{g.querySelectorAll('.tog').forEach((b,j)=>b.classList.toggle('on',!!a.answers&&a.answers[i]===j));});
+      return qaOf(t);}catch(e){return [];}
   }
+  function capRead(a){const q=capQA(a);return q.map(([l,v])=>`<div class="m25-q"><b>${E(l)}</b><div>${v?E(v):'<span class="m25-nil">Not answered</span>'}</div></div>`).join('');}
   let capPad2=null;
   window.acrCapOpen=function(pid,id){
     const a=capHist(pid).find(x=>x.id===id);if(!a)return;
-    const who=a.personType||'Patient or family member';
-    const sig=a.pending?`<div class="callout grey small" style="margin-bottom:8px">${E(who)} signature not collected yet. Collect it now if they are here.</div>
-        <label class="field"><span class="lbl">${E(who)} name</span><input class="input" id="acrCapN" placeholder="Full name"></label>
-        <div class="lbl" style="margin:10px 0 6px">${E(who)} signature</div><canvas id="acrCapC" width="520" height="150" style="width:100%;height:150px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;touch-action:none"></canvas>
-        <div class="row" style="justify-content:space-between;margin-top:6px"><button class="btn sm" onclick="acrCapClear()">Clear</button><span id="acrCapE" class="small" style="color:var(--red);display:none">Write the name and sign in the box</span></div>`
-      :`<div class="small">${E(who)}: <b>${E(a.person)}</b>${a.personAt?' · '+E(a.personAt):''}</div>${a.signature?`<img class="acr-sig" alt="Signature" src="${E(a.signature)}">`:''}`;
-    V3.modal('Capacity assessment · '+E(a.at),E(a.purpose||''),
-      `<dl class="kv"><dt>Date</dt><dd>${E(a.at)}</dd><dt>Capacity</dt><dd>${E(a.level||'Not recorded')}</dd><dt>Doctor</dt><dd>${E(a.by)} · signed</dd></dl>${capRead(a)}<div class="box" style="margin-top:10px">${sig}</div>`,
-      `<button class="btn" onclick="closeModal()">Close</button>${a.pending?`<button class="btn pri" onclick="acrCapSig('${Q(pid)}','${Q(id)}')">Save signature</button>`:''}`);
-    big();
-    if(a.pending)setTimeout(()=>{const c=document.getElementById('acrCapC');if(!c)return;const g=c.getContext('2d');g.lineWidth=2.2;g.lineCap='round';g.strokeStyle='#101828';capPad2={c,g,down:false,drawn:false};
-      const p=e=>{const r=c.getBoundingClientRect();return[(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height];};
-      c.onpointerdown=e=>{capPad2.down=true;capPad2.drawn=true;const[x,y]=p(e);g.beginPath();g.moveTo(x,y);c.setPointerCapture(e.pointerId);};
-      c.onpointermove=e=>{if(!capPad2.down)return;const[x,y]=p(e);g.lineTo(x,y);g.stroke();};c.onpointerup=()=>{capPad2.down=false;};},0);
+    const who=a.personType||'Patient or family member',p=ptFind(pid)||pt0(pid)||{};
+    const head=`<div class="m25-q"><b>Date</b><div>${E(a.at)}</div></div><div class="m25-q"><b>Purpose</b><div>${E(a.purpose||'')}</div></div><div class="m25-q"><b>Capacity</b><div>${E(a.level||'Not recorded')}</div></div>`;
+    const sigs=[{lab:'Doctor',name:a.by,at:a.at,img:a.docSig||''},{lab:who,name:a.person||'',at:a.personAt||'',img:a.signature||'',pending:!!a.pending}];
+    const doc=window.m25Doc?m25Doc('Capacity assessment',p,head+capRead(a),sigs):head+capRead(a);
+    const col=a.pending?`<div class="box" style="margin-top:12px"><div class="callout grey small" style="margin-bottom:8px">${E(who)} signature not collected yet. Collect it now if they are here.</div>
+        <label class="field"><span class="lbl">${E(who)} name</span><input class="input" id="acrCapN2" value="${E(nrOf(pid))}" placeholder="Full name"></label>${sigBox('acrCapP')}
+        <span id="acrCapE" class="small" style="color:var(--red);display:none">Write the name and sign (or upload the signature)</span></div>`:'';
+    V3.modal('Capacity assessment · '+E(a.at),E(a.purpose||''),doc+col,
+      `<button class="btn" onclick="closeModal()">Close</button>${window.m25DocPrint?`<button class="btn" onclick="m25DocPrint()">Print</button>`:''}${a.pending?`<button class="btn pri" onclick="acrCapSig('${Q(pid)}','${Q(id)}')">Save signature</button>`:''}`);
+    big();const m=document.getElementById('modal');if(m)m.style.width='min(960px,100%)';
+    if(a.pending)sigOn('acrCapP');
   };
-  window.acrCapClear=function(){if(!capPad2)return;capPad2.g.clearRect(0,0,capPad2.c.width,capPad2.c.height);capPad2.drawn=false;};
+  window.acrCapClear=function(){m25SigClear('acrCapP');};
   window.acrCapSig=function(pid,id){
-    const a=capHist(pid).find(x=>x.id===id),n=((document.getElementById('acrCapN')||{}).value||'').trim();
-    if(!a)return;if(!n||!capPad2||!capPad2.drawn){const e=document.getElementById('acrCapE');if(e)e.style.display='block';return;}
-    a.person=n;a.signature=capPad2.c.toDataURL('image/png');a.pending=false;a.personAt=atNow();a.personBy=signer();
+    const a=capHist(pid).find(x=>x.id===id),n=((document.getElementById('acrCapN2')||{}).value||'').trim(),sg=sigVal('acrCapP');
+    if(!a)return;if(!n||!sg){const e=document.getElementById('acrCapE');if(e)e.style.display='block';return;}
+    a.person=n;a.signature=sg;a.pending=false;a.personAt=atNow();a.personBy=signer();
     const x=px(pid),s=x.capacitySigned;if(s&&s.signedAt===a.at&&s.pending){s.person=n;s.signature=a.signature;s.pending=false;}
     try{V3.log(pid,S.role,'note','Capacity assessment of '+a.at+': '+(a.personType||'family')+' signature collected ('+n+')');}catch(e){}
     closeModal();render();toast('Signature saved');

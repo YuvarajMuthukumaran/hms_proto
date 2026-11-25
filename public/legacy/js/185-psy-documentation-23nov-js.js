@@ -22,13 +22,27 @@
   const reas=pid=>{const x=px(pid);return Array.isArray(x.reassess)?x.reassess:[];};
 
   /* ---------- the parts ---------- */
-  const roundsTable=pid=>{const L=roundLog(pid);if(!L.length)return '';
+  /* 25 Nov 2026 meeting (Anu): Rounds filter by psychiatrist / psychologist and Last 7 days / Last 1 month; capacity and
+     re-assessment get the date filter. Psychologist rounds (psyx.roundLogPsy, block 173) are listed here too. */
+  const F=OPEN.f=OPEN.f||{rd:{who:'all',d:'all'},cap:{d:'all'},rea:{d:'all'}};
+  const tsOf=l=>{if(l&&l.ts)return +l.ts;const s=String((l&&l.at)||'').split(',')[0];const t=Date.parse(s);return isNaN(t)?0:t;};
+  const inD=(l,d)=>d==='all'||(tsOf(l)&&Date.now()-tsOf(l)<=(d==='7'?7:31)*864e5);
+  const roundAll=pid=>{const x=px(pid);const a=roundLog(pid).map(l=>Object.assign({role:'Psychiatrist'},l));
+    const b=(x.roundLogPsy||[]).filter(l=>(l.changes||[]).length||l.note).map(l=>Object.assign({role:'Psychologist'},l));
+    return a.concat(b).sort((p,q)=>tsOf(q)-tsOf(p));};
+  const roundF=pid=>roundAll(pid).filter(l=>(F.rd.who==='all'||l.role.toLowerCase()===F.rd.who)&&inD(l,F.rd.d));
+  const fbar=(k,who)=>{const f=F[k];const sel=(id,opts,v)=>`<select class="input doc-fs" onchange="docFlt('${k}','${id}',this.value)">${opts.map(([a,b])=>`<option value="${a}" ${v===a?'selected':''}>${b}</option>`).join('')}</select>`;
+    return `<div class="doc-fb">${who?sel('who',[['all','Psychiatrist and psychologist'],['psychiatrist','Psychiatrist'],['psychologist','Psychologist']],f.who):''}${sel('d',[['all','All dates'],['7','Last 7 days'],['30','Last 1 month']],f.d)}</div>`;};
+  window.docFlt=function(k,id,v){F[k][id]=v;const w=document.getElementById('docWrap');if(w)w.remove();render();};
+  const roundsTable=pid=>{const L=roundF(pid);if(!L.length)return roundAll(pid).length?fbar('rd',1)+'<div class="small muted" style="padding:16px 4px">No rounds match the filter.</div>':'';
+    return fbar('rd',1)+`<div class="scroll"><table class="t"><thead><tr><th style="width:170px">When</th><th style="width:120px">Role</th><th>Changes made</th></tr></thead><tbody>${L.map(l=>`<tr><td><b>${E(l.at)}</b><div class="tiny muted">${E(l.by||'')}</div></td><td>${E(l.role)}</td><td>${(l.changes||[]).map(c=>`<div><b>${E(c.t)}:</b> ${E(c.d)}</div>`).join('')}${l.note?`<div>${E(l.note)}</div>`:''}${l.why?`<div class="tiny muted">Why: ${E(l.why)}</div>`:''}</td></tr>`).join('')}</tbody></table></div>`;};
+  const roundsTableOld=pid=>{const L=roundLog(pid);if(!L.length)return '';
     return `<h4 class="doc-h4">Changes made on rounds</h4><div class="scroll"><table class="t"><thead><tr><th style="width:170px">When</th><th>Changes made</th></tr></thead><tbody>${L.map(l=>`<tr><td><b>${E(l.at)}</b><div class="tiny muted">${E(l.by||'')}</div></td><td>${(l.changes||[]).map(c=>`<div><b>${E(c.t)}:</b> ${E(c.d)}</div>`).join('')}${l.why?`<div class="tiny muted">Why: ${E(l.why)}</div>`:''}</td></tr>`).join('')}</tbody></table></div>`;};
-  const capTable=pid=>{const L=caps(pid);
-    return `<div class="scroll"><table class="t"><thead><tr><th>Date</th><th>Capacity</th><th>Doctor</th><th>Patient or family signature</th><th></th></tr></thead><tbody>${L.map(a=>`<tr><td><b>${E(a.at)}</b><div class="tiny muted">${E(a.purpose||'')}</div></td><td>${E(a.level||'Not recorded')}</td><td>${E(a.by||'')}</td><td>${a.pending?`<b style="color:#b54708">Pending</b><div class="tiny muted">${E(a.personType||'Patient or family member')} to sign</div>`:`${E(a.person||'')}<div class="tiny muted">${E(a.personType||'')}</div>`}</td><td style="text-align:right"><button class="btn sm ${a.pending?'pri':''}" onclick="acrCapOpen('${Q(pid)}','${Q(a.id)}')">${a.pending?'Collect signature':'Open'}</button></td></tr>`).join('')||'<tr><td colspan="5" class="small muted">No capacity assessment yet.</td></tr>'}</tbody></table></div>`;};
+  const capTable=pid=>{const L=caps(pid).filter(a=>inD(a,F.cap.d));
+    return fbar('cap')+`<div class="scroll"><table class="t"><thead><tr><th>Date</th><th>Capacity</th><th>Doctor</th><th>Patient or family signature</th><th></th></tr></thead><tbody>${L.map(a=>`<tr><td><b>${E(a.at)}</b><div class="tiny muted">${E(a.purpose||'')}</div></td><td>${E(a.level||'Not recorded')}</td><td>${E(a.by||'')}</td><td>${a.pending?`<b style="color:#b54708">Pending</b><div class="tiny muted">${E(a.personType||'Patient or family member')} to sign</div>`:`${E(a.person||'')}<div class="tiny muted">${E(a.personType||'')}</div>`}</td><td style="text-align:right"><button class="btn sm ${a.pending?'pri':''}" onclick="acrCapOpen('${Q(pid)}','${Q(a.id)}')">${a.pending?'Collect signature':'Open'}</button></td></tr>`).join('')||'<tr><td colspan="5" class="small muted">No capacity assessment yet.</td></tr>'}</tbody></table></div>`;};
   const RQ=[['status','Current clinical status (history and MSE)'],['change','Change in clinical status'],['scale','Rating scale used, with scores'],['se','Side effects, toxicity or complications'],['inv','Further investigations required'],['plan','Change in management and treatment plan (including prescription)'],['other','Any other remarks']];
-  const reaRows=pid=>reas(pid).map((r,i)=>`<tr><td><b>${E(r.at)}</b><div class="tiny muted">${E(r.by||'')}</div></td><td>${E(r.change||'')}${r.scale?`<div class="tiny muted">${E(r.scale)}</div>`:''}</td><td>${E(r.status||'')}</td><td style="text-align:right"><button class="btn sm" onclick="docReaOpen('${Q(pid)}',${i})">Open</button></td></tr>`).join('');
-  const reaTable=pid=>`<div class="scroll"><table class="t"><thead><tr><th style="width:170px">When</th><th>Change in clinical status</th><th>Current clinical status</th><th></th></tr></thead><tbody>${reaRows(pid)||'<tr><td colspan="4" class="small muted">No re-assessment yet. It is due every week.</td></tr>'}</tbody></table></div>`;
+  const reaRows=pid=>reas(pid).map((r,i)=>inD(r,F.rea.d)?r:null).map((r,i)=>!r?'':`<tr><td><b>${E(r.at)}</b><div class="tiny muted">${E(r.by||'')}</div></td><td>${E(r.change||'')}${r.scale?`<div class="tiny muted">${E(r.scale)}</div>`:''}</td><td>${E(r.status||'')}</td><td style="text-align:right"><button class="btn sm" onclick="docReaOpen('${Q(pid)}',${i})">Open</button></td></tr>`).join('');
+  const reaTable=pid=>fbar('rea')+`<div class="scroll"><table class="t"><thead><tr><th style="width:170px">When</th><th>Change in clinical status</th><th>Current clinical status</th><th></th></tr></thead><tbody>${reaRows(pid)||'<tr><td colspan="4" class="small muted">No re-assessment yet. It is due every week.</td></tr>'}</tbody></table></div>`;
 
   /* 23 Nov 2026, second meeting (Anu): tabs instead of parts that fold open ("30 daily notes make a very long list and then to go
      to rounds I have to close the daily notes"). One part shows at a time; each has Print (that part) and Print all. */
@@ -64,7 +78,10 @@
     OPEN.tab='rea';closeModal();render();toast('Re-assessment saved');
   };
   const reaHtml=r=>RQ.map(([k,l])=>r[k]?`<div class="doc-kv"><b>${E(l)}</b><div>${E(r[k]).replace(/\n/g,'<br>')}</div></div>`:'').join('');
-  window.docReaOpen=function(pid,i){const r=reas(pid)[i];if(!r)return;V3.modal('Re-assessment · '+E(r.at),'Signed by '+E(r.by||''),`<div class="doc-rea">${reaHtml(r)}</div>`,`<button class="btn" onclick="closeModal()">Close</button>`,'min(760px,100%)');};
+  window.docReaOpen=function(pid,i){const r=reas(pid)[i];if(!r)return;
+    if(window.m25Doc){const p=ptFind(pid)||{};V3.modal('Re-assessment (IPD)',E(r.at),m25Doc('Re-assessment (IPD)',p,RQ.map(([k,l])=>`<div class="m25-q"><b>${E(l)}</b><div>${r[k]?E(r[k]).replace(/\n/g,'<br>'):'<span class="m25-nil">Not written</span>'}</div></div>`).join(''),[{lab:'Psychiatrist',name:r.by,at:r.at}]),
+      `<button class="btn" onclick="closeModal()">Close</button><button class="btn pri" onclick="m25DocPrint()">Print</button>`,'min(900px,96vw)');return;}
+    V3.modal('Re-assessment · '+E(r.at),'Signed by '+E(r.by||''),`<div class="doc-rea">${reaHtml(r)}</div>`,`<button class="btn" onclick="closeModal()">Close</button>`,'min(760px,100%)');};
 
   /* ---------- printing ---------- */
   function printHtml(pid,k){
@@ -93,13 +110,13 @@
     const old=[...host.children].slice([...host.children].indexOf(bar)+1).filter(e=>e.id!=='acrBody');
     const N=notes(pid),C=caps(pid),R=reas(pid);
     const wrap=document.createElement('div');wrap.id='docWrap';
-    const RL=roundLog(pid),cnt={dn:N.length,rd:RL.length,cap:C.length,rea:R.length},LB={dn:'Daily notes',rd:'Rounds',cap:'Capacity assessment',rea:'Re-assessment'};
+    const RL=roundAll(pid),cnt={dn:N.length,rd:RL.length,cap:C.length,rea:R.length},LB={dn:'Daily notes',rd:'Rounds',cap:'Capacity assessment',rea:'Re-assessment'};
     /* 24 Nov 2026 (Anu, meeting): no "Documentation" title and line here, the tab already says it */
     wrap.innerHTML=`<div class="doc-tabs" role="tablist" aria-label="Documentation">${KEYS.map(k=>`<button type="button" role="tab" class="doc-tab ${TAB()===k?'on':''}" id="docT_${k}" data-k="${k}" aria-controls="docP_${k}" aria-selected="${TAB()===k}" tabindex="${TAB()===k?0:-1}" onclick="docTab('${k}')" onkeydown="docTabKey(event)">${LB[k]}<span class="doc-tc">${cnt[k]}</span></button>`).join('')}</div>`
       +part(pid,'dn','Daily notes',N.length+' note'+(N.length===1?'':'s'),N[0]?((N[0].d||'')+' '+(N[0].my||'')).trim():'','<div id="docDn"></div>',`<button class="btn sm pri" onclick="openNotesFor('${Q(pid)}')">Open Daily notes for all patients</button>`)
       +part(pid,'rd','Rounds',RL.length+' round'+(RL.length===1?'':'s'),(RL[0]||{}).at||'',roundsTable(pid)||'<div class="small muted" style="padding:16px 4px">No rounds yet.</div>',`<button class="btn sm pri" onclick="if(window.psyOpenRounds)psyOpenRounds('${Q(pid)}');else go('#/rounds')">Open Rounds for all patients</button>`)
-      +part(pid,'cap','Capacity assessment',C.length+' done',C[0]?C[0].at:'',capTable(pid),`<button class="btn sm" onclick="acrCapNew('${Q(pid)}')">New assessment</button>`)
-      +part(pid,'rea','Re-assessment',R.length+' done',R[0]?R[0].at:'',reaTable(pid),`<button class="btn sm" onclick="docReaNew('${Q(pid)}')">New re-assessment</button>`);
+      +part(pid,'cap','Capacity assessment',C.length+' done',C[0]?C[0].at:'',capTable(pid),`<button class="btn sm pri" onclick="acrCapNew('${Q(pid)}')">New assessment</button>`)
+      +part(pid,'rea','Re-assessment',R.length+' done',R[0]?R[0].at:'',reaTable(pid),`<button class="btn sm pri" onclick="docReaNew('${Q(pid)}')">New re-assessment</button>`);
     old[0]?old[0].before(wrap):host.appendChild(wrap);
     const dn=wrap.querySelector('#docDn');old.forEach(e=>{e.style.display='';dn.appendChild(e);});
     /* Daily notes' own Print button prints this part */
@@ -126,6 +143,8 @@
     +'.doc-sum b{font-size:16px}.doc-n{font-size:12px;background:#eef4ff;color:#1e6cdb;border-radius:999px;padding:2px 10px;font-weight:600}'
     +'.doc-act{display:flex;gap:8px;flex-wrap:wrap}.doc-body{padding:0 16px 16px;border-top:1px solid #eef1f5}.doc-body>#docDn>section.card{box-shadow:none;border:0;margin:0}'
     +'@media(prefers-reduced-motion:reduce){.doc-part{animation:none}.doc-tab{transition:none}}'
+    +'.doc-fb{display:flex;gap:8px;flex-wrap:wrap;padding:12px 4px 4px}.doc-fs{width:auto!important;min-width:170px;height:36px}'
+    +'.doc-rea{padding:6px 8px 2px}.doc-rea .field{display:block}.doc-rea textarea{width:100%;box-sizing:border-box}'
     +'.doc-h4{margin:16px 4px 8px;font-size:14px}.doc-rea .field{margin-bottom:12px}.doc-kv{padding:8px 0;border-bottom:1px solid #eef1f5}.doc-kv b{display:block;font-size:12px;color:#475467;margin-bottom:2px}'
     /* capacity pop-up: scrolls inside the window */
     +'#modal:has(#acrCapF){display:flex!important;flex-direction:column;max-height:calc(100vh - 40px)!important;overflow:hidden!important}'

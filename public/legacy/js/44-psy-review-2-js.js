@@ -511,7 +511,7 @@
   let capPad=null;
   function capReadBody(){
     const d=px().capacityDraft||{};
-    if(!d.inputs&&!d.answers)return `<div class="grid2">${CAPREAD.map(f=>`<div class="box small"><div class="lbl">${f[0]}</div><div style="margin-top:4px;font-weight:600">${f[1]}</div></div>`).join('')}</div>`;
+    if(!d.inputs&&!d.answers)return (window.__TULASI_REAL_DATA__||window.__realSigner||!(window.EX&&EX[S.patient]))?'<div class="small muted" style="padding:14px 20px">The capacity assessment is not filled in yet. Choose Fill form.</div>':`<div class="grid2">${CAPREAD.map(f=>`<div class="box small"><div class="lbl">${f[0]}</div><div style="margin-top:4px;font-weight:600">${f[1]}</div></div>`).join('')}</div>`;
     const t=document.createElement('template');t.innerHTML=capForm(true);const controls=[...t.content.querySelectorAll('input,select,textarea')],groups=[...t.content.querySelectorAll('.radios')];
     if(d.inputs&&d.inputs.length===controls.length)controls.forEach((el,i)=>{el.value=d.inputs[i]||'';});
     if(d.answers&&d.answers.length===groups.length)groups.forEach((g,i)=>[...g.querySelectorAll('.tog')].forEach((b,j)=>b.classList.toggle('on',j===d.answers[i])));
@@ -524,8 +524,8 @@
     const conclusion=card.querySelector('.cap-concl .tog.on');
     const patientSigns=!conclusion||/^4A/.test(conclusion.textContent.trim());
     V3.modal('Review and sign capacity assessment','Confirm the assessment, then capture the patient or nominated representative signature.',
-      `<label class="row small" style="align-items:flex-start;gap:8px"><input type="checkbox" id="capConfirm" style="margin-top:3px"><span>I reviewed the full assessment and confirm it is accurate.</span></label>
-       <label class="field" style="margin-top:10px"><span class="lbl">${patientSigns?'Patient name':'Nominated representative name'}</span><input id="capSigner" class="input" value="${patientSigns?'':hesc((px().capacityDraft&&px().capacityDraft.rep)||'Ananya Bose')}" placeholder="Full name"></label>
+      `<input type="checkbox" id="capConfirm" checked hidden>
+       <label class="field" style="margin-top:10px"><span class="lbl">${patientSigns?'Patient name':'Nominated representative name'}</span><input id="capSigner" class="input" value="${patientSigns?'':hesc((px().capacityDraft&&px().capacityDraft.rep)||(function(){try{const n=(ptIdentity(ptFind(S.patient))||{}).nr;return n&&n!=='Not recorded'?n:'';}catch(e){return '';}})())}" placeholder="Full name"></label>
        <div class="lbl" style="margin:10px 0 6px">${patientSigns?'Patient':'Nominated representative'} signature</div><canvas id="capSigCanvas" width="520" height="130" style="width:100%;height:130px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;touch-action:none"></canvas>
        <div id="capSigError" class="tiny" style="color:#b42318;display:none;margin-top:6px">Confirm, enter the name and sign in the box.</div>`
       ,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="psyCapSignSave(${patientSigns})">Save signed assessment</button>`);

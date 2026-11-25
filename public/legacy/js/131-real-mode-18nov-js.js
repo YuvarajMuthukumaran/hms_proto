@@ -148,7 +148,10 @@
         const set=(li,txt,cls)=>{const s=li.querySelector('.adm-s');if(s)s.textContent=txt;li.classList.remove('done','warn');if(cls)li.classList.add(cls);const n=li.querySelector('.adm-n');const idx=lis.indexOf(li);if(n)n.textContent=cls==='done'?'✓':String(idx+1);};
         lis.forEach(li=>{
           const ti=(li.querySelector('.adm-t')||{}).textContent||'';
-          if(/^Admission forms/.test(ti))cons?set(li,'Signed','done'):set(li,'Not recorded','');
+          if(/^Admission forms/.test(ti)){/* 25 Nov 2026 (Anu): ticked only when every admission form is done, not after the first one */
+            const sg=k=>{const v=(x.consent||{})[k];return !!(v&&(v.st==='esign'||v.st==='uploaded'));};
+            const need=[!!x.appForm,sg('admission-consent'),sg('adm-terms'),sg('high-risk-consent'),sg('form-e')||sg('form-c')],dn=need.filter(Boolean).length;
+            dn===need.length?set(li,'All signed','done'):dn?set(li,dn+' of '+need.length+' done','warn'):set(li,'Not recorded','');}
           else if(/^Admission workup/.test(ti))wk.signed?set(li,'Signed','done'):(wk.edited?set(li,'In progress','warn'):set(li,'Not done',''));
           else if(/^Detailed capacity/.test(ti))c.capacityDone?set(li,'Done','done'):set(li,'Not done','');
           else if(/^Detailed history/.test(ti)){c.historyStatus==='signed'?set(li,'Signed','done'):set(li,sc.clock>3?'Overdue':'Due '+ptD(new Date(sc.start.getTime()+3*DAY)),'warn');}

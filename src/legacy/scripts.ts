@@ -199,4 +199,5 @@ export const LEGACY_SCRIPTS: string[] = [
   '/legacy/js/198-orders-consents-24nov-js.js',
   '/legacy/js/199-form-choice-cleanup-24nov-js.js',
   '/legacy/js/200-px-owner-grievances-25nov-js.js',
+  '/legacy/js/201-meeting-25nov-js.js',
 ];

@@ -118,7 +118,7 @@
     return {P,total,band};
   }
   window.psyNewsCalc=news; /* used by the QA block (49) for the automatic score */
-  const lastVit=c=>{const r=(c.vit||[]).slice(-1)[0]||[],bp=String(r[1]||'').split('/');return {sbp:+bp[0]||120,pulse:+r[2]||80,temp:r[3]?Math.round((+r[3]-32)*5/9*10)/10:36.8,spo2:+r[4]||98,rr:(+r[10]>0?+r[10]:16)};};
+  const lastVit=c=>{const r=(c.vit||[]).slice(-1)[0]||[],bp=String(r[1]||'').split('/');/* 25 Nov 2026 (Anu): no made-up vitals in the form; empty until a real reading exists */return {sbp:+bp[0]||'',pulse:+r[2]||'',temp:r[3]?Math.round((+r[3]-32)*5/9*10)/10:'',spo2:+r[4]||'',rr:(+r[10]>0?+r[10]:'')};};
   const bandCls=b=>b==='Urgent RMO review'?'red':b==='Inform RMO'?'amber':'';
   const arrow=(a,b)=>a==null||b==null?'':(a>b?' ↑':a<b?' ↓':' →');
   window.psyNewsSave=function(pid){
