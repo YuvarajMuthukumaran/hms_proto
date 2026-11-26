@@ -31,9 +31,13 @@
     const b=(x.roundLogPsy||[]).filter(l=>(l.changes||[]).length||l.note).map(l=>Object.assign({role:'Psychologist'},l));
     return a.concat(b).sort((p,q)=>tsOf(q)-tsOf(p));};
   const roundF=pid=>roundAll(pid).filter(l=>(F.rd.who==='all'||l.role.toLowerCase()===F.rd.who)&&inD(l,F.rd.d));
-  const fbar=(k,who)=>{const f=F[k];const sel=(id,opts,v)=>`<select class="input doc-fs" onchange="docFlt('${k}','${id}',this.value)">${opts.map(([a,b])=>`<option value="${a}" ${v===a?'selected':''}>${b}</option>`).join('')}</select>`;
-    return `<div class="doc-fb">${who?sel('who',[['all','Psychiatrist and psychologist'],['psychiatrist','Psychiatrist'],['psychologist','Psychologist']],f.who):''}${sel('d',[['all','All dates'],['7','Last 7 days'],['30','Last 1 month']],f.d)}</div>`;};
-  window.docFlt=function(k,id,v){F[k][id]=v;const w=document.getElementById('docWrap');if(w)w.remove();render();};
+  /* 26 Nov 2026: same filter chips as the Daily notes part (Earlier notes), not dropdowns - toggle buttons
+     turned into the animated segmented pills by block 61's pgUpgradeFilters (shared with the psychologist's filters). */
+  const fbar=(k,who)=>{const f=F[k];const grp=(id,opts)=>`<div class="mini-chips" role="group">${opts.map(([v,l])=>`<button type="button" class="tog ${f[id]===v?'on':''}" onclick="docFlt('${k}','${id}','${v}')">${l}</button>`).join('')}</div>`;
+    const parts=[];if(who)parts.push(grp('who',[['psychiatrist','Psychiatrist'],['psychologist','Psychologist']]));
+    parts.push(grp('d',[['7','Last 7 days'],['30','Last 1 month']]));
+    return `<div class="psy-dn-filter-row">${parts.join('<span class="dn9-sep" aria-hidden="true"></span>')}</div>`;};
+  window.docFlt=function(k,id,v){F[k][id]=(F[k][id]===v?'all':v);const w=document.getElementById('docWrap');if(w)w.remove();render();};
   const roundsTable=pid=>{const L=roundF(pid);if(!L.length)return roundAll(pid).length?fbar('rd',1)+'<div class="small muted" style="padding:16px 4px">No rounds match the filter.</div>':'';
     return fbar('rd',1)+`<div class="scroll"><table class="t"><thead><tr><th style="width:170px">When</th><th style="width:120px">Role</th><th>Changes made</th></tr></thead><tbody>${L.map(l=>`<tr><td><b>${E(l.at)}</b><div class="tiny muted">${E(l.by||'')}</div></td><td>${E(l.role)}</td><td>${(l.changes||[]).map(c=>`<div><b>${E(c.t)}:</b> ${E(c.d)}</div>`).join('')}${l.note?`<div>${E(l.note)}</div>`:''}${l.why?`<div class="tiny muted">Why: ${E(l.why)}</div>`:''}</td></tr>`).join('')}</tbody></table></div>`;};
   const roundsTableOld=pid=>{const L=roundLog(pid);if(!L.length)return '';
@@ -119,6 +123,7 @@
       +part(pid,'rea','Re-assessment',R.length+' done',R[0]?R[0].at:'',reaTable(pid),`<button class="btn sm pri" onclick="docReaNew('${Q(pid)}')">New re-assessment</button>`);
     old[0]?old[0].before(wrap):host.appendChild(wrap);
     const dn=wrap.querySelector('#docDn');old.forEach(e=>{e.style.display='';dn.appendChild(e);});
+    if(typeof window.pgUpgradeFilters==='function')wrap.querySelectorAll('.psy-dn-filter-row').forEach(window.pgUpgradeFilters);
     /* Daily notes' own Print button prints this part */
     dn.querySelectorAll('button').forEach(b=>{if(/^Print all daily notes$/.test(b.textContent.trim()))b.remove();});
     /* the "Writing notes for several patients?" bar: its button is now in the part's own button row */
@@ -143,7 +148,7 @@
     +'.doc-sum b{font-size:16px}.doc-n{font-size:12px;background:#eef4ff;color:#1e6cdb;border-radius:999px;padding:2px 10px;font-weight:600}'
     +'.doc-act{display:flex;gap:8px;flex-wrap:wrap}.doc-body{padding:0 16px 16px;border-top:1px solid #eef1f5}.doc-body>#docDn>section.card{box-shadow:none;border:0;margin:0}'
     +'@media(prefers-reduced-motion:reduce){.doc-part{animation:none}.doc-tab{transition:none}}'
-    +'.doc-fb{display:flex;gap:8px;flex-wrap:wrap;padding:12px 4px 4px}.doc-fs{width:auto!important;min-width:170px;height:36px}'
+    +'.doc-body .psy-dn-filter-row{padding:12px 4px 4px}'
     +'.doc-rea{padding:6px 8px 2px}.doc-rea .field{display:block}.doc-rea textarea{width:100%;box-sizing:border-box}'
     +'.doc-h4{margin:16px 4px 8px;font-size:14px}.doc-rea .field{margin-bottom:12px}.doc-kv{padding:8px 0;border-bottom:1px solid #eef1f5}.doc-kv b{display:block;font-size:12px;color:#475467;margin-bottom:2px}'
     /* capacity pop-up: scrolls inside the window */
